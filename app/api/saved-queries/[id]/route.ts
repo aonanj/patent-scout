@@ -1,4 +1,3 @@
-// app/api/saved-queries/[id]/route.ts
 import { NextResponse } from "next/server";
 
 export async function DELETE(_req: Request, context: any) {
