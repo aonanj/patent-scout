@@ -1,0 +1,36 @@
+name: Patent Scout Alerts
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 14:00 UTC = 07:00 PT (standard). GitHub uses UTC.
+  workflow_dispatch: {}     # allow manual run
+
+jobs:
+  run-alerts:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: alerts-runner
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install asyncpg httpx
+
+      - name: Run alerts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_FROM_NAME: ${{ secrets.MAILGUN_FROM_NAME }}
+          MAILGUN_FROM_EMAIL: ${{ secrets.MAILGUN_FROM_EMAIL }}
+        run: |
+          python alerts_runner.py
