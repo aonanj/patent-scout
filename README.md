@@ -1,175 +1,186 @@
 # Patent Scout
 
-Lightweight patent search and alerting using Postgres (Neon/Supabase), pgvector, and FastAPI.
+Lightweight patent search and alerting using Postgres (Neon/Supabase), pgvector, FastAPI, and a Next.js frontend.
 
-- Hybrid search: full‑text (Postgres GIN) + vector similarity (pgvector)
-- Simple ETL to load patents from CSV or sample data and (optionally) create OpenAI embeddings
-- Minimal FastAPI service with a single `/search` endpoint
-- Scheduled email alerts for saved queries via Mailgun (or console print when not configured)
+- **Hybrid search**: full-text (Postgres GIN) + vector similarity (pgvector)
+- **ETL**: load patents from CSV or BigQuery export, generate embeddings (OpenAI or deterministic hash fallback), and build indexes
+- **FastAPI backend**: `/search`, `/saved-queries`, `/alerts`
+- **Alerts runner**: scheduled job sends email digests via Mailgun
+- **Frontend**: Next.js app (App Router) with `/api/search` and `/api/saved-queries` proxy routes, and a simple search + “Save as Alert” UI
+- **Deployments**: Render (Web Service + Cron Job) recommended
 
-This repo is intentionally small: a few scripts that get you from zero to a working demo fast, and are easy to extend.
+---
+
+## Screenshots
+
+### Next.js Search UI
+![Search UI](docs/screenshots/search-ui.png)
+
+### Save Alert UI
+![Save Alert](docs/screenshots/save-alert.png)
+
+### FastAPI Swagger Docs
+![API Docs](docs/screenshots/api-docs.png)
+
+---
 
 ## What’s inside
 
-- `etl_patents_neon.py` — Creates schema and loads patents. Adds embeddings (OpenAI or deterministic hash fallback). Builds indexes.
-- `app.py` — FastAPI service exposing `/search` with hybrid ranking.
-- `alerts_runner.py` — Executes saved alerts, records events, sends email summaries.
-- `us_patents.csv` — Optional CSV input (id,title,abstract,assignee,pub_date,cpc_codes).
+- `etl_patents_neon.py` — Creates schema and loads patents. Handles CPC codes, embeddings, and indexes.
+- `app.py` — FastAPI service exposing `/search`, `/saved-queries`, `/alerts`, and health endpoints.
+- `alerts_runner.py` — Executes saved alerts, records events, sends Mailgun email digests.
+- `app/page.tsx` — Next.js UI with keyword + CPC search and “Save as Alert” button.
+- `app/api/search/route.ts` — Proxies frontend `/api/search` to FastAPI backend.
+- `app/api/saved-queries/route.ts` and `[id]/route.ts` — Proxies saved query CRUD to FastAPI backend.
+- `us_patents_with_cpc.csv` — Example CSV export from BigQuery (id,title,abstract,assignee,pub_date,cpc_codes).
+
+---
 
 ## Requirements
 
 - Python 3.10+
-- A Postgres with pgvector extension (Neon or Supabase recommended)
+- A Postgres database with `pgvector` (Neon or Supabase recommended)
+- Node.js 18+ and Next.js 13+ (for frontend)
 
-Python packages (see below for `requirements.txt` if you add one):
+Python packages:
+- Runtime: `fastapi`, `uvicorn`, `asyncpg`, `pydantic`, `numpy`, `httpx`, `python-dotenv`
+- ETL: `psycopg2-binary`, `tqdm`
+- Optional: `openai` (for real embeddings)
 
-- Runtime: fastapi, uvicorn, asyncpg, pydantic, numpy, httpx, python-dotenv
-- ETL: psycopg2-binary, tqdm
-- Optional: openai (for real embeddings)
+---
 
 ## Setup
 
-1) Create a Postgres database (Neon/Supabase/etc.). Ensure the `vector` extension is available.
+### 1. Database
+- Create a Neon or Supabase Postgres database
+- Ensure `pgvector` is available (`CREATE EXTENSION vector;`)
 
-2) Set environment variables (create a `.env` if you like):
+### 2. Environment variables
+In `.env` or Render dashboard:
 
 - `DATABASE_URL` — e.g. `postgresql://USER:PASS@HOST/DB?sslmode=require`
-- Optional Mailgun (for alerts):
-  - `MAILGUN_DOMAIN` — e.g. `mg.your-domain.com`
-  - `MAILGUN_API_KEY`
-  - `MAILGUN_FROM_NAME` (default: `Patent Scout Alerts`)
-  - `MAILGUN_FROM_EMAIL` (default: `alerts@<MAILGUN_DOMAIN>`) 
-  - `MAILGUN_BASE_URL` (default: `https://api.mailgun.net/v3`)
-- Optional OpenAI (for embeddings):
-  - `OPENAI_API_KEY`
 
-If you use a `.env` file, `dotenv` is already imported in the scripts to auto-load it.
+Optional Mailgun (for alerts):
+- `MAILGUN_DOMAIN`
+- `MAILGUN_API_KEY`
+- `MAILGUN_FROM_NAME` (default: Patent Scout Alerts)
+- `MAILGUN_FROM_EMAIL` (default: alerts@<MAILGUN_DOMAIN>)
 
-## Load data (ETL)
+Optional OpenAI (for embeddings):
+- `OPENAI_API_KEY`
 
-You can load the provided sample rows or your own CSV.
+Optional Next.js:
+- `BACKEND_URL` — FastAPI base URL (e.g. `https://patent-scout.onrender.com`)
 
-- Use sample rows (3 demo patents):
+---
+
+## ETL (Load patents)
+
+Export from BigQuery:
+
+```sql
+SELECT
+  publication_number AS id,
+  title_localized[SAFE_OFFSET(0)].text AS title,
+  abstract_localized[SAFE_OFFSET(0)].text AS abstract,
+  assignee_harmonized[SAFE_OFFSET(0)].name AS assignee,
+  CAST(publication_date AS STRING) AS pub_date,
+  STRING_AGG(DISTINCT c.code, ';' ORDER BY c.code) AS cpc_codes
+FROM `patents-public-data.patents.publications`
+LEFT JOIN UNNEST(cpc) AS c
+WHERE country_code = 'US'
+  AND publication_date >= 20240101
+GROUP BY id, title, abstract, assignee, pub_date
+LIMIT 5000;
+```
+
+Save as `us_patents_with_cpc.csv`.
+
+Run ETL:
 
 ```bash
-python etl_patents_neon.py
+python etl_patents_neon.py --csv us_patents_with_cpc.csv --limit 5000 --provider openai
 ```
 
-- Load a CSV:
+- Upserts into `patent` + `patent_embeddings`
+- Creates GIN full-text index, CPC jsonb GIN index, IVF Flat index
+- Falls back to deterministic hash embeddings if OpenAI is not configured
 
-```bash
-python etl_patents_neon.py --csv us_patents.csv --limit 1000
-```
+---
 
-- Choose embeddings provider:
+## FastAPI backend
 
-```bash
-# Force OpenAI (requires OPENAI_API_KEY); falls back to hash if it fails
-python etl_patents_neon.py --provider openai
-
-# Deterministic hash embeddings (no external calls)
-python etl_patents_neon.py --provider hash
-```
-
-The ETL will:
-- Create tables: `patent`, `patent_embeddings`
-- Add indexes: full‑text on title+abstract, GIN on CPC jsonb, optional IVF Flat on embeddings
-- Upsert rows and embeddings
-- Print a couple of quick smoke query results
-
-CSV format:
-
-```
-id,title,abstract,assignee,pub_date,cpc_codes
-US-20240123456-A1,Title...,Abstract...,Company,2024-06-06,"G06F/16;G06N/20"
-```
-
-CPC codes are semicolon‑delimited and stored as a JSON array.
-
-## Run the API
-
-The app exposes a single POST endpoint: `/search`.
-
-Request body:
-
-```json
-{
-  "keywords": "edge AI",
-  "qvec": [0.0, 0.1, ... 1536 floats ...]
-}
-```
-
-- If `keywords` is provided, a text search over title+abstract is used.
-- If `keywords` is omitted/null, vector similarity is used.
-- If `qvec` is omitted, a zero vector is used (mostly for demo).
-
-Hybrid scoring is a weighted mix of keyword and vector scores when both are present.
-
-Run the server locally (example with uvicorn):
+Start locally:
 
 ```bash
 uvicorn app:app --reload --port 8000
 ```
 
-Try it:
+Endpoints:
+- `POST /search` — hybrid keyword/vector/CPC search
+- `GET /saved-queries` — list
+- `POST /saved-queries` — create
+- `DELETE /saved-queries/{id}` — delete
+- `GET /alerts` — list recent alert events
+- `GET /health` — health check
+- `/docs` — Swagger UI
 
-```bash
-curl -X POST http://127.0.0.1:8000/search \
-  -H 'content-type: application/json' \
-  -d '{"keywords":"inference"}'
-```
+---
 
-## Alerts (email digests)
+## Alerts
 
-Alerts are defined in a simple table `saved_query` and executions are recorded in `alert_event`.
-
-Schema (created on first run if missing):
+Schema:
 
 ```sql
-CREATE TABLE IF NOT EXISTS saved_query (
-  id           bigserial PRIMARY KEY,
-  user_email   text NOT NULL,
-  name         text,
-  keywords     text,
-  assignee     text,
-  cpc          jsonb,   -- JSON array of CPC codes ["G06F/16", ...]
-  date_from    date,
-  date_to      date,
-  created_at   timestamptz DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS alert_event (
-  id              bigserial PRIMARY KEY,
-  saved_query_id  bigint REFERENCES saved_query(id) ON DELETE CASCADE,
-  created_at      timestamptz DEFAULT now(),
-  result_count    int,
-  results_sample  jsonb
-);
+CREATE TABLE saved_query (... cpc jsonb ...);
+CREATE TABLE alert_event (...);
 ```
 
-Run alerts:
+Run manually:
 
 ```bash
 python alerts_runner.py
 ```
 
-- If Mailgun creds are set, emails are sent.
-- If not, the email contents are printed to stdout.
-- Only patents newer than the previous alert run are included per saved query.
+- If Mailgun env vars set → sends email digests
+- If not, prints email content to stdout
+- Only includes new results since last run
 
-Tip: add to cron for daily digests.
+Schedule on Render as a Cron Job or use GitHub Actions.
 
-## Design notes
+---
 
-- Postgres handles both full‑text and vector similarity; no external search service needed.
-- CPC codes are stored as a JSONB array with a GIN index; the sample queries use `cpc ? 'CODE'` and a simple "match any" filter for alerts.
-- Embeddings default to a deterministic hash so the project works offline; switch to OpenAI for better quality.
+## Next.js frontend
 
-## Troubleshooting
+- `app/page.tsx` — search UI with keyword + CPC input, results list, and “Save as Alert”
+- `app/api/search/route.ts` — proxies to backend `/search`
+- `app/api/saved-queries/route.ts` — proxies CRUD to backend
 
-- `psycopg2` install issues: prefer `psycopg2-binary` for local dev. For production, compile `psycopg2` from source.
-- `vector` extension missing: ensure your Postgres supports `pgvector` and run `CREATE EXTENSION vector;`.
-- "No rows" after ETL: confirm `DATABASE_URL`, and that your CSV headers match the expected names.
+Run locally:
+
+```bash
+npm install
+npm run dev
+```
+
+Visit `http://localhost:3000`.
+
+---
+
+## Deployment (Render)
+
+1. Push repo to GitHub.
+2. Render → New Web Service:
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+   - Env Vars: set `DATABASE_URL`, `MAILGUN_*`.
+3. Render → New Cron Job:
+   - Command: `python alerts_runner.py`
+   - Schedule: `0 14 * * *`
+   - Env Vars: same as web service.
+4. Deploy Next.js frontend on Vercel or Render. Set `BACKEND_URL` to FastAPI URL.
+
+---
 
 ## License
 
