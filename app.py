@@ -76,10 +76,26 @@ async def health():
 
 @app.post("/search")
 async def search(req: SearchReq):
-    qvec = req.qvec or [0.0]*1536
+    # 1) build 1536-d vector
+    qvec = (req.qvec or [])
+    if len(qvec) < 1536:
+        qvec = qvec + [0.0] * (1536 - len(qvec))
+    elif len(qvec) > 1536:
+        qvec = qvec[:1536]
+
+    # 2) convert to pgvector text literal
+    vec_literal = "[" + ",".join(f"{float(x):.6f}" for x in qvec) + "]"
+
+    # 3) run query; NOTE the ::text::vector cast
     async with app.state.pool.acquire() as conn:
-        rows = await conn.fetch(HYBRID_SQL, req.keywords, qvec, req.cpc_any)
+        rows = await conn.fetch(
+            HYBRID_SQL,                 # unchanged except param 2 cast
+            req.keywords,               # $1
+            vec_literal,                # $2 (text)
+            req.cpc_any or None,        # $3 (text[] or NULL)
+        )
     return [dict(r) for r in rows]
+
 
 # FastAPI additions
 @app.get("/patent/{pid}")
