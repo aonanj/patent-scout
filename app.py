@@ -1,12 +1,17 @@
 # app.py
 import os
 import asyncpg
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, List
+from contextlib import asynccontextmanager
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.environ["DATABASE_URL"]
+
+class SearchReq(BaseModel):
+    keywords: Optional[str] = None
+    qvec: Optional[List[float]] = None
+    cpc_any: Optional[List[str]] = None
 
 HYBRID_SQL = """
 WITH kw AS (
@@ -42,30 +47,39 @@ ORDER BY hybrid_score DESC
 LIMIT 20;
 """
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create DB connection
-    app.state.db = await asyncpg.connect(DATABASE_URL)
+    app.state.pool = await asyncpg.create_pool(
+        DATABASE_URL,
+        min_size=1,
+        max_size=5,
+        command_timeout=30,
+        timeout=30,
+        max_inactive_connection_lifetime=300,  # recycle idle conns
+    )
     try:
         yield
     finally:
-        # Shutdown: close DB connection
-        await app.state.db.close()
+        await app.state.pool.close()
 
+app = FastAPI(docs_url="/docs", openapi_url="/openapi.json", lifespan=lifespan)
 
-app = FastAPI(
-    docs_url="/docs",
-    openapi_url="/openapi.json",
-    redoc_url=None,
-    lifespan=lifespan
-    )
+@app.get("/")
+async def root():
+    return {"ok": True}
 
-class SearchReq(BaseModel):
-    keywords: Optional[str] = None
-    qvec: Optional[List[float]] = None
-    cpc_any: Optional[List[str]] = None   # e.g., ["G06F/16","G06N/20"]
+@app.get("/health")
+async def health():
+    async with app.state.pool.acquire() as conn:
+        v = await conn.fetchval("SELECT 1;")
+    return {"status": "ok", "db": v}
 
+@app.post("/search")
+async def search(req: SearchReq):
+    qvec = req.qvec or [0.0]*1536
+    async with app.state.pool.acquire() as conn:
+        rows = await conn.fetch(HYBRID_SQL, req.keywords, qvec, req.cpc_any)
+    return [dict(r) for r in rows]
 
 # FastAPI additions
 @app.get("/patent/{pid}")
@@ -79,18 +93,3 @@ async def trend_volume():
     q = """SELECT date_trunc('month', pub_date)::date AS month, COUNT(*) AS n
            FROM patent GROUP BY 1 ORDER BY 1"""
     return [dict(r) for r in await app.state.db.fetch(q)]
-
-@app.post("/search")
-async def search(req: SearchReq):
-    db = app.state.db
-    qvec = req.qvec or [0.0]*1536
-    rows = await db.fetch(HYBRID_SQL, req.keywords, qvec, req.cpc_any)
-    return [dict(r) for r in rows]
-
-@app.get("/")
-def root():
-    return {"ok": True}
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
