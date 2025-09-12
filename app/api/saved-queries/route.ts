@@ -1,27 +1,21 @@
+// app/api/saved-queries/route.ts
+import { NextRequest } from "next/server";
+
 const BASE = process.env.BACKEND_URL;
 
-export async function GET(): Promise<Response> {
-  const r = await fetch(`${process.env.BACKEND_URL}/saved-queries`, {
-    cache: "no-store",
-  });
+export async function GET() {
+  const r = await fetch(`${BASE}/saved-queries`, { cache: "no-store" });
   const t = await r.text();
-  return new Response(t, {
-    status: r.status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(t, { status: r.status, headers: { "Content-Type": "application/json" } });
 }
 
-export async function POST(req: Request): Promise<Response> {
+export async function POST(req: NextRequest) {
   const body = await req.json();
-  const r = await fetch(`${process.env.BACKEND_URL}/saved-queries`, {
+  const r = await fetch(`${BASE}/saved-queries`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const t = await r.text();
-  return new Response(t, {
-    status: r.status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(t, { status: r.status, headers: { "Content-Type": "application/json" } });
 }
-
