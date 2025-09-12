@@ -54,7 +54,7 @@ try:
 except Exception:
     pass
 
-DB_URL = os.environ["DATABASE_URL"]
+DB_URL = os.getenv("DATABASE_URL")
 
 MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN")
 MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
