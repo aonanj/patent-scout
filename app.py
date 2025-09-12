@@ -54,7 +54,12 @@ async def lifespan(app: FastAPI):
         await app.state.db.close()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    docs_url="/docs",
+    openapi_url="/openapi.json",
+    redoc_url=None,
+    lifespan=lifespan
+    )
 
 class SearchReq(BaseModel):
     keywords: Optional[str] = None
@@ -82,4 +87,10 @@ async def search(req: SearchReq):
     rows = await db.fetch(HYBRID_SQL, req.keywords, qvec, req.cpc_any)
     return [dict(r) for r in rows]
 
+@app.get("/")
+def root():
+    return {"ok": True}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
