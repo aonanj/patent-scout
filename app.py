@@ -27,7 +27,7 @@ WITH kw AS (
   LIMIT 200
 ),
 vec AS (
-  SELECT p.id, 1.0/(1e-6 + (e.embedding <-> $2::vector)) AS score
+  SELECT p.id, 1.0/(1e-6 + (e.embedding <-> ($2::text)::vector)) AS score
   FROM patent_embeddings e
   JOIN patent p ON p.id=e.patent_id
   WHERE (
@@ -46,6 +46,7 @@ WHERE coalesce(k.score,0)>0 OR coalesce(v.score,0)>0
 ORDER BY hybrid_score DESC
 LIMIT 20;
 """
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,25 +77,22 @@ async def health():
 
 @app.post("/search")
 async def search(req: SearchReq):
-    # 1) build 1536-d vector
     qvec = (req.qvec or [])
     if len(qvec) < 1536:
-        qvec = qvec + [0.0] * (1536 - len(qvec))
+        qvec += [0.0]*(1536-len(qvec))
     elif len(qvec) > 1536:
         qvec = qvec[:1536]
-
-    # 2) convert to pgvector text literal
     vec_literal = "[" + ",".join(f"{float(x):.6f}" for x in qvec) + "]"
 
-    # 3) run query; NOTE the ::text::vector cast
     async with app.state.pool.acquire() as conn:
         rows = await conn.fetch(
-            HYBRID_SQL,                 # unchanged except param 2 cast
-            req.keywords,               # $1
-            vec_literal,                # $2 (text)
-            req.cpc_any or None,        # $3 (text[] or NULL)
+            HYBRID_SQL,
+            req.keywords,            # $1
+            vec_literal,             # $2 as text
+            req.cpc_any or None,     # $3 as text[] or NULL
         )
     return [dict(r) for r in rows]
+
 
 
 # FastAPI additions
