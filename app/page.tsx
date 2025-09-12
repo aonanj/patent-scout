@@ -69,6 +69,12 @@ export default function HomePage() {
     }
   }
 
+  function clearSearch() {
+    setKeywords("");
+    setCpc("");
+    setResults([]);
+  }
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <h1 className="text-xl font-bold">Patent Scout</h1>
@@ -101,13 +107,19 @@ export default function HomePage() {
         >
           Save as Alert
         </button>
+        <button
+          className="px-4 py-2 border rounded bg-red-100"
+          onClick={clearSearch}
+        >
+          Clear
+        </button>
       </div>
 
       <ul className="list-disc pl-6 space-y-1">
         {results.map((r, i) => (
           <li key={i}>
             <a
-              href={`https://patents.google.com/patent/${r.id}`}
+              href={`https://patents.google.com/patent/${r.id.replace(/-/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-blue-600 hover:underline"
