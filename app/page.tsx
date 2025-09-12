@@ -106,7 +106,15 @@ export default function HomePage() {
       <ul className="list-disc pl-6 space-y-1">
         {results.map((r, i) => (
           <li key={i}>
-            <span className="font-semibold">{r.id}</span> — {r.title}
+            <a
+              href={`https://patents.google.com/patent/${r.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              {r.id}
+            </a>{" "}
+            — {r.title}
           </li>
         ))}
       </ul>
