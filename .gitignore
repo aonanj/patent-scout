@@ -6,3 +6,6 @@ __pycache__
 __pycache__/
 copilot-instructions.md
 us_patents.csv
+node_modules/
+package-lock.json
+package.json
