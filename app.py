@@ -1,19 +1,28 @@
 # app.py
-import os, numpy as np
+import os
 import asyncpg
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 DATABASE_URL = os.environ["DATABASE_URL"]
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: create DB connection
+    app.state.db = await asyncpg.connect(DATABASE_URL)
+    try:
+        yield
+    finally:
+        # Shutdown: close DB connection
+        await app.state.db.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 class SearchReq(BaseModel):
     keywords: str | None = None
     qvec: list[float] | None = None
-
-@app.on_event("startup")
-async def startup():
-    app.state.db = await asyncpg.connect(DATABASE_URL)
 
 @app.post("/search")
 async def search(req: SearchReq):
@@ -46,3 +55,17 @@ async def search(req: SearchReq):
     LIMIT 20;
     """, req.keywords, qvec)
     return [dict(r) for r in rows]
+
+# FastAPI additions
+@app.get("/patent/{pid}")
+async def patent_detail(pid: str):
+    q = """SELECT id, pub_date, title, abstract, assignee, cpc
+           FROM patent WHERE id=$1"""
+    return await app.state.db.fetchrow(q, pid)
+
+@app.get("/trend/volume")
+async def trend_volume():
+    q = """SELECT date_trunc('month', pub_date)::date AS month, COUNT(*) AS n
+           FROM patent GROUP BY 1 ORDER BY 1"""
+    return [dict(r) for r in await app.state.db.fetch(q)]
+
