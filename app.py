@@ -13,6 +13,15 @@ class SearchReq(BaseModel):
     qvec: Optional[List[float]] = None
     cpc_any: Optional[List[str]] = None
 
+class SavedQueryIn(BaseModel):
+    name: str
+    keywords: Optional[str] = None
+    cpc: Optional[List[str]] = None
+    date_from: Optional[str] = None
+
+class SavedQuery(SavedQueryIn):
+    id: int
+
 HYBRID_SQL = """
 WITH kw AS (
   SELECT id, 1.0 AS score
@@ -93,6 +102,28 @@ async def search(req: SearchReq):
         )
     return [dict(r) for r in rows]
 
+
+@app.post("/saved-queries", status_code=201)
+async def create_saved_query(sq: SavedQueryIn):
+    async with app.state.pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO saved_query (name, keywords, cpc, date_from)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, name, keywords, cpc, date_from
+            """,
+            sq.name,
+            sq.keywords,
+            sq.cpc,
+            sq.date_from,
+        )
+    return dict(row)
+
+@app.get("/saved-queries")
+async def list_saved_queries():
+    async with app.state.pool.acquire() as conn:
+        rows = await conn.fetch("SELECT id, name, keywords, cpc, date_from FROM saved_query ORDER BY id")
+    return [dict(r) for r in rows]
 
 
 # FastAPI additions
