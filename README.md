@@ -7,7 +7,7 @@ Lightweight patent search and alerting using Postgres (Neon/Supabase), pgvector,
 - **FastAPI backend**: `/search`, `/saved-queries`, `/alerts`
 - **Alerts runner**: scheduled job sends email digests via Mailgun
 - **Frontend**: Next.js app (App Router) with `/api/search` and `/api/saved-queries` proxy routes, and a simple search + “Save as Alert” UI
-- **Deployments**: Render (Web Service) and Vercel. See ![https://patent-scout.vercel.app/](https://patent-scout.vercel.app/)
+- **Deployments**: Render (Web Service) and Vercel. See [https://patent-scout.vercel.app/](https://patent-scout.vercel.app/)
 
 ---
 
