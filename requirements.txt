@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn[standard]>=0.23
+asyncpg>=0.28
+pydantic>=2.6
+numpy>=1.26
+psycopg2-binary>=2.9
+httpx>=0.24
+python-dotenv>=1.0
+tqdm>=4.66
+openai>=1.0  # optional
