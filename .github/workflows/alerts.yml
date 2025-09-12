@@ -28,9 +28,9 @@ jobs:
       - name: Run alerts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_DOMAIN: ${{ env.MAILGUN_DOMAIN }}
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-          MAILGUN_FROM_NAME: ${{ secrets.MAILGUN_FROM_NAME }}
-          MAILGUN_FROM_EMAIL: ${{ secrets.MAILGUN_FROM_EMAIL }}
+          MAILGUN_FROM_NAME: ${{ env.MAILGUN_FROM_NAME }}
+          MAILGUN_FROM_EMAIL: ${{ env.MAILGUN_FROM_EMAIL }}
         run: |
           python alerts_runner.py
