@@ -21,11 +21,11 @@ jobs:
           python -m pip install --no-cache-dir -r "$GITHUB_WORKSPACE/requirements.txt"
           python -m pip show google-cloud-bigquery
           python - <<'PY'
-            import pkgutil, sys
-            mods = [m.name for m in pkgutil.iter_modules() if m.name.startswith('google')]
-            print("google namespace mods:", mods)
-            __import__('google.cloud.bigquery')
-            print('bigquery import ok')
+          import pkgutil, sys
+          mods = [m.name for m in pkgutil.iter_modules() if m.name.startswith('google')]
+          print("google namespace mods:", mods)
+          __import__('google.cloud.bigquery')
+          print('bigquery import ok')
           PY
       - name: Auth
         env: 
