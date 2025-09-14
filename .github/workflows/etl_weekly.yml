@@ -17,8 +17,8 @@ jobs:
           GCP_SA_JSON: ${{ secrets.GCP_SA_JSON }}
         run: |
           echo "$GCP_SA_JSON" > /tmp/gcp.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp.json" >> $GITHUB_ENV
+          export GCR_ETL_SCHEDULER_CREDS=/tmp/gcp.json
+          echo "GCR_ETL_SCHEDULER_CREDS=/tmp/gcp.json" >> $GITHUB_ENV
       - name: Run ETL
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
