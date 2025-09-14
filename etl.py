@@ -607,7 +607,7 @@ def main() -> int:
         date_to = args.date_to
     else:
         wm = latest_watermark(args.dsn)
-        date_to = (wm + timedelta(days=5)).isoformat() if wm else date.today().isoformat()
+        date_to = (wm + timedelta(days=3)).isoformat() if wm else date.today().isoformat()
     print(f"Loading up to date {date_to}", file=sys.stderr)
 
 
