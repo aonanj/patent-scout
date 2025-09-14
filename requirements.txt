@@ -8,9 +8,9 @@ charset-normalizer==3.4.3
 click==8.2.1
 distro==1.9.0
 fastapi==0.116.1
-google-api-core==2.25.1
-google-auth==2.40.3
-google-cloud-bigquery==3.37.0
+google-cloud-bigquery>=3.25.0
+google-api-core>=2.19.0
+google-auth>=2.33.0
 google-cloud-core==2.4.3
 google-crc32c==1.7.1
 google-resumable-media==2.7.2
@@ -25,9 +25,7 @@ jiter==0.10.0
 numpy==2.3.3
 openai==1.107.1
 packaging==25.0
-proto-plus==1.26.1
-protobuf==6.32.1
-psycopg[binary]==3.2.10
+psycopg==3.2.10
 psycopg-pool==3.2.6
 psycopg2-binary==2.9.10
 pyasn1==0.6.1
