@@ -7,3 +7,6 @@ __pycache__/
 copilot-instructions.md
 us_patents.csv
 node_modules/
+*.csv
+.secrets/
+tests/

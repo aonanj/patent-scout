@@ -42,7 +42,7 @@ from tqdm import tqdm
 # -------------------- Config --------------------
 EMBED_DIM = 1536
 DB_BATCH = 64
-EMB_BATCH = 64  # <=64 keeps you well under 300k token limit per request
+EMB_BATCH = 64  
 
 # -------------------- .env ----------------------
 try:
