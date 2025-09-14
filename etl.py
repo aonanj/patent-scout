@@ -24,12 +24,11 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple, TypeAlias
 
-from google.cloud import bigquery  # type: ignore
+from google.cloud import bigquery 
 import psycopg
 from psycopg.rows import TupleRow
 from psycopg import Connection
 from psycopg_pool import ConnectionPool  # type: ignore
-from psycopg2.extras import execute_batch
 from openai import OpenAI  # type: ignore
 from dotenv import load_dotenv
 

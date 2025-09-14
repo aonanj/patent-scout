@@ -27,7 +27,7 @@ openai==1.107.1
 packaging==25.0
 proto-plus==1.26.1
 protobuf==6.32.1
-psycopg==3.2.10
+psycopg[binary]==3.2.10
 psycopg-pool==3.2.6
 psycopg2-binary==2.9.10
 pyasn1==0.6.1
