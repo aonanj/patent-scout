@@ -170,7 +170,7 @@ export default function Page() {
   return (
     <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
-        <h1 style={{ margin: 0, fontSize: 22 }}>Patent Scout</h1>
+        <h1 style={{ margin: 0, fontSize: 22 }}>Patent Scout (for AI-related patents & publications)</h1>
 
         <Card>
           <div style={{ display: "grid", gap: 12 }}>
