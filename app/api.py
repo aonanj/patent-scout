@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 import inspect
 import os
-from typing import Annotated, cast
+from collections.abc import Sequence
+from typing import Annotated, Any, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import psycopg
+from psycopg.rows import dict_row
+from psycopg.types.json import Json
 
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
 from .repository import get_patent_detail, search_hybrid, trend_volume
+
 from .schemas import (
     PatentDetail,
     SearchFilters,
@@ -34,7 +38,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -63,6 +67,65 @@ async def post_search(req: SearchRequest, conn: Conn) -> SearchResponse:
         filters=req.filters,
     )
     return SearchResponse(total=total, items=items)
+
+
+# ----------------------------- Saved Queries -----------------------------
+class SavedQueryCreate(BaseModel):
+    owner_id: str
+    name: str
+    filters: dict[str, Any]
+    semantic_query: str | None = None
+    schedule_cron: str | None = None
+    is_active: bool = True
+
+
+@app.get("/saved-queries")
+async def list_saved_queries(conn: Conn, owner_id: str | None = None):
+    sql = (
+        "SELECT id, owner_id, name, filters, semantic_query, schedule_cron, is_active, created_at, updated_at "
+        "FROM saved_query"
+    )
+    args: list[object] = []
+    if owner_id:
+        sql += " WHERE owner_id = %s"
+        args.append(owner_id)
+    sql += " ORDER BY created_at DESC NULLS LAST, name ASC"
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(sql, args)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
+    return {"items": rows}
+
+
+@app.post("/saved-queries")
+async def create_saved_query(req: SavedQueryCreate, conn: Conn):
+    sql = (
+        "INSERT INTO saved_query (owner_id, name, filters, semantic_query, schedule_cron, is_active) "
+        "VALUES (%s,%s,%s,%s,%s,%s) RETURNING id"
+    )
+    args = [
+        req.owner_id,
+        req.name,
+        Json(req.filters),
+        req.semantic_query,
+        req.schedule_cron,
+        req.is_active,
+    ]
+    try:
+        async with conn.cursor() as cur:
+            await cur.execute(sql, args)  # type: ignore[arg-type]
+            row = await cur.fetchone()
+        return {"id": row[0] if row else None}
+    except psycopg.Error as e:  # unique violation etc.
+        raise HTTPException(status_code=400, detail=str(e).split("\n")[0]) from e
+
+
+@app.delete("/saved-queries/{id}")
+async def delete_saved_query(id: str, conn: Conn):
+    async with conn.cursor() as cur:
+        await cur.execute("DELETE FROM saved_query WHERE id = %s", [id])  # type: ignore[arg-type]
+        # rowcount available via cur.rowcount in sync API; for async, psycopg exposes rowcount attribute
+        deleted = cur.rowcount if hasattr(cur, "rowcount") else None  # type: ignore[attr-defined]
+    return {"deleted": deleted}
 
 
 @app.post("/trend/volume", response_model=TrendResponse)

@@ -2,7 +2,7 @@
 name = "patent-scout-api"
 version = "0.1.0"
 description = "Patent Scout FastAPI search service"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [{name = "Phaethon Order"}]
 dependencies = [
 "fastapi>=0.115",

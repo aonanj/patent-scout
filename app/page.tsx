@@ -70,6 +70,8 @@ export default function Page() {
   const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [trendLoading, setTrendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   // debounced search text to avoid chatty calls
   const qDebounced = useDebounced(q);
@@ -103,6 +105,76 @@ export default function Page() {
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
+
+  // Save current query as an alert in saved_query table via API route
+  const saveAsAlert = useCallback(async () => {
+    try {
+      const defaultName = qDebounced || assignee || cpc || "My Alert";
+      const name = window.prompt("Alert name", defaultName);
+      if (!name) return;
+
+      setSaving(true);
+      setSaveMsg(null);
+
+      // Stable anonymous owner id for this browser
+      function uuidv4(): string {
+        try {
+          if (typeof crypto !== "undefined" && (crypto as any).randomUUID) {
+            return (crypto as any).randomUUID();
+          }
+          if (typeof crypto !== "undefined" && (crypto as any).getRandomValues) {
+            const bytes = new Uint8Array(16);
+            (crypto as any).getRandomValues(bytes);
+            bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+            bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant
+            const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0"));
+            return `${hex[0]}${hex[1]}${hex[2]}${hex[3]}-${hex[4]}${hex[5]}-${hex[6]}${hex[7]}-${hex[8]}${hex[9]}-${hex[10]}${hex[11]}${hex[12]}${hex[13]}${hex[14]}${hex[15]}`;
+          }
+        } catch {}
+        // last resort (non-crypto)
+        const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
+        return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+      }
+
+      let ownerId = localStorage.getItem("ps_owner_id") || "";
+      if (!ownerId) {
+        ownerId = uuidv4();
+        localStorage.setItem("ps_owner_id", ownerId);
+      }
+
+      const payload = {
+        owner_id: ownerId,
+        name,
+        filters: {
+          keywords: qDebounced || null,
+          assignee: assignee || null,
+          cpc: cpc || null,
+          date_from: dateFrom || null,
+          date_to: dateTo || null,
+        },
+        semantic_query: null,
+        schedule_cron: null,
+        is_active: true,
+      };
+
+      const r = await fetch("/api/saved-queries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`Save failed (${r.status}): ${t}`);
+      }
+      setSaveMsg("Alert saved");
+      setTimeout(() => setSaveMsg(null), 3500);
+    } catch (e: any) {
+      setSaveMsg(e?.message || "Save failed");
+      setTimeout(() => setSaveMsg(null), 5000);
+    } finally {
+      setSaving(false);
+    }
+  }, [qDebounced, assignee, cpc, dateFrom, dateTo]);
 
   const fetchSearch = useCallback(async () => {
     setLoading(true);
@@ -258,6 +330,13 @@ export default function Page() {
               >
                 Reset
               </button>
+
+              <button onClick={saveAsAlert} disabled={saving} style={secondaryBtn} title="Save current filters as an alert">
+                {saving ? "Saving…" : "Save as Alert"}
+              </button>
+              {saveMsg && (
+                <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>
+              )}
             </Row>
           </div>
         </Card>
