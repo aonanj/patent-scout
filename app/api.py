@@ -1,25 +1,25 @@
 from __future__ import annotations
 
-from typing import Annotated, Sequence, Optional, Dict, Any, cast
+from collections.abc import Sequence
+import inspect
+import os
+from typing import Annotated, cast
 
-import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-import os
-import asyncio
-import inspect
+import psycopg
 
 from .db import get_conn, init_pool
-from .repository import get_patent_detail, search_hybrid, trend_volume
 from .embed import embed as embed_text
+from .repository import get_patent_detail, search_hybrid, trend_volume
 from .schemas import (
     PatentDetail,
+    SearchFilters,
     SearchRequest,
     SearchResponse,
     TrendPoint,
     TrendRequest,
     TrendResponse,
-    SearchFilters,
 )
 
 app = FastAPI(title="Patent Scout API", version="0.1.0")
@@ -71,7 +71,7 @@ async def post_trend(req: TrendRequest, conn: Conn) -> TrendResponse:
     points: list[TrendPoint] = [TrendPoint(bucket=b, count=int(c)) for b, c in rows]
     return TrendResponse(points=points)
 
-def _dtint(s: Optional[str]) -> Optional[int]:
+def _dtint(s: str | None) -> int | None:
     if not s:
         return None
     # accepts YYYY-MM-DD or YYYYMMDD
@@ -81,11 +81,11 @@ def _dtint(s: Optional[str]) -> Optional[int]:
 @app.get("/trend/volume")
 async def trend_volume_get(
     group_by: str = Query("month", pattern="^(month|cpc|assignee|applicant)$"),
-    q: Optional[str] = None,
-    assignee: Optional[str] = None,
-    cpc: Optional[str] = None,
-    date_from: Optional[str] = None,  # "YYYY-MM-DD" or "YYYYMMDD"
-    date_to: Optional[str] = None,
+    q: str | None = None,
+    assignee: str | None = None,
+    cpc: str | None = None,
+    date_from: str | None = None,  # "YYYY-MM-DD" or "YYYYMMDD"
+    date_to: str | None = None,
 ):
     filters = SearchFilters(
         assignee=assignee,
@@ -98,7 +98,7 @@ async def trend_volume_get(
     dsn = os.getenv("DATABASE_URL", "")
     async with (await psycopg.AsyncConnection.connect(dsn)) as conn:
         rows: list[tuple[str, int]] = await trend_volume(
-            conn, group_by=group_by, filters=filters
+            conn, group_by=group_by, filters=filters, keywords=q
         )
 
     return {"points": [{"date": k, "count": v} for (k, v) in rows]}

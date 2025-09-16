@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import os
-from typing import Final, Iterable
+from collections.abc import Iterable
+from typing import Final
 
 import psycopg
 from psycopg.rows import dict_row
@@ -83,11 +84,11 @@ async def search_hybrid(
                  title, abstract, assignee_name, pub_date, kind_code,
                  ts_rank_cd(
                    to_tsvector('english', coalesce(title,'') || ' ' || coalesce(abstract,'')),
-                   plainto_tsquery(%s)
+                   plainto_tsquery('english', %s)
                  ) AS kw_score
           FROM base
           WHERE to_tsvector('english', coalesce(title,'') || ' ' || coalesce(abstract,''))
-                @@ plainto_tsquery(%s)
+                @@ plainto_tsquery('english', %s)
         """
         with_parts.append(
             f"kw AS (SELECT *, ROW_NUMBER() OVER (ORDER BY kw_score DESC) AS kw_rank FROM ({kw_inner}) s)"
@@ -184,7 +185,11 @@ async def search_hybrid(
 
 
 async def trend_volume(
-    conn: psycopg.AsyncConnection, *, group_by: str, filters: SearchFilters
+    conn: psycopg.AsyncConnection,
+    *,
+    group_by: str,
+    filters: SearchFilters,
+    keywords: str | None = None,
 ) -> list[tuple[str, int]]:
     """Aggregate counts by month, CPC, or assignee."""
     args: list[object] = []
@@ -208,11 +213,19 @@ async def trend_volume(
     else:
         raise ValueError("invalid group_by")
 
+    # Optionally add keyword filter across title/abstract for performance
+    if keywords:
+        where_sql = (
+            where_sql
+            + " AND to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)"
+        )
+        args.append(keywords)
+
     sql = f"""
     WITH base AS (
-      SELECT {bucket_sql} AS bucket
-      FROM {from_sql}
-      WHERE {where_sql}
+        SELECT {bucket_sql} AS bucket
+        FROM {from_sql}
+        WHERE {where_sql}
     )
     SELECT bucket, COUNT(*) AS count
     FROM base
