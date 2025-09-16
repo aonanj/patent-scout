@@ -93,15 +93,15 @@ export default function Page() {
   const API = process.env.BACKEND_URL ?? "https://patent-scout.onrender.com";
 
   const buildFilterPayload = () => ({
-    q: qDebounced || undefined,
+    keywords: qDebounced || undefined,
     filters: {
       assignee: assignee || undefined,
       cpc: cpc || undefined,
       date_from: dateFrom || undefined,
       date_to: dateTo || undefined,
     },
-    page,
-    page_size: pageSize,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
   });
 
   const fetchSearch = useCallback(async () => {
