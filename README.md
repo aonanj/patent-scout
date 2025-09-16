@@ -1,6 +1,6 @@
 # Patent Scout
 
-Lightweight patent search and alerting using Postgres (Neon/Supabase), pgvector, FastAPI, and a Next.js frontend.
+Search, volume trend, and alerting on AI-related patents and publications using Postgres (Neon/Supabase), pgvector, FastAPI, and a Next.js frontend.
 
 - **Hybrid search**: full-text (Postgres GIN) + vector similarity (pgvector)
 - **ETL**: load patents from CSV or BigQuery export, generate embeddings (OpenAI or deterministic hash fallback), and build indexes
@@ -209,7 +209,7 @@ This approach increases storage and index time but keeps queries fast.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the AGPLv3 License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
