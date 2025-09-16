@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from typing import Annotated, Any, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+import contextlib
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psycopg
@@ -98,24 +99,36 @@ async def list_saved_queries(conn: Conn, owner_id: str | None = None):
 
 @app.post("/saved-queries")
 async def create_saved_query(req: SavedQueryCreate, conn: Conn):
-    sql = (
+    """Create a saved query, ensuring the owner exists to satisfy FK.
+
+    Some deployments enforce a foreign key saved_query.owner_id -> app_user(id).
+    We opportunistically insert the owner row if it doesn't exist.
+    """
+    insert_owner_sql = "INSERT INTO app_user (id) VALUES (%s) ON CONFLICT (id) DO NOTHING"
+    insert_sq_sql = (
         "INSERT INTO saved_query (owner_id, name, filters, semantic_query, schedule_cron, is_active) "
         "VALUES (%s,%s,%s,%s,%s,%s) RETURNING id"
     )
-    args = [
-        req.owner_id,
-        req.name,
-        Json(req.filters),
-        req.semantic_query,
-        req.schedule_cron,
-        req.is_active,
-    ]
     try:
         async with conn.cursor() as cur:
-            await cur.execute(sql, args)  # type: ignore[arg-type]
+            # Best-effort ensure owner exists; ignore if table missing
+            with contextlib.suppress(psycopg.errors.UndefinedTable):
+                await cur.execute(insert_owner_sql, [req.owner_id])  # type: ignore[arg-type]
+
+            await cur.execute(
+                insert_sq_sql,
+                [
+                    req.owner_id,
+                    req.name,
+                    Json(req.filters),
+                    req.semantic_query,
+                    req.schedule_cron,
+                    req.is_active,
+                ],
+            )  # type: ignore[arg-type]
             row = await cur.fetchone()
         return {"id": row[0] if row else None}
-    except psycopg.Error as e:  # unique violation etc.
+    except psycopg.Error as e:  # unique violation, FK errors, etc.
         raise HTTPException(status_code=400, detail=str(e).split("\n")[0]) from e
 
 
