@@ -128,7 +128,7 @@ WITH last_run AS (
   LEFT JOIN alert_event ae ON ae.saved_query_id = sq.id
   GROUP BY sq.id
 )
-SELECT p.id, p.title, p.pub_date
+SELECT p.pub_id, p.title, p.pub_date
 FROM patent p
 JOIN last_run lr ON lr.saved_query_id = $6
 {_where_clause()}
@@ -152,7 +152,7 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
     if count == 0:
         return 0
 
-    sample = [dict(id=r["id"], title=r["title"], pub_date=str(r["pub_date"])) for r in rows[:10]]
+    sample = [dict(id=r["pub_id"], title=r["title"], pub_date=str(r["pub_date"])) for r in rows[:10]]
 
     await conn.execute(
         "INSERT INTO alert_event(saved_query_id, result_count, results_sample) VALUES ($1,$2,$3)",
@@ -160,7 +160,7 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
     )
 
     name = sq["name"] or "Saved Query"
-    lines = [f"{r['pub_date']}  {r['id']}  {r['title']}" for r in sample]
+    lines = [f"{r['pub_date']}  {r['pub_id']}  {r['title']}" for r in sample]
     text = (
         f"Alert: {name}\n"
         f"Total new results: {count}\n\n"
@@ -171,7 +171,7 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
         f"<h3>Alert: {name}</h3>"
         f"<p>Total new results: <b>{count}</b></p>"
         "<ol>"
-        + "".join(f"<li>{r['pub_date']} &nbsp; <b>{r['id']}</b> — {r['title']}</li>" for r in sample)
+        + "".join(f"<li>{r['pub_date']} &nbsp; <b>{r['pub_id']}</b> — {r['title']}</li>" for r in sample)
         + "</ol><p>(Showing up to 10. See app for full list.)</p>"
     )
     await send_mailgun_email(sq["user_email"], f"Patent Scout Alert: {name}", text, html)

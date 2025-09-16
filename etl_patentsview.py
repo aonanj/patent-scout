@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-etl_bigquery_to_postgres.py
+etl_patentsview_to_postgres.py
 
-BigQuery → Postgres loader for Patent Scout MVP with integrated:
-- claims ingestion 
-- embeddings generation (OpenAI text-embedding-3-small) for title+abstract and claims
+PatentsView → Postgres loader for Patent Scout MVP with optional:
+- claims ingestion (PatentsView g_claim/pg_claim)
+- embeddings generation (OpenAI) for title+abstract and claims
 
 Idempotent:
 - Upsert into patent
@@ -21,109 +21,39 @@ import os
 import re
 import sys
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import TypeAlias
+from typing import Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple, TypeAlias
 
 import psycopg
 from dotenv import load_dotenv
-from google.cloud import bigquery
 from openai import OpenAI  # type: ignore
 from psycopg import Connection
 from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool  # type: ignore
-from tenacity import retry, stop_after_attempt, wait_random_exponential
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 # -----------------------
 # Configuration constants
 # -----------------------
-load_dotenv() 
+load_dotenv()
 
 AI_CPC_REGEX_DEFAULT = r"^(G06N|G06V|G06F17|G06F18|G06F40|G06F16/90|G06K9|G06T7|G10L|A61B|B60W|G05D)"
 
-PATENTSVIEW_BASE = "https://search.patentsview.org/api/v1"
-PV_TIMEOUT = 60
-PV_MAX_DOCS_PER_REQ = 200
-BQ_PAGE_SIZE = 5000
+PATENTSVIEW_BASE = os.getenv("PATENTSVIEW_BASE", "https://search.patentsview.org/api/v1")
+PV_PATENTS_ENDPOINT = os.getenv("PV_PATENTS_ENDPOINT", f"{PATENTSVIEW_BASE}/patents")
+PV_GCLAIM_ENDPOINT = os.getenv("PV_GCLAIM_ENDPOINT", f"{PATENTSVIEW_BASE}/g_claim")
+PV_PGCLAIM_ENDPOINT = os.getenv("PV_PGCLAIM_ENDPOINT", f"{PATENTSVIEW_BASE}/pg_claim")
+PV_TIMEOUT = int(os.getenv("PV_TIMEOUT", "60"))
+PV_PAGE_SIZE = int(os.getenv("PV_PAGE_SIZE", "200"))  # server may cap lower
+PV_API_KEY = os.getenv("PATENTSVIEW_API_KEY")  # optional
 
 EMB_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-EMB_DIM_HINT = 1024  # used only for DDL consistency; actual dim read from result length
-EMB_BATCH_SIZE = int(os.getenv("EMB_BATCH_SIZE", "80"))
-EMB_MAX_CHARS = int(os.getenv("EMB_MAX_CHARS", "20000"))  # simple guard for overlong inputs
+EMB_DIM_HINT = int(os.getenv("EMBEDDING_DIM_HINT", "1024"))  # hint only
+EMB_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "64"))
 
-# Derived model names to store multiple rows per pub_id without schema change
-MODEL_TA = f"{EMB_MODEL}|ta"
-MODEL_CLAIMS = f"{EMB_MODEL}|claims"
-
-# psycopg generics
 PgConn: TypeAlias = Connection[TupleRow]
-
-# -------------
-# SQL templates
-# -------------
-
-BQ_SQL_TEMPLATE = """
-DECLARE start_date INT64 DEFAULT CAST(REPLACE(@date_from, '-', '') AS INT64);
-DECLARE end_date   INT64 DEFAULT CAST(REPLACE(@date_to, '-', '') AS INT64);
-
-WITH base AS (
-  SELECT
-    p.publication_number    AS pub_id,
-    p.application_number_formatted AS application_number,
-    p.priority_date,
-    p.family_id,
-    p.kind_code,
-    p.publication_date    AS pub_date,
-    p.filing_date,
-    p.title_localized[SAFE_OFFSET(0)].text     AS title,
-    p.abstract_localized[SAFE_OFFSET(0)].text  AS abstract,
-    p.claims_localized[SAFE_OFFSET(0)].text    AS claims_text,
-    (SELECT an.name FROM UNNEST(p.assignee_harmonized) an WHERE an.name IS NOT NULL LIMIT 1) AS assignee_name,
-    ARRAY(SELECT iname.name FROM UNNEST(p.inventor_harmonized) iname WHERE iname.name IS NOT NULL) AS inventor_names,
-    ARRAY(
-      SELECT DISTINCT REPLACE(cx.code, ' ', '')
-      FROM UNNEST(p.cpc) AS cx
-      WHERE cx.code IS NOT NULL
-    ) AS cpc_codes
-  FROM `patents-public-data.patents.publications` AS p
-  WHERE p.country_code = 'US'
-    AND p.publication_date IS NOT NULL
-    AND p.publication_date >= start_date
-    AND p.publication_date <  end_date
-    AND NOT (p.publication_number LIKE 'USD%'  OR p.publication_number LIKE 'US-D%')  -- exclude design
-    AND NOT (p.publication_number LIKE 'USPP%' OR p.publication_number LIKE 'US-PP%')  -- exclude plant
-    AND EXISTS (
-      SELECT 1
-      FROM UNNEST(p.cpc) AS cx
-      WHERE cx.code IS NOT NULL AND REGEXP_CONTAINS(REPLACE(cx.code, ' ', ''), @cpc_regex)
-    )
-    AND (
-      REGEXP_CONTAINS(LOWER(COALESCE(p.title_localized[SAFE_OFFSET(0)].text, '')),
-                      r'(artificial intelligence|machine learning|machine-learning|neural network|neural-network)')
-      OR REGEXP_CONTAINS(LOWER(COALESCE(p.abstract_localized[SAFE_OFFSET(0)].text, '')),
-                         r'(artificial intelligence|machine learning|machine-learning|neural network|neural-network)')
-      OR REGEXP_CONTAINS(LOWER(COALESCE(p.claims_localized[SAFE_OFFSET(0)].text, '')),
-                         r'(artificial intelligence|machine learning|machine-learning|neural network|neural-network)')
-    )
-)
-SELECT
-  pub_id,
-  application_number,
-  priority_date,
-  family_id,
-  kind_code,
-  pub_date,
-  filing_date,
-  title,
-  abstract,
-  claims_text,
-  assignee_name,
-  inventor_names,
-  cpc_codes
-FROM base
-ORDER BY pub_date, pub_id
-"""
 
 UPSERT_SQL = """
 INSERT INTO patent (
@@ -169,7 +99,6 @@ ON CONFLICT (pub_id) DO UPDATE SET
     inventor_name     = COALESCE(EXCLUDED.inventor_name,     patent.inventor_name),
     cpc               = COALESCE(EXCLUDED.cpc,               patent.cpc)
 """
-
 INGEST_LOG_SQL = """
 INSERT INTO ingest_log (pub_id, stage, content_hash, detail, created_at)
 VALUES (%(pub_id)s, %(stage)s, %(content_hash)s, %(detail)s, NOW())
@@ -178,15 +107,12 @@ ON CONFLICT (pub_id, stage) DO UPDATE SET
   detail = EXCLUDED.detail,
   created_at = NOW();
 """
-
 UPDATE_CLAIMS_SQL = """
 UPDATE patent
 SET claims_text = %(claims_text)s,
     updated_at = NOW()
 WHERE id = %(id)s;
 """
-
-# Embeddings upsert; pass vector as text literal and cast
 UPSERT_EMBEDDINGS_SQL = """
 INSERT INTO patent_embeddings (pub_id, model, dim, embedding, created_at)
 VALUES (%(pub_id)s, %(model)s, %(dim)s, CAST(%(embedding)s AS vector), NOW())
@@ -195,14 +121,6 @@ DO UPDATE SET dim = EXCLUDED.dim,
               embedding = EXCLUDED.embedding,
               created_at = NOW();
 """
-
-SELECT_EXISTING_EMB_SQL = """
-SELECT pub_id, model
-FROM patent_embeddings
-WHERE pub_id = ANY(%(pub_ids)s)
-  AND model = ANY(%(models)s);
-"""
-
 # --------------
 # Data structures
 # --------------
@@ -210,21 +128,22 @@ WHERE pub_id = ANY(%(pub_ids)s)
 @dataclass(frozen=True)
 class PatentRecord:
     pub_id: str
-    application_number: str | None
-    priority_date: int | None
-    family_id: str | None
-    filing_date: int | None
-    kind_code: str | None
-    title: str | None
-    abstract: str | None
-    assignee_name: str | None
-    inventor_name: list[str]
+    application_number: Optional[str]
+    priority_date: Optional[int]
+    family_id: Optional[str]
+    filing_date: Optional[int]
+    kind_code: Optional[str]
+    title: Optional[str]
+    abstract: Optional[str]
+    assignee_name: Optional[str]
+    inventor_name: List[str]
     pub_date: int
-    cpc: Sequence[Mapping[str, str | None]]
-    claims_text: str | None
+    cpc: Sequence[Mapping[str, Optional[str]]]
+    claims_text: Optional[str]
 
 
 # -----------
+
 # Utilities
 # -----------
 
@@ -236,7 +155,7 @@ def _iso_to_date(s: str) -> date:
         return datetime.strptime(s, "%Y-%m-%d").date()
     return datetime.strptime(s, "%Y%m%d").date()
 
-def _parse_cpc_code(code: str) -> Mapping[str, str | None]:
+def _parse_cpc_code(code: str) -> Mapping[str, Optional[str]]:
     """
     Parse a CPC code like 'G06N3/08' into components.
     Returns dict with keys: section, class, subclass, group, subgroup.
@@ -262,7 +181,7 @@ def _parse_cpc_code(code: str) -> Mapping[str, str | None]:
         "subgroup": subgroup,
     }
 
-def _clean_claims(claims: str | None) -> str | None:
+def _clean_claims(claims: Optional[str]) -> Optional[str]:
     if not claims:
         return None
     claims_clean = None
@@ -314,8 +233,8 @@ def _to_record(row: bigquery.Row) -> PatentRecord:
     )
 
 
-def chunked(iterable: Iterable, size: int) -> Iterator[list]:
-    buf: list = []
+def chunked(iterable: Iterable, size: int) -> Iterator[List]:
+    buf: List = []
     for item in iterable:
         buf.append(item)
         if len(buf) >= size:
@@ -349,7 +268,7 @@ def pub_to_docnum(pub_id: str) -> str:
     return "".join(_DIGITS.findall(pub_id))
 
 
-def is_pregrant(kind_code: str | None) -> bool:
+def is_pregrant(kind_code: Optional[str]) -> bool:
     if not kind_code:
         return True
     return kind_code.upper().startswith("A")
@@ -363,7 +282,7 @@ def clamp_text(s: str, max_chars: int = EMB_MAX_CHARS) -> str:
     return s[: (cutoff if cutoff > 0 else max_chars)]
 
 
-def split_by_words(s: str, words_per_chunk: int = 900) -> list[str]:
+def split_by_words(s: str, words_per_chunk: int = 900) -> List[str]:
     """Approximate token-based chunking without external deps."""
     ws = s.split()
     return [" ".join(ws[i : i + words_per_chunk]) for i in range(0, len(ws), words_per_chunk)]
@@ -374,7 +293,7 @@ def vec_to_literal(v: Sequence[float]) -> str:
     return "[" + ",".join(f"{x:.8f}" for x in v) + "]"
 
 
-def average_vectors(rows: Sequence[Sequence[float]]) -> list[float]:
+def average_vectors(rows: Sequence[Sequence[float]]) -> List[float]:
     if not rows:
         return []
     dim = len(rows[0])
@@ -452,7 +371,278 @@ def upsert_batch(pool, records):
 
 
 
-def latest_watermark(conn_str: str) -> date | None:
+def latest_watermark(conn_str: str) -> Optional[date]:
+    sql = "SELECT max(pub_date) FROM patent;"
+    with psycopg.connect(conn_str) as conn, conn.cursor() as cur:
+        cur.execute(sql)
+        row = cur.fetchone()
+    int_wm = row[0] if row and row[0] is not None else None
+    print(f"Latest watermark from Postgres: {int_wm}", file=sys.stderr)
+    if int_wm is not None:
+        str_wm = str(int_wm)
+        dt_wm = datetime.strptime(str_wm, "%Y%m%d").date()
+    
+        return dt_wm
+
+# --------------------------
+
+
+# Minimal helpers preserved from original
+EMB_MAX_CHARS = 15000
+"A")
+
+
+def clamp_text(s: str, max_chars: int = EMB_MAX_CHARS) -> str:
+    if len(s) <= max_chars:
+        return s
+    # Prefer cutting at a whitespace boundary
+    cutoff = s.rfind(" ", 0, max_chars)
+    return s[: (cutoff if cutoff > 0 else max_chars)]
+
+
+def split_by_words(s: str, words_per_chunk: int = 900) -> List[str]:
+    """Approximate token-based chunking without external deps."""
+    ws = s.split()
+    return [" ".join(ws[i : i + words_per_chunk]) for i in range(0, len(ws), words_per_chunk)]
+
+
+def vec_to_literal(v: Sequence[float]) -> str:
+    # pgvector accepts '[v1,v2,...]' text literal
+    return "[" + ",".join(f"{x:.8f}" for x in v) + "]"
+
+
+def average_vectors(rows: Sequence[Sequence[float]]) -> List[float]:
+    if not rows:
+        return []
+    dim = len(rows[0])
+    acc = [0.0] * dim
+    for r in rows:
+        for i, x in enumerate(r):
+            acc[i] += float(x)
+    n = float(len(rows))
+    return [x / n for x in acc]
+
+
+# ----------------------
+# BigQuery query stage
+# ----------------------
+
+def query_bigquery(
+    client: bigquery.Client,
+    date_from: str,
+    date_to: str,
+    cpc_regex: str,
+) -> Iterator[PatentRecord]:
+    print(f"Querying BigQuery from {date_from} to {date_to} with CPC regex {cpc_regex}", file=sys.stderr)
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("date_from", "STRING", date_from),
+            bigquery.ScalarQueryParameter("date_to", "STRING", date_to),
+            bigquery.ScalarQueryParameter("cpc_regex", "STRING", cpc_regex),
+        ]
+    )
+    job = client.query(BQ_SQL_TEMPLATE, job_config=job_config)
+    for row in job.result(page_size=BQ_PAGE_SIZE):
+        yield _to_record(row)
+
+
+# ----------------------
+# Postgres upsert stage
+# ----------------------
+
+def upsert_batch(pool, records):
+    print("Upserting batch of", len(records), "records", file=sys.stderr)
+    CHUNK = 20  
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            for i in range(0, len(records), CHUNK):
+                chunk = records[i:i+CHUNK]
+       
+
+# ----------------------
+# PatentsView client
+# ----------------------
+
+def _pv_request(url: str, payload: Mapping) -> Mapping:
+    data = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if PV_API_KEY:
+        headers["x-api-key"] = PV_API_KEY
+    req = Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urlopen(req, timeout=PV_TIMEOUT) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except HTTPError as e:
+        raise RuntimeError(f"PatentsView HTTP {e.code}: {e.reason}") from e
+    except URLError as e:
+        raise RuntimeError(f"PatentsView network error: {e.reason}") from e
+
+def _first_text(arr: Optional[Sequence[Mapping]]) -> Optional[str]:
+    if not arr:
+        return None
+    for item in arr:
+        t = (item.get("text") or "").strip()
+        if t:
+            return t
+    return None
+
+def _pv_to_record(item: Mapping) -> PatentRecord:
+    # Support both PV and BigQuery-like shapes
+    pub_id = item.get("publication_number") or item.get("pub_id") or ""
+    app_no = item.get("application_number_formatted") or item.get("application_number")
+    prio = item.get("priority_date")
+    fam = item.get("family_id")
+    kind = item.get("kind_code")
+    pub_date = item.get("publication_date") or item.get("pub_date")
+    filing = item.get("filing_date")
+
+    title = item.get("title") or _first_text(item.get("title_localized")) or item.get("patent_title")
+    abstract = item.get("abstract") or _first_text(item.get("abstract_localized")) or item.get("patent_abstract")
+
+    assignee_name = None
+    ah = item.get("assignee_harmonized") or item.get("assignee") or []
+    if isinstance(ah, list) and ah:
+        nm = ah[0].get("name") if isinstance(ah[0], Mapping) else ah[0]
+        assignee_name = nm
+
+    inventor_names: List[str] = []
+    inv = item.get("inventor_harmonized") or item.get("inventor") or []
+    if isinstance(inv, list):
+        for v in inv:
+            nm = v.get("name") if isinstance(v, Mapping) else v
+            if nm:
+                inventor_names.append(nm)
+
+    cpc_structs: List[Mapping[str, Optional[str]]] = []
+    cpcs = item.get("cpc") or []
+    if isinstance(cpcs, list):
+        seen: set[str] = set()
+        for c in cpcs:
+            code = (c.get("code") if isinstance(c, Mapping) else None) or None
+            if code:
+                code = code.replace(" ", "")
+                if code not in seen:
+                    seen.add(code)
+                    cpc_structs.append(_parse_cpc_code(code))
+
+    return PatentRecord(
+        pub_id=str(pub_id),
+        application_number=app_no,
+        priority_date=int(prio) if prio else None,
+        family_id=str(fam) if fam else None,
+        filing_date=int(filing) if filing else None,
+        kind_code=kind,
+        title=title,
+        abstract=abstract,
+        assignee_name=assignee_name,
+        inventor_name=inventor_names,
+        pub_date=int(pub_date) if pub_date else 0,
+        cpc=cpc_structs,
+        claims_text=None,
+    )
+
+def query_patentsview(date_from: str, date_to: str, cpc_regex: str) -> Iterator[PatentRecord]:
+    # Server-side filters for date; client-side CPC regex filter to reduce complexity
+    page = 1
+    regex = re.compile(cpc_regex)
+    while True:
+        payload = {
+            "q": {
+                "_and": [
+                    {"publication_date": {"_gte": date_from.replace('-', '')}},
+                    {"publication_date": {"_lt": date_to.replace('-', '')}},
+                ]
+            },
+            "fields": [
+                "publication_number", "application_number_formatted", "priority_date", "family_id",
+                "kind_code", "publication_date", "filing_date", "title_localized", "abstract_localized",
+                "assignee_harmonized", "inventor_harmonized", "cpc.code"
+            ],
+            "sort": [{"publication_date": "asc"}, {"publication_number": "asc"}],
+            "page": page,
+            "per_page": PV_PAGE_SIZE,
+        }
+        resp = _pv_request(PV_PATENTS_ENDPOINT, payload)
+        docs = resp.get("data") or resp.get("patents") or []
+        if not docs:
+            break
+        for d in docs:
+            rec = _pv_to_record(d)
+            # CPC filter
+            if rec.cpc and any(regex.match("".join([p or '' for p in [c.get('section'), c.get('class'), c.get('subclass'), c.get('group'), c.get('subgroup')]])) for c in rec.cpc):
+                yield rec
+        meta = resp.get("meta") or {}
+        pages = meta.get("total_pages") or meta.get("pages") or None
+        page += 1
+        if pages and page > int(pages):
+            break
+
+def fetch_claims_text(pub_id: str, prefer_grant: bool = True) -> Optional[str]:
+    endpoints = []
+    if prefer_grant:
+        endpoints = [PV_GCLAIM_ENDPOINT, PV_PGCLAIM_ENDPOINT]
+    else:
+        endpoints = [PV_PGCLAIM_ENDPOINT, PV_GCLAIM_ENDPOINT]
+    for ep in endpoints:
+        try:
+            payload = {"q": {"publication_number": pub_id}, "fields": ["claim_text"]}
+            resp = _pv_request(ep, payload)
+            arr = resp.get("data") or resp.get("results") or []
+            if not arr:
+                continue
+            # Pick first non-empty claim_text
+            for it in arr:
+                text = it.get("claim_text") or it.get("text") or None
+                if text:
+                    return text
+        except Exception:
+            continue
+    return None
+
+# ----------------------
+# Postgres upsert stage
+# ----------------------
+
+def upsert_batch(pool, records):
+    print("Upserting batch of", len(records), "records", file=sys.stderr)
+    CHUNK = 20  
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            for i in range(0, len(records), CHUNK):
+                chunk = records[i:i+CHUNK]
+                rows = [{
+                    "pub_id": r.pub_id,
+                    "application_number": r.application_number,
+                    "priority_date": r.priority_date,
+                    "family_id": r.family_id,
+                    "filing_date": r.filing_date,
+                    "kind_code": r.kind_code,
+                    "pub_date": r.pub_date,
+                    "title": r.title,
+                    "abstract": r.abstract,
+                    "assignee_name": r.assignee_name,
+                    "inventor_name": json.dumps(list(r.inventor_name), ensure_ascii=False),
+                    "cpc": json.dumps(list(r.cpc), ensure_ascii=False),
+                    "claims_text": r.claims_text,
+                } for r in chunk]
+
+                try:
+                    cur.executemany(UPSERT_SQL, rows)  
+                    cur.executemany(INGEST_LOG_SQL, [{
+                        "pub_id": rec.pub_id,
+                        "stage": "inserted",
+                        "content_hash": content_hash(rec),
+                        "detail": json.dumps({"source": "bigquery"}, ensure_ascii=False),
+                    } for rec in chunk])
+                except Exception as e:
+                    print(f"Error upserting chunk starting with pub_id {chunk[0].pub_id}: {e}", file=sys.stderr)
+                    continue
+
+        conn.commit()
+
+
+
+def latest_watermark(conn_str: str) -> Optional[date]:
     sql = "SELECT max(pub_date) FROM patent;"
     with psycopg.connect(conn_str) as conn, conn.cursor() as cur:
         cur.execute(sql)
@@ -484,27 +674,25 @@ def select_existing_embeddings(pool: ConnectionPool[PgConn], pub_ids: Sequence[s
     return {(r[0], r[1]) for r in rows}
 
 
-def build_ta_input(r: PatentRecord) -> str | None:
+def build_ta_input(r: PatentRecord) -> Optional[str]:
     parts = [p for p in [r.title or "", r.abstract or ""] if p]
     if not parts:
         return None
     return clamp_text("\n\n".join(parts))
 
 
-def build_claims_inputs(r: PatentRecord) -> list[str]:
+def build_claims_inputs(r: PatentRecord) -> List[str]:
     if not r.claims_text:
         return []
     text = clamp_text(r.claims_text)
     return split_by_words(text, words_per_chunk=900)
 
 
-@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
-def embed_texts(client: OpenAI, texts: Sequence[str], model: str) -> list[list[float]]:
-    out: list[list[float]] = []
+def embed_texts(client: OpenAI, texts: Sequence[str], model: str) -> List[List[float]]:
+    out: List[List[float]] = []
     for batch in chunked(texts, EMB_BATCH_SIZE):
         resp = client.embeddings.create(model=model, input=list(batch))
         out.extend([d.embedding for d in resp.data])
-        time.sleep(5)  
     return out
 
 
@@ -519,9 +707,7 @@ def upsert_embeddings(pool: ConnectionPool[PgConn], rows: Sequence[dict]) -> Non
         print(f"Error upserting embeddings: {e}", file=sys.stderr)
 
 
-def ensure_embeddings_for_batch(
-    pool: ConnectionPool[PgConn], client: OpenAI, batch: Sequence[PatentRecord]
-) -> tuple[int, int]:
+def ensure_embeddings_for_batch(pool: ConnectionPool[PgConn], client: OpenAI, batch: Sequence[PatentRecord]) -> Tuple[int, int]:
     """Create embeddings for title+abstract and claims. Returns (upserts, total_targets)."""
     if not batch:
         return (0, 0)
@@ -531,11 +717,11 @@ def ensure_embeddings_for_batch(
 
     existing = select_existing_embeddings(pool, pub_ids, target_models)
 
-    rows: list[dict] = []
+    rows: List[dict] = []
     total_targets = 0
 
     # Title+Abstract embeddings
-    ta_inputs: list[tuple[str, str]] = []  # (pub_id, text)
+    ta_inputs: List[Tuple[str, str]] = []  # (pub_id, text)
     for r in batch:
         if (r.pub_id, MODEL_TA) in existing:
             continue
@@ -545,11 +731,11 @@ def ensure_embeddings_for_batch(
             total_targets += 1
     if ta_inputs:
         vectors = embed_texts(client, [t for _, t in ta_inputs], EMB_MODEL)
-        for (pub_id, _), vec in zip(ta_inputs, vectors, strict=True):
+        for (pub_id, _), vec in zip(ta_inputs, vectors):
             rows.append({"pub_id": pub_id, "model": MODEL_TA, "dim": len(vec), "embedding": vec_to_literal(vec)})
 
     # Claims embeddings (average of chunk vectors to fit schema)
-    claims_pub_chunks: list[tuple[str, list[str]]] = []
+    claims_pub_chunks: List[Tuple[str, List[str]]] = []
     for r in batch:
         if (r.pub_id, MODEL_CLAIMS) in existing:
             continue
@@ -559,8 +745,8 @@ def ensure_embeddings_for_batch(
             total_targets += 1
     if claims_pub_chunks:
         # Flatten for batching
-        flat_texts: list[str] = []
-        offsets: list[tuple[int, int]] = []  # start, end
+        flat_texts: List[str] = []
+        offsets: List[Tuple[int, int]] = []  # start, end
         start = 0
         for _, chunks in claims_pub_chunks:
             flat_texts.extend(chunks)
@@ -569,7 +755,7 @@ def ensure_embeddings_for_batch(
             start = end
         flat_vecs = embed_texts(client, flat_texts, EMB_MODEL)
         # Re-aggregate by pub
-        for (pub_id, _chunks), (s, e) in zip(claims_pub_chunks, offsets, strict=True):
+        for (pub_id, chunks), (s, e) in zip(claims_pub_chunks, offsets):
             vecs = flat_vecs[s:e]
             avg = average_vectors(vecs)
             if avg:
@@ -584,15 +770,23 @@ def ensure_embeddings_for_batch(
 # CLI / main
 # -----------
 
+
+
+def update_claims(pool: ConnectionPool[PgConn], pub_id: str, claims_text: str) -> bool:
+    with pool.connection() as conn, conn.cursor() as cur:
+        cur.execute("""UPDATE patent SET claims_text=%s, updated_at=NOW() WHERE pub_id=%s""", (claims_text, pub_id))
+        return cur.rowcount > 0
+
+
+# Replace BigQuery query with PatentsView query
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--date-from", help="YYYY-MM-DD; default=max(pub_date) or last 10 days")
     p.add_argument("--date-to", help="YYYY-MM-DD (exclusive); default=max(pub_date) + 10 days or today")
     p.add_argument("--batch-size", type=int, default=800, help="DB upsert batch size")
-    p.add_argument("--claims", action="store_true", help="Fetch and update claims_text")
+    p.add_argument("--claims", action="store_true", help="Fetch and update claims_text via PatentsView")
     p.add_argument("--embed", action="store_true", default=True, help="Generate embeddings for title+abstract and claims")
-    p.add_argument("--project", default=os.getenv("BQ_PROJECT", "patent-scout-etl"), help="BigQuery project id")
-    p.add_argument("--location", default=os.getenv("BQ_LOCATION", None), help="BigQuery location")
     p.add_argument("--dsn", default=os.getenv("PG_DSN", ""), help="Postgres DSN")
     p.add_argument("--dry-run", action="store_true", help="Do not write to Postgres")
     return p.parse_args()
@@ -601,9 +795,6 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    if not args.project:
-        print("BQ_PROJECT not set and --project not provided", file=sys.stderr)
-        return 2
     if not args.dsn:
         print("PG_DSN not set and --dsn not provided", file=sys.stderr)
         return 2
@@ -614,38 +805,27 @@ def main() -> int:
     if args.date_from:
         date_from = args.date_from
     else:
-        wm = latest_watermark(args.dsn)
-        date_from = wm.isoformat() if wm else (date.today() - timedelta(days=10)).isoformat()
-    print(f"Starting from watermark date {date_from}", file=sys.stderr)
+        # default: last known pub_date + 10 days or 10 days ago
+        # For simplicity here, default to 10 days ago
+        date_from = (date.today() - timedelta(days=10)).isoformat()
 
     if args.date_to:
         date_to = args.date_to
     else:
-        if args.date_from:
-            date_to = (date.fromisoformat(args.date_from) + timedelta(days=3)).isoformat()
-        else:
-            wm = latest_watermark(args.dsn)
-            date_to = (wm + timedelta(days=3)).isoformat() if wm else date.today().isoformat()
-    print(f"Loading up to date {date_to}", file=sys.stderr)
+        date_to = (date.fromisoformat(date_from) + timedelta(days=10)).isoformat()
 
-
-    # Clients
-    bq_client = bigquery.Client(project=args.project, location=args.location) if args.location else bigquery.Client(project=args.project)
-
-    pool = ConnectionPool[PgConn](
-        conninfo=args.dsn, 
-        max_size=4, 
-        kwargs={
-            "autocommit": False,
-            "sslmode": "require",
-            "prepare_threshold": None
-        }
+    pool: ConnectionPool[PgConn] = ConnectionPool(
+        conninfo=args.dsn,
+        max_size=4,
+        kwargs={"autocommit": False, "sslmode": "require"},
     )
 
-    oa_client = get_openai_client() if args.embed and not args.dry_run else None
+    oa_client: Optional[OpenAI] = None
+    if args.embed:
+        oa_client = get_openai_client()
 
-    # Stream → upsert → claims → embeddings
-    stream = query_bigquery(bq_client, date_from=date_from, date_to=date_to, cpc_regex=cpc_regex)
+    # Stream from PatentsView
+    stream = query_patentsview(date_from=date_from, date_to=date_to, cpc_regex=cpc_regex)
 
     total_rows = 0
     total_claims_updates = 0
@@ -661,12 +841,50 @@ def main() -> int:
         upsert_batch(pool, batch)
         total_rows += len(batch)
 
-        if args.embed and oa_client is not None:
-            print("Generating embeddings for batch", file=sys.stderr)
-            upserts, targets = ensure_embeddings_for_batch(pool, oa_client, batch)
-            total_emb_upserts += upserts
+        if args.claims:
+            total_claims_requested += len(batch)
+            updates = 0
+            for r in batch:
+                txt = fetch_claims_text(r.pub_id)
+                if not txt:
+                    continue
+                updated = update_claims(pool, r.pub_id, txt)
+                updates += 1 if updated else 0
+            total_claims_updates += updates
+
+        if args.embed and oa_client:
+            # title+abstract
+            ta_inputs = [(r.pub_id, build_ta_input(r)) for r in batch]
+            ta_inputs = [(pid, s) for pid, s in ta_inputs if s]
+            targets = len(ta_inputs)
+            to_embed = [s for _, s in ta_inputs]
+            vectors = embed_texts(oa_client, to_embed, EMB_MODEL)
+            now = datetime.utcnow().isoformat()
+            rows = [
+                {"pub_id": pid, "model": EMB_MODEL, "dim": EMB_DIM_HINT, "vector": json.dumps(vec), "created_at": now}
+                for (pid, _), vec in zip(ta_inputs, vectors)
+            ]
+            upsert_embeddings(pool, rows)
+            total_emb_upserts += len(rows)
             total_emb_targets += targets
-            print("Upserted embeddings for batch", file=sys.stderr)
+
+            # claims chunks
+            claim_inputs: List[Tuple[str, str]] = []
+            for r in batch:
+                for chunk in build_claims_inputs(r):
+                    claim_inputs.append((r.pub_id, chunk))
+            if claim_inputs:
+                vectors = embed_texts(oa_client, [s for _, s in claim_inputs], EMB_MODEL)
+                now = datetime.utcnow().isoformat()
+                rows = [
+                    {"pub_id": pid, "model": EMB_MODEL, "dim": EMB_DIM_HINT, "vector": json.dumps(vec), "created_at": now}
+                    for (pid, _), vec in zip(claim_inputs, vectors)
+                ]
+                upsert_embeddings(pool, rows)
+                total_emb_upserts += len(rows)
+                total_emb_targets += len(claim_inputs)
+
+        print("Processed batch", file=sys.stderr)
 
     print(
         f"Upserted {total_rows} records from {date_from} to {date_to}"
