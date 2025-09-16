@@ -16,9 +16,6 @@ Lightweight patent search and alerting using Postgres (Neon/Supabase), pgvector,
 ### Next.js Search UI
 ![Search UI](docs/screenshots/search-ui.png)
 
-### Save Alert UI
-![Save Alert](docs/screenshots/save-alert.png)
-
 ### FastAPI Swagger Docs
 ![API Docs](docs/screenshots/api-docs.png)
 
