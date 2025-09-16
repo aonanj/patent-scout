@@ -90,15 +90,31 @@ export default function Page() {
     [qDebounced, assignee, cpc, dateFrom, dateTo, page]
   );
 
+  const API = process.env.BACKEND_URL ?? "https://patent-scout.onrender.com";
+
+  const buildFilterPayload = () => ({
+    q: qDebounced || undefined,
+    filters: {
+      assignee: assignee || undefined,
+      cpc: cpc || undefined,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+    },
+    page,
+    page_size: pageSize,
+  });
+
   const fetchSearch = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = buildParams();
-      const res = await fetch(`/search?${params.toString()}`);
+      const res = await fetch(`${API}/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildFilterPayload()),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      // expected shape: { results: SearchHit[], total: number }
       setHits(data.results ?? data.items ?? []);
       setTotal(data.total ?? null);
     } catch (e: any) {
@@ -106,24 +122,31 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }, [buildParams]);
+  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, page, pageSize]);
+
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
     try {
-      const params = buildParams({ page: 1, page_size: 0 }); // not needed for trend
-      const res = await fetch(`/trend/volume?${params.toString()}`);
+      const p = new URLSearchParams();
+      if (qDebounced) p.set("q", qDebounced);
+      if (assignee) p.set("assignee", assignee);
+      if (cpc) p.set("cpc", cpc);
+      if (dateFrom) p.set("date_from", dateFrom);
+      if (dateTo) p.set("date_to", dateTo);
+      p.set("group_by", "month");
+
+      const res = await fetch(`${API}/trend/volume?${p.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      // expected shape: { points: [{ date, count }]} OR array
-      const pts: TrendPoint[] = data.points ?? data ?? [];
-      setTrend(pts);
+      setTrend(data.points ?? data ?? []);
     } catch {
       setTrend([]);
     } finally {
       setTrendLoading(false);
     }
-  }, [buildParams]);
+  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo]);
+
 
   // trigger on filter changes
   useEffect(() => {
