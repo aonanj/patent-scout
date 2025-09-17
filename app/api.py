@@ -150,24 +150,42 @@ async def delete_saved_query(id: str, conn: Conn):
     return {"deleted": deleted}
 
 
-@app.post("/trend/volume", response_model=TrendResponse)
-async def post_trend(req: TrendRequest, conn: Conn) -> TrendResponse:
+# app/api.py
+
+@app.get("/trend/volume", response_model=TrendResponse)
+async def get_trend(
+    conn: Conn,
+    group_by: str = Query(...),
+    q: str | None = Query(None),
+    assignee: str | None = Query(None),
+    cpc: str | None = Query(None),
+    date_from: int | None = Query(None),
+    date_to: int | None = Query(None),
+    semantic_query: str | None = Query(None),
+) -> TrendResponse:
     qv: list[float] | None = None
-    if req.semantic_query:
-        maybe = embed_text(req.semantic_query)
+    if semantic_query:
+        maybe = embed_text(semantic_query)
         if inspect.isawaitable(maybe):
             qv = cast(list[float], await maybe)
         else:
             qv = list(cast(Sequence[float], maybe))
 
+    filters = SearchFilters(
+        assignee=assignee,
+        cpc=cpc,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
     rows = await trend_volume(
         conn,
-        group_by=req.group_by,
-        filters=req.filters,
-        keywords=req.keywords,
+        group_by=group_by,
+        filters=filters,
+        keywords=q,
         query_vec=qv,
     )
-    points: list[TrendPoint] = [TrendPoint(bucket=b, count=int(c)) for b, c in rows]
+    points: list[TrendPoint] = [TrendPoint(bucket=str(b), count=int(c)) for b, c in rows]
     return TrendResponse(points=points)
 
 

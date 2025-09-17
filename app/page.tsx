@@ -200,13 +200,15 @@ export default function Page() {
     setTrendLoading(true);
     try {
       const token = await getAccessTokenSilently();
+      const dateToInt = (d: string) => (d ? parseInt(d.replace(/-/g, ""), 10) : undefined);
 
       const p = new URLSearchParams();
       if (qDebounced) p.set("q", qDebounced);
+      if (semanticDebounced) p.set("semantic_query", semanticDebounced);
       if (assigneeDebounced) p.set("assignee", assigneeDebounced);
       if (cpcDebounced) p.set("cpc", cpcDebounced);
-      if (dateFrom) p.set("date_from", dateFrom);
-      if (dateTo) p.set("date_to", dateTo);
+      if (dateFrom) p.set("date_from", dateToInt(dateFrom)!.toString());
+      if (dateTo) p.set("date_to", dateToInt(dateTo)!.toString());
       p.set("group_by", trendGroupBy);
 
       const res = await fetch(`/api/trend/volume?${p.toString()}`, {
@@ -323,7 +325,7 @@ export default function Page() {
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="sr-only">Patent Scout</h1>
-        <img src="/images/PatentScoutLogo.png" alt="Patent Scout" style={{ height: 75 }} />
+        <img className="w-auto h-5rem drop-shadow-lg hover:scale-110" src="/images/PatentScoutLogo.png" alt="Patent Scout" />
         <div>
           {isLoading && <span style={{fontSize: 12, color: '#64748b'}}>Loading session...</span>}
           {!isLoading && isAuthenticated && (
