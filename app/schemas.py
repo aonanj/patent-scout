@@ -38,6 +38,8 @@ class SearchResponse(BaseModel):
 class TrendRequest(BaseModel):
     group_by: Literal["month", "cpc", "assignee", "applicant"] = "month"
     filters: SearchFilters = Field(default_factory=SearchFilters)
+    semantic_query: str | None = None
+    keywords: str | None = None
 
 
 class TrendPoint(BaseModel):

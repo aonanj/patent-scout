@@ -307,7 +307,7 @@ export default function Page() {
       {!isLoading && !isAuthenticated && (
         <div style={overlayStyle}>
           <div style={overlayContentStyle}>
-            <h2 style={{ marginTop: 0, fontSize: 20, fontWeight: 600 }}>Patent Scout</h2><h3 style={{ margin: 0, fontSize: 14, fontWeight: 400 }}>presented by Phaethon Order LLC</h3>
+            <h2 style={{ marginTop: 0, fontSize: 20, fontWeight: 600 }}>Patent Scout</h2>
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 400 }}>presented by Phaethon Order LLC</h3>
             <p style={{ color: '#475569', marginBottom: 24 }}>Please log in or sign up to continue.</p>
             <button 
@@ -328,7 +328,7 @@ export default function Page() {
           {isLoading && <span style={{fontSize: 12, color: '#64748b'}}>Loading session...</span>}
           {!isLoading && isAuthenticated && (
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span>{user?.name}!</span>
+              <span>User: {user?.name}</span>
               <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })} style={secondaryBtn}>
                 Log out
               </button>

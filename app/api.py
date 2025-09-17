@@ -152,41 +152,23 @@ async def delete_saved_query(id: str, conn: Conn):
 
 @app.post("/trend/volume", response_model=TrendResponse)
 async def post_trend(req: TrendRequest, conn: Conn) -> TrendResponse:
-    rows = await trend_volume(conn, group_by=req.group_by, filters=req.filters)
+    qv: list[float] | None = None
+    if req.semantic_query:
+        maybe = embed_text(req.semantic_query)
+        if inspect.isawaitable(maybe):
+            qv = cast(list[float], await maybe)
+        else:
+            qv = list(cast(Sequence[float], maybe))
+
+    rows = await trend_volume(
+        conn,
+        group_by=req.group_by,
+        filters=req.filters,
+        keywords=req.keywords,
+        query_vec=qv,
+    )
     points: list[TrendPoint] = [TrendPoint(bucket=b, count=int(c)) for b, c in rows]
     return TrendResponse(points=points)
-
-def _dtint(s: str | None) -> int | None:
-    if not s:
-        return None
-    # accepts YYYY-MM-DD or YYYYMMDD
-    t = s.replace("-", "")
-    return int(t) if t.isdigit() and len(t) == 8 else None
-
-@app.get("/trend/volume")
-async def trend_volume_get(
-    group_by: str = Query("month", pattern="^(month|cpc|assignee|applicant)$"),
-    q: str | None = None,
-    assignee: str | None = None,
-    cpc: str | None = None,
-    date_from: str | None = None,  # "YYYY-MM-DD" or "YYYYMMDD"
-    date_to: str | None = None,
-):
-    filters = SearchFilters(
-        assignee=assignee,
-        cpc=cpc,
-        date_from=_dtint(date_from),
-        date_to=_dtint(date_to),
-    )
-
-    # Replace with your repo's pool/connection helper if you have one.
-    dsn = os.getenv("DATABASE_URL", "")
-    async with (await psycopg.AsyncConnection.connect(dsn)) as conn:
-        rows: list[tuple[str, int]] = await trend_volume(
-            conn, group_by=group_by, filters=filters, keywords=q
-        )
-
-    return {"points": [{"date": k, "count": v} for (k, v) in rows]}
 
 
 @app.get("/patent/{pub_id}", response_model=PatentDetail)

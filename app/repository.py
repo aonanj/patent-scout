@@ -192,53 +192,66 @@ async def search_hybrid(
     return total, items
 
 
+# File: app/repository.py
+
 async def trend_volume(
     conn: psycopg.AsyncConnection,
     *,
     group_by: str,
     filters: SearchFilters,
     keywords: str | None = None,
+    query_vec: Iterable[float] | None = None,
 ) -> list[tuple[str, int]]:
-    """Aggregate counts by month, CPC, or assignee."""
+    """Aggregate counts by month, CPC, or assignee, with optional keyword and vector filtering."""
     args: list[object] = []
     where_sql = _filters_sql(filters, args)
 
+    # Prepare the FROM and JOIN clauses
     if group_by == "month":
-        bucket_sql = "to_char(to_date(pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
+        bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
         from_sql = "patent p"
     elif group_by == "cpc":
         bucket_sql = (
             "( (c->>'section')"
-            " || (c->>'class')"
-            " || (c->>'subclass')"
-            " || COALESCE(c->>'group', '')"
-            " || COALESCE('/' || (c->>'subgroup'), '') )"
+            " || COALESCE(c->>'class', '')"
+            " )" # Simplified to section+class for better grouping
         )
         from_sql = "patent p, LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c"
     elif group_by == "assignee":
-        bucket_sql = "assignee_name"
+        bucket_sql = "p.assignee_name"
         from_sql = "patent p"
     else:
         raise ValueError("invalid group_by")
 
-    # Optionally add keyword filter across title/abstract for performance
+    join_sql = ""
+    # If a vector is provided, create a JOIN clause to filter by the top semantic matches
+    if query_vec is not None:
+        # Prepend the vector to the arguments list as it appears first in the combined SQL
+        args.insert(0, list(query_vec))
+        join_sql = f"""
+        JOIN (
+            SELECT pub_id FROM patent_embeddings
+            ORDER BY embedding <-> %s{_VEC_CAST}
+            LIMIT 5000
+        ) AS vector_matches ON p.pub_id = vector_matches.pub_id
+        """
+
     if keywords:
-        where_sql = (
-            where_sql
-            + " AND to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)"
-        )
+        where_sql += " AND to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)"
         args.append(keywords)
 
     sql = f"""
     WITH base AS (
         SELECT {bucket_sql} AS bucket
         FROM {from_sql}
+        {join_sql}
         WHERE {where_sql}
     )
     SELECT bucket, COUNT(*) AS count
     FROM base
+    WHERE bucket IS NOT NULL
     GROUP BY bucket
-    ORDER BY bucket ASC;
+    ORDER BY count DESC;
     """
 
     async with conn.cursor(row_factory=dict_row) as cur:
