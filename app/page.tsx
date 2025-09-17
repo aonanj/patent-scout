@@ -263,7 +263,7 @@ export default function Page() {
 
     if (match) {
       const [, country, year, serial, kindCode] = match;
-      const correctedSerial: string = '0${serial}';
+      const correctedSerial: string = `0${serial}`;
       return `${country}${year}${correctedSerial}${kindCode}`;
     }
     return cleanedId;
