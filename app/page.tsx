@@ -1,6 +1,7 @@
+// File: app/page.tsx
+
 "use client";
 import { useAuth0 } from "@auth0/auth0-react";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type SearchHit = {
@@ -10,7 +11,6 @@ type SearchHit = {
   assignee_name?: string;
   pub_date?: string | number;
   cpc_codes?: string | string[];
-  // add other fields as your /search returns them
 };
 
 type TrendPoint = { label: string; count: number };
@@ -54,11 +54,33 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Styles for the new login overlay
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0, 0, 0, 0.6)', // Semi-transparent background
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 1000, // Ensure it's on top of other content
+};
+
+const overlayContentStyle: React.CSSProperties = {
+  background: 'white',
+  padding: '40px',
+  borderRadius: '12px',
+  textAlign: 'center',
+  boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
+  maxWidth: '400px',
+  width: '90%',
+};
+
 export default function Page() {
   // auth
-  const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
-
-  const { getAccessTokenSilently } = useAuth0();
+  const { loginWithRedirect, logout, user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   
   // filters
   const [q, setQ] = useState("");
@@ -67,7 +89,7 @@ export default function Page() {
   const [cpc, setCpc] = useState("");
   const [dateFrom, setDateFrom] = useState(""); // YYYY-MM-DD
   const [dateTo, setDateTo] = useState("");
-  const [trendGroupBy, setTrendGroupBy] = useState<"month" | "cpc" | "assignee">("month");
+  const [trendGroupBy, setTrendGroupBy] = useState<"month" | "cpc" | "assignee">("cpc");
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -81,51 +103,16 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  // debounced search text to avoid chatty calls
+  // Debounce all free-text inputs to prevent API spam and race conditions
   const qDebounced = useDebounced(q);
-
-  // build shared query params
-  const buildParams = useCallback(
-    (overrides: Record<string, string | number | undefined> = {}) => {
-      const p = new URLSearchParams();
-      if (qDebounced) p.set("q", qDebounced);
-      if (assignee) p.set("assignee", assignee);
-      if (cpc) p.set("cpc", cpc);
-      if (dateFrom) p.set("date_from", dateFrom);
-      if (dateTo) p.set("date_to", dateTo);
-      p.set("page", String(overrides.page ?? page));
-      p.set("page_size", String(overrides.page_size ?? pageSize));
-      return p;
-    },
-    [qDebounced, assignee, cpc, dateFrom, dateTo, page]
-  );
-
-  const API = process.env.BACKEND_URL ?? "https://patent-scout.onrender.com";
-
-  const buildFilterPayload = () => {
-    const dateToInt = (dateString: string) => {
-      if (!dateString) return undefined;
-      return parseInt(dateString.replace(/-/g, ""), 10);
-    };
-
-    return {
-      keywords: qDebounced || undefined,
-      semantic_query: semantic || undefined,
-      filters: {
-        assignee: assignee || undefined,
-        cpc: cpc || undefined,
-        date_from: dateToInt(dateFrom),
-        date_to: dateToInt(dateTo),
-      },
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    };
-  };
+  const semanticDebounced = useDebounced(semantic);
+  const assigneeDebounced = useDebounced(assignee);
+  const cpcDebounced = useDebounced(cpc);
 
   // Save current query as an alert in saved_query table via API route
   const saveAsAlert = useCallback(async () => {
     try {
-      const defaultName = qDebounced || assignee || cpc || "My Alert";
+      const defaultName = qDebounced || assigneeDebounced || cpcDebounced || "My Alert";
       const name = window.prompt("Alert name", defaultName);
       if (!name) return;
 
@@ -138,12 +125,12 @@ export default function Page() {
         name,
         filters: {
           keywords: qDebounced || null,
-          assignee: assignee || null,
-          cpc: cpc || null,
+          assignee: assigneeDebounced || null,
+          cpc: cpcDebounced || null,
           date_from: dateFrom || null,
           date_to: dateTo || null,
         },
-        semantic_query: null,
+        semantic_query: semanticDebounced || null, 
         schedule_cron: null,
         is_active: true,
       };
@@ -168,32 +155,46 @@ export default function Page() {
     } finally {
       setSaving(false);
     }
-  }, [qDebounced, assignee, cpc, dateFrom, dateTo, getAccessTokenSilently]);
+  }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, getAccessTokenSilently]);
 
   const fetchSearch = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const token = await getAccessTokenSilently();
-      const res = await fetch(`${API}/search`, {
+      const dateToInt = (d: string) => d ? parseInt(d.replace(/-/g, ""), 10) : undefined;
+
+      const payload = {
+        keywords: qDebounced || undefined,
+        semantic_query: semanticDebounced || undefined,
+        filters: {
+          assignee: assigneeDebounced || undefined,
+          cpc: cpcDebounced || undefined,
+          date_from: dateToInt(dateFrom),
+          date_to: dateToInt(dateTo),
+        },
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      };
+
+      const res = await fetch(`/api/search`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(buildFilterPayload()),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setHits(data.results ?? data.items ?? []);
+      setHits(data.items ?? []);
       setTotal(data.total ?? null);
     } catch (e: any) {
       setError(e?.message ?? "search failed");
     } finally {
       setLoading(false);
     }
-  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, page, pageSize, getAccessTokenSilently]);
-
+  }, [getAccessTokenSilently, page, pageSize, qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
@@ -202,13 +203,13 @@ export default function Page() {
 
       const p = new URLSearchParams();
       if (qDebounced) p.set("q", qDebounced);
-      if (assignee) p.set("assignee", assignee);
-      if (cpc) p.set("cpc", cpc);
+      if (assigneeDebounced) p.set("assignee", assigneeDebounced);
+      if (cpcDebounced) p.set("cpc", cpcDebounced);
       if (dateFrom) p.set("date_from", dateFrom);
       if (dateTo) p.set("date_to", dateTo);
       p.set("group_by", trendGroupBy);
 
-      const res = await fetch(`${API}/trend/volume?${p.toString()}`, {
+      const res = await fetch(`/api/trend/volume?${p.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -217,9 +218,7 @@ export default function Page() {
       const data = await res.json();
       const raw: Array<Record<string, any>> = (Array.isArray(data) ? data : data?.points) || [];
 
-      // transform according to groupBy
       const getKey = (r: Record<string, any>): string => {
-        // Prefer 'bucket' but fall back to common alternative fields
         const k = r.bucket ?? r.date ?? r.label ?? r.key ?? r.cpc ?? r.assignee ?? r.name ?? null;
         return k == null ? "" : String(k);
       };
@@ -231,13 +230,11 @@ export default function Page() {
           .sort((a, b) => a.label.localeCompare(b.label));
         setTrend(points);
       } else if (trendGroupBy === "cpc") {
-        // Aggregate to CPC section+class only: first 3 chars like G06
         const agg = new Map<string, number>();
         for (const r of raw) {
           const bucket = getKey(r);
-          const sc = bucket.slice(0, 3).toUpperCase();
-          if (!sc) continue;
-          agg.set(sc, (agg.get(sc) || 0) + (Number(r.count) || 0));
+          if (!bucket) continue;
+          agg.set(bucket, (agg.get(bucket) || 0) + (Number(r.count) || 0));
         }
         const sorted = Array.from(agg.entries())
           .map(([label, count]) => ({ label, count }))
@@ -247,7 +244,6 @@ export default function Page() {
         const finalPoints = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
         setTrend(finalPoints);
       } else {
-        // assignee: top 10, rest grouped under "Other"
         const itemsAll = raw.map((r) => ({ key: getKey(r), count: Number(r.count) || 0 }));
         const unknownSum = itemsAll.filter((i) => !i.key).reduce((acc, i) => acc + i.count, 0);
         const known = itemsAll.filter((i) => i.key).map((i) => ({ label: i.key as string, count: i.count }));
@@ -263,48 +259,37 @@ export default function Page() {
     } finally {
       setTrendLoading(false);
     }
-  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, trendGroupBy, getAccessTokenSilently]);
+  }, [getAccessTokenSilently, qDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, trendGroupBy]);
 
-
-  // trigger on filter changes
   useEffect(() => {
     setPage(1);
-  }, [qDebounced, assignee, cpc, dateFrom, dateTo]);
+  }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
 
   useEffect(() => {
-    fetchSearch();
-    fetchTrend();
-  }, [page, fetchSearch, fetchTrend]);
+    if (isAuthenticated) {
+        fetchSearch();
+        fetchTrend();
+    }
+  }, [page, fetchSearch, fetchTrend, isAuthenticated]);
 
-  // simple pagination controls
   const totalPages = useMemo(() => {
-    if (!total) return null;
+    if (total === null) return null;
     return Math.max(1, Math.ceil(total / pageSize));
-  }, [total]);
+  }, [total, pageSize]);
 
-  /**
- * Formats a patent publication number for a Google Patents URL,
-   * correcting an issue where a leading zero is missing from the serial number.
-   * e.g., 'US2025049352A1' becomes 'US20250049352A1'
-   *
-   * @param {string} pubId The publication number from your database.
-   * @returns {string} A URL-safe, formatted publication number.
-   */
   interface GooglePatentIdRegexGroups extends RegExpMatchArray {
     0: string;
-    1: string; // country
-    2: string; // year
-    3: string; // serial
-    4: string; // kindCode
+    1: string;
+    2: string;
+    3: string;
+    4: string;
   }
 
   const formatGooglePatentId = (pubId: string): string => {
     if (!pubId) return "";
-    
     const cleanedId: string = pubId.replace(/[- ]/g, "");
     const regex: RegExp = /^(US)(\d{4})(\d{6})([A-Z]\d{1,2})$/;
     const match: GooglePatentIdRegexGroups | null = cleanedId.match(regex) as GooglePatentIdRegexGroups | null;
-
     if (match) {
       const [, country, year, serial, kindCode] = match;
       const correctedSerial: string = `0${serial}`;
@@ -313,19 +298,34 @@ export default function Page() {
     return cleanedId;
   };
 
-  // simple date helpers
   const today = useRef<string>(new Date().toISOString().slice(0, 10)).current;
 
   return (
     <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
+      
+      {/* Login Overlay */}
+      {!isLoading && !isAuthenticated && (
+        <div style={overlayStyle}>
+          <div style={overlayContentStyle}>
+            <h2 style={{ marginTop: 0, fontSize: 20, fontWeight: 600 }}>Patent Scout</h2><h3 style={{ margin: 0, fontSize: 14, fontWeight: 400 }}>presented by Phaethon Order LLC</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 400 }}>presented by Phaethon Order LLC</h3>
+            <p style={{ color: '#475569', marginBottom: 24 }}>Please log in or sign up to continue.</p>
+            <button 
+              onClick={() => loginWithRedirect()} 
+              style={{ ...primaryBtn, padding: '0 24px', height: 44, fontSize: 16 }}
+            >
+              Log In / Sign Up
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ margin: 0, fontSize: 22 }}>Patent Scout (for AI-related patents & publications)</h1>
+        <h1 className="sr-only">Patent Scout</h1>
+        <img src="/images/PatentScoutLogo.png" alt="Patent Scout" style={{ height: 75 }} />
         <div>
-          {isLoading && <p>Loading...</p>}
-          {!isLoading && !isAuthenticated && (
-            <button onClick={() => loginWithRedirect()} style={primaryBtn}>Log in</button>
-          )}
+          {isLoading && <span style={{fontSize: 12, color: '#64748b'}}>Loading session...</span>}
           {!isLoading && isAuthenticated && (
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span>{user?.name}!</span>
@@ -423,6 +423,7 @@ export default function Page() {
               <button
                 onClick={() => {
                   setQ("");
+                  setSemantic("");
                   setAssignee("");
                   setCpc("");
                   setDateFrom("");
@@ -434,7 +435,7 @@ export default function Page() {
                 Reset
               </button>
 
-              <button onClick={saveAsAlert} disabled={saving} style={secondaryBtn} title="Save current filters as an alert">
+              <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
                 {saving ? "Saving…" : "Save as Alert"}
               </button>
               {saveMsg && (
@@ -474,9 +475,9 @@ export default function Page() {
           <Row>
             <h2 style={{ margin: 0, fontSize: 16 }}>Results</h2>
             {loading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading…</span>}
-            {typeof total === "number" && (
+            {total !== null && (
               <span style={{ marginLeft: "auto", fontSize: 12, color: "#334155" }}>
-                {total} total
+                {total.toLocaleString()} total
               </span>
             )}
           </Row>
@@ -553,7 +554,6 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   const h = height - padding * 2;
 
   if (groupBy === "month") {
-    // time-series line chart
     const parsed = useMemo(() => {
       return data
         .map((d) => ({
@@ -566,6 +566,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
     }, [data]);
 
     const [minX, maxX, minY, maxY] = useMemo(() => {
+      if (parsed.length === 0) return [0, 0, 0, 0];
       const xs = parsed.map((d) => d.x);
       const ys = parsed.map((d) => d.y);
       return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
@@ -579,7 +580,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
       return parsed
         .map((d, i) => `${i === 0 ? "M" : "L"} ${scaleX(d.x)} ${scaleY(d.y)}`)
         .join(" ");
-    }, [parsed]);
+    }, [parsed, scaleX, scaleY]);
 
     const yTicks = 4;
     const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>
@@ -620,7 +621,6 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
     );
   }
 
-  // categorical bar chart for CPC / Assignee
   const categories = data.map((d) => ({ label: d.label, y: Number(d.count) || 0 }));
   const maxY = Math.max(1, ...categories.map((c) => c.y));
   const yTicks = 4;
@@ -630,8 +630,6 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   const slot = w / n;
   const barWidth = Math.max(18, slot * 0.6);
   const scaleY = (y: number) => padding + h - (y / maxY) * h;
-
-  // Add extra bottom margin for long rotated labels
   const extraBottom = 40;
   const viewH = height + extraBottom;
 
@@ -644,7 +642,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
         return (
           <g key={idx}>
             <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#f1f5f9" />
-            <text x={6} y={y + 4} fontSize="10" fill="#64748b">{v}</text>
+            <text x={6} y={y + 4} fontSize="10" fill="#64748b">{v.toLocaleString()}</text>
           </g>
         );
       })}
@@ -667,7 +665,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
               {groupBy === "assignee" ? truncate(c.label, 14) : c.label}
             </text>
             <text x={xCenter} y={y - 4} fontSize="10" fill="#334155" textAnchor="middle">
-              {c.y}
+              {c.y.toLocaleString()}
             </text>
           </g>
         );
@@ -728,7 +726,6 @@ function truncate(s: string, n: number) {
 }
 
 function formatDate(v: string | number) {
-  // accepts "YYYYMMDD", ISO string, or millis
   const s = String(v);
   let d: Date;
   if (/^\d{8}$/.test(s)) {
