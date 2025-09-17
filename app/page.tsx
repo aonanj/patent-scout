@@ -247,21 +247,17 @@ export default function Page() {
         setTrend(finalPoints);
       } else {
         const itemsAll = raw.map((r) => ({ key: getKey(r), count: Number(r.count) || 0 }));
-        const unknownSum = itemsAll.filter((i) => !i.key).reduce((acc, i) => acc + i.count, 0);
         const known = itemsAll.filter((i) => i.key).map((i) => ({ label: i.key as string, count: i.count }));
         const sorted = known.filter((p) => p.count > 0).sort((a, b) => b.count - a.count);
-        const top = sorted.slice(0, 10);
-        const restKnown = sorted.slice(10).reduce((acc, x) => acc + x.count, 0);
-        const restSum = restKnown + unknownSum;
-        const finalPoints = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
-        setTrend(finalPoints);
+        const top = sorted.slice(0, 15);
+        setTrend(top);
       }
     } catch {
       setTrend([]);
     } finally {
       setTrendLoading(false);
     }
-  }, [getAccessTokenSilently, qDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, trendGroupBy]);
+  }, [getAccessTokenSilently, qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, trendGroupBy]);
 
   useEffect(() => {
     setPage(1);
@@ -632,7 +628,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   const slot = w / n;
   const barWidth = Math.max(18, slot * 0.6);
   const scaleY = (y: number) => padding + h - (y / maxY) * h;
-  const extraBottom = 40;
+  const extraBottom = 60;
   const viewH = height + extraBottom;
 
   return (
@@ -658,8 +654,8 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
             <rect x={x} y={y} width={barWidth} height={barH} fill="#0ea5e9" />
             <text
               x={xCenter}
-              y={height - padding + 20}
-              fontSize="10"
+              y={height - padding + 25}
+              fontSize="9"
               fill="#64748b"
               textAnchor="end"
               transform={`rotate(-35 ${xCenter} ${height - padding + 20})`}
