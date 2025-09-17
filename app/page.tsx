@@ -56,6 +56,7 @@ function Card({ children }: { children: React.ReactNode }) {
 export default function Page() {
   // filters
   const [q, setQ] = useState("");
+  const [semantic, setSemantic] = useState("");
   const [assignee, setAssignee] = useState("");
   const [cpc, setCpc] = useState("");
   const [dateFrom, setDateFrom] = useState(""); // YYYY-MM-DD
@@ -96,6 +97,7 @@ export default function Page() {
 
   const buildFilterPayload = () => ({
     keywords: qDebounced || undefined,
+    semantic_query: semantic || undefined,
     filters: {
       assignee: assignee || undefined,
       cpc: cpc || undefined,
@@ -248,7 +250,17 @@ export default function Page() {
           <div style={{ display: "grid", gap: 12 }}>
             <Row>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="q">Search</Label>
+                <Label htmlFor="semantic">Semantic Query</Label>
+                <input
+                  id="semantic"
+                  value={semantic}
+                  onChange={(e) => setSemantic(e.target.value)}
+                  placeholder="Describe the relevant AI technology"
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="q">Keywords</Label>
                 <input
                   id="q"
                   value={q}

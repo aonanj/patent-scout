@@ -3,8 +3,8 @@
 Search, volume trend, and alerting on AI-related patents and publications using Postgres (Neon/Supabase), pgvector, FastAPI, and a Next.js frontend.
 
 - **Hybrid search**: full-text (Postgres GIN) + vector similarity (pgvector)
-- **ETL**: load patents from CSV or BigQuery export, generate embeddings (OpenAI or deterministic hash fallback), and build indexes
-- **FastAPI backend**: `/search`, `/saved-queries`, `/alerts`
+- **ETL**: directly query BigQuery patents dataset, generate embeddings (OpenAI or deterministic hash fallback), and build indexes
+- **FastAPI backend**: `/search`, `/saved-queries`, `/trend/volume`
 - **Alerts runner**: scheduled job sends email digests via Mailgun
 - **Frontend**: Next.js app (App Router) with `/api/search` and `/api/saved-queries` proxy routes, and a simple search + “Save as Alert” UI
 - **Deployments**: Render (Web Service) and Vercel. See [https://patent-scout.vercel.app/](https://patent-scout.vercel.app/)
@@ -38,14 +38,15 @@ Search, volume trend, and alerting on AI-related patents and publications using 
 
 ## Requirements
 
-- Python 3.11+ (project uses modern typing and was tested on 3.13+)
+- Python 3.12+ (project uses modern typing and was tested on 3.13+)
 - A Postgres database with `pgvector` (Neon or Supabase recommended)
-- Node.js 18+ and Next.js 13+ (for frontend)
+- Node.js 18+ and Next.js 15+ (for frontend)
 
 Python packages (see `pyproject.toml` / `requirements.txt`):
-- Runtime: `fastapi`, `uvicorn`, `psycopg[binary,pool]` (or `asyncpg`), `pydantic`, `httpx`, `python-dotenv`
-- ETL: `psycopg2-binary` or `psycopg[binary]`, `tqdm`
-- Optional: `openai` (for real embeddings)
+- Runtime: `fastapi`, `uvicorn`, `psycopg[binary,pool]`, `pydantic`, `httpx`, `python-dotenv`
+- ETL: `psycopg2-binary`, `google-cloud-bigquery`, `tqdm`, `tenacity`, `openai`
+- Alerts: `asyncpg`, `aiosmtplib`
+- Optional: `openai` (for embeddings)
 
 ---
 
@@ -79,31 +80,24 @@ Optional Next.js:
 
 ## ETL (Load patents)
 
-Export from BigQuery:
+The ETL script directly queries Google BigQuery's public patents dataset and loads into Postgres.
 
-```sql
-SELECT
-  publication_number AS id,
-  title_localized[SAFE_OFFSET(0)].text AS title,
-  abstract_localized[SAFE_OFFSET(0)].text AS abstract,
-  assignee_harmonized[SAFE_OFFSET(0)].name AS assignee,
-  CAST(publication_date AS STRING) AS pub_date,
-  STRING_AGG(DISTINCT c.code, ';' ORDER BY c.code) AS cpc_codes
-FROM `patents-public-data.patents.publications`
-LEFT JOIN UNNEST(cpc) AS c
-WHERE country_code = 'US'
-  AND publication_date >= 20240101
-GROUP BY id, title, abstract, assignee, pub_date
-LIMIT 5000;
-```
-
-Save as `us_patents_with_cpc.csv`.
+Prerequisites:
+- Google Cloud BigQuery access (set `BQ_PROJECT` env var or `--project`)
+- Postgres database with `pgvector` extension
 
 Run ETL:
 
 ```bash
-python etl_patents_neon.py --csv us_patents_with_cpc.csv --limit 5000 --provider openai
+python etl.py --project your-bigquery-project --dsn "postgresql://user:pass@host/db" --date-from 2024-01-01 --date-to 2024-01-31
 ```
+
+Options:
+- `--date-from` / `--date-to`: Date range (YYYY-MM-DD)
+- `--embed`: Generate embeddings (requires OpenAI API key)
+- `--claims`: Include claims text in ingestion
+- `--batch-size`: Batch size for upserts (default 800)
+- `--dry-run`: Preview without writing to DB
 
 - Upserts into `patent` + `patent_embeddings`
 - Creates GIN full-text index for title/abstract, CPC jsonb GIN index, and vector index for embeddings when possible
@@ -125,8 +119,8 @@ Endpoints:
 - `GET /saved-queries` — list
 - `POST /saved-queries` — create
 - `DELETE /saved-queries/{id}` — delete
-- `GET /alerts` — list recent alert events
-- `GET /health` — health check
+- `GET /trend/volume` — volume trends
+- `GET /patent/{pub_id}` — patent details
 - `/docs` — Swagger UI
 
 ---
@@ -136,8 +130,25 @@ Endpoints:
 Schema:
 
 ```sql
-CREATE TABLE saved_query (... cpc jsonb ...);
-CREATE TABLE alert_event (...);
+CREATE TABLE saved_query (
+  id           bigserial PRIMARY KEY,
+  owner_id     text NOT NULL,
+  name         text NOT NULL,
+  filters      jsonb,    -- SearchFilters as JSON
+  semantic_query text,
+  schedule_cron text,
+  is_active    boolean DEFAULT true,
+  created_at   timestamptz DEFAULT now(),
+  updated_at   timestamptz DEFAULT now()
+);
+
+CREATE TABLE alert_event (
+  id              bigserial PRIMARY KEY,
+  saved_query_id  bigint REFERENCES saved_query(id) ON DELETE CASCADE,
+  created_at      timestamptz DEFAULT now(),
+  result_count    int,
+  results_sample  jsonb
+);
 ```
 
 Run manually:
