@@ -95,18 +95,25 @@ export default function Page() {
 
   const API = process.env.BACKEND_URL ?? "https://patent-scout.onrender.com";
 
-  const buildFilterPayload = () => ({
-    keywords: qDebounced || undefined,
-    semantic_query: semantic || undefined,
-    filters: {
-      assignee: assignee || undefined,
-      cpc: cpc || undefined,
-      date_from: dateFrom || undefined,
-      date_to: dateTo || undefined,
-    },
-    limit: pageSize,
-    offset: (page - 1) * pageSize,
-  });
+  const buildFilterPayload = () => {
+    const dateToInt = (dateString: string) => {
+      if (!dateString) return undefined;
+      return parseInt(dateString.replace(/-/g, ""), 10);
+    };
+
+    return {
+      keywords: qDebounced || undefined,
+      semantic_query: semantic || undefined,
+      filters: {
+        assignee: assignee || undefined,
+        cpc: cpc || undefined,
+        date_from: dateToInt(dateFrom),
+        date_to: dateToInt(dateTo),
+      },
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    };
+  };
 
   // Save current query as an alert in saved_query table via API route
   const saveAsAlert = useCallback(async () => {
