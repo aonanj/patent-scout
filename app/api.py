@@ -1,22 +1,22 @@
 from __future__ import annotations
 
+import contextlib
 import inspect
 import os
 from collections.abc import Sequence
 from typing import Annotated, Any, cast
 
-from fastapi import Depends, FastAPI, HTTPException, Query
-import contextlib
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import psycopg
+from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
+from pydantic import BaseModel
 
+from .auth import get_current_user
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
 from .repository import get_patent_detail, search_hybrid, trend_volume
-
 from .schemas import (
     PatentDetail,
     SearchFilters,
@@ -29,6 +29,7 @@ from .schemas import (
 
 app = FastAPI(title="Patent Scout API", version="0.1.0")
 Conn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
+User = Annotated[dict, Depends(get_current_user)]
 origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()] or [
     "http://localhost:3000",
     "https://patent-scout.onrender.com",
@@ -72,7 +73,6 @@ async def post_search(req: SearchRequest, conn: Conn) -> SearchResponse:
 
 # ----------------------------- Saved Queries -----------------------------
 class SavedQueryCreate(BaseModel):
-    owner_id: str
     name: str
     filters: dict[str, Any]
     semantic_query: str | None = None
@@ -81,30 +81,39 @@ class SavedQueryCreate(BaseModel):
 
 
 @app.get("/saved-queries")
-async def list_saved_queries(conn: Conn, owner_id: str | None = None):
+async def list_saved_queries(conn: Conn, user: User):
+
+    owner_id = user.get("sub")
+    if owner_id is None:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+    
+
+
     sql = (
         "SELECT id, owner_id, name, filters, semantic_query, schedule_cron, is_active, created_at, updated_at "
         "FROM saved_query"
+        "WHERE owner_id = %s "
+        "ORDER BY created_at DESC NULLS LAST, name ASC"
     )
-    args: list[object] = []
-    if owner_id:
-        sql += " WHERE owner_id = %s"
-        args.append(owner_id)
-    sql += " ORDER BY created_at DESC NULLS LAST, name ASC"
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(sql, args)  # type: ignore[arg-type]
+        await cur.execute(sql, [owner_id])  # type: ignore[arg-type]
         rows = await cur.fetchall()
     return {"items": rows}
 
 
 @app.post("/saved-queries")
-async def create_saved_query(req: SavedQueryCreate, conn: Conn):
+async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
     """Create a saved query, ensuring the owner exists to satisfy FK.
 
     Some deployments enforce a foreign key saved_query.owner_id -> app_user(id).
     We opportunistically insert the owner row if it doesn't exist.
     """
+    owner_id = user.get("sub")
+    if owner_id is None:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+    
     insert_owner_sql = "INSERT INTO app_user (id) VALUES (%s) ON CONFLICT (id) DO NOTHING"
+
     insert_sq_sql = (
         "INSERT INTO saved_query (owner_id, name, filters, semantic_query, schedule_cron, is_active) "
         "VALUES (%s,%s,%s,%s,%s,%s) RETURNING id"
@@ -118,7 +127,7 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn):
             await cur.execute(
                 insert_sq_sql,
                 [
-                    req.owner_id,
+                    owner_id,
                     req.name,
                     Json(req.filters),
                     req.semantic_query,

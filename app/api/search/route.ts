@@ -4,13 +4,23 @@ import { NextRequest } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    
+    // 1. Get the Authorization header from the incoming request
+    const authHeader = req.headers.get('authorization');
 
-    // Send to FastAPI backend
+    // 2. Prepare headers for the backend request
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+    if (authHeader) {
+      headers.append("Authorization", authHeader);
+    }
+
+    // 3. Send to FastAPI backend with the new headers
     const resp = await fetch(`${process.env.BACKEND_URL}/search`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: headers, // Use the prepared headers
       body: JSON.stringify(body),
-      cache: "no-store", // always fresh
+      cache: "no-store",
     });
 
     const text = await resp.text();

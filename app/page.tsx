@@ -1,4 +1,5 @@
 "use client";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -54,6 +55,11 @@ function Card({ children }: { children: React.ReactNode }) {
 }
 
 export default function Page() {
+  // auth
+  const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
+
+  const { getAccessTokenSilently } = useAuth0();
+  
   // filters
   const [q, setQ] = useState("");
   const [semantic, setSemantic] = useState("");
@@ -123,37 +129,12 @@ export default function Page() {
       const name = window.prompt("Alert name", defaultName);
       if (!name) return;
 
+      const token = await getAccessTokenSilently();
+
       setSaving(true);
       setSaveMsg(null);
 
-      // Stable anonymous owner id for this browser
-      function uuidv4(): string {
-        try {
-          if (typeof crypto !== "undefined" && (crypto as any).randomUUID) {
-            return (crypto as any).randomUUID();
-          }
-          if (typeof crypto !== "undefined" && (crypto as any).getRandomValues) {
-            const bytes = new Uint8Array(16);
-            (crypto as any).getRandomValues(bytes);
-            bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
-            bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant
-            const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0"));
-            return `${hex[0]}${hex[1]}${hex[2]}${hex[3]}-${hex[4]}${hex[5]}-${hex[6]}${hex[7]}-${hex[8]}${hex[9]}-${hex[10]}${hex[11]}${hex[12]}${hex[13]}${hex[14]}${hex[15]}`;
-          }
-        } catch {}
-        // last resort (non-crypto)
-        const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
-        return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
-      }
-
-      let ownerId = localStorage.getItem("ps_owner_id") || "";
-      if (!ownerId) {
-        ownerId = uuidv4();
-        localStorage.setItem("ps_owner_id", ownerId);
-      }
-
       const payload = {
-        owner_id: ownerId,
         name,
         filters: {
           keywords: qDebounced || null,
@@ -169,7 +150,10 @@ export default function Page() {
 
       const r = await fetch("/api/saved-queries", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, 
+        },
         body: JSON.stringify(payload),
       });
       if (!r.ok) {
@@ -184,15 +168,19 @@ export default function Page() {
     } finally {
       setSaving(false);
     }
-  }, [qDebounced, assignee, cpc, dateFrom, dateTo]);
+  }, [qDebounced, assignee, cpc, dateFrom, dateTo, getAccessTokenSilently]);
 
   const fetchSearch = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const token = await getAccessTokenSilently();
       const res = await fetch(`${API}/search`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(buildFilterPayload()),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -204,12 +192,14 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, page, pageSize]);
+  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, page, pageSize, getAccessTokenSilently]);
 
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
     try {
+      const token = await getAccessTokenSilently();
+
       const p = new URLSearchParams();
       if (qDebounced) p.set("q", qDebounced);
       if (assignee) p.set("assignee", assignee);
@@ -218,7 +208,11 @@ export default function Page() {
       if (dateTo) p.set("date_to", dateTo);
       p.set("group_by", trendGroupBy);
 
-      const res = await fetch(`${API}/trend/volume?${p.toString()}`);
+      const res = await fetch(`${API}/trend/volume?${p.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const raw: Array<Record<string, any>> = (Array.isArray(data) ? data : data?.points) || [];
@@ -269,7 +263,7 @@ export default function Page() {
     } finally {
       setTrendLoading(false);
     }
-  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, trendGroupBy]);
+  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, trendGroupBy, getAccessTokenSilently]);
 
 
   // trigger on filter changes
@@ -325,8 +319,23 @@ export default function Page() {
   return (
     <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ margin: 0, fontSize: 22 }}>Patent Scout (for AI-related patents & publications)</h1>
-
+        <div>
+          {isLoading && <p>Loading...</p>}
+          {!isLoading && !isAuthenticated && (
+            <button onClick={() => loginWithRedirect()} style={primaryBtn}>Log in</button>
+          )}
+          {!isLoading && isAuthenticated && (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span>{user?.name}!</span>
+              <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })} style={secondaryBtn}>
+                Log out
+              </button>
+            </div>
+          )}
+        </div>
+        </div>
         <Card>
           <div style={{ display: "grid", gap: 12 }}>
             <Row>
