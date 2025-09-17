@@ -43,6 +43,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class DateRangeReponse(BaseModel):
+    min_date: int | None  # YYYYMMDD
+    max_date: int | None  # YYYYMMDD
+
 
 @app.on_event("startup")
 async def _startup() -> None:
@@ -186,6 +190,17 @@ async def get_trend(
     )
     points: list[TrendPoint] = [TrendPoint(bucket=str(b), count=int(c)) for b, c in rows]
     return TrendResponse(points=points)
+
+
+@app.get("/patent-date-range", response_model=DateRangeReponse)
+async def get_patent_date_range(conn: Conn) -> DateRangeReponse:
+    sql = "SELECT MIN(pub_date), MAX(pub_date) FROM patent"
+    async with conn.cursor() as cur:
+        await cur.execute(sql)
+        row = await cur.fetchone()
+    if not row:
+        return DateRangeReponse(min_date=None, max_date=None)
+    return DateRangeReponse(min_date=row[0], max_date=row[1])
 
 
 @app.get("/patent/{pub_id}", response_model=PatentDetail)

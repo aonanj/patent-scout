@@ -89,7 +89,7 @@ export default function Page() {
   const [cpc, setCpc] = useState("");
   const [dateFrom, setDateFrom] = useState(""); // YYYY-MM-DD
   const [dateTo, setDateTo] = useState("");
-  const [trendGroupBy, setTrendGroupBy] = useState<"month" | "cpc" | "assignee">("cpc");
+  const [trendGroupBy, setTrendGroupBy] = useState<"month" | "cpc" | "assignee">("month");
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -108,6 +108,8 @@ export default function Page() {
   const semanticDebounced = useDebounced(semantic);
   const assigneeDebounced = useDebounced(assignee);
   const cpcDebounced = useDebounced(cpc);
+
+  const [dateBounds, setDateBounds] = useState<{ min: string; max: string} | null>(null);
 
   // Save current query as an alert in saved_query table via API route
   const saveAsAlert = useCallback(async () => {
@@ -269,6 +271,34 @@ export default function Page() {
         fetchTrend();
     }
   }, [page, fetchSearch, fetchTrend, isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    if(!isAuthenticated || isLoading) return;
+    const fetchDateBounds = async () => {
+      try {
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`/api/patent-date-range`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.min_date && data.max_date) {
+          setDateBounds({ 
+            min: formatDate(data.min_date), 
+            max: formatDate(data.max_date) 
+          });
+        }
+      } catch (err: any) {
+        console.error("API proxy error for /patent-date-range:", err);
+      }
+    };
+    fetchDateBounds();
+  }, [getAccessTokenSilently, isAuthenticated, isLoading]);
+
+  const displayedDateFrom = dateFrom || (dateBounds?.min ?? '');
+  const displayedDateTo = dateTo || (dateBounds?.max ?? '');
 
   const totalPages = useMemo(() => {
     if (total === null) return null;
@@ -445,7 +475,14 @@ export default function Page() {
 
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <h2 style={{ margin: 0, fontSize: 16 }}>Trend</h2>
+            <h2 style={{ margin: 0, fontSize: 16 }}>
+              <span style={{ fontWeight: 'bold' }}>Trend</span>
+              {displayedDateFrom && displayedDateTo && (
+                <span style={{ fontWeight: 'normal', fontSize: 14, color: '#475569', marginLeft: 8 }}>
+                  ({displayedDateFrom} - {displayedDateTo})
+                </span>
+              )}
+            </h2>
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
               <Label htmlFor="trend_group_by">Group by</Label>
               <select
@@ -546,10 +583,10 @@ export default function Page() {
 }
 
 function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; groupBy: "month" | "cpc" | "assignee"; height?: number }) {
-  const padding = 28;
+  const padding = { left: 60, right: 28, top: 28, bottom: 28 };
   const width = 900;
-  const w = width - padding * 2;
-  const h = height - padding * 2;
+  const w = width - padding.left - padding.right;
+  const h = height - padding.top - padding.bottom;
 
   if (groupBy === "month") {
     const parsed = useMemo(() => {
@@ -570,8 +607,8 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
       return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
     }, [parsed]);
 
-    const scaleX = (x: number) => padding + ((x - minX) / Math.max(1, maxX - minX)) * w;
-    const scaleY = (y: number) => padding + h - ((y - minY) / Math.max(1, maxY - minY)) * h;
+    const scaleX = (x: number) => padding.left + ((x - minX) / Math.max(1, maxX - minX)) * w;
+    const scaleY = (y: number) => padding.top + h - ((y - minY) / Math.max(1, maxY - minY)) * h;
 
     const path = useMemo(() => {
       if (parsed.length === 0) return "";
@@ -587,14 +624,14 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
 
     return (
       <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend (time)">
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#e5e7eb" />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#e5e7eb" />
+        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#e5e7eb" />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="#e5e7eb" />
         {yVals.map((v, idx) => {
           const y = scaleY(v);
           return (
             <g key={idx}>
-              <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#f1f5f9" />
-              <text x={6} y={y + 4} fontSize="10" fill="#64748b">{v}</text>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#f1f5f9" />
+              <text x={padding.left - 8} y={y + 4} fontSize="10" fill="#64748b" textAnchor="end">{v}</text>
             </g>
           );
         })}
@@ -604,13 +641,13 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
         ))}
         {parsed.length > 0 && (
           <>
-            <text x={padding} y={height - 6} fontSize="10" fill="#64748b">
+            <text x={padding.left} y={height - 6} fontSize="10" fill="#64748b">
               {fmtShortDate(parsed[0].x)}
             </text>
-            <text x={width / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#64748b">
+            <text x={padding.left + w / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#64748b">
               {fmtShortDate(parsed[Math.floor(parsed.length / 2)].x)}
             </text>
-            <text x={width - padding} y={height - 6} fontSize="10" textAnchor="end" fill="#64748b">
+            <text x={width - padding.right} y={height - 6} fontSize="10" textAnchor="end" fill="#64748b">
               {fmtShortDate(parsed[parsed.length - 1].x)}
             </text>
           </>
@@ -627,38 +664,38 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   const n = Math.max(1, categories.length);
   const slot = w / n;
   const barWidth = Math.max(18, slot * 0.6);
-  const scaleY = (y: number) => padding + h - (y / maxY) * h;
+  const scaleY = (y: number) => padding.top + h - (y / maxY) * h;
   const extraBottom = 60;
   const viewH = height + extraBottom;
 
   return (
     <svg width="100%" viewBox={`0 0 ${width} ${viewH}`} role="img" aria-label="Trend (categorical)">
-      <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#e5e7eb" />
-      <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#e5e7eb" />
+      <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#e5e7eb" />
+      <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="#e5e7eb" />
       {yVals.map((v, idx) => {
         const y = scaleY(v);
         return (
           <g key={idx}>
-            <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#f1f5f9" />
-            <text x={6} y={y + 4} fontSize="10" fill="#64748b">{v.toLocaleString()}</text>
+            <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#f1f5f9" />
+            <text x={padding.left - 8} y={y + 4} fontSize="10" fill="#64748b" textAnchor="end">{v.toLocaleString()}</text>
           </g>
         );
       })}
       {categories.map((c, i) => {
-        const xCenter = padding + i * slot + slot / 2;
+        const xCenter = padding.left + i * slot + slot / 2;
         const x = xCenter - barWidth / 2;
         const y = scaleY(c.y);
-        const barH = height - padding - y;
+        const barH = height - padding.bottom - y;
         return (
           <g key={i}>
             <rect x={x} y={y} width={barWidth} height={barH} fill="#0ea5e9" />
             <text
               x={xCenter}
-              y={height - padding + 25}
+              y={height - padding.bottom + 25}
               fontSize="9"
               fill="#64748b"
               textAnchor="end"
-              transform={`rotate(-35 ${xCenter} ${height - padding + 20})`}
+              transform={`rotate(-35 ${xCenter} ${height - padding.bottom + 20})`}
             >
               {groupBy === "assignee" ? truncate(c.label, 14) : c.label}
             </text>
