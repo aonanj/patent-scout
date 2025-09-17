@@ -245,23 +245,24 @@ export default function Page() {
           if (!sc) continue;
           agg.set(sc, (agg.get(sc) || 0) + (Number(r.count) || 0));
         }
-        const points = Array.from(agg.entries())
+        const sorted = Array.from(agg.entries())
           .map(([label, count]) => ({ label, count }))
           .sort((a, b) => b.count - a.count);
-        setTrend(points);
+        const top = sorted.slice(0, 10);
+        const restSum = sorted.slice(10).reduce((acc, x) => acc + x.count, 0);
+        const finalPoints = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
+        setTrend(finalPoints);
       } else {
         // assignee: top 10, rest grouped under "Other"
-        const items = raw
-          .map((r) => {
-            const key = getKey(r);
-            return { label: key || "(Unknown)", count: Number(r.count) || 0 };
-          })
-          .filter((p) => p.count > 0)
-          .sort((a, b) => b.count - a.count);
-        const top = items.slice(0, 10);
-        const restSum = items.slice(10).reduce((acc, x) => acc + x.count, 0);
-        const points = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
-        setTrend(points);
+        const itemsAll = raw.map((r) => ({ key: getKey(r), count: Number(r.count) || 0 }));
+        const unknownSum = itemsAll.filter((i) => !i.key).reduce((acc, i) => acc + i.count, 0);
+        const known = itemsAll.filter((i) => i.key).map((i) => ({ label: i.key as string, count: i.count }));
+        const sorted = known.filter((p) => p.count > 0).sort((a, b) => b.count - a.count);
+        const top = sorted.slice(0, 10);
+        const restKnown = sorted.slice(10).reduce((acc, x) => acc + x.count, 0);
+        const restSum = restKnown + unknownSum;
+        const finalPoints = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
+        setTrend(finalPoints);
       }
     } catch {
       setTrend([]);
@@ -456,7 +457,7 @@ export default function Page() {
           ) : trend.length === 0 ? (
             <div style={{ fontSize: 13, color: "#64748b" }}>No data</div>
           ) : (
-            <TrendChart data={trend} groupBy={trendGroupBy} height={200} />
+            <TrendChart data={trend} groupBy={trendGroupBy} height={260} />
           )}
         </Card>
 
@@ -621,8 +622,12 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   const barWidth = Math.max(18, slot * 0.6);
   const scaleY = (y: number) => padding + h - (y / maxY) * h;
 
+  // Add extra bottom margin for long rotated labels
+  const extraBottom = 40;
+  const viewH = height + extraBottom;
+
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend (categorical)">
+    <svg width="100%" viewBox={`0 0 ${width} ${viewH}`} role="img" aria-label="Trend (categorical)">
       <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#e5e7eb" />
       <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#e5e7eb" />
       {yVals.map((v, idx) => {
@@ -644,11 +649,11 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
             <rect x={x} y={y} width={barWidth} height={barH} fill="#0ea5e9" />
             <text
               x={xCenter}
-              y={height - padding + 10}
+              y={height - padding + 20}
               fontSize="10"
               fill="#64748b"
               textAnchor="end"
-              transform={`rotate(-35 ${xCenter} ${height - padding + 10})`}
+              transform={`rotate(-35 ${xCenter} ${height - padding + 20})`}
             >
               {c.label}
             </text>
