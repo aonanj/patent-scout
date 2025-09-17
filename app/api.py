@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-import contextlib
 import inspect
 import os
 from collections.abc import Sequence
 from typing import Annotated, Any, cast
 
-import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Query
+import contextlib
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
-from pydantic import BaseModel
 
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
 from .repository import get_patent_detail, search_hybrid, trend_volume
+
 from .schemas import (
     PatentDetail,
     SearchFilters,

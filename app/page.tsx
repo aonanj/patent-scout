@@ -238,6 +238,37 @@ export default function Page() {
     return Math.max(1, Math.ceil(total / pageSize));
   }, [total]);
 
+  /**
+ * Formats a patent publication number for a Google Patents URL,
+   * correcting an issue where a leading zero is missing from the serial number.
+   * e.g., 'US2025049352A1' becomes 'US20250049352A1'
+   *
+   * @param {string} pubId The publication number from your database.
+   * @returns {string} A URL-safe, formatted publication number.
+   */
+  interface GooglePatentIdRegexGroups extends RegExpMatchArray {
+    0: string;
+    1: string; // country
+    2: string; // year
+    3: string; // serial
+    4: string; // kindCode
+  }
+
+  const formatGooglePatentId = (pubId: string): string => {
+    if (!pubId) return "";
+    
+    const cleanedId: string = pubId.replace(/[- ]/g, "");
+    const regex: RegExp = /^(US)(\d{4})(\d{6})([A-Z]\d{1,2})$/;
+    const match: GooglePatentIdRegexGroups | null = cleanedId.match(regex) as GooglePatentIdRegexGroups | null;
+
+    if (match) {
+      const [, country, year, serial, kindCode] = match;
+      const correctedSerial: string = '0${serial}';
+      return `${country}${year}${correctedSerial}${kindCode}`;
+    }
+    return cleanedId;
+  };
+
   // simple date helpers
   const today = useRef<string>(new Date().toISOString().slice(0, 10)).current;
 
@@ -387,7 +418,7 @@ export default function Page() {
                   <div style={{ fontWeight: 600 }}>
                     {h.title || "(no title)"}{" "}
                     {h.pub_id && (
-                      <span style={{ fontWeight: 400, color: "#64748b" }}>• <a href={`https://patents.google.com/patent/${h.pub_id.replace(/-/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{h.pub_id}</a></span>
+                      <span style={{ fontWeight: 400, color: "#64748b" }}>• <a href={`https://patents.google.com/patent/${formatGooglePatentId(h.pub_id)}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{h.pub_id}</a></span>
                     )}
                   </div>
                   <div style={{ fontSize: 12, color: "#475569" }}>
