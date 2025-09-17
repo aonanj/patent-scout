@@ -23,7 +23,6 @@ from .schemas import (
     SearchRequest,
     SearchResponse,
     TrendPoint,
-    TrendRequest,
     TrendResponse,
 )
 
