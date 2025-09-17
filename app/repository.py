@@ -110,16 +110,14 @@ async def search_hybrid(
                  (e.embedding <-> %s{_VEC_CAST}) AS vec_dist
           FROM patent_embeddings e
           JOIN base b ON b.pub_id = e.pub_id
-          WHERE e.model LIKE '%%|ta'
-          ORDER BY vec_dist ASC
-          LIMIT 5000
+          WHERE e.model LIKE '%%|ta' AND (e.embedding <-> %s{_VEC_CAST}) < 0.5
         """
         with_parts.append(
             f"vec AS (SELECT *, ROW_NUMBER() OVER (ORDER BY vec_dist ASC) AS vec_rank FROM ({vec_inner}) s)"
         )
-        args.append(list(query_vec))
+        args.extend([list(query_vec), list(query_vec)])
 
-    # No signals -> recency
+    # ... (rest of the function is the same)
     if len(with_parts) == 1:
         sql = f"""
         WITH {with_parts[0]}
@@ -220,9 +218,7 @@ async def trend_volume(
         joins.append(f"""
         JOIN (
             SELECT pub_id FROM patent_embeddings
-            WHERE model LIKE '%%|ta'
-            ORDER BY embedding <-> %s{_VEC_CAST}
-            LIMIT 5000
+            WHERE model LIKE '%%|ta' AND (embedding <-> %s{_VEC_CAST}) < 0.5
         ) AS vector_matches ON p.pub_id = vector_matches.pub_id
         """)
         args.insert(0, list(query_vec))
