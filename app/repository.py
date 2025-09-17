@@ -191,9 +191,6 @@ async def search_hybrid(
     items = [PatentHit(**obj) for obj in (row["items"] or [])]
     return total, items
 
-
-# File: app/repository.py
-
 async def trend_volume(
     conn: psycopg.AsyncConnection,
     *,
@@ -242,12 +239,12 @@ async def trend_volume(
 
     sql = f"""
     WITH base AS (
-        SELECT {bucket_sql} AS bucket
+        SELECT {bucket_sql} AS bucket, p.pub_id
         FROM {from_sql}
         {join_sql}
         WHERE {where_sql}
     )
-    SELECT bucket, COUNT(*) AS count
+    SELECT bucket, COUNT(DISTINCT pub_id) AS count
     FROM base
     WHERE bucket IS NOT NULL
     GROUP BY bucket

@@ -325,7 +325,7 @@ export default function Page() {
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="sr-only">Patent Scout</h1>
-        <img className="w-auto h-5rem drop-shadow-lg hover:scale-110" src="/images/PatentScoutLogo.png" alt="Patent Scout" />
+        <img className="w-auto max-h-16 drop-shadow-lg hover:scale-110" src="/images/PatentScoutLogo.png" alt="Patent Scout" />
         <div>
           {isLoading && <span style={{fontSize: 12, color: '#64748b'}}>Loading session...</span>}
           {!isLoading && isAuthenticated && (
