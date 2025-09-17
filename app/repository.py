@@ -14,6 +14,14 @@ _VEC_CAST: Final[str] = (
     "::halfvec" if os.environ.get("VECTOR_TYPE", "vector").lower().startswith("half") else "::vector"
 )
 
+def _dtint(s: int | str | None) -> int | None:
+    if s is None:
+        return None
+    if isinstance(s, int):
+        return s
+    # accepts YYYY-MM-DD or YYYYMMDD
+    t = s.replace("-", "")
+    return int(t) if t.isdigit() and len(t) == 8 else None
 
 def _filters_sql(f: SearchFilters, args: list[object]) -> str:
     """Build WHERE clause and append positional args."""
@@ -39,11 +47,11 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
     if f.date_from:
         where.append("pub_date >= %s")
-        args.append(f.date_from)
+        args.append(_dtint(f.date_from))
 
     if f.date_to:
         where.append("pub_date < %s")
-        args.append(f.date_to)
+        args.append(_dtint(f.date_to))
 
 
     return " AND ".join(where)

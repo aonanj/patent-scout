@@ -255,7 +255,7 @@ export default function Page() {
                   id="semantic"
                   value={semantic}
                   onChange={(e) => setSemantic(e.target.value)}
-                  placeholder="Describe the relevant AI technology"
+                  placeholder="Describe relevant AI tech"
                   style={inputStyle}
                 />
               </div>
@@ -265,7 +265,7 @@ export default function Page() {
                   id="q"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="keywords in title/abstract/claims"
+                  placeholder="Keywords in title/abstract/claims"
                   style={inputStyle}
                 />
               </div>
@@ -276,7 +276,7 @@ export default function Page() {
                   id="assignee"
                   value={assignee}
                   onChange={(e) => setAssignee(e.target.value)}
-                  placeholder="e.g., Google"
+                  placeholder="e.g., Google, Oracle, ..."
                   style={inputStyle}
                 />
               </div>
@@ -299,6 +299,7 @@ export default function Page() {
                 <input
                   id="date_from"
                   type="date"
+                  min="2022-01-01"
                   max={dateTo || today}
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
@@ -310,7 +311,7 @@ export default function Page() {
                 <input
                   id="date_to"
                   type="date"
-                  min={dateFrom || "1900-01-01"}
+                  min={dateFrom || "2022-01-02"}
                   max={today}
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
@@ -386,7 +387,7 @@ export default function Page() {
                   <div style={{ fontWeight: 600 }}>
                     {h.title || "(no title)"}{" "}
                     {h.pub_id && (
-                      <span style={{ fontWeight: 400, color: "#64748b" }}>• {h.pub_id}</span>
+                      <span style={{ fontWeight: 400, color: "#64748b" }}>• <a href={`https://patents.google.com/patent/${h.pub_id.replace(/-/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{h.pub_id}</a></span>
                     )}
                   </div>
                   <div style={{ fontSize: 12, color: "#475569" }}>
