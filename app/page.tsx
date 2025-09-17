@@ -655,7 +655,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
               textAnchor="end"
               transform={`rotate(-35 ${xCenter} ${height - padding + 20})`}
             >
-              {c.label}
+              {groupBy === "assignee" ? truncate(c.label, 14) : c.label}
             </text>
             <text x={xCenter} y={y - 4} fontSize="10" fill="#334155" textAnchor="middle">
               {c.y}
