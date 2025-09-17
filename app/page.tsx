@@ -264,11 +264,11 @@ export default function Page() {
   }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading) {
         fetchSearch();
         fetchTrend();
     }
-  }, [page, fetchSearch, fetchTrend, isAuthenticated]);
+  }, [page, fetchSearch, fetchTrend, isAuthenticated, isLoading]);
 
   const totalPages = useMemo(() => {
     if (total === null) return null;
