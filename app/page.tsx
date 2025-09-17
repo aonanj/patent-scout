@@ -12,7 +12,7 @@ type SearchHit = {
   // add other fields as your /search returns them
 };
 
-type TrendPoint = { date: string; count: number };
+type TrendPoint = { label: string; count: number };
 
 function useDebounced<T>(value: T, delay = 400) {
   const [v, setV] = useState(value);
@@ -61,6 +61,7 @@ export default function Page() {
   const [cpc, setCpc] = useState("");
   const [dateFrom, setDateFrom] = useState(""); // YYYY-MM-DD
   const [dateTo, setDateTo] = useState("");
+  const [trendGroupBy, setTrendGroupBy] = useState<"month" | "cpc" | "assignee">("month");
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -215,18 +216,52 @@ export default function Page() {
       if (cpc) p.set("cpc", cpc);
       if (dateFrom) p.set("date_from", dateFrom);
       if (dateTo) p.set("date_to", dateTo);
-      p.set("group_by", "month");
+      p.set("group_by", trendGroupBy);
 
       const res = await fetch(`${API}/trend/volume?${p.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setTrend(data.points ?? data ?? []);
+      const raw: Array<{ bucket: string | null; count: number }> = (Array.isArray(data)
+        ? data
+        : data?.points) || [];
+
+      // transform according to groupBy
+      if (trendGroupBy === "month") {
+        const points = raw
+          .filter((r) => !!r.bucket)
+          .map((r) => ({ label: String(r.bucket), count: Number(r.count) || 0 }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+        setTrend(points);
+      } else if (trendGroupBy === "cpc") {
+        // Aggregate to CPC section+class only: first 3 chars like G06
+        const agg = new Map<string, number>();
+        for (const r of raw) {
+          const bucket = (r.bucket || "").toString();
+          const sc = bucket.slice(0, 3).toUpperCase();
+          if (!sc) continue;
+          agg.set(sc, (agg.get(sc) || 0) + (Number(r.count) || 0));
+        }
+        const points = Array.from(agg.entries())
+          .map(([label, count]) => ({ label, count }))
+          .sort((a, b) => b.count - a.count);
+        setTrend(points);
+      } else {
+        // assignee: top 10, rest grouped under "Other"
+        const items = raw
+          .map((r) => ({ label: (r.bucket || "(Unknown)").toString(), count: Number(r.count) || 0 }))
+          .filter((p) => p.count > 0)
+          .sort((a, b) => b.count - a.count);
+        const top = items.slice(0, 10);
+        const restSum = items.slice(10).reduce((acc, x) => acc + x.count, 0);
+        const points = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
+        setTrend(points);
+      }
     } catch {
       setTrend([]);
     } finally {
       setTrendLoading(false);
     }
-  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo]);
+  }, [API, qDebounced, assignee, cpc, dateFrom, dateTo, trendGroupBy]);
 
 
   // trigger on filter changes
@@ -393,13 +428,28 @@ export default function Page() {
         </Card>
 
         <Card>
-          <h2 style={{ margin: 0, fontSize: 16, marginBottom: 8 }}>Trend</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <h2 style={{ margin: 0, fontSize: 16 }}>Trend</h2>
+            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+              <Label htmlFor="trend_group_by">Group by</Label>
+              <select
+                id="trend_group_by"
+                value={trendGroupBy}
+                onChange={(e) => setTrendGroupBy(e.target.value as any)}
+                style={{ height: 28, border: "1px solid #e5e7eb", borderRadius: 6, padding: "0 8px" }}
+              >
+                <option value="month">Month</option>
+                <option value="cpc">CPC (section+class)</option>
+                <option value="assignee">Assignee</option>
+              </select>
+            </div>
+          </div>
           {trendLoading ? (
             <div style={{ fontSize: 13, color: "#64748b" }}>Loading…</div>
           ) : trend.length === 0 ? (
             <div style={{ fontSize: 13, color: "#64748b" }}>No data</div>
           ) : (
-            <TrendChart data={trend} height={180} />
+            <TrendChart data={trend} groupBy={trendGroupBy} height={200} />
           )}
         </Card>
 
@@ -479,83 +529,128 @@ export default function Page() {
   );
 }
 
-function TrendChart({ data, height = 180 }: { data: TrendPoint[]; height?: number }) {
-  // normalize
-  const parsed = useMemo(() => {
-    return data
-      .map((d) => ({
-        x: new Date(d.date).getTime(),
-        y: Number(d.count) || 0,
-        label: d.date,
-      }))
-      .sort((a, b) => a.x - b.x);
-  }, [data]);
-
+function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; groupBy: "month" | "cpc" | "assignee"; height?: number }) {
   const padding = 28;
   const width = 900;
   const w = width - padding * 2;
   const h = height - padding * 2;
 
-  const [minX, maxX, minY, maxY] = useMemo(() => {
-    const xs = parsed.map((d) => d.x);
-    const ys = parsed.map((d) => d.y);
-    return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  }, [parsed]);
+  if (groupBy === "month") {
+    // time-series line chart
+    const parsed = useMemo(() => {
+      return data
+        .map((d) => ({
+          x: new Date((d.label?.length === 7 ? d.label + "-01" : d.label)).getTime(),
+          y: Number(d.count) || 0,
+          label: d.label,
+        }))
+        .filter((d) => !Number.isNaN(d.x))
+        .sort((a, b) => a.x - b.x);
+    }, [data]);
 
-  const scaleX = (x: number) =>
-    padding + ((x - minX) / Math.max(1, maxX - minX)) * w;
-  const scaleY = (y: number) =>
-    padding + h - ((y - minY) / Math.max(1, maxY - minY)) * h;
+    const [minX, maxX, minY, maxY] = useMemo(() => {
+      const xs = parsed.map((d) => d.x);
+      const ys = parsed.map((d) => d.y);
+      return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    }, [parsed]);
 
-  const path = useMemo(() => {
-    if (parsed.length === 0) return "";
-    return parsed
-      .map((d, i) => `${i === 0 ? "M" : "L"} ${scaleX(d.x)} ${scaleY(d.y)}`)
-      .join(" ");
-  }, [parsed, scaleX, scaleY]);
+    const scaleX = (x: number) => padding + ((x - minX) / Math.max(1, maxX - minX)) * w;
+    const scaleY = (y: number) => padding + h - ((y - minY) / Math.max(1, maxY - minY)) * h;
 
+    const path = useMemo(() => {
+      if (parsed.length === 0) return "";
+      return parsed
+        .map((d, i) => `${i === 0 ? "M" : "L"} ${scaleX(d.x)} ${scaleY(d.y)}`)
+        .join(" ");
+    }, [parsed]);
+
+    const yTicks = 4;
+    const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>
+      Math.round(minY + (i * (maxY - minY)) / yTicks)
+    );
+
+    return (
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend (time)">
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#e5e7eb" />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#e5e7eb" />
+        {yVals.map((v, idx) => {
+          const y = scaleY(v);
+          return (
+            <g key={idx}>
+              <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#f1f5f9" />
+              <text x={6} y={y + 4} fontSize="10" fill="#64748b">{v}</text>
+            </g>
+          );
+        })}
+        <path d={path} fill="none" stroke="#0ea5e9" strokeWidth="2" />
+        {parsed.map((d, i) => (
+          <circle key={i} cx={scaleX(d.x)} cy={scaleY(d.y)} r="2.5" fill="#0ea5e9" />
+        ))}
+        {parsed.length > 0 && (
+          <>
+            <text x={padding} y={height - 6} fontSize="10" fill="#64748b">
+              {fmtShortDate(parsed[0].x)}
+            </text>
+            <text x={width / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#64748b">
+              {fmtShortDate(parsed[Math.floor(parsed.length / 2)].x)}
+            </text>
+            <text x={width - padding} y={height - 6} fontSize="10" textAnchor="end" fill="#64748b">
+              {fmtShortDate(parsed[parsed.length - 1].x)}
+            </text>
+          </>
+        )}
+      </svg>
+    );
+  }
+
+  // categorical bar chart for CPC / Assignee
+  const categories = data.map((d) => ({ label: d.label, y: Number(d.count) || 0 }));
+  const maxY = Math.max(1, ...categories.map((c) => c.y));
   const yTicks = 4;
-  const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>
-    Math.round(minY + (i * (maxY - minY)) / yTicks)
-  );
+  const yVals = Array.from({ length: yTicks + 1 }, (_, i) => Math.round((i * maxY) / yTicks));
+
+  const n = Math.max(1, categories.length);
+  const slot = w / n;
+  const barWidth = Math.max(18, slot * 0.6);
+  const scaleY = (y: number) => padding + h - (y / maxY) * h;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend">
-      {/* axes */}
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend (categorical)">
       <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#e5e7eb" />
       <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#e5e7eb" />
-      {/* y grid + labels */}
       {yVals.map((v, idx) => {
         const y = scaleY(v);
         return (
           <g key={idx}>
             <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#f1f5f9" />
-            <text x={6} y={y + 4} fontSize="10" fill="#64748b">
-              {v}
+            <text x={6} y={y + 4} fontSize="10" fill="#64748b">{v}</text>
+          </g>
+        );
+      })}
+      {categories.map((c, i) => {
+        const xCenter = padding + i * slot + slot / 2;
+        const x = xCenter - barWidth / 2;
+        const y = scaleY(c.y);
+        const barH = height - padding - y;
+        return (
+          <g key={i}>
+            <rect x={x} y={y} width={barWidth} height={barH} fill="#0ea5e9" />
+            <text
+              x={xCenter}
+              y={height - padding + 10}
+              fontSize="10"
+              fill="#64748b"
+              textAnchor="end"
+              transform={`rotate(-35 ${xCenter} ${height - padding + 10})`}
+            >
+              {c.label}
+            </text>
+            <text x={xCenter} y={y - 4} fontSize="10" fill="#334155" textAnchor="middle">
+              {c.y}
             </text>
           </g>
         );
       })}
-      {/* line */}
-      <path d={path} fill="none" stroke="#0ea5e9" strokeWidth="2" />
-      {/* points */}
-      {parsed.map((d, i) => (
-        <circle key={i} cx={scaleX(d.x)} cy={scaleY(d.y)} r="2.5" fill="#0ea5e9" />
-      ))}
-      {/* x labels: first, mid, last */}
-      {parsed.length > 0 && (
-        <>
-          <text x={padding} y={height - 6} fontSize="10" fill="#64748b">
-            {fmtShortDate(parsed[0].x)}
-          </text>
-          <text x={width / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#64748b">
-            {fmtShortDate(parsed[Math.floor(parsed.length / 2)].x)}
-          </text>
-          <text x={width - padding} y={height - 6} fontSize="10" textAnchor="end" fill="#64748b">
-            {fmtShortDate(parsed[parsed.length - 1].x)}
-          </text>
-        </>
-      )}
     </svg>
   );
 }
