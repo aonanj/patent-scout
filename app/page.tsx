@@ -221,22 +221,26 @@ export default function Page() {
       const res = await fetch(`${API}/trend/volume?${p.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const raw: Array<{ bucket: string | null; count: number }> = (Array.isArray(data)
-        ? data
-        : data?.points) || [];
+      const raw: Array<Record<string, any>> = (Array.isArray(data) ? data : data?.points) || [];
 
       // transform according to groupBy
+      const getKey = (r: Record<string, any>): string => {
+        // Prefer 'bucket' but fall back to common alternative fields
+        const k = r.bucket ?? r.date ?? r.label ?? r.key ?? r.cpc ?? r.assignee ?? r.name ?? null;
+        return k == null ? "" : String(k);
+      };
+
       if (trendGroupBy === "month") {
         const points = raw
-          .filter((r) => !!r.bucket)
-          .map((r) => ({ label: String(r.bucket), count: Number(r.count) || 0 }))
+          .map((r) => ({ label: getKey(r), count: Number(r.count) || 0 }))
+          .filter((r) => !!r.label)
           .sort((a, b) => a.label.localeCompare(b.label));
         setTrend(points);
       } else if (trendGroupBy === "cpc") {
         // Aggregate to CPC section+class only: first 3 chars like G06
         const agg = new Map<string, number>();
         for (const r of raw) {
-          const bucket = (r.bucket || "").toString();
+          const bucket = getKey(r);
           const sc = bucket.slice(0, 3).toUpperCase();
           if (!sc) continue;
           agg.set(sc, (agg.get(sc) || 0) + (Number(r.count) || 0));
@@ -248,7 +252,10 @@ export default function Page() {
       } else {
         // assignee: top 10, rest grouped under "Other"
         const items = raw
-          .map((r) => ({ label: (r.bucket || "(Unknown)").toString(), count: Number(r.count) || 0 }))
+          .map((r) => {
+            const key = getKey(r);
+            return { label: key || "(Unknown)", count: Number(r.count) || 0 };
+          })
           .filter((p) => p.count > 0)
           .sort((a, b) => b.count - a.count);
         const top = items.slice(0, 10);
