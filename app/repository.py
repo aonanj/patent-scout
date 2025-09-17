@@ -111,6 +111,8 @@ async def search_hybrid(
           FROM patent_embeddings e
           JOIN base b ON b.pub_id = e.pub_id
           WHERE e.model LIKE '%%|ta'
+          ORDER BY vec_dist ASC
+          LIMIT 5000
         """
         with_parts.append(
             f"vec AS (SELECT *, ROW_NUMBER() OVER (ORDER BY vec_dist ASC) AS vec_rank FROM ({vec_inner}) s)"
@@ -204,57 +206,74 @@ async def trend_volume(
     args: list[object] = []
     where_sql = _filters_sql(filters, args)
 
-    # Prepare the FROM and JOIN clauses
-    if group_by == "month":
-        bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
-        from_sql = "patent p"
-    elif group_by == "cpc":
-        bucket_sql = (
-            "( (c->>'section')"
-            " || COALESCE(c->>'class', '')"
-            " )" # Simplified to section+class for better grouping
-        )
-        from_sql = "patent p, LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c"
-    elif group_by == "assignee":
-        bucket_sql = "p.assignee_name"
-        from_sql = "patent p"
-    else:
-        raise ValueError("invalid group_by")
+    # CTE for patents matching filters
+    with_parts = []
+    
+    base_patent_cte = """
+    base_patents AS (
+        SELECT p.pub_id, p.pub_date, p.assignee_name, p.cpc, p.title, p.abstract
+        FROM patent p
+    """
 
-    join_sql = ""
-    # If a vector is provided, create a JOIN clause to filter by the top semantic matches
+    joins = []
     if query_vec is not None:
-        # Prepend the vector to the arguments list as it appears first in the combined SQL
-        args.insert(0, list(query_vec))
-        join_sql = f"""
+        joins.append(f"""
         JOIN (
             SELECT pub_id FROM patent_embeddings
             WHERE model LIKE '%%|ta'
             ORDER BY embedding <-> %s{_VEC_CAST}
             LIMIT 5000
         ) AS vector_matches ON p.pub_id = vector_matches.pub_id
-        """
+        """)
+        args.insert(0, list(query_vec))
+    
+    if joins:
+        base_patent_cte += "\n".join(joins)
 
+    where_clauses = [where_sql]
     if keywords:
-        where_sql += " AND to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)"
+        where_clauses.append("to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)")
         args.append(keywords)
+    
+    base_patent_cte += "\nWHERE " + " AND ".join(where_clauses)
+    base_patent_cte += "\n)"
 
-    sql = f"""
-    WITH base AS (
-        SELECT {bucket_sql} AS bucket, p.pub_id
-        FROM {from_sql}
-        {join_sql}
-        WHERE {where_sql}
-    )
-    SELECT bucket, COUNT(DISTINCT pub_id) AS count
-    FROM base
-    WHERE bucket IS NOT NULL
-    GROUP BY bucket
-    ORDER BY count DESC;
-    """
+    with_parts.append(base_patent_cte)
+
+    if group_by == "month":
+        bucket_sql = "to_char(to_date(pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
+        final_select = f"""
+        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT pub_id) AS count
+        FROM base_patents
+        WHERE {bucket_sql} IS NOT NULL
+        GROUP BY bucket
+        ORDER BY count DESC
+        """
+    elif group_by == "cpc":
+        bucket_sql = "( (c->>'section') || COALESCE(c->>'class', '') )"
+        final_select = f"""
+        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT pub_id) AS count
+        FROM base_patents, LATERAL jsonb_array_elements(COALESCE(cpc, '[]'::jsonb)) c
+        WHERE {bucket_sql} IS NOT NULL
+        GROUP BY bucket
+        ORDER BY count DESC
+        """
+    elif group_by == "assignee":
+        bucket_sql = "assignee_name"
+        final_select = f"""
+        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT pub_id) AS count
+        FROM base_patents
+        WHERE {bucket_sql} IS NOT NULL
+        GROUP BY bucket
+        ORDER BY count DESC
+        """
+    else:
+        raise ValueError("invalid group_by")
+
+    sql = f"WITH {', '.join(with_parts)}\n{final_select}"
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(sql, args)  # type: ignore[arg-type]
+        await cur.execute(sql, args)
         rows = await cur.fetchall()
 
     return [(r["bucket"], r["count"]) for r in rows]
