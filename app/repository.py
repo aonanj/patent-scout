@@ -6,8 +6,8 @@ from collections.abc import Iterable
 from typing import Final
 
 import psycopg
+from psycopg import sql as _sql
 from psycopg.rows import dict_row
-from psycopg.sql import SQL, Composed
 
 from .schemas import PatentDetail, PatentHit, SearchFilters
 
@@ -69,7 +69,6 @@ async def search_hybrid(
     """Keyword and/or vector search with simple reciprocal-rank fusion."""
     args: list[object] = []
     where_sql = _filters_sql(filters, args) 
-    _sql = SQL("")
 
     base_cte = f"""
     base AS (
@@ -145,7 +144,7 @@ async def search_hybrid(
         args.extend([limit, offset])
     else:
         if keywords and query_vec is not None:
-            tail = """
+            tail = ("""
             fused AS (
               SELECT coalesce(k.pub_id, v.pub_id) AS pub_id,
                      coalesce(k.title, v.title) AS title,
@@ -163,9 +162,9 @@ async def search_hybrid(
             SELECT (SELECT COUNT(*) FROM fused) AS total,
                    coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
             FROM page;
-            """
+            """)
         elif keywords:
-            tail = """
+            tail = ("""
             , page AS (
               SELECT pub_id, title, abstract, assignee_name, pub_date, kind_code, kw_score AS score
               FROM kw
@@ -175,9 +174,9 @@ async def search_hybrid(
             SELECT (SELECT COUNT(*) FROM kw) AS total,
                    coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
             FROM page;
-            """
+            """)
         else: # Vector only
-            tail = """
+            tail = ("""
             , page AS (
               SELECT pub_id, title, abstract, assignee_name, pub_date, kind_code,
                      (1.0 / NULLIF(vec_rank,0)) AS score
@@ -188,18 +187,15 @@ async def search_hybrid(
             SELECT (SELECT COUNT(*) FROM vec) AS total,
                    coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
             FROM page;
-            """
-        sql = ",\n".join(s.strip() for s in with_parts)
+            """)
 
-        _sql = SQL("WITH\n")
-        _sql += Composed(sql)
-        _sql += SQL("\n")
-        _sql += SQL(tail)
+        sql = "WITH\n" + ",\n".join(s.strip() for s in with_parts) + "\n" + tail
+
 
         args.extend([limit, offset])
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql, args)
+        await cur.execute(_sql.SQL(sql), args) # type: ignore[arg-type]
         row = await cur.fetchone()
 
 
