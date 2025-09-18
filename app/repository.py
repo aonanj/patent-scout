@@ -29,7 +29,7 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
     where: list[str] = ["1=1"]
 
     if f.assignee:
-        where.append("assignee_name ILIKE %s")
+        where.append("p.assignee_name ILIKE %s")
         args.append(f"%{f.assignee}%")
 
     if f.cpc:
@@ -47,15 +47,16 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
         args.append(f"{prefix}%")
 
     if f.date_from:
-        where.append("pub_date >= %s")
+        where.append("p.pub_date >= %s")
         args.append(_dtint(f.date_from))
 
     if f.date_to:
-        where.append("pub_date < %s")
+        where.append("p.pub_date < %s")
         args.append(_dtint(f.date_to))
 
 
     return " AND ".join(where)
+
 
 async def search_hybrid(
     conn: psycopg.AsyncConnection,
@@ -68,142 +69,63 @@ async def search_hybrid(
 ) -> tuple[int, list[PatentHit]]:
     """Keyword and/or vector search with simple reciprocal-rank fusion."""
     args: list[object] = []
-    where_sql = _filters_sql(filters, args) 
-
-    base_cte = f"""
-    base AS (
-      SELECT p.pub_id,
-             p.title,
-             p.abstract,
-             p.assignee_name,
-             p.pub_date,
-             p.kind_code,
-             p.cpc
-      FROM patent p
-      WHERE {where_sql}
-    )
+    
+    # Base query parts
+    select_core = """
+        SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc
     """
-
-    with_parts: list[str] = [base_cte]
-
-    if keywords:
-        kw_inner = """
-          SELECT pub_id,
-                 title, abstract, assignee_name, pub_date, kind_code,
-                 ts_rank_cd(
-                   to_tsvector('english', coalesce(title,'') || ' ' || coalesce(abstract,'')),
-                   plainto_tsquery('english', %s)
-                 ) AS kw_score
-          FROM base
-          WHERE to_tsvector('english', coalesce(title,'') || ' ' || coalesce(abstract,''))
-                @@ plainto_tsquery('english', %s)
-        """
-        with_parts.append(
-            f"kw AS (SELECT *, ROW_NUMBER() OVER (ORDER BY kw_score DESC) AS kw_rank FROM ({kw_inner}) s)"
-        )
-        args.extend([keywords, keywords])
+    
+    from_clause = "FROM patent p"
+    joins = []
+    where = [_filters_sql(filters, args)]
 
     if query_vec is not None:
-        # First, find candidate pub_ids from vector search
-        vec_candidates_cte = f"""
-        vec_candidates AS (
-            SELECT pub_id, (embedding <-> %s{_VEC_CAST}) AS vec_dist
-            FROM patent_embeddings
-            WHERE model LIKE '%%|ta' AND (embedding <-> %s{_VEC_CAST}) < 0.5
+        joins.append(
+            """
+            JOIN patent_embeddings e ON p.pub_id = e.pub_id
+            """
         )
-        """
-        with_parts.append(vec_candidates_cte)
-        args.extend([list(query_vec), list(query_vec)])
-
-        # Then, join these candidates with the already-filtered base patents
-        vec_inner = """
-          SELECT b.pub_id, b.title, b.abstract, b.assignee_name, b.pub_date, b.kind_code, vc.vec_dist
-          FROM base b
-          JOIN vec_candidates vc ON b.pub_id = vc.pub_id
-        """
-        with_parts.append(
-            f"vec AS (SELECT *, ROW_NUMBER() OVER (ORDER BY vec_dist ASC) AS vec_rank FROM ({vec_inner}) s)"
-        )
+        where.append(f"(e.embedding <-> %s{_VEC_CAST}) < 0.5")
+        where.append("e.model LIKE '%%|ta'")
+        args.insert(0, list(query_vec))
 
 
-    # No signals -> recency
-    if len(with_parts) == 1:
-        sql = f"""
-        WITH {with_parts[0]}
-        , page AS (
-          SELECT pub_id,
-                 title, abstract, assignee_name, pub_date, kind_code
-          FROM base
-          ORDER BY pub_date DESC
-          LIMIT %s OFFSET %s
-        )
-        SELECT (SELECT COUNT(*) FROM base) AS total,
-               coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
-        FROM page;
-        """
-        args.extend([limit, offset])
+    if keywords:
+        where.append("to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)")
+        args.append(keywords)
+    
+    # Build the full query
+    base_query = f"{from_clause} {' '.join(joins)} WHERE {' AND '.join(where)}"
+    
+    count_query = f"SELECT COUNT(DISTINCT p.pub_id) {base_query}"
+    
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(_sql.SQL(count_query), args) # type: ignore
+        total_row = await cur.fetchone()
+        total = total_row['count'] if total_row else 0
+
+    # Now get the paginated results
+    if query_vec is not None:
+        # Re-add vector for ordering
+        args.append(list(query_vec))
+        order_by = f"ORDER BY (e.embedding <-> %s{_VEC_CAST}) ASC"
+    elif keywords:
+         # we need to add the keyword to the args again for ordering
+         args.append(keywords)
+         order_by = "ORDER BY ts_rank_cd(to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')), plainto_tsquery('english', %s)) DESC"
     else:
-        if keywords and query_vec is not None:
-            tail = ("""
-            fused AS (
-              SELECT coalesce(k.pub_id, v.pub_id) AS pub_id,
-                     coalesce(k.title, v.title) AS title,
-                     coalesce(k.abstract, v.abstract) AS abstract,
-                     coalesce(k.assignee_name, v.assignee_name) AS assignee_name,
-                     coalesce(k.pub_date, v.pub_date) AS pub_date,
-                     coalesce(k.kind_code, v.kind_code) AS kind_code,
-                     (coalesce(1.0 / k.kw_rank, 0) + coalesce(1.0 / v.vec_rank, 0)) AS score
-              FROM kw k FULL OUTER JOIN vec v ON k.pub_id = v.pub_id
-            ),
-            page AS (
-              SELECT * FROM fused ORDER BY score DESC
-              LIMIT %s OFFSET %s
-            )
-            SELECT (SELECT COUNT(*) FROM fused) AS total,
-                   coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
-            FROM page;
-            """)
-        elif keywords:
-            tail = ("""
-            , page AS (
-              SELECT pub_id, title, abstract, assignee_name, pub_date, kind_code, kw_score AS score
-              FROM kw
-              ORDER BY kw_rank ASC
-              LIMIT %s OFFSET %s
-            )
-            SELECT (SELECT COUNT(*) FROM kw) AS total,
-                   coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
-            FROM page;
-            """)
-        else: # Vector only
-            tail = ("""
-            , page AS (
-              SELECT pub_id, title, abstract, assignee_name, pub_date, kind_code,
-                     (1.0 / NULLIF(vec_rank,0)) AS score
-              FROM vec
-              ORDER BY vec_rank ASC
-              LIMIT %s OFFSET %s
-            )
-            SELECT (SELECT COUNT(*) FROM vec) AS total,
-                   coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
-            FROM page;
-            """)
+        order_by = "ORDER BY p.pub_date DESC"
 
-        sql = "WITH\n" + ",\n".join(s.strip() for s in with_parts) + "\n" + tail
-
-
-        args.extend([limit, offset])
+    paged_query = f"{select_core} {base_query} {order_by} LIMIT %s OFFSET %s"
+    args.extend([limit, offset])
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql.SQL(sql), args) # type: ignore[arg-type]
-        row = await cur.fetchone()
+        await cur.execute(_sql.SQL(paged_query), args) # type: ignore
+        rows = await cur.fetchall()
 
-
-    if row is None:
-        return 0, []
-    total = row["total"] or 0
-    items = [PatentHit(**obj) for obj in (row["items"] or [])]
+    items = [PatentHit(**row) for row in rows]
     return total, items
+
 
 async def trend_volume(
     conn: psycopg.AsyncConnection,
@@ -216,78 +138,46 @@ async def trend_volume(
     """Aggregate counts by month, CPC, or assignee, with optional keyword and vector filtering."""
     args: list[object] = []
     
-    # Base query with filters
-    base_filters_sql = _filters_sql(filters, args)
-    
-    # Vector search CTE
-    with_parts = []
-    if query_vec is not None:
-        vec_candidates_cte = f"""
-        vec_candidates AS (
-            SELECT pub_id
-            FROM patent_embeddings
-            WHERE model LIKE '%%|ta' AND (embedding <-> %s{_VEC_CAST}) < 0.5
-        )
-        """
-        with_parts.append(vec_candidates_cte)
-        args.insert(0, list(query_vec)) # Vector is the first param
-    
-    # Main data selection CTE
-    base_patent_cte = """
-    base_patents AS (
-        SELECT p.pub_id, p.pub_date, p.assignee_name, p.cpc, p.title, p.abstract
-        FROM patent p
-    """
-    
-    # Add JOIN for vector candidates if they exist
-    if query_vec is not None:
-        base_patent_cte += " JOIN vec_candidates vc ON p.pub_id = vc.pub_id"
+    from_clause = "FROM patent p"
+    joins = []
+    where_clauses = [_filters_sql(filters, args)]
 
-    # Add WHERE clauses
-    where_clauses = [base_filters_sql]
+    if query_vec:
+        joins.append(
+            """
+            JOIN patent_embeddings e ON p.pub_id = e.pub_id
+            """
+        )
+        where_clauses.append(f"(e.embedding <-> %s{_VEC_CAST}) < 0.5")
+        where_clauses.append("e.model LIKE '%%|ta'")
+        args.insert(0, list(query_vec))
+
     if keywords:
         where_clauses.append("to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)")
         args.append(keywords)
     
-    base_patent_cte += "\nWHERE " + " AND ".join(where_clauses)
-    base_patent_cte += "\n)"
-    with_parts.append(base_patent_cte)
-
-    # Grouping and final selection
+    # Grouping logic
     if group_by == "month":
-        bucket_sql = "to_char(to_date(pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
-        final_select = f"""
-        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT pub_id) AS count
-        FROM base_patents
-        WHERE {bucket_sql} IS NOT NULL
-        GROUP BY bucket
-        ORDER BY count DESC
-        """
+        bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
     elif group_by == "cpc":
         bucket_sql = "( (c->>'section') || COALESCE(c->>'class', '') )"
-        final_select = f"""
-        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT pub_id) AS count
-        FROM base_patents, LATERAL jsonb_array_elements(COALESCE(cpc, '[]'::jsonb)) c
-        WHERE {bucket_sql} IS NOT NULL
-        GROUP BY bucket
-        ORDER BY count DESC
-        """
+        from_clause += ", LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c"
     elif group_by == "assignee":
-        bucket_sql = "assignee_name"
-        final_select = f"""
-        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT pub_id) AS count
-        FROM base_patents
-        WHERE {bucket_sql} IS NOT NULL
-        GROUP BY bucket
-        ORDER BY count DESC
-        """
+        bucket_sql = "p.assignee_name"
     else:
         raise ValueError("invalid group_by")
 
-    sql = f"WITH {', '.join(with_parts)}\n{final_select}"
+    sql = f"""
+        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT p.pub_id) AS count
+        {from_clause}
+        {' '.join(joins)}
+        WHERE {' AND '.join(where_clauses)} AND {bucket_sql} IS NOT NULL
+        GROUP BY bucket
+        ORDER BY count DESC
+    """
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(sql, args)
+        await cur.execute(_sql.SQL(sql), args) # type: ignore
         rows = await cur.fetchall()
 
     return [(r["bucket"], r["count"]) for r in rows]
@@ -314,7 +204,7 @@ async def get_patent_detail(
     LIMIT 1;
     """
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(sql, [pub_id])  # type: ignore[arg-type]
+        await cur.execute(sql, [pub_id])
         row = await cur.fetchone()
 
     return PatentDetail(**row) if row else None
