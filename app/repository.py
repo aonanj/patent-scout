@@ -7,6 +7,7 @@ from typing import Final
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg.sql import SQL, Composed
 
 from .schemas import PatentDetail, PatentHit, SearchFilters
 
@@ -67,7 +68,8 @@ async def search_hybrid(
 ) -> tuple[int, list[PatentHit]]:
     """Keyword and/or vector search with simple reciprocal-rank fusion."""
     args: list[object] = []
-    where_sql = _filters_sql(filters, args)
+    where_sql = _filters_sql(filters, args) 
+    _sql = SQL("")
 
     base_cte = f"""
     base AS (
@@ -103,20 +105,29 @@ async def search_hybrid(
         args.extend([keywords, keywords])
 
     if query_vec is not None:
-        vec_inner = f"""
-          SELECT e.pub_id,
-                 b.title, b.abstract, b.assignee_name, b.pub_date, b.kind_code,
-                 (e.embedding <-> %s{_VEC_CAST}) AS vec_dist
-          FROM patent_embeddings e
-          JOIN base b ON b.pub_id = e.pub_id
-          WHERE e.model LIKE '%%|ta' AND (e.embedding <-> %s{_VEC_CAST}) < 0.5
+        # First, find candidate pub_ids from vector search
+        vec_candidates_cte = f"""
+        vec_candidates AS (
+            SELECT pub_id, (embedding <-> %s{_VEC_CAST}) AS vec_dist
+            FROM patent_embeddings
+            WHERE model LIKE '%%|ta' AND (embedding <-> %s{_VEC_CAST}) < 0.5
+        )
+        """
+        with_parts.append(vec_candidates_cte)
+        args.extend([list(query_vec), list(query_vec)])
+
+        # Then, join these candidates with the already-filtered base patents
+        vec_inner = """
+          SELECT b.pub_id, b.title, b.abstract, b.assignee_name, b.pub_date, b.kind_code, vc.vec_dist
+          FROM base b
+          JOIN vec_candidates vc ON b.pub_id = vc.pub_id
         """
         with_parts.append(
             f"vec AS (SELECT *, ROW_NUMBER() OVER (ORDER BY vec_dist ASC) AS vec_rank FROM ({vec_inner}) s)"
         )
-        args.extend([list(query_vec), list(query_vec)])
 
-    # ... (rest of the function is the same)
+
+    # No signals -> recency
     if len(with_parts) == 1:
         sql = f"""
         WITH {with_parts[0]}
@@ -165,7 +176,7 @@ async def search_hybrid(
                    coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
             FROM page;
             """
-        else:
+        else: # Vector only
             tail = """
             , page AS (
               SELECT pub_id, title, abstract, assignee_name, pub_date, kind_code,
@@ -178,12 +189,19 @@ async def search_hybrid(
                    coalesce(jsonb_agg(to_jsonb(page)), '[]'::jsonb) AS items
             FROM page;
             """
-        sql = "WITH\n" + ",\n".join(s.strip() for s in with_parts) + "\n" + tail
+        sql = ",\n".join(s.strip() for s in with_parts)
+
+        _sql = SQL("WITH\n")
+        _sql += Composed(sql)
+        _sql += SQL("\n")
+        _sql += SQL(tail)
+
         args.extend([limit, offset])
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(sql, args)  # type: ignore[arg-type]
+        await cur.execute(_sql, args)
         row = await cur.fetchone()
+
 
     if row is None:
         return 0, []
@@ -201,40 +219,45 @@ async def trend_volume(
 ) -> list[tuple[str, int]]:
     """Aggregate counts by month, CPC, or assignee, with optional keyword and vector filtering."""
     args: list[object] = []
-    where_sql = _filters_sql(filters, args)
-
-    # CTE for patents matching filters
-    with_parts = []
     
+    # Base query with filters
+    base_filters_sql = _filters_sql(filters, args)
+    
+    # Vector search CTE
+    with_parts = []
+    if query_vec is not None:
+        vec_candidates_cte = f"""
+        vec_candidates AS (
+            SELECT pub_id
+            FROM patent_embeddings
+            WHERE model LIKE '%%|ta' AND (embedding <-> %s{_VEC_CAST}) < 0.5
+        )
+        """
+        with_parts.append(vec_candidates_cte)
+        args.insert(0, list(query_vec)) # Vector is the first param
+    
+    # Main data selection CTE
     base_patent_cte = """
     base_patents AS (
         SELECT p.pub_id, p.pub_date, p.assignee_name, p.cpc, p.title, p.abstract
         FROM patent p
     """
-
-    joins = []
-    if query_vec is not None:
-        joins.append(f"""
-        JOIN (
-            SELECT pub_id FROM patent_embeddings
-            WHERE model LIKE '%%|ta' AND (embedding <-> %s{_VEC_CAST}) < 0.5
-        ) AS vector_matches ON p.pub_id = vector_matches.pub_id
-        """)
-        args.insert(0, list(query_vec))
     
-    if joins:
-        base_patent_cte += "\n".join(joins)
+    # Add JOIN for vector candidates if they exist
+    if query_vec is not None:
+        base_patent_cte += " JOIN vec_candidates vc ON p.pub_id = vc.pub_id"
 
-    where_clauses = [where_sql]
+    # Add WHERE clauses
+    where_clauses = [base_filters_sql]
     if keywords:
         where_clauses.append("to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)")
         args.append(keywords)
     
     base_patent_cte += "\nWHERE " + " AND ".join(where_clauses)
     base_patent_cte += "\n)"
-
     with_parts.append(base_patent_cte)
 
+    # Grouping and final selection
     if group_by == "month":
         bucket_sql = "to_char(to_date(pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
         final_select = f"""
