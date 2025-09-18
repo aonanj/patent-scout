@@ -24,16 +24,19 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import TypeAlias
 
 import psycopg
 from dotenv import load_dotenv
 from google.cloud import bigquery
-from openai import OpenAI  # type: ignore
+from openai import OpenAI
 from psycopg import Connection
 from psycopg.rows import TupleRow
-from psycopg_pool import ConnectionPool  # type: ignore
+from psycopg_pool import ConnectionPool
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+from infrastructure.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 # -----------------------
 # Configuration constants
@@ -49,15 +52,15 @@ BQ_PAGE_SIZE = 5000
 
 EMB_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 EMB_DIM_HINT = 1024  # used only for DDL consistency; actual dim read from result length
-EMB_BATCH_SIZE = int(os.getenv("EMB_BATCH_SIZE", "80"))
-EMB_MAX_CHARS = int(os.getenv("EMB_MAX_CHARS", "20000"))  # simple guard for overlong inputs
+EMB_BATCH_SIZE = int(os.getenv("EMB_BATCH_SIZE", "150"))
+EMB_MAX_CHARS = int(os.getenv("EMB_MAX_CHARS", "25000"))  # simple guard for overlong inputs
 
 # Derived model names to store multiple rows per pub_id without schema change
 MODEL_TA = f"{EMB_MODEL}|ta"
 MODEL_CLAIMS = f"{EMB_MODEL}|claims"
 
 # psycopg generics
-PgConn: TypeAlias = Connection[TupleRow]
+type PgConn = Connection[TupleRow]
 
 # -------------
 # SQL templates
@@ -188,9 +191,9 @@ WHERE id = %(id)s;
 
 # Embeddings upsert; pass vector as text literal and cast
 UPSERT_EMBEDDINGS_SQL = """
-INSERT INTO patent_embeddings (pub_id, model, dim, embedding, created_at)
-VALUES (%(pub_id)s, %(model)s, %(dim)s, CAST(%(embedding)s AS vector), NOW())
-ON CONFLICT (pub_id, model)
+INSERT INTO patent_embeddings (pub_id, model, dim, created_at, embedding)
+VALUES (%(pub_id)s, %(model)s, %(dim)s, NOW(), CAST(%(embedding)s AS vector))
+ON CONFLICT (model, pub_id)
 DO UPDATE SET dim = EXCLUDED.dim,
               embedding = EXCLUDED.embedding,
               created_at = NOW();
@@ -415,40 +418,39 @@ def query_bigquery(
 
 def upsert_batch(pool, records):
     print("Upserting batch of", len(records), "records", file=sys.stderr)
-    CHUNK = 20  
     with pool.connection() as conn:
-        with conn.cursor() as cur:
-            for i in range(0, len(records), CHUNK):
-                chunk = records[i:i+CHUNK]
-                rows = [{
-                    "pub_id": r.pub_id,
-                    "application_number": r.application_number,
-                    "priority_date": r.priority_date,
-                    "family_id": r.family_id,
-                    "filing_date": r.filing_date,
-                    "kind_code": r.kind_code,
-                    "pub_date": r.pub_date,
-                    "title": r.title,
-                    "abstract": r.abstract,
-                    "assignee_name": r.assignee_name,
-                    "inventor_name": json.dumps(list(r.inventor_name), ensure_ascii=False),
-                    "cpc": json.dumps(list(r.cpc), ensure_ascii=False),
-                    "claims_text": r.claims_text,
-                } for r in chunk]
+        for r in records:
+            try:
+                with conn.cursor() as cur:
+                    # Upsert patent record
+                    cur.execute(UPSERT_SQL, {
+                        "pub_id": r.pub_id,
+                        "application_number": r.application_number,
+                        "priority_date": r.priority_date,
+                        "family_id": r.family_id,
+                        "filing_date": r.filing_date,
+                        "kind_code": r.kind_code,
+                        "pub_date": r.pub_date,
+                        "title": r.title,
+                        "abstract": r.abstract,
+                        "assignee_name": r.assignee_name,
+                        "inventor_name": json.dumps(list(r.inventor_name), ensure_ascii=False),
+                        "cpc": json.dumps(list(r.cpc), ensure_ascii=False),
+                        "claims_text": r.claims_text,
+                    })
 
-                try:
-                    cur.executemany(UPSERT_SQL, rows)  
-                    cur.executemany(INGEST_LOG_SQL, [{
-                        "pub_id": rec.pub_id,
+                    # Log ingestion
+                    cur.execute(INGEST_LOG_SQL, {
+                        "pub_id": r.pub_id,
                         "stage": "inserted",
-                        "content_hash": content_hash(rec),
+                        "content_hash": content_hash(r),
                         "detail": json.dumps({"source": "bigquery"}, ensure_ascii=False),
-                    } for rec in chunk])
-                except Exception as e:
-                    print(f"Error upserting chunk starting with pub_id {chunk[0].pub_id}: {e}", file=sys.stderr)
-                    continue
-
-        conn.commit()
+                    })
+                conn.commit()
+            except Exception as e:
+                print(f"Error upserting record with pub_id {r.pub_id}: {e}", file=sys.stderr)
+                conn.rollback()
+                continue
 
 
 
@@ -508,14 +510,20 @@ def embed_texts(client: OpenAI, texts: Sequence[str], model: str) -> list[list[f
     return out
 
 
-def upsert_embeddings(pool: ConnectionPool[PgConn], rows: Sequence[dict]) -> None:
+def upsert_embeddings(pool, rows: Sequence[dict]) -> None:
     if not rows:
         return
+    conn = None
     try:
-        with pool.connection() as conn, conn.cursor() as cur:
-            cur.executemany(UPSERT_EMBEDDINGS_SQL, rows)
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                for row in rows:
+                    cur.execute(UPSERT_EMBEDDINGS_SQL, row)
             conn.commit()
     except Exception as e:
+        logger.error(f"Error upserting embeddings: {e}")
+        if conn is not None:
+            conn.rollback()
         print(f"Error upserting embeddings: {e}", file=sys.stderr)
 
 
@@ -633,12 +641,13 @@ def main() -> int:
     bq_client = bigquery.Client(project=args.project, location=args.location) if args.location else bigquery.Client(project=args.project)
 
     pool = ConnectionPool[PgConn](
-        conninfo=args.dsn, 
-        max_size=4, 
+        conninfo="postgresql://neondb_owner:npg_3pXkdtIJb0mo@ep-hidden-cake-afkwgoyd-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require", 
+        max_size=10, 
         kwargs={
             "autocommit": False,
             "sslmode": "require",
-            "prepare_threshold": None
+            "prepare_threshold": None,
+            "channel_binding": "require",
         }
     )
 

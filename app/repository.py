@@ -56,7 +56,6 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
     return " AND ".join(where)
 
-
 async def search_hybrid(
     conn: psycopg.AsyncConnection,
     *,
