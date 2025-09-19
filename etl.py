@@ -641,7 +641,7 @@ def main() -> int:
     bq_client = bigquery.Client(project=args.project, location=args.location) if args.location else bigquery.Client(project=args.project)
 
     pool = ConnectionPool[PgConn](
-        conninfo="postgresql://neondb_owner:npg_3pXkdtIJb0mo@ep-hidden-cake-afkwgoyd-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require", 
+        conninfo=args.dsn, 
         max_size=10, 
         kwargs={
             "autocommit": False,
