@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable
-from typing import Final
+from collections.abc import Iterable, Sequence
+from typing import Final, Optional, Dict, Any, List, Tuple
 
 import psycopg
 from psycopg import sql as _sql
@@ -57,6 +57,26 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
     return " AND ".join(where)
 
+def _adaptive_filters(rows: List[Dict[str, Any]], *,
+                      dist_cap: Optional[float] = None,
+                      jump: float = 0.05,
+                      limit: int = 50) -> List[Dict[str, Any]]:
+    if not rows:
+        return rows
+    
+    keep = []
+    last = rows[0]["dist"]
+    for r in rows:
+        d = r["dist"]
+        if dist_cap is not None and d > dist_cap:
+            break
+        if keep and (d - last) > jump:
+            break
+        keep.append(r)
+        last = d
+        if len(keep) >= limit:
+            break
+    return keep
 
 async def search_hybrid(
     conn: psycopg.AsyncConnection,
