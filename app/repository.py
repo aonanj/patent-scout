@@ -85,7 +85,7 @@ async def search_hybrid(
             JOIN patent_embeddings e ON p.pub_id = e.pub_id
             """
         )
-        where.append(f"(e.embedding <-> %s{_VEC_CAST}) < 0.5")
+        where.append(f"(e.embedding <=> %s{_VEC_CAST}) < 0.5")
         where.append("e.model LIKE '%%|ta'")
         args.insert(0, list(query_vec))
 
@@ -108,7 +108,7 @@ async def search_hybrid(
     if query_vec is not None:
         # Re-add vector for ordering
         args.append(list(query_vec))
-        order_by = f"ORDER BY (e.embedding <-> %s{_VEC_CAST}) ASC"
+        order_by = f"ORDER BY (e.embedding <=> %s{_VEC_CAST}) ASC"
     elif keywords:
          # we need to add the keyword to the args again for ordering
          args.append(keywords)
@@ -148,7 +148,7 @@ async def trend_volume(
             JOIN patent_embeddings e ON p.pub_id = e.pub_id
             """
         )
-        where_clauses.append(f"(e.embedding <-> %s{_VEC_CAST}) < 0.5")
+        where_clauses.append(f"(e.embedding <=> %s{_VEC_CAST}) < 0.5")
         where_clauses.append("e.model LIKE '%%|ta'")
         args.insert(0, list(query_vec))
 
