@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable, Sequence
-from typing import Final, Optional, Dict, Any, List, Tuple
+from collections.abc import Iterable
+from typing import Any, Final
 
 import psycopg
 from psycopg import sql as _sql
@@ -57,10 +57,10 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
     return " AND ".join(where)
 
-def _adaptive_filters(rows: List[Dict[str, Any]], *,
-                      dist_cap: Optional[float] = None,
+def _adaptive_filters(rows: list[dict[str, Any]], *,
+                      dist_cap: float | None = None,
                       jump: float = 0.05,
-                      limit: int = 50) -> List[Dict[str, Any]]:
+                      limit: int = 50) -> list[dict[str, Any]]:
     if not rows:
         return rows
     
@@ -87,63 +87,108 @@ async def search_hybrid(
     offset: int,
     filters: SearchFilters,
 ) -> tuple[int, list[PatentHit]]:
-    """Keyword and/or vector search with simple reciprocal-rank fusion."""
-    args: list[object] = []
-    
-    # Base query parts
-    select_core = """
-        SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc
+    """Keyword and/or vector search.
+
+    When query_vec is provided, perform rank-only cosine distance search:
+    - Fetch top 200 by cosine distance (no distance predicate in SQL)
+    - Apply post-filter in code: drop after jump in distance > 0.05
+    - Then apply offset/limit on the filtered list
+    For keyword-only, fall back to existing ranking and total counting.
     """
-    
-    from_clause = "FROM patent p"
-    joins = []
-    where = [_filters_sql(filters, args)]
 
-    if query_vec is not None:
-        joins.append(
-            """
-            JOIN patent_embeddings e ON p.pub_id = e.pub_id
-            """
+    # Keyword-only path (no semantic vector): keep existing behavior
+    if query_vec is None:
+        args: list[object] = []
+        select_core = (
+            "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc"
         )
-        where.append(f"(e.embedding <=> %s{_VEC_CAST}) < 0.5")
-        where.append("e.model LIKE '%%|ta'")
-        args.insert(0, list(query_vec))
+        from_clause = "FROM patent p"
+        joins: list[str] = []
+        where = [_filters_sql(filters, args)]
 
+        if keywords:
+            where.append(
+                "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
+                "@@ plainto_tsquery('english', %s)"
+            )
+            args.append(keywords)
+
+        base_query = f"{from_clause} {' '.join(joins)} WHERE {' AND '.join(where)}"
+        count_query = f"SELECT COUNT(DISTINCT p.pub_id) {base_query}"
+
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(_sql.SQL(count_query), args)  # type: ignore
+            total_row = await cur.fetchone()
+            total = total_row["count"] if total_row else 0
+
+        if keywords:
+            # add keyword again for ordering
+            args.append(keywords)
+            order_by = (
+                "ORDER BY ts_rank_cd(to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')), "
+                "plainto_tsquery('english', %s)) DESC"
+            )
+        else:
+            order_by = "ORDER BY p.pub_date DESC"
+
+        paged_query = f"{select_core} {base_query} {order_by} LIMIT %s OFFSET %s"
+        args.extend([limit, offset])
+
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(_sql.SQL(paged_query), args)  # type: ignore
+            rows = await cur.fetchall()
+
+        items = [PatentHit(**row) for row in rows]
+        return total, items
+
+    # Vector (semantic) path: rank-only cosine distance with post-filtering
+    topk = 200
+    args: list[object] = []
+    select_core = (
+        "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc, "
+        f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
+    )
+    args.append(list(query_vec))
+
+    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id"
+    where = [_filters_sql(filters, args)]
+    # keep model constraint if desired
+    where.append("e.model LIKE '%%|ta'")
 
     if keywords:
-        where.append("to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)")
+        where.append(
+            "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
+            "@@ plainto_tsquery('english', %s)"
+        )
         args.append(keywords)
-    
-    # Build the full query
-    base_query = f"{from_clause} {' '.join(joins)} WHERE {' AND '.join(where)}"
-    
-    count_query = f"SELECT COUNT(DISTINCT p.pub_id) {base_query}"
-    
-    async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql.SQL(count_query), args) # type: ignore
-        total_row = await cur.fetchone()
-        total = total_row['count'] if total_row else 0
 
-    # Now get the paginated results
-    if query_vec is not None:
-        # Re-add vector for ordering
-        args.append(list(query_vec))
-        order_by = f"ORDER BY (e.embedding <=> %s{_VEC_CAST}) ASC"
-    elif keywords:
-         # we need to add the keyword to the args again for ordering
-         args.append(keywords)
-         order_by = "ORDER BY ts_rank_cd(to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')), plainto_tsquery('english', %s)) DESC"
-    else:
-        order_by = "ORDER BY p.pub_date DESC"
-
-    paged_query = f"{select_core} {base_query} {order_by} LIMIT %s OFFSET %s"
-    args.extend([limit, offset])
+    base_query = f"{from_clause} WHERE {' AND '.join(where)}"
+    sql = f"{select_core} {base_query} ORDER BY dist ASC LIMIT {topk}"
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql.SQL(paged_query), args) # type: ignore
-        rows = await cur.fetchall()
+        await cur.execute(_sql.SQL(sql), args)  # type: ignore
+        rows: list[dict[str, Any]] = await cur.fetchall()
 
-    items = [PatentHit(**row) for row in rows]
+    # Post-filter: drop rows after a jump > 0.05, no extra cap besides topk
+    kept = _adaptive_filters(rows, jump=0.05, limit=topk)
+
+    total = len(kept)
+    # Apply offset/limit after post-filter
+    page = kept[offset : offset + limit]
+
+    # Map to PatentHit; expose distance as score for transparency
+    items = [
+        PatentHit(
+            pub_id=r["pub_id"],
+            title=r.get("title"),
+            abstract=r.get("abstract"),
+            assignee_name=r.get("assignee_name"),
+            pub_date=r.get("pub_date"),
+            kind_code=r.get("kind_code"),
+            score=r.get("dist"),
+        )
+        for r in page
+    ]
     return total, items
 
 
@@ -155,28 +200,98 @@ async def trend_volume(
     keywords: str | None = None,
     query_vec: Iterable[float] | None = None,
 ) -> list[tuple[str, int]]:
-    """Aggregate counts by month, CPC, or assignee, with optional keyword and vector filtering."""
+    """Aggregate counts by month, CPC, or assignee.
+
+    For semantic search (query_vec provided):
+    - Rank-only cosine distance top-200 candidates
+    - Post-filter in code with jump > 0.05
+    - Perform aggregation in code over the kept set
+    Otherwise, fall back to SQL aggregation with keyword/metadata filters.
+    """
+
+    # Helper to compute bucket in Python
+    def month_bucket(pub_date: int | None) -> str | None:
+        if not pub_date:
+            return None
+        s = str(pub_date)
+        if len(s) != 8:
+            return None
+        return f"{s[:4]}-{s[4:6]}"
+
+    if query_vec is not None:
+        # Vector path: select top-200 with distance, then aggregate in Python
+        topk = 200
+        args: list[object] = []
+        select_core = (
+            "SELECT p.pub_id, p.pub_date, p.assignee_name, p.cpc, "
+            f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
+        )
+        args.append(list(query_vec))
+        from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id"
+        where_parts = [_filters_sql(filters, args)]
+        where_parts.append("e.model LIKE '%%|ta'")
+        if keywords:
+            where_parts.append(
+                "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
+                "@@ plainto_tsquery('english', %s)"
+            )
+            args.append(keywords)
+
+        sql = f"{select_core} {from_clause} WHERE {' AND '.join(where_parts)} ORDER BY dist ASC LIMIT {topk}"
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(_sql.SQL(sql), args)  # type: ignore
+            rows: list[dict[str, Any]] = await cur.fetchall()
+
+        kept = _adaptive_filters(rows, jump=0.05, limit=topk)
+
+        # Aggregate in Python based on group_by
+        counts: dict[str, int] = {}
+        if group_by == "month":
+            for r in kept:
+                b = month_bucket(r.get("pub_date"))
+                if not b:
+                    continue
+                counts[b] = counts.get(b, 0) + 1
+        elif group_by == "assignee":
+            for r in kept:
+                b = r.get("assignee_name")
+                if not b:
+                    continue
+                counts[b] = counts.get(b, 0) + 1
+        elif group_by == "cpc":
+            for r in kept:
+                cpc_list = r.get("cpc") or []
+                try:
+                    for c in cpc_list:
+                        sec = c.get("section")
+                        clazz = c.get("class")
+                        if not sec and not clazz:
+                            continue
+                        b = f"{sec or ''}{clazz or ''}"
+                        if not b:
+                            continue
+                        counts[b] = counts.get(b, 0) + 1
+                except Exception:
+                    # If cpc value is not a list of dicts, skip
+                    continue
+        else:
+            raise ValueError("invalid group_by")
+
+        # Return sorted by count desc
+        return sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+
+    # Non-vector path: keep SQL aggregation as before
     args: list[object] = []
-    
     from_clause = "FROM patent p"
-    joins = []
+    joins: list[str] = []
     where_clauses = [_filters_sql(filters, args)]
 
-    if query_vec:
-        joins.append(
-            """
-            JOIN patent_embeddings e ON p.pub_id = e.pub_id
-            """
-        )
-        where_clauses.append(f"(e.embedding <=> %s{_VEC_CAST}) < 0.5")
-        where_clauses.append("e.model LIKE '%%|ta'")
-        args.insert(0, list(query_vec))
-
     if keywords:
-        where_clauses.append("to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)")
+        where_clauses.append(
+            "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', %s)"
+        )
         args.append(keywords)
-    
-    # Grouping logic
+
     if group_by == "month":
         bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
     elif group_by == "cpc":
@@ -197,7 +312,7 @@ async def trend_volume(
     """
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql.SQL(sql), args) # type: ignore
+        await cur.execute(_sql.SQL(sql), args)  # type: ignore
         rows = await cur.fetchall()
 
     return [(r["bucket"], r["count"]) for r in rows]
