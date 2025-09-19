@@ -91,10 +91,9 @@ async def list_saved_queries(conn: Conn, user: User):
         raise HTTPException(status_code=400, detail="user missing sub claim")
     
 
-
     sql = (
         "SELECT id, owner_id, name, filters, semantic_query, schedule_cron, is_active, created_at, updated_at "
-        "FROM saved_query"
+        "FROM saved_query "
         "WHERE owner_id = %s "
         "ORDER BY created_at DESC NULLS LAST, name ASC"
     )
@@ -145,11 +144,24 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
 
 
 @app.delete("/saved-queries/{id}")
-async def delete_saved_query(id: str, conn: Conn):
+async def delete_saved_query(id: str, conn: Conn, user: User):
+    """Delete a saved query owned by the current user.
+
+    Requires authentication and enforces ownership in the DELETE statement.
+    """
+    owner_id = user.get("sub")
+    if owner_id is None:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+
     async with conn.cursor() as cur:
-        await cur.execute("DELETE FROM saved_query WHERE id = %s", [id])  # type: ignore[arg-type]
-        # rowcount available via cur.rowcount in sync API; for async, psycopg exposes rowcount attribute
+        await cur.execute(
+            "DELETE FROM saved_query WHERE id = %s AND owner_id = %s",
+            [id, owner_id],  # type: ignore[arg-type]
+        )
         deleted = cur.rowcount if hasattr(cur, "rowcount") else None  # type: ignore[attr-defined]
+    # If nothing was deleted, either it doesn't exist or user doesn't own it
+    if not deleted:
+        raise HTTPException(status_code=404, detail="saved query not found")
     return {"deleted": deleted}
 
 

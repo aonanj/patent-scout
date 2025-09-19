@@ -1,13 +1,16 @@
 // app/api/saved-queries/route.ts
 import { NextRequest } from "next/server";
+import { getAuth } from "@clerk/nextjs/server";
 
 const BASE = process.env.BACKEND_URL;
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
+  const { getToken } = getAuth(req);
+  const token = await getToken();
+
   const headers = new Headers();
-  if (authHeader) {
-    headers.append("Authorization", authHeader);
+  if (token) {
+    headers.append("Authorization", `Bearer ${token}`);
   }
 
   const r = await fetch(`${BASE}/saved-queries`, { 
@@ -20,12 +23,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const authHeader = req.headers.get('authorization');
+  const { getToken } = getAuth(req);
+  const token = await getToken();
   
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
-  if (authHeader) {
-    headers.append("Authorization", authHeader);
+  if (token) {
+    headers.append("Authorization", `Bearer ${token}`);
   }
 
   const r = await fetch(`${BASE}/saved-queries`, {

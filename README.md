@@ -75,6 +75,16 @@ Optional OpenAI (for embeddings):
 
 Optional Next.js:
 - `BACKEND_URL` — FastAPI base URL (e.g. `https://patent-scout.onrender.com`)
+Auth (Auth0):
+- Backend must have:
+  - `AUTH0_DOMAIN` — your Auth0 tenant domain (e.g. `your-tenant.us.auth0.com`)
+  - `AUTH0_API_AUDIENCE` — API Identifier configured in Auth0 (must match what the frontend requests)
+- Frontend must have:
+  - `NEXT_PUBLIC_AUTH0_DOMAIN`
+  - `NEXT_PUBLIC_AUTH0_CLIENT_ID`
+  - `NEXT_PUBLIC_AUTH0_AUDIENCE` — should be the same as `AUTH0_API_AUDIENCE`
+
+If the audience/domain are mismatched or missing, authenticated routes like `/saved-queries` will return `401 Unauthorized`.
 
 ---
 
