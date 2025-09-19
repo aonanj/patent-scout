@@ -59,7 +59,7 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
-                      jump: float = 0.09,
+                      jump: float = 0.03,
                       limit: int = 100) -> list[dict[str, Any]]:
     if not rows:
         return rows
