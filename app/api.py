@@ -99,7 +99,7 @@ async def list_saved_queries(conn: Conn, user: User):
         "ORDER BY created_at DESC NULLS LAST, name ASC"
     )
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(sql, [owner_id])  # type: ignore[arg-type]
+        await cur.execute(sql, [owner_id])  
         rows = await cur.fetchall()
     return {"items": rows}
 
@@ -125,7 +125,7 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
         async with conn.cursor() as cur:
             # Best-effort ensure owner exists; ignore if table missing
             with contextlib.suppress(psycopg.errors.UndefinedTable):
-                await cur.execute(insert_owner_sql, [req.owner_id])  # type: ignore[arg-type]
+                await cur.execute(insert_owner_sql, [owner_id])  
 
             await cur.execute(
                 insert_sq_sql,
