@@ -15,6 +15,10 @@ _VEC_CAST: Final[str] = (
     "::halfvec" if os.environ.get("VECTOR_TYPE", "vector").lower().startswith("half") else "::vector"
 )
 
+# Semantic search tuning (less restrictive by default)
+SEMANTIC_TOPK: Final[int] = int(os.getenv("SEMANTIC_TOPK", "1000"))
+SEMANTIC_JUMP: Final[float] = float(os.getenv("SEMANTIC_JUMP", "0.1"))
+
 def _dtint(s: int | str | None) -> int | None:
     if s is None:
         return None
@@ -59,8 +63,8 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
-                      jump: float = 0.075,
-                      limit: int = 100) -> list[dict[str, Any]]:
+                      jump: float = 0.15,
+                      limit: int = 1000) -> list[dict[str, Any]]:
     if not rows:
         return rows
     
@@ -142,7 +146,7 @@ async def search_hybrid(
         return total, items
 
     # Vector (semantic) path: rank-only cosine distance with post-filtering
-    topk = 200
+    topk = SEMANTIC_TOPK
     args: list[object] = []
     select_core = (
         "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc, "
@@ -169,8 +173,8 @@ async def search_hybrid(
         await cur.execute(_sql.SQL(sql), args)  # type: ignore
         rows: list[dict[str, Any]] = await cur.fetchall()
 
-    # Post-filter: drop rows after a jump > 0.05, no extra cap besides topk
-    kept = _adaptive_filters(rows, jump=0.05, limit=topk)
+    # Post-filter: drop rows after a jump > threshold, no extra cap besides topk
+    kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
 
     total = len(kept)
     # Apply offset/limit after post-filter
@@ -219,8 +223,8 @@ async def trend_volume(
         return f"{s[:4]}-{s[4:6]}"
 
     if query_vec is not None:
-        # Vector path: select top-200 with distance, then aggregate in Python
-        topk = 200
+        # Vector path: select top-N with distance, then aggregate in Python
+        topk = SEMANTIC_TOPK
         args: list[object] = []
         select_core = (
             "SELECT p.pub_id, p.pub_date, p.assignee_name, p.cpc, "
@@ -242,7 +246,7 @@ async def trend_volume(
             await cur.execute(_sql.SQL(sql), args)  # type: ignore
             rows: list[dict[str, Any]] = await cur.fetchall()
 
-        kept = _adaptive_filters(rows, jump=0.05, limit=topk)
+        kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
 
         # Aggregate in Python based on group_by
         counts: dict[str, int] = {}
