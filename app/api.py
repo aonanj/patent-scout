@@ -32,6 +32,7 @@ from .schemas import (
     TrendPoint,
     TrendResponse,
 )
+from .whitespace_api import router as whitespace_router
 
 # Optional PDF support
 _has_reportlab = (
@@ -64,6 +65,8 @@ app.add_middleware(
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+app.include_router(whitespace_router)
 
 class DateRangeReponse(BaseModel):
     min_date: int | None  # YYYYMMDD

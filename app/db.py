@@ -31,6 +31,6 @@ async def get_conn() -> AsyncIterator[psycopg.AsyncConnection]:
     Ensures rollback on error and commit on success.
     """
     pool = init_pool()
-    async with pool.connection() as conn:   # type: ignore[assignment]
+    async with pool.connection() as conn:  
         async with conn.transaction():
             yield conn

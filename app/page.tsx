@@ -121,6 +121,20 @@ export default function Page() {
   const [alertsErr, setAlertsErr] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
 
+  // Whitespace analysis state
+  const [whitespaceModel, setWhitespaceModel] = useState("text-embedding-3-small|ta");
+  const [whitespaceDateFrom, setWhitespaceDateFrom] = useState("");
+  const [whitespaceDateTo, setWhitespaceDateTo] = useState("");
+  const [whitespaceNeighbors, setWhitespaceNeighbors] = useState(15);
+  const [whitespaceResolution, setWhitespaceResolution] = useState(0.5);
+  const [whitespaceAlpha, setWhitespaceAlpha] = useState(0.8);
+  const [whitespaceBeta, setWhitespaceBeta] = useState(0.5);
+  const [whitespaceLimit, setWhitespaceLimit] = useState(1000);
+  const [whitespaceLayout, setWhitespaceLayout] = useState(true);
+  const [whitespaceLoading, setWhitespaceLoading] = useState(false);
+  const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
+  const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[], edges: any[] } | null>(null);
+
   // Debounce all free-text inputs to prevent API spam and race conditions
   const qDebounced = useDebounced(q);
   const semanticDebounced = useDebounced(semantic);
@@ -328,6 +342,86 @@ export default function Page() {
     }
   }, [getAccessTokenSilently, qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, trendGroupBy]);
 
+  const runWhitespaceAnalysis = useCallback(async () => {
+    setWhitespaceLoading(true);
+    setWhitespaceError(null);
+    try {
+      const token = await getAccessTokenSilently();
+      const payload = {
+        model: whitespaceModel,
+        date_from: whitespaceDateFrom || undefined,
+        date_to: whitespaceDateTo || undefined,
+        neighbors: whitespaceNeighbors,
+        resolution: whitespaceResolution,
+        alpha: whitespaceAlpha,
+        beta: whitespaceBeta,
+        limit: whitespaceLimit,
+        layout: whitespaceLayout,
+      };
+
+      const res = await fetch(`/api/whitespace/run`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      const data = await res.json();
+      setWhitespaceGraph(data);
+    } catch (e: any) {
+      setWhitespaceError(e?.message ?? "Whitespace analysis failed");
+    } finally {
+      setWhitespaceLoading(false);
+    }
+  }, [
+    getAccessTokenSilently,
+    whitespaceModel,
+    whitespaceDateFrom,
+    whitespaceDateTo,
+    whitespaceNeighbors,
+    whitespaceResolution,
+    whitespaceAlpha,
+    whitespaceBeta,
+    whitespaceLimit,
+    whitespaceLayout,
+  ]);
+
+  const fetchWhitespaceGraph = useCallback(async () => {
+    setWhitespaceLoading(true);
+    setWhitespaceError(null);
+    try {
+      const token = await getAccessTokenSilently();
+      const params = new URLSearchParams({
+        model: whitespaceModel,
+        limit: String(whitespaceLimit),
+      });
+      const res = await fetch(`/api/whitespace/graph?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.status === 404) {
+        setWhitespaceGraph(null);
+        return;
+      }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      const data = await res.json();
+      setWhitespaceGraph(data);
+    } catch (e: any) {
+      setWhitespaceError(e?.message ?? "Failed to fetch whitespace graph");
+    } finally {
+      setWhitespaceLoading(false);
+    }
+  }, [getAccessTokenSilently, whitespaceModel, whitespaceLimit]);
+
   useEffect(() => {
     setPage(1);
   }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
@@ -336,8 +430,9 @@ export default function Page() {
     if (isAuthenticated && !isLoading) {
         fetchSearch();
         fetchTrend();
+        fetchWhitespaceGraph();
     }
-  }, [page, fetchSearch, fetchTrend, isAuthenticated, isLoading]);
+  }, [page, fetchSearch, fetchTrend, fetchWhitespaceGraph, isAuthenticated, isLoading]);
 
   useEffect(() => {
     if(!isAuthenticated || isLoading) return;
@@ -712,6 +807,129 @@ export default function Page() {
           ) : (
             <TrendChart data={trend} groupBy={trendGroupBy} height={260} />
           )}
+        </Card>
+
+        <Card>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Analysis</h2>
+          <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+            <Row>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-model">Model</Label>
+                <input
+                  id="ws-model"
+                  value={whitespaceModel}
+                  onChange={(e) => setWhitespaceModel(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-limit">Limit</Label>
+                <input
+                  id="ws-limit"
+                  type="number"
+                  value={whitespaceLimit}
+                  onChange={(e) => setWhitespaceLimit(Number(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-date_from">From</Label>
+                <input
+                  id="ws-date_from"
+                  type="date"
+                  min="2022-01-01"
+                  max={whitespaceDateTo || today}
+                  value={whitespaceDateFrom}
+                  onChange={(e) => setWhitespaceDateFrom(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-date_to">To</Label>
+                <input
+                  id="ws-date_to"
+                  type="date"
+                  min={whitespaceDateFrom || "2022-01-02"}
+                  max={today}
+                  value={whitespaceDateTo}
+                  onChange={(e) => setWhitespaceDateTo(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+            </Row>
+            <Row>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-neighbors">Neighbors</Label>
+                <input
+                  id="ws-neighbors"
+                  type="number"
+                  value={whitespaceNeighbors}
+                  onChange={(e) => setWhitespaceNeighbors(Number(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-resolution">Resolution</Label>
+                <input
+                  id="ws-resolution"
+                  type="number"
+                  step="0.1"
+                  value={whitespaceResolution}
+                  onChange={(e) => setWhitespaceResolution(Number(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-alpha">Alpha</Label>
+                <input
+                  id="ws-alpha"
+                  type="number"
+                  step="0.1"
+                  value={whitespaceAlpha}
+                  onChange={(e) => setWhitespaceAlpha(Number(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-beta">Beta</Label>
+                <input
+                  id="ws-beta"
+                  type="number"
+                  step="0.1"
+                  value={whitespaceBeta}
+                  onChange={(e) => setWhitespaceBeta(Number(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  id="ws-layout"
+                  type="checkbox"
+                  checked={whitespaceLayout}
+                  onChange={(e) => setWhitespaceLayout(e.target.checked)}
+                />
+                <Label htmlFor="ws-layout">Compute Layout</Label>
+              </div>
+              <button
+                onClick={() => {
+                  runWhitespaceAnalysis();
+                }}
+                style={primaryBtn}
+                disabled={whitespaceLoading}
+              >
+                {whitespaceLoading ? "Running..." : "Run Analysis"}
+              </button>
+            </Row>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Graph</h2>
+          {whitespaceLoading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
+          {whitespaceError && <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {whitespaceError}</div>}
+          <div style={{ height: 400, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
+            {/* Graph will be rendered here */}
+          </div>
         </Card>
 
         <Card>
