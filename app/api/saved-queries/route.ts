@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
+  if (!body.name) {
+    body.name = `Saved Query ${new Date().toISOString()}`;
+  }
   const authHeader = req.headers.get('authorization');
   
   const headers = new Headers();

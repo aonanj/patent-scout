@@ -17,7 +17,7 @@ class UnauthorizedException(HTTPException):
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
-        jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
+        jwks_url = f"{AUTH0_DOMAIN}/.well-known/jwks.json"
         jwks_client = jwt.PyJWKClient(jwks_url)
         
         try:
@@ -32,7 +32,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             signing_key.key,
             algorithms=ALGORITHMS,
             audience=API_AUDIENCE,
-            issuer=f"https://{AUTH0_DOMAIN}/"
+            issuer=f"{AUTH0_DOMAIN}"
         )
         return payload
 
@@ -41,4 +41,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except jwt.MissingRequiredClaimError as e:
         raise UnauthorizedException(detail="Invalid claims, please check the audience and issuer") from e
     except Exception as e:
-        raise UnauthorizedException(detail="Unable to parse authentication token.") from e
+        raise UnauthorizedException(detail=f"Unable to parse authentication token: {e}") from e
