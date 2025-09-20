@@ -16,7 +16,7 @@ _VEC_CAST: Final[str] = (
 )
 
 # Semantic search tuning (less restrictive by default)
-SEMANTIC_TOPK: Final[int] = int(os.getenv("SEMANTIC_TOPK", "500"))
+SEMANTIC_TOPK: Final[int] = int(os.getenv("SEMANTIC_TOPK", "1000"))
 SEMANTIC_JUMP: Final[float] = float(os.getenv("SEMANTIC_JUMP", "0.1"))
 EXPORT_MAX_ROWS: Final[int] = int(os.getenv("EXPORT_MAX_ROWS", "1000"))
 EXPORT_SEMANTIC_TOPK: Final[int] = int(os.getenv("EXPORT_SEMANTIC_TOPK", "1500"))
