@@ -116,7 +116,7 @@ def _where_clause() -> str:
     return """
       WHERE ($1::text IS NULL OR
              to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) @@ plainto_tsquery('english', $1))
-        AND ($2::text IS NULL OR p.assignee = $2)
+        AND ($2::text IS NULL OR p.assignee_name = $2)
         AND (
               $3::jsonb IS NULL
               OR EXISTS (
