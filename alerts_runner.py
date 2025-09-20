@@ -125,8 +125,14 @@ def _where_clause() -> str:
                     WHERE p.cpc ? q.code
                  )
             )
-        AND ($4::date IS NULL OR p.pub_date >= $4)
-        AND ($5::date IS NULL OR p.pub_date <= $5)
+                AND (
+                            $4::date IS NULL
+                            OR to_date(p.pub_date::text, 'YYYYMMDD') >= $4
+                        )
+                AND (
+                            $5::date IS NULL
+                            OR to_date(p.pub_date::text, 'YYYYMMDD') <= $5
+                        )
     """
 
 
@@ -142,8 +148,8 @@ SELECT p.pub_id, p.title, p.pub_date
 FROM patent p
 JOIN last_run lr ON lr.saved_query_id = $6
 {_where_clause()}
-  AND p.pub_date > (lr.ts AT TIME ZONE 'UTC')::date
-ORDER BY p.pub_date DESC
+    AND to_date(p.pub_date::text, 'YYYYMMDD') > (lr.ts AT TIME ZONE 'UTC')::date
+ORDER BY to_date(p.pub_date::text, 'YYYYMMDD') DESC
 LIMIT 200;
 """
 
