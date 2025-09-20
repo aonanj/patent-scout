@@ -23,7 +23,7 @@ EXPORT_SEMANTIC_TOPK: Final[int] = int(os.getenv("EXPORT_SEMANTIC_TOPK", "1500")
 
 # add near top of repository.py, after imports/constants
 SEARCH_EXPR = (
-    "(setweight(to_tsvector('english', coalesce(p.title,'')),'A') || "
+    "setweight(to_tsvector('english', coalesce(p.title,'')),'A') || "
     "setweight(to_tsvector('english', coalesce(p.abstract,'')),'B') || "
     "setweight(to_tsvector('english', coalesce(p.claims_text,'')),'C')"
 )
@@ -119,6 +119,9 @@ async def export_rows(
     Fields: pub_id, title, abstract, assignee_name, pub_date, cpc (comma-separated), priority_date
     """
     limit = max(1, min(limit, EXPORT_MAX_ROWS))
+    tsq = None
+    if keywords:
+        tsq = "plainto_tsquery('english', %s)"
 
     if query_vec is None:
         # Keyword-only path: use SQL with optional TS ranking.
@@ -134,19 +137,13 @@ async def export_rows(
         where = [_filters_sql(filters, args)]
 
         if keywords:
-            where.append(
-                "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
-                "@@ plainto_tsquery('english', %s)"
-            )
+            where.append(f"({SEARCH_EXPR}) @@ {tsq}")
             args.append(keywords)
 
         base_query = f"{from_clause} WHERE {' AND '.join(where)}"
         if keywords:
             # order by text search rank when keywords present
-            order_by = (
-                "ORDER BY ts_rank_cd(to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')), "
-                "plainto_tsquery('english', %s)) DESC, p.pub_date DESC"
-            )
+            order_by = (f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC")
             args.append(keywords)
         else:
             order_by = "ORDER BY p.pub_date DESC"
@@ -190,10 +187,7 @@ async def export_rows(
     where = [_filters_sql(filters, args)]
     where.append("e.model LIKE '%%|ta'")
     if keywords:
-        where.append(
-            "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
-            "@@ plainto_tsquery('english', %s)"
-        )
+        where.append(f"({SEARCH_EXPR}) @@ {tsq}")
         args.append(keywords)
     base_query = f"{from_clause} WHERE {' AND '.join(where)}"
     sql = f"{select_core} {base_query} ORDER BY dist ASC LIMIT {topk}"
@@ -253,7 +247,7 @@ async def search_hybrid(
         where = [_filters_sql(filters, args)]
 
         if keywords:
-            where.append(f"{SEARCH_EXPR} @@ {tsq}")
+            where.append(f"({SEARCH_EXPR}) @@ {tsq}")
             args.append(keywords)
 
         base_query = f"{from_clause} {' '.join(joins)} WHERE {' AND '.join(where)}"
@@ -268,8 +262,7 @@ async def search_hybrid(
             # add keyword again for ordering
             args.append(keywords)
             order_by = (
-                f"ORDER BY ts_rank_cd({SEARCH_EXPR}, "
-                f"{tsq}) DESC"
+                f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC"
             )
         else:
             order_by = "ORDER BY p.pub_date DESC"
@@ -299,7 +292,7 @@ async def search_hybrid(
     where.append("e.model LIKE '%%|ta'")
 
     if keywords:
-        where.append(f"{SEARCH_EXPR} @@ {tsq}")
+        where.append(f"({SEARCH_EXPR}) @@ {tsq}")
         args.append(keywords)
 
     base_query = f"{from_clause} WHERE {' AND '.join(where)}"
@@ -375,7 +368,7 @@ async def trend_volume(
         where_parts = [_filters_sql(filters, args)]
         where_parts.append("e.model LIKE '%%|ta'")
         if keywords:
-            where_parts.append(f"{SEARCH_EXPR} @@ {tsq}")
+            where_parts.append(f"({SEARCH_EXPR}) @@ {tsq}")
             args.append(keywords)
 
         sql = f"{select_core} {from_clause} WHERE {' AND '.join(where_parts)} ORDER BY dist ASC LIMIT {topk}"
@@ -428,7 +421,7 @@ async def trend_volume(
     where_clauses = [_filters_sql(filters, args)]
 
     if keywords:
-        where_clauses.append(f"{SEARCH_EXPR} @@ {tsq}")
+        where_clauses.append(f"({SEARCH_EXPR}) @@ {tsq}")
         args.append(keywords)
 
     if group_by == "month":
