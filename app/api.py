@@ -355,47 +355,148 @@ async def export(
     y -= 18
     c.setFont("Helvetica", 9)
 
-    def draw_line(text: str, font="Helvetica", size=9):
+    def _ensure_space():
         nonlocal y
         if y < 60:
             c.showPage()
             y = height - margin
-            c.setFont(font, size)
-        c.drawString(margin, y, text)
+
+    def draw_label_value(label: str, value: str | None, label_font: str = "Helvetica-Bold", label_size: int = 9, value_font: str = "Helvetica", value_size: int = 9):
+        """Draw a label in bold followed by a wrapped value. The label is printed as "Label: " in bold and the value wraps to subsequent lines aligned under the value start."""
+        nonlocal y
+        if not value:
+            return
+        _ensure_space()
+        label_text = f"{label}: "
+        # starting positions
+        x_label = margin
+        # compute widths
+        c.setFont(label_font, label_size)
+        label_w = c.stringWidth(label_text, label_font, label_size)
+        x_value = x_label + label_w
+        max_value_width = width - margin - x_value
+
+        words = str(value).split()
+        # draw first line with label
+        c.setFont(label_font, label_size)
+        c.drawString(x_label, y, label_text)
+        c.setFont(value_font, value_size)
+        line = ""
+        first_line = True
+        for w in words:
+            test = (line + " " + w).strip()
+            test_w = c.stringWidth(test, value_font, value_size)
+            if test_w <= max_value_width:
+                line = test
+            else:
+                # draw current line
+                if first_line:
+                    c.drawString(x_value, y, line)
+                    first_line = False
+                else:
+                    _ensure_space()
+                    y -= 12
+                    c.setFont(value_font, value_size)
+                    c.drawString(x_value, y, line)
+                line = w
+                # check for page break after moving down
+                if y < 60:
+                    c.showPage()
+                    y = height - margin
+                    # re-draw label on new page
+                    c.setFont(label_font, label_size)
+                    c.drawString(x_label, y, label_text)
+                    c.setFont(value_font, value_size)
+        # draw remainder
+        if first_line:
+            c.drawString(x_value, y, line)
+        else:
+            _ensure_space()
+            y -= 12
+            c.setFont(value_font, value_size)
+            c.drawString(x_value, y, line)
+
+    def draw_inline_meta(pairs: list[tuple[str, str]]):
+        """Draw a sequence of small meta label/value pairs on a single line when possible, with bold labels and normal values, separated by ' | '."""
+        nonlocal y
+        if not pairs:
+            return
+        _ensure_space()
+        x = margin
+        sep = " | "
+        for i, (lab, val) in enumerate(pairs):
+            lab_text = f"{lab}: "
+            c.setFont("Helvetica-Bold", 9)
+            lab_w = c.stringWidth(lab_text, "Helvetica-Bold", 9)
+            c.drawString(x, y, lab_text)
+            x += lab_w
+            c.setFont("Helvetica", 9)
+            val_w = c.stringWidth(str(val), "Helvetica", 9)
+            # wrap to next line if it won't fit
+            if x + val_w > width - margin:
+                # move to next line
+                y -= 12
+                if y < 60:
+                    c.showPage()
+                    y = height - margin
+                x = margin
+                # redraw label on new line
+                c.setFont("Helvetica-Bold", 9)
+                c.drawString(x, y, lab_text)
+                x += lab_w
+                c.setFont("Helvetica", 9)
+            c.drawString(x, y, str(val))
+            x += val_w
+            if i != len(pairs) - 1:
+                c.setFont("Helvetica", 9)
+                sep_w = c.stringWidth(sep, "Helvetica", 9)
+                # if separator doesn't fit, wrap
+                if x + sep_w > width - margin:
+                    y -= 12
+                    if y < 60:
+                        c.showPage()
+                        y = height - margin
+                    x = margin
+                c.drawString(x, y, sep)
+                x += sep_w
         y -= 12
 
     for r in rows:
-        draw_line(f"Pub: {r.get('pub_id')}", "Helvetica-Bold", 10)
-        if r.get('title'):
-            draw_line(f"Title: {r.get('title')}")
-        if r.get('assignee_name'):
-            draw_line(f"Assignee: {r.get('assignee_name')}")
-        date_s = _int_date(r.get('pub_date'))
-        prio_s = _int_date(r.get('priority_date'))
-        meta = []
+        # Pub id (bold label)
+        draw_label_value("Pub", r.get("pub_id"), label_size=10)
+
+        # Title and Assignee
+        if r.get("title"):
+            draw_label_value("Title", r.get("title"))
+        if r.get("assignee_name"):
+            draw_label_value("Assignee", r.get("assignee_name"))
+
+        # Inline meta (Pub Date | Priority)
+        date_s = _int_date(r.get("pub_date"))
+        prio_s = _int_date(r.get("priority_date"))
+        meta_pairs: list[tuple[str, str]] = []
         if date_s:
-            meta.append(f"Pub Date: {date_s}")
+            meta_pairs.append(("Pub Date", date_s))
         if prio_s:
-            meta.append(f"Priority: {prio_s}")
-        if meta:
-            draw_line(" | ".join(meta))
-        if r.get('cpc'):
-            draw_line(f"CPC: {r.get('cpc')}")
-        if r.get('abstract'):
-            abstract = str(r.get('abstract')).replace('\n', ' ')
-            # wrap naive
-            words = abstract.split()
-            line = ""
-            for w in words:
-                test = (line + " " + w).strip()
-                if len(test) > 110:
-                    draw_line(line)
-                    line = w
-                else:
-                    line = test
-            if line:
-                draw_line(line)
-        y -= 6
+            meta_pairs.append(("Priority", prio_s))
+        if meta_pairs:
+            draw_inline_meta(meta_pairs)
+
+        # CPC
+        if r.get("cpc"):
+            draw_label_value("CPC", r.get("cpc"))
+
+        # Abstract (use the label/value wrapper to handle wrapping)
+        if r.get("abstract"):
+            abstract = str(r.get("abstract")).replace("\n", " ")
+            draw_label_value("Abstract", abstract)
+
+        # horizontal separator between records
+        _ensure_space()
+        # draw a thin line and advance
+        c.setLineWidth(0.5)
+        c.line(margin, y, width - margin, y)
+        y -= 12
 
     c.showPage()
     c.save()

@@ -962,12 +962,13 @@ const ghostBtn: React.CSSProperties = {
 };
 
 const secondaryBtn: React.CSSProperties = {
-  height: 32,
+  height: 24,
   padding: "0 10px",
   borderRadius: 8,
   border: "1px solid #e5e7eb",
   background: "white",
   cursor: "pointer",
+  fontSize: 12,
 };
 
 const dangerBtn: React.CSSProperties = {

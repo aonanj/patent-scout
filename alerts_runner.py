@@ -7,43 +7,53 @@ alerts_runner.py
 - Only reports NEW results since the last run per saved_query
 
 Install:
-  pip install asyncpg httpx python-dotenv
+    pip install asyncpg httpx python-dotenv
 
 Env:
-  DATABASE_URL="postgresql://USER:PASS@HOST/DB?sslmode=require"
+    DATABASE_URL="postgresql://USER:PASS@HOST/DB?sslmode=require"
 
-  MAILGUN_DOMAIN="mg.your-domain.com"
-  MAILGUN_API_KEY="key-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  MAILGUN_FROM_NAME="Patent Scout Alerts"
-  MAILGUN_FROM_EMAIL="alerts@your-domain.com"
-  # Optional:
-  MAILGUN_BASE_URL="https://api.mailgun.net/v3"  # default
+    MAILGUN_DOMAIN="mg.your-domain.com"
+    MAILGUN_API_KEY="key-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    MAILGUN_FROM_NAME="Patent Scout Alerts"
+    MAILGUN_FROM_EMAIL="alerts@your-domain.com"
+    # Optional:
+    MAILGUN_BASE_URL="https://api.mailgun.net/v3"  # default
 
-DB schema (run once):
-  CREATE TABLE IF NOT EXISTS saved_query (
-    id           bigserial PRIMARY KEY,
-    user_email   text NOT NULL,
-    name         text,
-    keywords     text,     -- plainto_tsquery on title+abstract
-    assignee     text,     -- exact match; normalize upstream if needed
-    cpc          jsonb,    -- JSON array of CPC codes, e.g. ["G06F/16","G06N/20"]
-    date_from    date,
-    date_to      date,
-    created_at   timestamptz DEFAULT now()
-  );
+DB schema (current):
+    -- app users
+    CREATE TABLE app_user (
+        id           text PRIMARY KEY,
+        email        citext UNIQUE NOT NULL,
+        display_name text,
+        created_at   timestamptz NOT NULL DEFAULT now()
+    );
 
-  CREATE TABLE IF NOT EXISTS alert_event (
-    id              bigserial PRIMARY KEY,
-    saved_query_id  bigint REFERENCES saved_query(id) ON DELETE CASCADE,
-    created_at      timestamptz DEFAULT now(),
-    result_count    int,
-    results_sample  jsonb
-  );
+    -- saved queries (filters is JSONB)
+    CREATE TABLE saved_query (
+        id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        owner_id       text NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+        name           text NOT NULL,
+        filters        jsonb NOT NULL, -- {keywords?, assignee?, cpc?[], date_from?, date_to?}
+        semantic_query text,
+        schedule_cron  text,
+        is_active      boolean NOT NULL DEFAULT true,
+        created_at     timestamptz NOT NULL DEFAULT now(),
+        updated_at     timestamptz NOT NULL DEFAULT now()
+    );
+
+    -- alert events (per run summary)
+    CREATE TABLE alert_event (
+        id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        saved_query_id uuid NOT NULL REFERENCES saved_query(id) ON DELETE CASCADE,
+        created_at     timestamptz NOT NULL DEFAULT now(),
+        results_sample jsonb NOT NULL,
+        count          integer NOT NULL CHECK (count >= 0)
+    );
 """
-import os
-import json
 import asyncio
-from typing import Optional
+import json
+import os
+from typing import Any
 
 import asyncpg
 import httpx
@@ -74,7 +84,7 @@ async def send_mailgun_email(
     to_email: str,
     subject: str,
     text_body: str,
-    html_body: Optional[str] = None,
+    html_body: str | None = None,
 ) -> None:
     # If Mailgun is not configured, no-op with console output.
     if not (MAILGUN_DOMAIN and MAILGUN_API_KEY):
@@ -138,14 +148,47 @@ LIMIT 200;
 """
 
 
+def _extract_filters(filters: dict[str, Any] | None) -> tuple[str | None, str | None, str | None, str | None, str | None]:
+        """Extract normalized filter tuple from saved_query.filters JSON.
+
+        Expected keys inside filters JSONB:
+            - keywords: str | null
+            - assignee: str | null
+            - cpc: list[str] | null
+            - date_from: str(YYYY-MM-DD) | null
+            - date_to: str(YYYY-MM-DD) | null
+        Returns a 5-tuple matching SQL parameter order for _where_clause.
+        """
+        if not isinstance(filters, dict):
+                return None, None, None, None, None
+
+        keywords = filters.get("keywords") or None
+        assignee = filters.get("assignee") or None
+
+        cpc = None
+        try:
+                raw = filters.get("cpc")
+                if raw:
+                        # store as JSON-encoded array of strings for the SQL ? operator logic
+                        cpc = json.dumps(list(map(str, raw)))
+        except Exception:
+                cpc = None
+
+        date_from = filters.get("date_from") or None
+        date_to = filters.get("date_to") or None
+        return keywords, assignee, cpc, date_from, date_to
+
+
 async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
+    # filters are in jsonb column 'filters'
+    k, a, cpc_json, dfrom, dto = _extract_filters(sq.get("filters"))
     params = (
-        sq["keywords"],                                # $1
-        sq["assignee"],                                # $2
-        json.dumps(sq["cpc"]) if sq["cpc"] else None,  # $3
-        sq["date_from"],                                # $4
-        sq["date_to"],                                  # $5
-        sq["id"],                                       # $6
+        k,            # $1 keywords
+        a,            # $2 assignee
+        cpc_json,     # $3 cpc array as json
+        dfrom,        # $4 date_from
+        dto,          # $5 date_to
+        sq["id"],     # $6 saved_query uuid
     )
     rows = await conn.fetch(SEARCH_SQL_NEW, *params)
     count = len(rows)
@@ -155,8 +198,8 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
     sample = [dict(id=r["pub_id"], title=r["title"], pub_date=str(r["pub_date"])) for r in rows[:10]]
 
     await conn.execute(
-        "INSERT INTO alert_event(saved_query_id, result_count, results_sample) VALUES ($1,$2,$3)",
-        sq["id"], count, json.dumps(sample)
+        "INSERT INTO alert_event(saved_query_id, results_sample, count) VALUES ($1,$2,$3)",
+        sq["id"], json.dumps(sample), count
     )
 
     name = sq["name"] or "Saved Query"
@@ -174,14 +217,27 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
         + "".join(f"<li>{r['pub_date']} &nbsp; <b>{r['pub_id']}</b> — {r['title']}</li>" for r in sample)
         + "</ol><p>(Showing up to 10. See app for full list.)</p>"
     )
-    await send_mailgun_email(sq["user_email"], f"Patent Scout Alert: {name}", text, html)
+    to_email = sq.get("owner_email") or sq.get("email")
+    if not to_email:
+        print(f"[warn] No owner email for saved_query id={sq['id']}; skipping email send")
+    else:
+        await send_mailgun_email(to_email, f"Patent Scout Alert: {name}", text, html)
     return count
 
 
 async def main():
     conn = await asyncpg.connect(DB_URL)
     try:
-        saved = await conn.fetch("SELECT * FROM saved_query ORDER BY id")
+        # Fetch active queries and join to owner email
+        saved = await conn.fetch(
+            """
+            SELECT sq.*, au.email AS owner_email
+            FROM saved_query sq
+            JOIN app_user au ON au.id = sq.owner_id
+            WHERE sq.is_active = TRUE
+            ORDER BY sq.created_at
+            """
+        )
         total = 0
         for sq in saved:
             try:
