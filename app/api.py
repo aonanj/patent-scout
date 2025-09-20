@@ -104,10 +104,7 @@ async def list_saved_queries(conn: Conn, user: User):
 
 @app.post("/saved-queries")
 async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
-    """Create a saved query, ensuring the owner exists to satisfy FK.
-
-    Some deployments enforce a foreign key saved_query.owner_id -> app_user(id).
-    We opportunistically insert the owner row if it doesn't exist.
+    """Create a saved query.
     """
     owner_id = user.get("sub")
     if not owner_id:

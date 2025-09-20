@@ -103,6 +103,24 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
+  // Alerts overlay state
+  type SavedQuery = {
+    id: number | string;
+    owner_id?: string;
+    name: string;
+    filters?: Record<string, any> | null;
+    semantic_query?: string | null;
+    schedule_cron?: string | null;
+    is_active?: boolean | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+  };
+  const [showAlerts, setShowAlerts] = useState(false);
+  const [alerts, setAlerts] = useState<SavedQuery[]>([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [alertsErr, setAlertsErr] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | number | null>(null);
+
   // Debounce all free-text inputs to prevent API spam and race conditions
   const qDebounced = useDebounced(q);
   const semanticDebounced = useDebounced(semantic);
@@ -158,6 +176,54 @@ export default function Page() {
       setSaving(false);
     }
   }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, getAccessTokenSilently]);
+
+  const loadAlerts = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setAlertsLoading(true);
+    setAlertsErr(null);
+    try {
+      const token = await getAccessTokenSilently();
+      const r = await fetch("/api/saved-queries", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const t = await r.json();
+      const items: SavedQuery[] = Array.isArray(t?.items) ? t.items : Array.isArray(t) ? t : [];
+      setAlerts(items);
+    } catch (e: any) {
+      setAlertsErr(e?.message ?? "failed to load alerts");
+    } finally {
+      setAlertsLoading(false);
+    }
+  }, [getAccessTokenSilently, isAuthenticated]);
+
+  const openAlerts = useCallback(() => {
+    setShowAlerts(true);
+    loadAlerts();
+  }, [loadAlerts]);
+
+  const closeAlerts = useCallback(() => setShowAlerts(false), []);
+
+  const deleteAlert = useCallback(async (id: string | number) => {
+    if (!id) return;
+    const confirm = window.confirm("Delete this alert? This cannot be undone.");
+    if (!confirm) return;
+    try {
+      setDeletingId(id);
+      const token = await getAccessTokenSilently();
+      const r = await fetch(`/api/saved-queries/${encodeURIComponent(String(id))}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      setAlerts((prev) => prev.filter((a) => String(a.id) !== String(id)));
+    } catch (e: any) {
+      alert(e?.message ?? "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  }, [getAccessTokenSilently]);
 
   const fetchSearch = useCallback(async () => {
     setLoading(true);
@@ -466,12 +532,86 @@ export default function Page() {
               <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
                 {saving ? "Saving…" : "Save as Alert"}
               </button>
+              <button onClick={openAlerts} disabled={!isAuthenticated} style={secondaryBtn} title="View and manage your alerts">
+                List Alerts
+              </button>
               {saveMsg && (
                 <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>
               )}
             </Row>
           </div>
         </Card>
+
+        {showAlerts && (
+          <div style={overlayStyle}>
+            <div style={{ ...overlayContentStyle, width: "min(900px, 95%)", maxHeight: "80vh", overflow: "auto", textAlign: "left" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <h3 style={{ margin: 0 }}>Your Alerts</h3>
+                <button onClick={closeAlerts} style={ghostBtn} aria-label="Close alerts">Close</button>
+              </div>
+              {alertsLoading ? (
+                <div style={{ fontSize: 13, color: "#64748b" }}>Loading…</div>
+              ) : alertsErr ? (
+                <div style={{ color: "#b91c1c", fontSize: 13 }}>Error: {alertsErr}</div>
+              ) : alerts.length === 0 ? (
+                <div style={{ fontSize: 13, color: "#64748b" }}>No alerts saved yet.</div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={tableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Name</th>
+                        <th style={thStyle}>Keywords</th>
+                        <th style={thStyle}>Assignee</th>
+                        <th style={thStyle}>CPC</th>
+                        <th style={thStyle}>Date Range</th>
+                        <th style={thStyle}>Semantic</th>
+                        <th style={thStyle}>Schedule</th>
+                        <th style={thStyle}>Active</th>
+                        <th style={thStyle}>Created</th>
+                        <th style={thStyle}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {alerts.map((a) => {
+                        const f = (a.filters ?? {}) as Record<string, any>;
+                        const kw = f.keywords ?? f.q ?? "";
+                        const ass = f.assignee ?? "";
+                        const cpcv = f.cpc ?? "";
+                        const df = f.date_from ?? "";
+                        const dt = f.date_to ?? "";
+                        const dr = df || dt ? `${fmtDateCell(df)} – ${fmtDateCell(dt)}` : "";
+                        return (
+                          <tr key={String(a.id)}>
+                            <td style={tdStyle}>{a.name}</td>
+                            <td style={tdStyle}>{truncate(String(kw ?? ""), 36)}</td>
+                            <td style={tdStyle}>{truncate(String(ass ?? ""), 24)}</td>
+                            <td style={tdStyle}>{Array.isArray(cpcv) ? cpcv.join(", ") : String(cpcv ?? "")}</td>
+                            <td style={tdStyle}>{dr}</td>
+                            <td style={tdStyle}>{truncate(String(a.semantic_query ?? ""), 24)}</td>
+                            <td style={tdStyle}>{a.schedule_cron ?? "—"}</td>
+                            <td style={tdStyle}>{(a.is_active ?? true) ? "Yes" : "No"}</td>
+                            <td style={tdStyle}>{a.created_at ? fmtDateTimeCell(a.created_at) : ""}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>
+                              <button
+                                onClick={() => deleteAlert(a.id)}
+                                disabled={deletingId === a.id}
+                                style={dangerBtn}
+                                title="Delete alert"
+                              >
+                                {deletingId === a.id ? "Deleting…" : "Delete"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -756,6 +896,39 @@ const secondaryBtn: React.CSSProperties = {
   cursor: "pointer",
 };
 
+const dangerBtn: React.CSSProperties = {
+  height: 28,
+  padding: "0 10px",
+  borderRadius: 6,
+  border: "1px solid #ef4444",
+  background: "#fff1f2",
+  color: "#b91c1c",
+  cursor: "pointer",
+};
+
+const tableStyle: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: 12,
+};
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "8px 10px",
+  borderBottom: "1px solid #e5e7eb",
+  color: "#334155",
+  background: "#f8fafc",
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "8px 10px",
+  borderTop: "1px solid #f1f5f9",
+  verticalAlign: "top",
+};
+
 function truncate(s: string, n: number) {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
@@ -779,4 +952,25 @@ function formatDate(v: string | number) {
 function fmtShortDate(ms: number) {
   const d = new Date(ms);
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function fmtDateCell(v: any): string {
+  if (v === null || v === undefined || v === "") return "";
+  try {
+    return formatDate(v);
+  } catch {
+    return String(v);
+  }
+}
+
+function fmtDateTimeCell(v: any): string {
+  if (!v) return "";
+  try {
+    const d = new Date(v);
+    // Show YYYY-MM-DD HH:MM (UTC)
+    const iso = d.toISOString();
+    return iso.slice(0, 16).replace("T", " ") + "Z";
+  } catch {
+    return String(v);
+  }
 }
