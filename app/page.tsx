@@ -481,7 +481,7 @@ export default function Page() {
                   value={semantic}
                   onChange={(e) => setSemantic(e.target.value)}
                   placeholder="Describe relevant AI tech"
-                  style={inputStyle}
+                  style={{ ...inputStyle, minWidth: 420, width: 600, maxWidth: 800 }}
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
@@ -572,12 +572,14 @@ export default function Page() {
                 Reset
               </button>
 
-              <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
-                {saving ? "Saving…" : "Save as Alert"}
-              </button>
-              <button onClick={openAlerts} disabled={!isAuthenticated} style={secondaryBtn} title="View and manage your alerts">
-                List Alerts
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
+                  {saving ? "Saving…" : "Save as Alert"}
+                </button>
+                <button onClick={openAlerts} disabled={!isAuthenticated} style={secondaryBtn} title="View and manage your alerts">
+                  List Alerts
+                </button>
+              </div>
               {saveMsg && (
                 <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>
               )}
@@ -794,6 +796,11 @@ export default function Page() {
           </div>
         </Card>
       </div>
+
+      {/* Footer */}
+      <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12 }}>
+        2025 © Phaethon Order LLC | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a>
+      </footer>
     </div>
   );
 }
