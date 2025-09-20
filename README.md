@@ -36,6 +36,116 @@ Search, volume trend, and alerting on AI-related patents and publications using 
 
 ---
 
+## Database schema (from DB)
+
+Below are concise summaries of the main tables as observed from the running database. Types and important columns are listed to help understand how data is stored and how the repository queries operate.
+
+- `patent_embeddings`
+  - Columns: `id` (integer, PK), `pub_id` (text, FK -> `patent.pub_id`), `model` (text), `dim` (integer), `created_at` (timestamp), `embedding` (vector)
+  - Notes: stores pgvector embeddings for patents. Indexes include specialized HNSW/hnsw-like vector indexes constrained by `model` (e.g. `...|claims`, `...|ta`).
+
+- `patent`
+  - Columns: `pub_id` (text, PK), `family_id` (text), `kind_code` (text), `title` (text), `abstract` (text), `claims_text` (text), `assignee_name` (text), `inventor_name` (jsonb), `cpc` (jsonb), `created_at`, `updated_at`, `application_number` (text), `priority_date` (integer), `filing_date` (integer), `pub_date` (integer), `canonical_assignee_name` (text)
+  - Notes: main patent metadata table. There are GIN indexes for full-text search on `title`/`abstract`/`claims_text` (e.g. `to_tsvector`) and a GIN index for `cpc` jsonb (`jsonb_path_ops`/`jsonb_path_ops`-like). Many repository queries use lateral `jsonb_array_elements` to extract CPC entries.
+
+- `saved_query`
+  - Columns: `id` (uuid), `owner_id` (text), `name` (text), `filters` (jsonb), `semantic_query` (text), `schedule_cron` (text), `is_active` (boolean), `created_at`, `updated_at`
+  - Notes: holds alert definitions / saved searches and their serialized filter criteria.
+
+- `alert_event`
+  - Columns: `id` (uuid), `saved_query_id` (uuid FK -> `saved_query.id`), `created_at` (timestamp), `results_sample` (jsonb), `count` (integer)
+  - Notes: recorded alert runs and a sample of results (used for digests).
+
+- `app_user`
+  - Columns: `id` (text), `email` (citext), `display_name` (text), `created_at` (timestamp)
+
+```sql
+-- patent_embeddings
+CREATE TABLE public.patent_embeddings (
+  id integer PRIMARY KEY,
+  pub_id text NOT NULL,
+  model text NOT NULL,
+  dim integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  embedding vector(1536) NOT NULL
+);
+
+-- Indexes (examples from DB)
+CREATE UNIQUE INDEX patent_embeddings_model_idx ON public.patent_embeddings (model, pub_id);
+CREATE INDEX patent_embeddings_hnsw_idx_claims hnsw (embedding vector_cosine_ops) WHERE model = 'text-embedding-3-small|claims'::text;
+CREATE INDEX patent_embeddings_hnsw_idx_ta hnsw (embedding vector_cosine_ops) WHERE model = 'text-embedding-3-small|ta'::text;
+
+-- Foreign key
+ALTER TABLE public.patent_embeddings
+  ADD CONSTRAINT patent_embeddings_pub_id_fkey FOREIGN KEY (pub_id) REFERENCES public.patent(pub_id) ON DELETE CASCADE;
+
+-- patent (metadata)
+CREATE TABLE public.patent (
+  pub_id text PRIMARY KEY,
+  family_id text,
+  kind_code text,
+  title text NOT NULL,
+  abstract text,
+  claims_text text,
+  assignee_name text,
+  inventor_name jsonb,
+  cpc jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  application_number text,
+  priority_date integer,
+  filing_date integer,
+  pub_date integer NOT NULL,
+  canonical_assignee_name text
+);
+
+-- Example indexes observed
+CREATE INDEX patent_abstract_trgm_idx ON public.patent USING gin (abstract gin_trgm_ops);
+CREATE INDEX patent_title_trgm_idx ON public.patent USING gin (title gin_trgm_ops);
+CREATE INDEX patent_claims_idx ON public.patent USING gin (to_tsvector('english'::regconfig, claims_text));
+CREATE INDEX patent_tsv_idx ON public.patent USING gin (to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(abstract, '')));
+CREATE INDEX patent_search_expr_gin on public.patent USING gin (((setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(abstract, ''::text)), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(claims_text, ''::text)), 'C'::"char")))
+CREATE INDEX patent_cpc_jsonb_idx ON public.patent USING gin (cpc jsonb_path_ops);
+
+-- saved_query
+CREATE TABLE public.saved_query (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id text NOT NULL,
+  name text NOT NULL,
+  filters jsonb NOT NULL,
+  semantic_query text,
+  schedule_cron text,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+-- Foreign key
+ALTER TABLE public.saved_query
+  ADD CONSTRAINT saved_query_app_user_fkey FOREIGN KEY (owner_id) REFERENCES public.app_user(id) ON DELETE CASCADE;
+
+-- alert_event
+CREATE TABLE public.alert_event (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  saved_query_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  results_sample jsonb NOT NULL,
+  count integer NOT NULL
+);
+
+ALTER TABLE public.alert_event
+  ADD CONSTRAINT alert_event_saved_query_id_fkey FOREIGN KEY (saved_query_id) REFERENCES public.saved_query(id) ON DELETE CASCADE;
+
+-- app_user
+CREATE TABLE public.app_user (
+  id text PRIMARY KEY,
+  email citext,
+  display_name text,
+  created_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+```
+
 ## Requirements
 
 - Python 3.12+ (project uses modern typing and was tested on 3.13+)
