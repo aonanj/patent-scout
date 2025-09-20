@@ -481,7 +481,7 @@ export default function Page() {
                   value={semantic}
                   onChange={(e) => setSemantic(e.target.value)}
                   placeholder="Describe relevant AI tech"
-                  style={{ ...inputStyle, minWidth: 420, width: 480, maxWidth: 550 }}
+                  style={{ ...inputStyle, minWidth: 380, width: 420, maxWidth: 500 }}
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>

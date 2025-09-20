@@ -427,8 +427,8 @@ async def trend_volume(
     if group_by == "month":
         bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
     elif group_by == "cpc":
-        bucket_sql = "( (c->>'section') || COALESCE(c->>'class', '') )"
-        from_clause += ", LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c"
+        bucket_sql = "( (cpc_agg->>'section') || COALESCE(cpc_agg->>'class', '') )"
+        from_clause += ", LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) cpc_agg"
     elif group_by == "assignee":
         bucket_sql = "p.assignee_name"
     else:
