@@ -201,7 +201,14 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
     if count == 0:
         return 0
 
-    sample = [dict(id=r["pub_id"], title=r["title"], pub_date=str(r["pub_date"])) for r in rows[:10]]
+    sample = [
+        {
+            "pub_id": r["pub_id"],
+            "title": r["title"],
+            "pub_date": str(r["pub_date"]),
+        }
+        for r in rows[:10]
+    ]
 
     await conn.execute(
         "INSERT INTO alert_event(saved_query_id, results_sample, count) VALUES ($1,$2,$3)",

@@ -27,6 +27,8 @@ class PatentHit(BaseModel):
     assignee_name: str | None = None
     pub_date: int | None = None
     kind_code: str | None = None
+    cpc: str | None = None
+    priority_date: int | None = None
     score: float | None = None # distance or rank fusion score
 
 
