@@ -414,7 +414,7 @@ export default function Page() {
         </div>
       )}
 
-      <div style={{ maxWidth: 1500, margin: "0 auto", display: "grid", gap: 16 }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="sr-only">Patent Scout</h1>
         <img className="w-auto max-h-16 drop-shadow-lg hover:scale-110" src="/images/PatentScoutLogo.png" alt="Patent Scout" />
@@ -544,7 +544,7 @@ export default function Page() {
 
         {showAlerts && (
           <div style={overlayStyle}>
-            <div style={{ ...overlayContentStyle, width: "min(1200px, 96%)", maxHeight: "82vh", overflow: "auto", textAlign: "left" }}>
+            <div style={{ ...overlayContentStyle, width: "max(1500px, 96%)", maxHeight: "82vh", overflow: "auto", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <h3 style={{ margin: 0 }}>Your Alerts</h3>
                 <button onClick={closeAlerts} style={ghostBtn} aria-label="Close alerts">Close</button>
