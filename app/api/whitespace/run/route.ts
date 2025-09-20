@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       headers.append("Authorization", authHeader);
     }
 
-    const resp = await fetch(`${process.env.BACKEND_URL}/whitespace/run`, {
+    const resp = await fetch(`${process.env.BACKEND_URL}/whitespace/graph`, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(body),

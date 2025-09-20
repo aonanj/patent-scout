@@ -80,15 +80,14 @@ def ensure_schema(conn: psycopg.Connection) -> None:
     conn.commit()
 
 # --- Request and response models ---
-class RunRequest(BaseModel):
-    model: str = Field("text-embedding-3-small|ta")
+class GraphRequest(BaseModel):
     date_from: str | None = Field(None, description="YYYY-MM-DD")
     date_to: str | None = Field(None, description="YYYY-MM-DD")
     neighbors: int = 15
     resolution: float = 0.5
     alpha: float = 0.8
     beta: float = 0.5
-    limit: int | None = None
+    limit: int | None = 2000
     focus_assignees: list[str] = []
     focus_cpc_like: list[str] = []
     layout: bool = True          # compute 2D layout for graph response
@@ -119,9 +118,9 @@ def _to_int_date(s: str | None) -> int | None:
     y, m, d = s.split("-")
     return int(f"{y}{m}{d}")
 
-def load_embeddings(conn: psycopg.Connection, req: RunRequest) -> tuple[np.ndarray, list[str]]:
+def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> tuple[np.ndarray, list[str]]:
     where = ["e.model = %s"]
-    params: list[Any] = [req.model]
+    params: list[Any] = [model]
     df = _to_int_date(req.date_from)
     dt = _to_int_date(req.date_to)
     if df is not None:
@@ -156,7 +155,7 @@ def load_embeddings(conn: psycopg.Connection, req: RunRequest) -> tuple[np.ndarr
     X = X / norms
     return X, pub_ids
 
-def load_focus_mask(conn: psycopg.Connection, pub_ids: list[str], req: RunRequest) -> np.ndarray:
+def load_focus_mask(conn: psycopg.Connection, pub_ids: list[str], req: GraphRequest) -> np.ndarray:
     if not req.focus_assignees and not req.focus_cpc_like:
         return np.zeros(len(pub_ids), dtype=bool)
     q = "SELECT p.pub_id FROM patent p WHERE p.pub_id = ANY(%s)"
@@ -371,11 +370,12 @@ def persist(
 
 # --- Endpoints ---
 
-@router.post("/run", response_model=GraphResponse)
-def run_whitespace(req: RunRequest, pool: Annotated[ConnectionPool, Depends(get_pool)]) -> GraphResponse:
+@router.post("/graph", response_model=GraphResponse)
+def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depends(get_pool)]) -> GraphResponse:
     with pool.connection() as conn:
         ensure_schema(conn)
-        X, pub_ids = load_embeddings(conn, req)
+        model = "text-embedding-3-small|ta"
+        X, pub_ids = load_embeddings(conn, model, req)
         focus_mask = load_focus_mask(conn, pub_ids, req)
 
         dist, idx = build_knn(X, req.neighbors)
@@ -385,7 +385,7 @@ def run_whitespace(req: RunRequest, pool: Annotated[ConnectionPool, Depends(get_
         scores = whitespace_scores(X, labels, dens, focus_mask, req.alpha, req.beta, mom)
 
         # persist to DB
-        persist(conn, pub_ids, req.model, dist, idx, labels, dens, scores)
+        persist(conn, pub_ids, model, dist, idx, labels, dens, scores)
 
         # layout
         if req.layout and _HAVE_UMAP:
