@@ -1,21 +1,29 @@
 from __future__ import annotations
 
+import importlib.util
 import inspect
 import os
+
+# Standard library imports
 from collections.abc import Sequence
+from io import BytesIO
 from typing import Annotated, Any, cast
 
 import psycopg
+
+# Third-party imports
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 from pydantic import BaseModel
 
+# Local application imports
 from .auth import get_current_user
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
-from .repository import get_patent_detail, search_hybrid, trend_volume
+from .repository import export_rows, get_patent_detail, search_hybrid, trend_volume
 from .schemas import (
     PatentDetail,
     SearchFilters,
@@ -24,6 +32,21 @@ from .schemas import (
     TrendPoint,
     TrendResponse,
 )
+
+# Optional PDF support
+_has_reportlab = (
+    importlib.util.find_spec("reportlab") is not None
+    and importlib.util.find_spec("reportlab.pdfgen") is not None
+    and importlib.util.find_spec("reportlab.lib.pagesizes") is not None
+)
+if _has_reportlab:
+    from reportlab.lib.pagesizes import letter as _LETTER  # type: ignore
+    from reportlab.pdfgen import canvas as _CANVAS  # type: ignore
+    HAVE_REPORTLAB = True
+else:  # pragma: no cover - optional dependency missing
+    _LETTER = None  # type: ignore[assignment]
+    _CANVAS = None  # type: ignore[assignment]
+    HAVE_REPORTLAB = False
 
 app = FastAPI(title="Patent Scout API", version="0.1.0")
 Conn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
@@ -242,3 +265,143 @@ async def get_detail(pub_id: str, conn: Conn) -> PatentDetail:
     if not detail:
         raise HTTPException(status_code=404, detail="not found")
     return detail
+
+
+def _int_date(v: int | None) -> str:
+    if not v:
+        return ""
+    s = str(v)
+    if len(s) == 8:
+        return f"{s[:4]}-{s[4:6]}-{s[6:8]}"
+    return s
+
+
+@app.get("/export")
+async def export(
+    conn: Conn,
+    format: str = Query("csv", pattern="^(csv|pdf)$"),
+    q: str | None = Query(None),
+    assignee: str | None = Query(None),
+    cpc: str | None = Query(None),
+    date_from: int | None = Query(None),
+    date_to: int | None = Query(None),
+    semantic_query: str | None = Query(None),
+    limit: int = Query(1000, ge=1, le=1000),
+):
+    qv: list[float] | None = None
+    if semantic_query:
+        maybe = embed_text(semantic_query)
+        if inspect.isawaitable(maybe):
+            qv = cast(list[float], await maybe)
+        else:
+            qv = list(cast(Sequence[float], maybe))
+
+    filters = SearchFilters(
+        assignee=assignee,
+        cpc=cpc,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+    rows = await export_rows(
+        conn,
+        keywords=q,
+        query_vec=qv,
+        filters=filters,
+        limit=limit,
+    )
+
+    filename = "patent_scout_export"
+    if format == "csv":
+        def gen():
+            header = ["pub_id", "title", "abstract", "assignee_name", "pub_date", "cpc", "priority_date"]
+            yield (",").join(header) + "\n"
+            for r in rows:
+                vals = [
+                    r.get("pub_id") or "",
+                    (r.get("title") or "").replace("\n", " ").replace("\r", " "),
+                    (r.get("abstract") or "").replace("\n", " ").replace("\r", " "),
+                    r.get("assignee_name") or "",
+                    _int_date(r.get("pub_date")),
+                    r.get("cpc") or "",
+                    _int_date(r.get("priority_date")),
+                ]
+                # Basic CSV quoting
+                out = []
+                for v in vals:
+                    s = str(v)
+                    if any(ch in s for ch in [',','\n','\r','"']):
+                        s = '"' + s.replace('"','""') + '"'
+                    out.append(s)
+                yield ",".join(out) + "\n"
+        headers = {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": f"attachment; filename={filename}.csv",
+        }
+        return StreamingResponse(gen(), headers=headers, media_type="text/csv")
+
+    # PDF
+    if not HAVE_REPORTLAB:
+        raise HTTPException(status_code=500, detail="PDF generation not available on server")
+
+    buffer = BytesIO()
+    c = _CANVAS.Canvas(buffer, pagesize=_LETTER)  # type: ignore[union-attr]
+    width, height = _LETTER  # type: ignore[assignment]
+
+    margin = 40
+    y = height - margin
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(margin, y, "Patent Scout Export (top results)")
+    y -= 18
+    c.setFont("Helvetica", 9)
+
+    def draw_line(text: str, font="Helvetica", size=9):
+        nonlocal y
+        if y < 60:
+            c.showPage()
+            y = height - margin
+            c.setFont(font, size)
+        c.drawString(margin, y, text)
+        y -= 12
+
+    for r in rows:
+        draw_line(f"Pub: {r.get('pub_id')}", "Helvetica-Bold", 10)
+        if r.get('title'):
+            draw_line(f"Title: {r.get('title')}")
+        if r.get('assignee_name'):
+            draw_line(f"Assignee: {r.get('assignee_name')}")
+        date_s = _int_date(r.get('pub_date'))
+        prio_s = _int_date(r.get('priority_date'))
+        meta = []
+        if date_s:
+            meta.append(f"Pub Date: {date_s}")
+        if prio_s:
+            meta.append(f"Priority: {prio_s}")
+        if meta:
+            draw_line(" | ".join(meta))
+        if r.get('cpc'):
+            draw_line(f"CPC: {r.get('cpc')}")
+        if r.get('abstract'):
+            abstract = str(r.get('abstract')).replace('\n', ' ')
+            # wrap naive
+            words = abstract.split()
+            line = ""
+            for w in words:
+                test = (line + " " + w).strip()
+                if len(test) > 110:
+                    draw_line(line)
+                    line = w
+                else:
+                    line = test
+            if line:
+                draw_line(line)
+        y -= 6
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    headers = {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": f"attachment; filename={filename}.pdf",
+    }
+    return StreamingResponse(buffer, headers=headers, media_type="application/pdf")

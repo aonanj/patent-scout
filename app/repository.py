@@ -16,8 +16,10 @@ _VEC_CAST: Final[str] = (
 )
 
 # Semantic search tuning (less restrictive by default)
-SEMANTIC_TOPK: Final[int] = int(os.getenv("SEMANTIC_TOPK", "1000"))
-SEMANTIC_JUMP: Final[float] = float(os.getenv("SEMANTIC_JUMP", "0.1"))
+SEMANTIC_TOPK: Final[int] = int(os.getenv("SEMANTIC_TOPK", "500"))
+SEMANTIC_JUMP: Final[float] = float(os.getenv("SEMANTIC_JUMP", "0.08"))
+EXPORT_MAX_ROWS: Final[int] = int(os.getenv("EXPORT_MAX_ROWS", "1000"))
+EXPORT_SEMANTIC_TOPK: Final[int] = int(os.getenv("EXPORT_SEMANTIC_TOPK", "1500"))
 
 def _dtint(s: int | str | None) -> int | None:
     if s is None:
@@ -63,8 +65,8 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
-                      jump: float = 0.15,
-                      limit: int = 1000) -> list[dict[str, Any]]:
+                      jump: float = 0.08,
+                      limit: int = 500) -> list[dict[str, Any]]:
     if not rows:
         return rows
     
@@ -81,6 +83,133 @@ def _adaptive_filters(rows: list[dict[str, Any]], *,
         if len(keep) >= limit:
             break
     return keep
+
+def _cpc_dict_to_code(c: dict[str, Any] | None) -> str:
+    if not c:
+        return ""
+    sec = (c.get("section") or "").strip()
+    cls = (c.get("class") or "").strip()
+    sub = (c.get("subclass") or "").strip()
+    grp = (c.get("group") or "").strip()
+    sgrp = (c.get("subgroup") or "").strip()
+    head = f"{sec}{cls}{sub}".strip()
+    tail = ""
+    if grp:
+        tail = grp + (f"/{sgrp}" if sgrp else "")
+    return (head + tail).strip()
+
+async def export_rows(
+    conn: psycopg.AsyncConnection,
+    *,
+    keywords: str | None,
+    query_vec: Iterable[float] | None,
+    filters: SearchFilters,
+    limit: int = EXPORT_MAX_ROWS,
+) -> list[dict[str, Any]]:
+    """Return up to `limit` rows for export with flattened CPC.
+
+    Fields: pub_id, title, abstract, assignee_name, pub_date, cpc (comma-separated), priority_date
+    """
+    limit = max(1, min(limit, EXPORT_MAX_ROWS))
+
+    if query_vec is None:
+        # Keyword-only path: use SQL with optional TS ranking.
+        args: list[object] = []
+        select_core = (
+            "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.priority_date, "
+            "(SELECT string_agg(DISTINCT \n"
+            "        (COALESCE(c->>'section','') || COALESCE(c->>'class','') || COALESCE(c->>'subclass','') || \n"
+            "         COALESCE(c->>'group','') || COALESCE('/' || (c->>'subgroup'), '')), ', ')\n"
+            "   FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c) AS cpc_str"
+        )
+        from_clause = "FROM patent p"
+        where = [_filters_sql(filters, args)]
+
+        if keywords:
+            where.append(
+                "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
+                "@@ plainto_tsquery('english', %s)"
+            )
+            args.append(keywords)
+
+        base_query = f"{from_clause} WHERE {' AND '.join(where)}"
+        if keywords:
+            # order by text search rank when keywords present
+            order_by = (
+                "ORDER BY ts_rank_cd(to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')), "
+                "plainto_tsquery('english', %s)) DESC, p.pub_date DESC"
+            )
+            args.append(keywords)
+        else:
+            order_by = "ORDER BY p.pub_date DESC"
+
+        sql = f"{select_core} {base_query} {order_by} LIMIT %s"
+        args.append(limit)
+
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(_sql.SQL(sql), args)  # type: ignore
+            rows: list[dict[str, Any]] = await cur.fetchall()
+
+        # Normalize 'cpc' as string
+        out: list[dict[str, Any]] = []
+        for r in rows:
+            out.append(
+                {
+                    "pub_id": r.get("pub_id"),
+                    "title": r.get("title"),
+                    "abstract": r.get("abstract"),
+                    "assignee_name": r.get("assignee_name"),
+                    "pub_date": r.get("pub_date"),
+                    "priority_date": r.get("priority_date"),
+                    "cpc": r.get("cpc_str") or "",
+                }
+            )
+        return out
+
+    # Semantic path: select top-K by distance then post-filter in Python.
+    topk = max(limit, EXPORT_SEMANTIC_TOPK)
+    args: list[object] = []
+    select_core = (
+        "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.priority_date, "
+        f"(e.embedding <=> %s{_VEC_CAST}) AS dist, "
+        "(SELECT string_agg(DISTINCT \n"
+        "        (COALESCE(c->>'section','') || COALESCE(c->>'class','') || COALESCE(c->>'subclass','') || \n"
+        "         COALESCE(c->>'group','') || COALESCE('/' || (c->>'subgroup'), '')), ', ')\n"
+        "   FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c) AS cpc_str"
+    )
+    args.append(list(query_vec))
+    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id"
+    where = [_filters_sql(filters, args)]
+    where.append("e.model LIKE '%%|ta'")
+    if keywords:
+        where.append(
+            "to_tsvector('english', coalesce(p.title,'') || ' ' || coalesce(p.abstract,'')) "
+            "@@ plainto_tsquery('english', %s)"
+        )
+        args.append(keywords)
+    base_query = f"{from_clause} WHERE {' AND '.join(where)}"
+    sql = f"{select_core} {base_query} ORDER BY dist ASC LIMIT {topk}"
+
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(_sql.SQL(sql), args)  # type: ignore
+        rows: list[dict[str, Any]] = await cur.fetchall()
+
+    kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
+    kept = kept[:limit]
+    out: list[dict[str, Any]] = []
+    for r in kept:
+        out.append(
+            {
+                "pub_id": r.get("pub_id"),
+                "title": r.get("title"),
+                "abstract": r.get("abstract"),
+                "assignee_name": r.get("assignee_name"),
+                "pub_date": r.get("pub_date"),
+                "priority_date": r.get("priority_date"),
+                "cpc": r.get("cpc_str") or "",
+            }
+        )
+    return out
 
 async def search_hybrid(
     conn: psycopg.AsyncConnection,

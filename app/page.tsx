@@ -128,6 +128,7 @@ export default function Page() {
   const cpcDebounced = useDebounced(cpc);
 
   const [dateBounds, setDateBounds] = useState<{ min: string; max: string} | null>(null);
+  const [downloading, setDownloading] = useState<null | "csv" | "pdf">(null);
 
   // Save current query as an alert in saved_query table via API route
   const saveAsAlert = useCallback(async () => {
@@ -394,6 +395,46 @@ export default function Page() {
 
   const today = useRef<string>(new Date().toISOString().slice(0, 10)).current;
 
+  const buildExportUrl = useCallback((fmt: "csv" | "pdf") => {
+    const dateToInt = (d: string) => (d ? parseInt(d.replace(/-/g, ""), 10) : undefined);
+    const p = new URLSearchParams();
+    p.set("format", fmt);
+    if (qDebounced) p.set("q", qDebounced);
+    if (semanticDebounced) p.set("semantic_query", semanticDebounced);
+    if (assigneeDebounced) p.set("assignee", assigneeDebounced);
+    if (cpcDebounced) p.set("cpc", cpcDebounced);
+    if (dateFrom) p.set("date_from", String(dateToInt(dateFrom)));
+    if (dateTo) p.set("date_to", String(dateToInt(dateTo)));
+    p.set("limit", "1000");
+    return `/api/export?${p.toString()}`;
+  }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
+
+  const triggerDownload = useCallback(async (fmt: "csv" | "pdf") => {
+    try {
+      setDownloading(fmt);
+      const token = await getAccessTokenSilently();
+      const url = buildExportUrl(fmt);
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`Export failed (${r.status}) ${t}`);
+      }
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      const objUrl = URL.createObjectURL(blob);
+      a.href = objUrl;
+      a.download = `patent_scout_export.${fmt}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+    } catch (e: any) {
+      alert(e?.message ?? "Export failed");
+    } finally {
+      setDownloading(null);
+    }
+  }, [buildExportUrl, getAccessTokenSilently]);
+
   return (
     <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
       
@@ -544,7 +585,7 @@ export default function Page() {
 
         {showAlerts && (
           <div style={overlayStyle}>
-            <div style={{ ...overlayContentStyle, width: "1500px", maxWidth: 'none', maxHeight: "600px", overflow: "auto", textAlign: "left" }}>
+            <div style={{ ...overlayContentStyle, width: "min(1200px, 95%)", maxWidth: 'none', maxHeight: "600px", overflow: "auto", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <h3 style={{ margin: 0, fontWeight: 600, textDecoration: "underline" }}>Your Alerts</h3>
                 <button onClick={closeAlerts} style={ghostBtn} aria-label="Close alerts">Close</button>
@@ -639,10 +680,10 @@ export default function Page() {
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <h2 style={{ margin: 0, fontSize: 16 }}>
-              <span style={{ fontWeight: 'bold' }}>Trend</span>
+              <span style={{ fontWeight: 'bold', textDecoration: 'underline' }}>Trend</span>
               {displayedDateFrom && displayedDateTo && (
                 <span style={{ fontWeight: 'normal', fontSize: 14, color: '#475569', marginLeft: 8 }}>
-                  ({displayedDateFrom} - {displayedDateTo})
+                  (From: {displayedDateFrom}, To: {displayedDateTo})
                 </span>
               )}
             </h2>
@@ -671,12 +712,22 @@ export default function Page() {
 
         <Card>
           <Row>
-            <h2 style={{ margin: 0, fontSize: 16 }}>Results</h2>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Results</h2>
             {loading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading…</span>}
             {total !== null && (
               <span style={{ marginLeft: "auto", fontSize: 12, color: "#334155" }}>
                 {total.toLocaleString()} total
               </span>
+            )}
+            {total !== null && total > 0 && (
+              <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
+                <button onClick={() => triggerDownload('csv')} disabled={downloading !== null} style={secondaryBtn} title="Download top 1000 as CSV">
+                  {downloading === 'csv' ? 'Generating…' : 'Download CSV'}
+                </button>
+                <button onClick={() => triggerDownload('pdf')} disabled={downloading !== null} style={secondaryBtn} title="Download top 1000 as PDF">
+                  {downloading === 'pdf' ? 'Generating…' : 'Download PDF'}
+                </button>
+              </div>
             )}
           </Row>
 
