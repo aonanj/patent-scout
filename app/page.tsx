@@ -544,7 +544,7 @@ export default function Page() {
 
         {showAlerts && (
           <div style={overlayStyle}>
-            <div style={{ ...overlayContentStyle, width: "max(1500px, 96%)", maxHeight: "82vh", overflow: "auto", textAlign: "left" }}>
+            <div style={{ ...overlayContentStyle, width: "1500px", maxHeight: "600px", overflow: "auto", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <h3 style={{ margin: 0 }}>Your Alerts</h3>
                 <button onClick={closeAlerts} style={ghostBtn} aria-label="Close alerts">Close</button>
