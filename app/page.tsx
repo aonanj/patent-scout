@@ -414,7 +414,7 @@ export default function Page() {
         </div>
       )}
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
+      <div style={{ maxWidth: 1500, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="sr-only">Patent Scout</h1>
         <img className="w-auto max-h-16 drop-shadow-lg hover:scale-110" src="/images/PatentScoutLogo.png" alt="Patent Scout" />
@@ -544,7 +544,7 @@ export default function Page() {
 
         {showAlerts && (
           <div style={overlayStyle}>
-            <div style={{ ...overlayContentStyle, width: "min(900px, 95%)", maxHeight: "80vh", overflow: "auto", textAlign: "left" }}>
+            <div style={{ ...overlayContentStyle, width: "min(1200px, 96%)", maxHeight: "82vh", overflow: "auto", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <h3 style={{ margin: 0 }}>Your Alerts</h3>
                 <button onClick={closeAlerts} style={ghostBtn} aria-label="Close alerts">Close</button>
@@ -590,7 +590,30 @@ export default function Page() {
                             <td style={tdStyle}>{dr}</td>
                             <td style={tdStyle}>{truncate(String(a.semantic_query ?? ""), 24)}</td>
                             <td style={tdStyle}>{a.schedule_cron ?? "—"}</td>
-                            <td style={tdStyle}>{(a.is_active ?? true) ? "Yes" : "No"}</td>
+                            <td style={tdStyle}>
+                              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!(a.is_active ?? true)}
+                                  onChange={async (e) => {
+                                    const next = e.currentTarget.checked;
+                                    try {
+                                      const token = await getAccessTokenSilently();
+                                      const r = await fetch(`/api/saved-queries/${encodeURIComponent(String(a.id))}`, {
+                                        method: "PATCH",
+                                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                        body: JSON.stringify({ is_active: next }),
+                                      });
+                                      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                                      setAlerts((prev) => prev.map((x) => (String(x.id) === String(a.id) ? { ...x, is_active: next } : x)));
+                                    } catch (err: any) {
+                                      alert(err?.message ?? "Failed to update");
+                                    }
+                                  }}
+                                />
+                                <span>{(a.is_active ?? true) ? "Active" : "Inactive"}</span>
+                              </label>
+                            </td>
                             <td style={tdStyle}>{a.created_at ? fmtDateTimeCell(a.created_at) : ""}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>
                               <button

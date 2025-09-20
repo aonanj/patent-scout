@@ -26,3 +26,34 @@ export async function DELETE(req: NextRequest, context: any) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+export async function PATCH(req: NextRequest, context: any) {
+  const { id } = (context?.params ?? {}) as { id: string };
+  if (!id) {
+    return NextResponse.json({ error: "missing id" }, { status: 400 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+
+  const authHeader = req.headers.get('authorization');
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  if (authHeader) {
+    headers.append("Authorization", authHeader);
+  }
+
+  const r = await fetch(
+    `${process.env.BACKEND_URL}/saved-queries/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(body),
+    }
+  );
+  const t = await r.text();
+
+  return new NextResponse(t, {
+    status: r.status,
+    headers: { "Content-Type": "application/json" },
+  });
+}

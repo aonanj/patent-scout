@@ -82,6 +82,12 @@ class SavedQueryCreate(BaseModel):
     is_active: bool = True
 
 
+class SavedQueryUpdate(BaseModel):
+    is_active: bool | None = None
+    # In the future, allow updating schedule_cron or other fields if needed
+    # schedule_cron: str | None = None
+
+
 @app.get("/saved-queries")
 async def list_saved_queries(conn: Conn, user: User):
 
@@ -154,6 +160,30 @@ async def delete_saved_query(id: str, conn: Conn, user: User):
     if not deleted:
         raise HTTPException(status_code=404, detail="saved query not found")
     return {"deleted": deleted}
+
+
+@app.patch("/saved-queries/{id}")
+async def update_saved_query(id: str, req: SavedQueryUpdate, conn: Conn, user: User):
+    """Update a saved query owned by the current user.
+
+    Currently supports toggling is_active.
+    """
+    owner_id = user.get("sub")
+    if owner_id is None:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+
+    if req.is_active is None:
+        raise HTTPException(status_code=400, detail="no updatable fields provided")
+
+    async with conn.cursor() as cur:
+        await cur.execute(
+            "UPDATE saved_query SET is_active = %s, updated_at = now() WHERE id = %s AND owner_id = %s RETURNING id",
+            [req.is_active, id, owner_id],
+        )
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="saved query not found")
+    return {"id": row[0], "is_active": req.is_active}
 
 
 # app/api.py
