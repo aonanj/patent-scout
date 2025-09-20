@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import inspect
 import os
 from collections.abc import Sequence
@@ -110,11 +109,22 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
     Some deployments enforce a foreign key saved_query.owner_id -> app_user(id).
     We opportunistically insert the owner row if it doesn't exist.
     """
-    owner_id = user.get("sub")
-    if owner_id is None:
-        raise HTTPException(status_code=400, detail="user missing sub claim")
-    
-    insert_owner_sql = "INSERT INTO app_user (id) VALUES (%s) ON CONFLICT (id) DO NOTHING"
+    email = user.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="user missing email claim")
+
+    # Get or create the user and retrieve their internal UUID
+    get_or_create_user_sql = """
+        WITH ins AS (
+            INSERT INTO app_user (email, display_name)
+            VALUES (%s, %s)
+            ON CONFLICT (email) DO NOTHING
+            RETURNING id
+        )
+        SELECT id FROM ins
+        UNION ALL
+        SELECT id FROM app_user WHERE email = %s;
+    """
 
     insert_sq_sql = (
         "INSERT INTO saved_query (owner_id, name, filters, semantic_query, schedule_cron, is_active) "
@@ -122,9 +132,11 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
     )
     try:
         async with conn.cursor() as cur:
-            # Best-effort ensure owner exists; ignore if table missing
-            with contextlib.suppress(psycopg.errors.UndefinedTable):
-                await cur.execute(insert_owner_sql, [owner_id])  
+            await cur.execute(get_or_create_user_sql, [email, user.get("name"), email])
+            owner_row = await cur.fetchone()
+            if not owner_row:
+                raise HTTPException(status_code=500, detail="Could not get or create user")
+            owner_id = owner_row[0]
 
             await cur.execute(
                 insert_sq_sql,
@@ -136,7 +148,7 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
                     req.schedule_cron,
                     req.is_active,
                 ],
-            )  # type: ignore[arg-type]
+            )
             row = await cur.fetchone()
         return {"id": row[0] if row else None}
     except psycopg.Error as e:  # unique violation, FK errors, etc.
