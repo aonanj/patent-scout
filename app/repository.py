@@ -17,7 +17,7 @@ _VEC_CAST: Final[str] = (
 
 # Semantic search tuning (less restrictive by default)
 SEMANTIC_TOPK: Final[int] = int(os.getenv("SEMANTIC_TOPK", "500"))
-SEMANTIC_JUMP: Final[float] = float(os.getenv("SEMANTIC_JUMP", "0.08"))
+SEMANTIC_JUMP: Final[float] = float(os.getenv("SEMANTIC_JUMP", "0.1"))
 EXPORT_MAX_ROWS: Final[int] = int(os.getenv("EXPORT_MAX_ROWS", "1000"))
 EXPORT_SEMANTIC_TOPK: Final[int] = int(os.getenv("EXPORT_SEMANTIC_TOPK", "1500"))
 
@@ -65,7 +65,7 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
-                      jump: float = 0.08,
+                      jump: float = 0.1,
                       limit: int = 500) -> list[dict[str, Any]]:
     if not rows:
         return rows
