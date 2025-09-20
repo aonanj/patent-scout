@@ -32,7 +32,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             signing_key.key,
             algorithms=ALGORITHMS,
             audience=API_AUDIENCE,
-            issuer=f"{AUTH0_DOMAIN}"
+            issuer=f"{AUTH0_DOMAIN}/"
         )
         return payload
 
