@@ -296,9 +296,10 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
               if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
               cam.goto({ x, y });
+              r.refresh();
             } catch {}
           }}
-          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer", textDecoration: "hover:underline" }}
+          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer", textDecoration: "hover:underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
           Center on node
         </button>
@@ -306,9 +307,9 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "hover:underline", color: "#0f172a" }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "hover:underline", color: "#0f172a", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
-          Open on Google Patents
+          View patent
         </a>
       </div>
     </div>
