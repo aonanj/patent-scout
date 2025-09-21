@@ -55,6 +55,19 @@ function colorForCluster(clusterId: number): string {
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
+function formatGooglePatentId(pubId: string): string {
+  if (!pubId) return "";
+  const cleanedId = pubId.replace(/[- ]/g, "");
+  const regex = /^(US)(\d{4})(\d{6})([A-Z]\d{1,2})$/;
+  const match = cleanedId.match(regex);
+  if (match) {
+    const [, country, year, serial, kindCode] = match as any;
+    const correctedSerial = `0${serial}`; // ensure leading 0
+    return `${country}${year}${correctedSerial}${kindCode}`;
+  }
+  return cleanedId;
+}
+
 export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhitespaceGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any | null>(null);
@@ -269,7 +282,11 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const x = g.getNodeAttribute(selectedNode, "x");
             const y = g.getNodeAttribute(selectedNode, "y");
             try {
-              r.getCamera().animate({ x, y, ratio: 0.2 }, { duration: 600 });
+              const cam = r.getCamera();
+              const { ratio } = cam.getState();
+              // Add a touch of auto-zoom-in when centering, but never zoom out
+              const targetRatio = Math.min(ratio, 0.25);
+              cam.animate({ x, y, ratio: targetRatio }, { duration: 600 });
             } catch {}
           }}
           style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}
@@ -277,7 +294,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           Center on node
         </button>
         <a
-          href={`https://patents.google.com/patent/${encodeURIComponent(selectedNode)}`}
+          href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"
           rel="noopener noreferrer"
           style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "none", color: "#0f172a" }}

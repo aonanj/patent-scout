@@ -3,8 +3,6 @@
 "use client";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-const SigmaWhitespaceGraph = dynamic(() => import("../components/SigmaWhitespaceGraph"), { ssr: false });
 
 type SearchHit = {
   pub_id?: string;
@@ -105,39 +103,6 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  // Alerts overlay state
-  type SavedQuery = {
-    id: number | string;
-    owner_id?: string;
-    name: string;
-    filters?: Record<string, any> | null;
-    semantic_query?: string | null;
-    schedule_cron?: string | null;
-    is_active?: boolean | null;
-    created_at?: string | null;
-    updated_at?: string | null;
-  };
-  const [showAlerts, setShowAlerts] = useState(false);
-  const [alerts, setAlerts] = useState<SavedQuery[]>([]);
-  const [alertsLoading, setAlertsLoading] = useState(false);
-  const [alertsErr, setAlertsErr] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | number | null>(null);
-
-  // Whitespace analysis state
-  const [whitespaceDateFrom, setWhitespaceDateFrom] = useState("");
-  const [whitespaceDateTo, setWhitespaceDateTo] = useState("");
-  const [whitespaceNeighbors, setWhitespaceNeighbors] = useState(15);
-  const [whitespaceResolution, setWhitespaceResolution] = useState(0.5);
-  const [whitespaceAlpha, setWhitespaceAlpha] = useState(0.8);
-  const [whitespaceBeta, setWhitespaceBeta] = useState(0.5);
-  const [whitespaceLimit, setWhitespaceLimit] = useState(1000);
-  const [whitespaceLayout, setWhitespaceLayout] = useState(true);
-  const [whitespaceFocusAssignees, setWhitespaceFocusAssignees] = useState("");
-  const [whitespaceFocusCpcLike, setWhitespaceFocusCpcLike] = useState("");
-  const [whitespaceLoading, setWhitespaceLoading] = useState(false);
-  const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
-  const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[], edges: any } | null>(null);
-
   // Sigma component handles its own container; no external ref needed.
 
   // Debounce all free-text inputs to prevent API spam and race conditions
@@ -197,53 +162,6 @@ export default function Page() {
     }
   }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, getAccessTokenSilently]);
 
-  const loadAlerts = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setAlertsLoading(true);
-    setAlertsErr(null);
-    try {
-      const token = await getAccessTokenSilently();
-      const r = await fetch("/api/saved-queries", {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const t = await r.json();
-      const items: SavedQuery[] = Array.isArray(t?.items) ? t.items : Array.isArray(t) ? t : [];
-      setAlerts(items);
-    } catch (e: any) {
-      setAlertsErr(e?.message ?? "failed to load alerts");
-    } finally {
-      setAlertsLoading(false);
-    }
-  }, [getAccessTokenSilently, isAuthenticated]);
-
-  const openAlerts = useCallback(() => {
-    setShowAlerts(true);
-    loadAlerts();
-  }, [loadAlerts]);
-
-  const closeAlerts = useCallback(() => setShowAlerts(false), []);
-
-  const deleteAlert = useCallback(async (id: string | number) => {
-    if (!id) return;
-    const confirm = window.confirm("Delete this alert? This cannot be undone.");
-    if (!confirm) return;
-    try {
-      setDeletingId(id);
-      const token = await getAccessTokenSilently();
-      const r = await fetch(`/api/saved-queries/${encodeURIComponent(String(id))}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      setAlerts((prev) => prev.filter((a) => String(a.id) !== String(id)));
-    } catch (e: any) {
-      alert(e?.message ?? "Delete failed");
-    } finally {
-      setDeletingId(null);
-    }
-  }, [getAccessTokenSilently]);
 
   const fetchSearch = useCallback(async () => {
     setLoading(true);
@@ -347,56 +265,7 @@ export default function Page() {
     }
   }, [getAccessTokenSilently, qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, trendGroupBy]);
 
-  const runWhitespaceAnalysis = useCallback(async () => {
-    setWhitespaceLoading(true);
-    setWhitespaceError(null);
-    try {
-      const token = await getAccessTokenSilently();
-      const payload = {
-        date_from: whitespaceDateFrom || undefined,
-        date_to: whitespaceDateTo || undefined,
-        neighbors: whitespaceNeighbors,
-        resolution: whitespaceResolution,
-        alpha: whitespaceAlpha,
-        beta: whitespaceBeta,
-        limit: whitespaceLimit,
-        layout: whitespaceLayout,
-        focus_assignees: whitespaceFocusAssignees ? whitespaceFocusAssignees.split(",").map(s => s.trim()).filter(Boolean) : [],
-        focus_cpc_like: whitespaceFocusCpcLike ? whitespaceFocusCpcLike.split(",").map(s => s.trim()).filter(Boolean) : [],
-      };
-
-      const res = await fetch(`/api/whitespace/graph`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      const data = await res.json();
-      setWhitespaceGraph(data);
-    } catch (e: any) {
-      setWhitespaceError(e?.message ?? "Whitespace analysis failed");
-    } finally {
-      setWhitespaceLoading(false);
-    }
-  }, [
-    getAccessTokenSilently,
-    whitespaceDateFrom,
-    whitespaceDateTo,
-    whitespaceNeighbors,
-    whitespaceResolution,
-    whitespaceAlpha,
-    whitespaceBeta,
-    whitespaceLimit,
-    whitespaceLayout,
-    whitespaceFocusAssignees,
-    whitespaceFocusCpcLike,
-  ]);
+  // whitespace analysis moved to /whitespace page
 
   // NOTE: rendering is now handled by SigmaWhitespaceGraph component below.
 
@@ -528,21 +397,6 @@ export default function Page() {
       )}
 
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 className="sr-only">Patent Scout</h1>
-        <img className="w-auto max-h-16 drop-shadow-lg hover:scale-110" src="/images/PatentScoutLogo.png" alt="Patent Scout" />
-        <div>
-          {isLoading && <span style={{fontSize: 12, color: '#64748b'}}>Loading session...</span>}
-          {!isLoading && isAuthenticated && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span>User: {user?.name}</span>
-              <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })} style={secondaryBtn}>
-                Log out
-              </button>
-            </div>
-          )}
-        </div>
-        </div>
         <Card>
           <div style={{ display: "grid", gap: 12 }}>
             <Row>
@@ -644,114 +498,15 @@ export default function Page() {
                 Reset
               </button>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
-                  {saving ? "Saving…" : "Save as Alert"}
-                </button>
-                <button onClick={openAlerts} disabled={!isAuthenticated} style={secondaryBtn} title="View and manage your alerts">
-                  List Alerts
-                </button>
-              </div>
+              <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
+                {saving ? "Saving…" : "Save as Alert"}
+              </button>
               {saveMsg && (
                 <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>
               )}
             </Row>
           </div>
         </Card>
-
-        {showAlerts && (
-          <div style={overlayStyle}>
-            <div style={{ ...overlayContentStyle, width: "min(1200px, 95%)", maxWidth: 'none', maxHeight: "600px", overflow: "auto", textAlign: "left" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <h3 style={{ margin: 0, fontWeight: 600, textDecoration: "underline" }}>Your Alerts</h3>
-                <button onClick={closeAlerts} style={ghostBtn} aria-label="Close alerts">Close</button>
-              </div>
-              {alertsLoading ? (
-                <div style={{ fontSize: 13, color: "#64748b" }}>Loading…</div>
-              ) : alertsErr ? (
-                <div style={{ color: "#b91c1c", fontSize: 13 }}>Error: {alertsErr}</div>
-              ) : alerts.length === 0 ? (
-                <div style={{ fontSize: 13, color: "#64748b" }}>No alerts saved yet.</div>
-              ) : (
-                <div style={{ overflowX: "auto" }}>
-                  <table style={tableStyle}>
-                    <thead>
-                      <tr>
-                        <th style={thStyle}>Name</th>
-                        <th style={thStyle}>Keywords</th>
-                        <th style={thStyle}>Assignee</th>
-                        <th style={thStyle}>CPC</th>
-                        <th style={thStyle}>Date Range</th>
-                        <th style={thStyle}>Semantic</th>
-                        <th style={thStyle}>Schedule</th>
-                        <th style={thStyle}>Active</th>
-                        <th style={thStyle}>Created</th>
-                        <th style={thStyle}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {alerts.map((a) => {
-                        const f = (a.filters ?? {}) as Record<string, any>;
-                        const kw = f.keywords ?? f.q ?? "";
-                        const ass = f.assignee ?? "";
-                        const cpcv = f.cpc ?? "";
-                        const df = f.date_from ?? "";
-                        const dt = f.date_to ?? "";
-                        const dr = df || dt ? `${fmtDateCell(df)} – ${fmtDateCell(dt)}` : "";
-                        return (
-                          <tr key={String(a.id)}>
-                            <td style={tdStyle}>{a.name}</td>
-                            <td style={tdStyle}>{truncate(String(kw ?? ""), 36)}</td>
-                            <td style={tdStyle}>{truncate(String(ass ?? ""), 24)}</td>
-                            <td style={tdStyle}>{Array.isArray(cpcv) ? cpcv.join(", ") : String(cpcv ?? "")}</td>
-                            <td style={tdStyle}>{dr}</td>
-                            <td style={tdStyle}>{truncate(String(a.semantic_query ?? ""), 24)}</td>
-                            <td style={tdStyle}>{a.schedule_cron ?? "—"}</td>
-                            <td style={tdStyle}>
-                              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                                <input
-                                  type="checkbox"
-                                  checked={!!(a.is_active ?? true)}
-                                  onChange={async (e) => {
-                                    const next = e.currentTarget.checked;
-                                    try {
-                                      const token = await getAccessTokenSilently();
-                                      const r = await fetch(`/api/saved-queries/${encodeURIComponent(String(a.id))}`, {
-                                        method: "PATCH",
-                                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                                        body: JSON.stringify({ is_active: next }),
-                                      });
-                                      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                                      setAlerts((prev) => prev.map((x) => (String(x.id) === String(a.id) ? { ...x, is_active: next } : x)));
-                                    } catch (err: any) {
-                                      alert(err?.message ?? "Failed to update");
-                                    }
-                                  }}
-                                />
-                                <span>{(a.is_active ?? true) ? "Active" : "Inactive"}</span>
-                              </label>
-                            </td>
-                            <td style={tdStyle}>{a.created_at ? fmtDateTimeCell(a.created_at) : ""}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>
-                              <button
-                                onClick={() => deleteAlert(a.id)}
-                                disabled={deletingId === a.id}
-                                style={dangerBtn}
-                                title="Delete alert"
-                              >
-                                {deletingId === a.id ? "Deleting…" : "Delete"}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -786,139 +541,7 @@ export default function Page() {
           )}
         </Card>
 
-        <Card>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Analysis</h2>
-          <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            <Row>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-focus-assignees">Focus Assignees</Label>
-                <input
-                  id="ws-focus-assignees"
-                  value={whitespaceFocusAssignees}
-                  onChange={(e) => setWhitespaceFocusAssignees(e.target.value)}
-                  placeholder="e.g., Google, Apple"
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-focus-cpc">Focus CPC (LIKE)</Label>
-                <input
-                  id="ws-focus-cpc"
-                  value={whitespaceFocusCpcLike}
-                  onChange={(e) => setWhitespaceFocusCpcLike(e.target.value)}
-                  placeholder="e.g., G06N%, H04L%"
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-limit">Limit</Label>
-                <input
-                  id="ws-limit"
-                  type="number"
-                  value={whitespaceLimit}
-                  onChange={(e) => setWhitespaceLimit(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-date_from">From</Label>
-                <input
-                  id="ws-date_from"
-                  type="date"
-                  min="2022-01-01"
-                  max={whitespaceDateTo || today}
-                  value={whitespaceDateFrom}
-                  onChange={(e) => setWhitespaceDateFrom(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-date_to">To</Label>
-                <input
-                  id="ws-date_to"
-                  type="date"
-                  min={whitespaceDateFrom || "2022-01-02"}
-                  max={today}
-                  value={whitespaceDateTo}
-                  onChange={(e) => setWhitespaceDateTo(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-            </Row>
-            <Row>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-neighbors">Neighbors</Label>
-                <input
-                  id="ws-neighbors"
-                  type="number"
-                  value={whitespaceNeighbors}
-                  onChange={(e) => setWhitespaceNeighbors(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-resolution">Resolution</Label>
-                <input
-                  id="ws-resolution"
-                  type="number"
-                  step="0.1"
-                  value={whitespaceResolution}
-                  onChange={(e) => setWhitespaceResolution(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-alpha">Alpha</Label>
-                <input
-                  id="ws-alpha"
-                  type="number"
-                  step="0.1"
-                  value={whitespaceAlpha}
-                  onChange={(e) => setWhitespaceAlpha(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-beta">Beta</Label>
-                <input
-                  id="ws-beta"
-                  type="number"
-                  step="0.1"
-                  value={whitespaceBeta}
-                  onChange={(e) => setWhitespaceBeta(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input
-                  id="ws-layout"
-                  type="checkbox"
-                  checked={whitespaceLayout}
-                  onChange={(e) => setWhitespaceLayout(e.target.checked)}
-                />
-                <Label htmlFor="ws-layout">Compute Layout</Label>
-              </div>
-              <button
-                onClick={() => {
-                  runWhitespaceAnalysis();
-                }}
-                style={primaryBtn}
-                disabled={whitespaceLoading}
-              >
-                {whitespaceLoading ? "Running..." : "Run Analysis"}
-              </button>
-            </Row>
-          </div>
-        </Card>
-
-        <Card>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Graph</h2>
-          {whitespaceLoading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
-          {whitespaceError && <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {whitespaceError}</div>}
-          <div style={{ height: 400, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
-            <SigmaWhitespaceGraph data={whitespaceGraph as any} height={400} />
-          </div>
-        </Card>
+        {/* Whitespace Analysis moved to its own page at /whitespace */}
 
         <Card>
           <Row>
@@ -1177,7 +800,7 @@ const ghostBtn: React.CSSProperties = {
 };
 
 const secondaryBtn: React.CSSProperties = {
-  height: 24,
+  height: 36,
   padding: "0 10px",
   borderRadius: 8,
   border: "1px solid #e5e7eb",
