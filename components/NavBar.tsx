@@ -116,31 +116,31 @@ export default function NavBar() {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-slate-200">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
-        <div className="flex items-center gap-3">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
-            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={167}height={30} className="rounded-md shadow-md hover:scale-105 transition-transform py-2" />
+            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={200} height={36} className="rounded-md shadow-md hover:scale-105 transition-transform py-2" />
           </Link>
         </div>
 
         <div className="flex-1" />
 
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Search & Trends</Link>
-          <Link href="/whitespace" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
+          <Link href="/" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Search & Trends</Link>
+          <Link href="/whitespace" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
         </div>
 
         <div className="hidden md:flex items-center pl-1 ml-1">
           <button
             onClick={openAlerts}
-            className="px-3 py-1.5 text-sm border-0 rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
+            className="px-3 py-1.5 text-sm font-semibold border-0 rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
             disabled={isLoading}
             title={isAuthenticated ? "View and manage your alerts" : "Log in to manage alerts"}
           >
             Alerts
           </button>
-          <a href="mailto:support@phaethon.llc" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">support@phaethon.llc</a>
-          <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">GitHub</a>
+          <a href="mailto:support@phaethon.llc" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">support@phaethon.llc</a>
+          <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">GitHub</a>
         </div>
 
         <div className="hidden md:flex items-center gap-1 pl-2 ml-2 border-l border-slate-200">
@@ -149,14 +149,14 @@ export default function NavBar() {
           ) : isAuthenticated ? (
             <>
               <div className="hidden sm:flex items-center gap-2 pr-2">
-                <span className="text-sm text-slate-700">{user?.name || user?.email}</span>
+                <span className="text-sm font-semibold text-slate-700">{user?.name || user?.email}</span>
                 <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-300 text-sky-700 text-xs font-semibold grid place-items-center">
                   {userInitials}
                 </div>
               </div>
               <button
                 onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
-                className="h-8 px-3 text-sm rounded-md border border-slate-200 bg-white hover:bg-[#BCCCDC] hover:underline text-blue-800"
+                className="h-8 px-3 text-sm font-semibold rounded-md border border-slate-200 bg-white hover:bg-[#BCCCDC] hover:underline text-blue-800"
               >
                 Log out
               </button>
