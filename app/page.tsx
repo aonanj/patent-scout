@@ -627,8 +627,8 @@ export default function Page() {
       </div>
 
       {/* Footer */}
-      <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12 }}>
-        2025 © Phaethon Order LLC | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a>
+      <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
+        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">github</a>
       </footer>
     </div>
   );

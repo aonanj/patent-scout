@@ -295,21 +295,20 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             try {
               if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
-              cam.goto({ x, y });
-              r.refresh();
+              cam.animate({ x, y }, { duration: 50 });
             } catch {}
           }}
-          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer", textDecoration: "hover:underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
+          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
-          Center on node
+          Center on Node
         </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "hover:underline", color: "#0f172a", alignContent: "center", alignItems: "center", fontWeight: 500 }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "6px 10px", background: "white", textDecoration: "underline", color: "#0f172a", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
-          View patent
+          View Publication
         </a>
       </div>
     </div>
