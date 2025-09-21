@@ -241,8 +241,10 @@ def neighbor_momentum(conn: psycopg.Connection, pub_ids: list[str], labels: np.n
             ) ON COMMIT DROP
         """)
         with cur.copy("COPY tmp_labels (pub_id, cluster_id) FROM STDIN") as cp:
-            for pid, cid in zip(pub_ids, labels.astype(int), strict=False):
-                cp.write_row((pid, int(cid) if cid is not None else None))
+            for pid, cid_val in zip(pub_ids, labels, strict=False):
+                # psycopg3's write_row with default format handles None correctly
+                cid = int(cid_val) if cid_val is not None and not np.isnan(cid_val) else None
+                cp.write_row((pid, cid))
 
         # 2) Compute cutoff and momentum per cluster in SQL
         cur.execute("""
