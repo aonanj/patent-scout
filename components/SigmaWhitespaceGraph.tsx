@@ -217,14 +217,37 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Soft-center on selection without altering zoom level
+      // Soft-center on selection - using display coordinates approach
       try {
-        const cam = renderer.getCamera();
-        const x = g.getNodeAttribute(node, "x");
-        const y = g.getNodeAttribute(node, "y");
-        if (Number.isFinite(x) && Number.isFinite(y)) {
-          // Sigma v2: use camera.animate to move the view center to the node
-          cam.animate({ x, y }, { duration: 350 });
+        const nodeDisplayData = renderer.getNodeDisplayData(node);
+        if (nodeDisplayData) {
+          const cam = renderer.getCamera();
+          const currentState = cam.getState();
+          
+          // Get the container dimensions
+          const container = containerRef.current;
+          if (container) {
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            // Calculate the difference between current center and node position
+            const deltaX = nodeDisplayData.x - centerX;
+            const deltaY = nodeDisplayData.y - centerY;
+            
+            // Convert screen coordinates back to graph coordinates
+            const graphDeltaX = deltaX / currentState.ratio;
+            const graphDeltaY = deltaY / currentState.ratio;
+            
+            // Move camera by the calculated delta
+            const newCameraX = currentState.x + graphDeltaX;
+            const newCameraY = currentState.y + graphDeltaY;
+            
+            cam.animate({ 
+              x: newCameraX, 
+              y: newCameraY 
+            }, { duration: 350 });
+          }
         }
       } catch {}
       renderer.refresh();
@@ -294,10 +317,39 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const nodeX = g.getNodeAttribute(selectedNode, "x");
             const nodeY = g.getNodeAttribute(selectedNode, "y");
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
+            // Try a different approach using renderer methods
             try {
-              const cam = r.getCamera();
-              // Use the same approach as the working clickNode handler
-              cam.animate({ x: nodeX, y: nodeY }, { duration: 500 });
+              // First, let's try to use the renderer's built-in methods
+              const nodeDisplayData = r.getNodeDisplayData(selectedNode);
+              if (nodeDisplayData) {
+                const cam = r.getCamera();
+                const currentState = cam.getState();
+                
+                // Get the container dimensions
+                const container = containerRef.current;
+                if (container) {
+                  const rect = container.getBoundingClientRect();
+                  const centerX = rect.width / 2;
+                  const centerY = rect.height / 2;
+                  
+                  // Calculate the difference between current center and node position
+                  const deltaX = nodeDisplayData.x - centerX;
+                  const deltaY = nodeDisplayData.y - centerY;
+                  
+                  // Convert screen coordinates back to graph coordinates
+                  const graphDeltaX = deltaX / currentState.ratio;
+                  const graphDeltaY = deltaY / currentState.ratio;
+                  
+                  // Move camera by the calculated delta
+                  const newCameraX = currentState.x + graphDeltaX;
+                  const newCameraY = currentState.y + graphDeltaY;
+                  
+                  cam.animate({ 
+                    x: newCameraX, 
+                    y: newCameraY 
+                  }, { duration: 500 });
+                }
+              }
             } catch (error) {
               console.warn("Error centering on node:", error);
             }
