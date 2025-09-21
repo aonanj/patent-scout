@@ -119,32 +119,31 @@ export default function NavBar() {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
         <div className="flex items-center gap-3">
           <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
-            <Image src="/images/PatentScoutIcon.png" alt="Patent Scout" width={28} height={28} className="rounded-md shadow-sm" />
-            <span className="font-semibold tracking-tight">Patent Scout</span>
+            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" max-height={48} className="rounded-md shadow-sm hover:scale-105 transition-transform" />
           </Link>
         </div>
 
         <div className="flex-1" />
 
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/" className="px-3 py-1.5 text-sm rounded-md hover:bg-slate-100 text-slate-700">Search & Trends</Link>
-          <Link href="/whitespace" className="px-3 py-1.5 text-sm rounded-md hover:bg-slate-100 text-slate-700">Whitespace</Link>
+          <Link href="/" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Search & Trends</Link>
+          <Link href="/whitespace" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 pl-3 ml-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center gap-2 pl-3 ml-3 border-r border-slate-200">
           <button
             onClick={openAlerts}
-            className="px-3 py-1.5 text-sm rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+            className="px-3 py-1.5 text-sm border-0 hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
             disabled={isLoading}
             title={isAuthenticated ? "View and manage your alerts" : "Log in to manage alerts"}
           >
             Alerts
           </button>
-          <a href="https://www.phaethonorder.com" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-slate-100 text-slate-700">Phaethon Order</a>
-          <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-slate-100 text-slate-700">GitHub</a>
+          <a href="mailto:support@phaethon.llc" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">support@phaethon.llc</a>
+          <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">GitHub</a>
         </div>
 
-        <div className="flex items-center gap-2 ml-3">
+        <div className="hidden md:flex items-center gap-2 pl-3 ml-3 border-l border-slate-200">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (
@@ -157,7 +156,7 @@ export default function NavBar() {
               </div>
               <button
                 onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
-                className="h-8 px-3 text-sm rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                className="h-8 px-3 text-sm rounded-md border border-slate-200 bg-white hover:bg-[#BCCCDC] hover:underline text-blue-800"
               >
                 Log out
               </button>

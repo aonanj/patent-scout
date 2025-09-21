@@ -145,7 +145,6 @@ export default function WhitespacePage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="/" style={{ ...ghostBtn, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>← Back</a>
             <h1 style={{ margin: 0, fontSize: 18 }}>Whitespace Analysis</h1>
           </div>
           {!isLoading && !isAuthenticated && (
