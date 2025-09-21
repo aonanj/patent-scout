@@ -353,3 +353,28 @@ This project is licensed under the AGPLv3 License - see the [LICENSE](LICENSE) f
 ## Contact
 
 For issues and questions, please contact [phaethon@phaethon.llc](mailto:phaethon@phaethon.llc). 
+
+---
+
+## Whitespace Graph (Sigma + Graphology)
+
+The frontend whitespace graph is now rendered with Sigma backed by Graphology.
+
+- Component: `components/SigmaWhitespaceGraph.tsx` (dynamically imported to avoid SSR WebGL globals)
+- Data contract from API (`POST /api/whitespace/graph`):
+  - nodes: `{ id: string, cluster_id: number, score: number, density: number, x: number, y: number }[]`
+  - edges: `{ source: string, target: string, w: number }[]`
+- Rendering:
+  - Node size uses `score` (normalized client-side)
+  - Node color is based on `cluster_id`
+  - Edge weight uses `w`
+  - If `x,y` provided, they are used as initial positions, then a short ForceAtlas2 refinement runs client-side
+
+Local run:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the homepage, configure inputs, and click "Run Analysis" in the Whitespace Analysis section to see the graph.

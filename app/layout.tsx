@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Providers } from "./providers";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Patent Scout",

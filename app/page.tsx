@@ -3,6 +3,8 @@
 "use client";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+const SigmaWhitespaceGraph = dynamic(() => import("../components/SigmaWhitespaceGraph"), { ssr: false });
 
 type SearchHit = {
   pub_id?: string;
@@ -134,9 +136,9 @@ export default function Page() {
   const [whitespaceFocusCpcLike, setWhitespaceFocusCpcLike] = useState("");
   const [whitespaceLoading, setWhitespaceLoading] = useState(false);
   const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
-  const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[], edges: any[] } | null>(null);
+  const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[], edges: any } | null>(null);
 
-  const whitespaceGraphRef = useRef<HTMLDivElement>(null);
+  // Sigma component handles its own container; no external ref needed.
 
   // Debounce all free-text inputs to prevent API spam and race conditions
   const qDebounced = useDebounced(q);
@@ -396,28 +398,7 @@ export default function Page() {
     whitespaceFocusCpcLike,
   ]);
 
-  useEffect(() => {
-    if (whitespaceGraph && whitespaceGraphRef.current) {
-      console.log("Whitespace graph data received, attempting to render:", whitespaceGraph);
-      // Clear previous graph
-      while (whitespaceGraphRef.current.firstChild) {
-        whitespaceGraphRef.current.removeChild(whitespaceGraphRef.current.firstChild);
-      }
-      // Assuming PatcitGraph is available globally or imported
-      // @ts-ignore
-      const viz = new PatcitGraph(
-        whitespaceGraphRef.current,
-        whitespaceGraph.nodes,
-        whitespaceGraph.edges,
-        {
-          nodeSize: "score",
-          nodeColor: "cluster_id",
-          edgeWeight: "w",
-        }
-      );
-      viz.init();
-    }
-  }, [whitespaceGraph]);
+  // NOTE: rendering is now handled by SigmaWhitespaceGraph component below.
 
   useEffect(() => {
     setPage(1);
@@ -934,8 +915,8 @@ export default function Page() {
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Graph</h2>
           {whitespaceLoading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
           {whitespaceError && <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {whitespaceError}</div>}
-          <div ref={whitespaceGraphRef} style={{ height: 400, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
-            {/* Graph will be rendered here */}
+          <div style={{ height: 400, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
+            <SigmaWhitespaceGraph data={whitespaceGraph as any} height={400} />
           </div>
         </Card>
 

@@ -10,3 +10,5 @@ node_modules/
 *.csv
 .secrets/
 tests/
+.next/
+.vscode/
