@@ -62,6 +62,7 @@ DDL = [
     WHERE e.cluster_id IS NOT NULL
     GROUP BY e.cluster_id;
     """,
+    "CREATE UNIQUE INDEX IF NOT EXISTS cluster_stats_cluster_id_idx ON cluster_stats (cluster_id);",
 ]
 UPSERT_EDGE = "INSERT INTO knn_edge(src,dst,w) VALUES (%s,%s,%s) ON CONFLICT(src,dst) DO UPDATE SET w=EXCLUDED.w;"
 UPDATE_EMB = """
