@@ -194,15 +194,17 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       }
       if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2 };
       if (neighborsRef.current.has(node)) return { ...data, size: (data.size || 4) * 1.1 };
-      return { ...data, color: "#cbd5e1" };
+      // Slightly dim non-neighbors instead of fully greying out
+      const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
+      return { ...data, color: orig, opacity: 0.35 };
     };
     const edgeReducer = (edge: string, data: any) => {
       const sel = selectedRef.current;
       if (!sel) return data;
       const s = g.source(edge);
       const t = g.target(edge);
-      if (s === sel || t === sel) return { ...data, color: "#94a3b8" };
-      return { ...data, color: "#e2e8f0" };
+      if (s === sel || t === sel) return { ...data, color: "#94a3b8", size: (data.size || 1) };
+      return { ...data, color: "#e2e8f0", opacity: 0.3 };
     };
     renderer.setSetting("nodeReducer", nodeReducer as any);
     renderer.setSetting("edgeReducer", edgeReducer as any);
@@ -215,15 +217,14 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Soft-center on selection without altering zoom drastically
+      // Soft-center on selection without altering zoom level
       try {
         const cam = renderer.getCamera();
         const state = cam.getState();
         const x = g.getNodeAttribute(node, "x");
         const y = g.getNodeAttribute(node, "y");
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
-          cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 300 });
+          cam.animate({ ...state, x, y }, { duration: 250 });
         }
       } catch {}
       renderer.refresh();
@@ -296,10 +297,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
               if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
               const state = cam.getState();
-              // Preserve current zoom, but clamp to sane bounds
-              const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
-              // Keep other state (angle etc.) intact
-              cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 500 });
+              // Keep zoom and angle intact; only move to x/y
+              cam.animate({ ...state, x, y }, { duration: 350 });
             } catch {}
           }}
           style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}

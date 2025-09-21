@@ -119,7 +119,7 @@ export default function NavBar() {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
         <div className="flex items-center gap-3">
           <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
-            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" max-height={32} className="rounded-md shadow-sm hover:scale-105 transition-transform py-2" />
+            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={167}height={30} className="rounded-md shadow-md hover:scale-105 transition-transform py-2" />
           </Link>
         </div>
 
@@ -130,7 +130,7 @@ export default function NavBar() {
           <Link href="/whitespace" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
         </div>
 
-        <div className="hidden md:flex items-center pl-3 ml-3">
+        <div className="hidden md:flex items-center pl-1 ml-1">
           <button
             onClick={openAlerts}
             className="px-3 py-1.5 text-sm border-0 rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
@@ -143,7 +143,7 @@ export default function NavBar() {
           <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">GitHub</a>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 pl-3 ml-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center gap-1 pl-2 ml-2 border-l border-slate-200">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (

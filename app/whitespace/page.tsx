@@ -281,7 +281,7 @@ export default function WhitespacePage() {
       </div>
 
       <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12 }}>
-        2025 © Phaethon Order LLC
+        2025 © Phaethon Order LLC | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a>
       </footer>
     </div>
   );
