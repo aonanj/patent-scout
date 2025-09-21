@@ -291,15 +291,37 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const g = graphRef.current;
             const r = rendererRef.current;
             if (!g || !r || !selectedNode) return;
-            const x = g.getNodeAttribute(selectedNode, "x");
-            const y = g.getNodeAttribute(selectedNode, "y");
-            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+            const nodeX = g.getNodeAttribute(selectedNode, "x");
+            const nodeY = g.getNodeAttribute(selectedNode, "y");
+            if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
               const cam = r.getCamera();
-              // Animate camera to node position; keep current zoom ratio
-              cam.animate({ x, y }, { duration: 350 });
-            } catch {}
-            r.refresh();
+              const currentState = cam.getState();
+              
+              // Calculate the proper camera position to center the node
+              // We need to account for the viewport dimensions and current zoom
+              const container = containerRef.current;
+              if (!container) return;
+              
+              const containerRect = container.getBoundingClientRect();
+              const viewportWidth = containerRect.width;
+              const viewportHeight = containerRect.height;
+              
+              // Convert node coordinates to camera coordinates
+              // For centering, we want the camera to be positioned such that
+              // the node appears in the center of the viewport
+              const targetCameraX = nodeX - (viewportWidth / 2) / currentState.ratio;
+              const targetCameraY = nodeY - (viewportHeight / 2) / currentState.ratio;
+              
+              // Animate to the new camera position while preserving zoom level
+              cam.animate({ 
+                x: targetCameraX, 
+                y: targetCameraY,
+                ratio: currentState.ratio 
+              }, { duration: 500 });
+            } catch (error) {
+              console.warn("Error centering on node:", error);
+            }
           }}
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
