@@ -296,16 +296,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
               const cam = r.getCamera();
-              const currentState = cam.getState();
-              
-              // In Sigma.js v2, camera coordinates represent the center of the viewport
-              // To center a node, we simply move the camera to the node's position
-              // while preserving the current zoom ratio
-              cam.animate({ 
-                x: nodeX, 
-                y: nodeY,
-                ratio: currentState.ratio 
-              }, { duration: 500 });
+              // Use the same approach as the working clickNode handler
+              cam.animate({ x: nodeX, y: nodeY }, { duration: 500 });
             } catch (error) {
               console.warn("Error centering on node:", error);
             }
