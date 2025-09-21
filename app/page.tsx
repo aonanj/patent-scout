@@ -122,7 +122,6 @@ export default function Page() {
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
 
   // Whitespace analysis state
-  const [whitespaceModel, setWhitespaceModel] = useState("text-embedding-3-small|ta");
   const [whitespaceDateFrom, setWhitespaceDateFrom] = useState("");
   const [whitespaceDateTo, setWhitespaceDateTo] = useState("");
   const [whitespaceNeighbors, setWhitespaceNeighbors] = useState(15);
@@ -131,6 +130,8 @@ export default function Page() {
   const [whitespaceBeta, setWhitespaceBeta] = useState(0.5);
   const [whitespaceLimit, setWhitespaceLimit] = useState(1000);
   const [whitespaceLayout, setWhitespaceLayout] = useState(true);
+  const [whitespaceFocusAssignees, setWhitespaceFocusAssignees] = useState("");
+  const [whitespaceFocusCpcLike, setWhitespaceFocusCpcLike] = useState("");
   const [whitespaceLoading, setWhitespaceLoading] = useState(false);
   const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
   const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[], edges: any[] } | null>(null);
@@ -348,7 +349,6 @@ export default function Page() {
     try {
       const token = await getAccessTokenSilently();
       const payload = {
-        model: whitespaceModel,
         date_from: whitespaceDateFrom || undefined,
         date_to: whitespaceDateTo || undefined,
         neighbors: whitespaceNeighbors,
@@ -357,6 +357,8 @@ export default function Page() {
         beta: whitespaceBeta,
         limit: whitespaceLimit,
         layout: whitespaceLayout,
+        focus_assignees: whitespaceFocusAssignees ? whitespaceFocusAssignees.split(",").map(s => s.trim()).filter(Boolean) : [],
+        focus_cpc_like: whitespaceFocusCpcLike ? whitespaceFocusCpcLike.split(",").map(s => s.trim()).filter(Boolean) : [],
       };
 
       const res = await fetch(`/api/whitespace/graph`, {
@@ -380,7 +382,6 @@ export default function Page() {
     }
   }, [
     getAccessTokenSilently,
-    whitespaceModel,
     whitespaceDateFrom,
     whitespaceDateTo,
     whitespaceNeighbors,
@@ -389,6 +390,8 @@ export default function Page() {
     whitespaceBeta,
     whitespaceLimit,
     whitespaceLayout,
+    whitespaceFocusAssignees,
+    whitespaceFocusCpcLike,
   ]);
 
   useEffect(() => {
@@ -782,11 +785,22 @@ export default function Page() {
           <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
             <Row>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-model">Model</Label>
+                <Label htmlFor="ws-focus-assignees">Focus Assignees</Label>
                 <input
-                  id="ws-model"
-                  value={whitespaceModel}
-                  onChange={(e) => setWhitespaceModel(e.target.value)}
+                  id="ws-focus-assignees"
+                  value={whitespaceFocusAssignees}
+                  onChange={(e) => setWhitespaceFocusAssignees(e.target.value)}
+                  placeholder="e.g., Google, Apple"
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-focus-cpc">Focus CPC (LIKE)</Label>
+                <input
+                  id="ws-focus-cpc"
+                  value={whitespaceFocusCpcLike}
+                  onChange={(e) => setWhitespaceFocusCpcLike(e.target.value)}
+                  placeholder="e.g., G06N%, H04L%"
                   style={inputStyle}
                 />
               </div>
