@@ -298,25 +298,12 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
               const cam = r.getCamera();
               const currentState = cam.getState();
               
-              // Calculate the proper camera position to center the node
-              // We need to account for the viewport dimensions and current zoom
-              const container = containerRef.current;
-              if (!container) return;
-              
-              const containerRect = container.getBoundingClientRect();
-              const viewportWidth = containerRect.width;
-              const viewportHeight = containerRect.height;
-              
-              // Convert node coordinates to camera coordinates
-              // For centering, we want the camera to be positioned such that
-              // the node appears in the center of the viewport
-              const targetCameraX = nodeX - (viewportWidth / 2) / currentState.ratio;
-              const targetCameraY = nodeY - (viewportHeight / 2) / currentState.ratio;
-              
-              // Animate to the new camera position while preserving zoom level
+              // In Sigma.js v2, camera coordinates represent the center of the viewport
+              // To center a node, we simply move the camera to the node's position
+              // while preserving the current zoom ratio
               cam.animate({ 
-                x: targetCameraX, 
-                y: targetCameraY,
+                x: nodeX, 
+                y: nodeY,
                 ratio: currentState.ratio 
               }, { duration: 500 });
             } catch (error) {

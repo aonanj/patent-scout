@@ -139,8 +139,6 @@ export default function NavBar() {
           >
             Alerts
           </button>
-          <a href="mailto:support@phaethon.llc" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">support@phaethon.llc</a>
-          <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">GitHub</a>
         </div>
 
         <div className="hidden md:flex items-center gap-1 pl-2 ml-2 border-l border-slate-200">
