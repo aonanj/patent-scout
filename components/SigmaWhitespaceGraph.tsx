@@ -292,11 +292,12 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             if (!g || !r || !selectedNode) return;
             const x = g.getNodeAttribute(selectedNode, "x");
             const y = g.getNodeAttribute(selectedNode, "y");
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
             try {
-              if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
-              cam.animate({ x, y }, { duration: 50 });
+              cam.goto({ x, y });
             } catch {}
+            r.refresh();
           }}
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
