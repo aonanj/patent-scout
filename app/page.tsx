@@ -136,6 +136,8 @@ export default function Page() {
   const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
   const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[], edges: any[] } | null>(null);
 
+  const whitespaceGraphRef = useRef<HTMLDivElement>(null);
+
   // Debounce all free-text inputs to prevent API spam and race conditions
   const qDebounced = useDebounced(q);
   const semanticDebounced = useDebounced(semantic);
@@ -393,6 +395,29 @@ export default function Page() {
     whitespaceFocusAssignees,
     whitespaceFocusCpcLike,
   ]);
+
+  useEffect(() => {
+    if (whitespaceGraph && whitespaceGraphRef.current) {
+      console.log("Whitespace graph data received, attempting to render:", whitespaceGraph);
+      // Clear previous graph
+      while (whitespaceGraphRef.current.firstChild) {
+        whitespaceGraphRef.current.removeChild(whitespaceGraphRef.current.firstChild);
+      }
+      // Assuming PatcitGraph is available globally or imported
+      // @ts-ignore
+      const viz = new PatcitGraph(
+        whitespaceGraphRef.current,
+        whitespaceGraph.nodes,
+        whitespaceGraph.edges,
+        {
+          nodeSize: "score",
+          nodeColor: "cluster_id",
+          edgeWeight: "w",
+        }
+      );
+      viz.init();
+    }
+  }, [whitespaceGraph]);
 
   useEffect(() => {
     setPage(1);
@@ -909,7 +934,7 @@ export default function Page() {
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Graph</h2>
           {whitespaceLoading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
           {whitespaceError && <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {whitespaceError}</div>}
-          <div style={{ height: 400, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
+          <div ref={whitespaceGraphRef} style={{ height: 400, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
             {/* Graph will be rendered here */}
           </div>
         </Card>
