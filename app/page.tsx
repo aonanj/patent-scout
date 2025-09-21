@@ -391,37 +391,6 @@ export default function Page() {
     whitespaceLayout,
   ]);
 
-  const fetchWhitespaceGraph = useCallback(async () => {
-    setWhitespaceLoading(true);
-    setWhitespaceError(null);
-    try {
-      const token = await getAccessTokenSilently();
-      const params = new URLSearchParams({
-        model: whitespaceModel,
-        limit: String(whitespaceLimit),
-      });
-      const res = await fetch(`/api/whitespace/graph?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.status === 404) {
-        setWhitespaceGraph(null);
-        return;
-      }
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      const data = await res.json();
-      setWhitespaceGraph(data);
-    } catch (e: any) {
-      setWhitespaceError(e?.message ?? "Failed to fetch whitespace graph");
-    } finally {
-      setWhitespaceLoading(false);
-    }
-  }, [getAccessTokenSilently, whitespaceModel, whitespaceLimit]);
-
   useEffect(() => {
     setPage(1);
   }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
@@ -430,9 +399,8 @@ export default function Page() {
     if (isAuthenticated && !isLoading) {
         fetchSearch();
         fetchTrend();
-        fetchWhitespaceGraph();
     }
-  }, [page, fetchSearch, fetchTrend, fetchWhitespaceGraph, isAuthenticated, isLoading]);
+  }, [page, fetchSearch, fetchTrend, isAuthenticated, isLoading]);
 
   useEffect(() => {
     if(!isAuthenticated || isLoading) return;
