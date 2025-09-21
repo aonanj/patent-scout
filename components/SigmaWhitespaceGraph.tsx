@@ -295,12 +295,10 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             try {
               if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
-              const state = cam.getState();
-              // Keep zoom and angle intact; only move to x/y
-              cam.animate({ ...state, x, y }, { duration: 350 });
+              cam.goto({ x, y });
             } catch {}
           }}
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}
+          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer", textDecoration: "hover:underline" }}
         >
           Center on node
         </button>
@@ -308,7 +306,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "none", color: "#0f172a" }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "hover:underline", color: "#0f172a" }}
         >
           Open on Google Patents
         </a>
