@@ -223,7 +223,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const x = g.getNodeAttribute(node, "x");
         const y = g.getNodeAttribute(node, "y");
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          cam.animate({ x, y }, { duration: 250 });
+          cam.animate({ x, y, ratio: cam.getState().ratio }, { duration: 250 });
         }
       } catch {}
       renderer.refresh();

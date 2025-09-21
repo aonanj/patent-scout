@@ -119,7 +119,7 @@ export default function NavBar() {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-2">
         <div className="flex items-center gap-2">
           <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
-            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={200} height={36} className="rounded-md shadow-md hover:scale-105 transition-transform py-2" />
+            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={211} height={38} className="hover:scale-105 transition-transform py-2" />
           </Link>
         </div>
 

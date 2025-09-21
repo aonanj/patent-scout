@@ -145,7 +145,7 @@ export default function WhitespacePage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h1 style={{ margin: 0, fontSize: 18 }}>Whitespace Analysis</h1>
+            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Whitespace Analysis</h1>
           </div>
           {!isLoading && !isAuthenticated && (
             <button onClick={() => loginWithRedirect()} style={ghostBtn}>Log in</button>
