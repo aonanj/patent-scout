@@ -9,7 +9,7 @@ import igraph as ig  # optional
 import leidenalg as la  # optional
 import numpy as np
 import psycopg
-import umap  # optional for 2D layout
+import umap  # optional
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
@@ -240,9 +240,9 @@ def neighbor_momentum(conn: psycopg.Connection, pub_ids: list[str], labels: np.n
               cluster_id int
             ) ON COMMIT DROP
         """)
-        with cur.copy("COPY tmp_labels (pub_id, cluster_id) FROM STDIN WITH (FORMAT CSV)") as cp:
+        with cur.copy("COPY tmp_labels (pub_id, cluster_id) FROM STDIN") as cp:
             for pid, cid in zip(pub_ids, labels.astype(int), strict=False):
-                cp.write_row((pid, int(cid)))
+                cp.write_row((pid, int(cid) if cid is not None else None))
 
         # 2) Compute cutoff and momentum per cluster in SQL
         cur.execute("""
