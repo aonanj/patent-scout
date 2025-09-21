@@ -359,7 +359,7 @@ export default function Page() {
         layout: whitespaceLayout,
       };
 
-      const res = await fetch(`/api/whitespace/run`, {
+      const res = await fetch(`/api/whitespace/graph`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
