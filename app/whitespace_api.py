@@ -320,7 +320,7 @@ def persist(
               w   real
             ) ON COMMIT DROP
         """)
-        with cur.copy("COPY tmp_edges (src, dst, w) FROM STDIN WITH (FORMAT CSV)") as cp:
+        with cur.copy("COPY tmp_edges (src, dst, w) FROM STDIN") as cp:
             for i, src in enumerate(pub_ids):
                 for jpos in range(k):
                     j = int(idx[i, jpos])
@@ -344,7 +344,7 @@ def persist(
               whitespace_score real
             ) ON COMMIT DROP
         """)
-        with cur.copy("COPY tmp_updates (pub_id, cluster_id, local_density, whitespace_score) FROM STDIN WITH (FORMAT CSV)") as cp:
+        with cur.copy("COPY tmp_updates (pub_id, cluster_id, local_density, whitespace_score) FROM STDIN") as cp:
             for pid, cid, d, s in zip(
                 pub_ids,
                 labels.astype(int).tolist(),
