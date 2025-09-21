@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Graph from "graphology";
 import Sigma from "sigma";
 import forceAtlas2 from "graphology-layout-forceatlas2";
@@ -26,10 +26,31 @@ export type SigmaWhitespaceGraphProps = {
   height?: number;
 };
 
+function hslToHex(h: number, s: number, l: number): string {
+  // h [0,360], s/l [0,1]
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const hp = h / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (0 <= hp && hp < 1) { r = c; g = x; b = 0; }
+  else if (1 <= hp && hp < 2) { r = x; g = c; b = 0; }
+  else if (2 <= hp && hp < 3) { r = 0; g = c; b = x; }
+  else if (3 <= hp && hp < 4) { r = 0; g = x; b = c; }
+  else if (4 <= hp && hp < 5) { r = x; g = 0; b = c; }
+  else if (5 <= hp && hp < 6) { r = c; g = 0; b = x; }
+  const m = l - c / 2;
+  const rr = Math.round((r + m) * 255);
+  const gg = Math.round((g + m) * 255);
+  const bb = Math.round((b + m) * 255);
+  return `#${rr.toString(16).padStart(2, "0")}${gg.toString(16).padStart(2, "0")}${bb.toString(16).padStart(2, "0")}`;
+}
+
 function colorForCluster(clusterId: number): string {
-  // simple pastel color palette based on cluster id
-  const hue = (clusterId * 47) % 360;
-  return `hsl(${hue} 70% 55%)`;
+  // stable pastel-ish palette in hex
+  const hue = (Math.abs(clusterId) * 47) % 360;
+  return hslToHex(hue, 0.65, 0.56);
 }
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
@@ -38,6 +59,10 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any | null>(null);
   const graphRef = useRef<any | null>(null);
+  const selectedRef = useRef<string | null>(null);
+  const neighborsRef = useRef<Set<string>>(new Set());
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [selectedAttrs, setSelectedAttrs] = useState<any | null>(null);
 
   // compute min/max score for sizing
   const sizeScale = useMemo(() => {
@@ -46,6 +71,17 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     const max = scores.length ? Math.max(...scores) : 1;
     const denom = max - min || 1;
     return (s: number) => 2 + 10 * ((s - min) / denom); // node size in px
+  }, [data]);
+
+  // stable cluster -> color map
+  const clusterColor = useMemo(() => {
+    const ids = new Set<number>();
+    (data?.nodes ?? []).forEach((n) => ids.add(Number(n.cluster_id) || 0));
+    const map = new Map<number, string>();
+    Array.from(ids).sort((a, b) => a - b).forEach((cid, i) => {
+      map.set(cid, colorForCluster(cid));
+    });
+    return map;
   }, [data]);
 
   useEffect(() => {
@@ -69,7 +105,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       const x = Number.isFinite(n.x as number) ? Number(n.x) : Math.random();
       const y = Number.isFinite(n.y as number) ? Number(n.y) : Math.random();
       const size = sizeScale(Number(n.score) || 0);
-      const color = colorForCluster(n.cluster_id);
+      const color = clusterColor.get(Number(n.cluster_id)) || colorForCluster(n.cluster_id);
       if (!g.hasNode(key)) {
         g.addNode(key, { x, y, size, color, score: n.score, cluster_id: n.cluster_id, label: key });
       }
@@ -92,6 +128,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       renderLabels: false,
       allowInvalidContainer: false,
       zIndex: true,
+      defaultEdgeColor: "#cbd5e1",
     });
 
     rendererRef.current = renderer;
@@ -127,15 +164,54 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     };
 
     const handleEnterNode = ({ node }: any) => {
-      const cam = renderer.getCamera();
-      const { x, y } = renderer.camera.graphToViewport(g.getNodeAttribute(node, "x"), g.getNodeAttribute(node, "y"));
-      displayTooltip(node, x, y);
+      const dd = renderer.getNodeDisplayData(node) as any;
+      if (!dd) return;
+      displayTooltip(node, dd.x, dd.y);
     };
 
     const handleLeaveNode = () => hideTooltip();
 
+    // reducers for highlighting selection
+    const nodeReducer = (node: string, data: any) => {
+      const sel = selectedRef.current;
+      if (!sel) {
+        // ensure original color is applied (avoid default black)
+        const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
+        return { ...data, color: orig };
+      }
+      if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2 };
+      if (neighborsRef.current.has(node)) return { ...data, size: (data.size || 4) * 1.1 };
+      return { ...data, color: "#cbd5e1" };
+    };
+    const edgeReducer = (edge: string, data: any) => {
+      const sel = selectedRef.current;
+      if (!sel) return data;
+      const s = g.source(edge);
+      const t = g.target(edge);
+      if (s === sel || t === sel) return { ...data, color: "#94a3b8" };
+      return { ...data, color: "#e2e8f0" };
+    };
+    renderer.setSetting("nodeReducer", nodeReducer as any);
+    renderer.setSetting("edgeReducer", edgeReducer as any);
+
     renderer.on("enterNode", handleEnterNode);
     renderer.on("leaveNode", handleLeaveNode);
+
+    renderer.on("clickNode", ({ node }: any) => {
+      selectedRef.current = node;
+      neighborsRef.current = new Set(g.neighbors(node));
+      setSelectedNode(node);
+      setSelectedAttrs(g.getNodeAttributes(node));
+      renderer.refresh();
+    });
+    renderer.on("clickStage", () => {
+      selectedRef.current = null;
+      neighborsRef.current = new Set();
+      setSelectedNode(null);
+      setSelectedAttrs(null);
+      hideTooltip();
+      renderer.refresh();
+    });
 
     // resize observer
     const ro = new ResizeObserver(() => renderer.refresh());
@@ -144,6 +220,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     return () => {
       renderer.off("enterNode", handleEnterNode);
       renderer.off("leaveNode", handleLeaveNode);
+      renderer.off("clickNode");
+      renderer.off("clickStage");
       try { ro.disconnect(); } catch {}
       try { renderer.kill(); } catch {}
       rendererRef.current = null;
@@ -151,7 +229,69 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     };
   }, [data, sizeScale]);
 
+  // Sidebar details for selected node
+  const details = selectedNode && selectedAttrs ? (
+    <div style={{ width: 280, padding: 12, borderLeft: "1px solid #e5e7eb", background: "#fff" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <strong style={{ fontSize: 13 }}>Details</strong>
+        <button
+          onClick={() => {
+            selectedRef.current = null;
+            neighborsRef.current = new Set();
+            setSelectedNode(null);
+            setSelectedAttrs(null);
+            rendererRef.current?.refresh();
+          }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "2px 8px", background: "white", cursor: "pointer" }}
+        >
+          Clear
+        </button>
+      </div>
+      <div style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.6 }}>
+        <div><span style={{ color: "#64748b" }}>ID:</span> {selectedNode}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ color: "#64748b" }}>Cluster:</span>
+          <span>{String(selectedAttrs.cluster_id)}</span>
+          <span style={{ width: 10, height: 10, background: selectedAttrs.color || "#000", display: "inline-block", borderRadius: 2, border: "1px solid #e2e8f0" }} />
+        </div>
+        <div><span style={{ color: "#64748b" }}>Score:</span> {Number(selectedAttrs.score).toFixed(3)}</div>
+        {selectedAttrs.density !== undefined && (
+          <div><span style={{ color: "#64748b" }}>Density:</span> {Number(selectedAttrs.density).toFixed(3)}</div>
+        )}
+        <div><span style={{ color: "#64748b" }}>Neighbors:</span> {neighborsRef.current.size}</div>
+      </div>
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <button
+          onClick={() => {
+            const g = graphRef.current;
+            const r = rendererRef.current;
+            if (!g || !r || !selectedNode) return;
+            const x = g.getNodeAttribute(selectedNode, "x");
+            const y = g.getNodeAttribute(selectedNode, "y");
+            try {
+              r.getCamera().animate({ x, y, ratio: 0.2 }, { duration: 600 });
+            } catch {}
+          }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}
+        >
+          Center on node
+        </button>
+        <a
+          href={`https://patents.google.com/patent/${encodeURIComponent(selectedNode)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "none", color: "#0f172a" }}
+        >
+          Open on Google Patents
+        </a>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div style={{ height }} ref={containerRef} />
+    <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8 }}>
+      <div style={{ flex: 1, position: "relative" }} ref={containerRef} />
+      {details}
+    </div>
   );
 }
