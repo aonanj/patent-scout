@@ -215,6 +215,17 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
+      // Soft-center on selection without altering zoom drastically
+      try {
+        const cam = renderer.getCamera();
+        const state = cam.getState();
+        const x = g.getNodeAttribute(node, "x");
+        const y = g.getNodeAttribute(node, "y");
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
+          cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 300 });
+        }
+      } catch {}
       renderer.refresh();
     });
     renderer.on("clickStage", () => {
@@ -282,11 +293,13 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const x = g.getNodeAttribute(selectedNode, "x");
             const y = g.getNodeAttribute(selectedNode, "y");
             try {
+              if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
-              const { ratio } = cam.getState();
-              // Add a touch of auto-zoom-in when centering, but never zoom out
-              const targetRatio = Math.min(ratio, 0.25);
-              cam.animate({ x, y, ratio: targetRatio }, { duration: 600 });
+              const state = cam.getState();
+              // Preserve current zoom, but clamp to sane bounds
+              const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
+              // Keep other state (angle etc.) intact
+              cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 500 });
             } catch {}
           }}
           style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}

@@ -119,7 +119,7 @@ export default function NavBar() {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
         <div className="flex items-center gap-3">
           <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
-            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" max-height={48} className="rounded-md shadow-sm hover:scale-105 transition-transform" />
+            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" max-height={32} className="rounded-md shadow-sm hover:scale-105 transition-transform py-2" />
           </Link>
         </div>
 
@@ -130,10 +130,10 @@ export default function NavBar() {
           <Link href="/whitespace" className="px-3 py-1.5 text-sm rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 pl-3 ml-3 border-r border-slate-200">
+        <div className="hidden md:flex items-center pl-3 ml-3">
           <button
             onClick={openAlerts}
-            className="px-3 py-1.5 text-sm border-0 hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
+            className="px-3 py-1.5 text-sm border-0 rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
             disabled={isLoading}
             title={isAuthenticated ? "View and manage your alerts" : "Log in to manage alerts"}
           >
