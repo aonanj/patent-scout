@@ -223,7 +223,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const x = g.getNodeAttribute(node, "x");
         const y = g.getNodeAttribute(node, "y");
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          cam.goto({ x, y });
+          // Sigma v2: use camera.animate to move the view center to the node
+          cam.animate({ x, y }, { duration: 350 });
         }
       } catch {}
       renderer.refresh();
@@ -295,7 +296,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             if (!Number.isFinite(x) || !Number.isFinite(y)) return;
             try {
               const cam = r.getCamera();
-              cam.goto({ x, y });
+              // Animate camera to node position; keep current zoom ratio
+              cam.animate({ x, y }, { duration: 350 });
             } catch {}
             r.refresh();
           }}
