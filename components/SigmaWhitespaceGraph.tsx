@@ -217,15 +217,23 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Camera animation disabled - testing basic functionality
-      // try {
-      //   const cam = renderer.getCamera();
-      //   const x = g.getNodeAttribute(node, "x");
-      //   const y = g.getNodeAttribute(node, "y");
-      //   if (Number.isFinite(x) && Number.isFinite(y)) {
-      //     cam.animate({ x, y, ratio: cam.getState().ratio }, { duration: 250 });
-      //   }
-      // } catch {}
+      // Simple camera centering on node click
+      try {
+        const cam = renderer.getCamera();
+        const nodeX = g.getNodeAttribute(node, "x");
+        const nodeY = g.getNodeAttribute(node, "y");
+        if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+          // Use animateState instead of animate to be more explicit
+          const currentState = cam.getState();
+          cam.setState({
+            x: nodeX,
+            y: nodeY,
+            ratio: currentState.ratio
+          });
+        }
+      } catch (error) {
+        console.warn("Camera animation error:", error);
+      }
       renderer.refresh();
     });
     renderer.on("clickStage", () => {
@@ -293,18 +301,23 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const nodeX = g.getNodeAttribute(selectedNode, "x");
             const nodeY = g.getNodeAttribute(selectedNode, "y");
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
-            // Camera animation disabled - testing basic functionality
-            console.log("Center on Node clicked for:", selectedNode);
-            // try {
-            //   const cam = r.getCamera();
-            //   const nodeX = g.getNodeAttribute(selectedNode, "x");
-            //   const nodeY = g.getNodeAttribute(selectedNode, "y");
-            //   if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-            //     cam.animate({ x: nodeX, y: nodeY, ratio: cam.getState().ratio }, { duration: 500 });
-            //   }
-            // } catch (error) {
-            //   console.warn("Error centering on node:", error);
-            // }
+            try {
+              const cam = r.getCamera();
+              const nodeX = g.getNodeAttribute(selectedNode, "x");
+              const nodeY = g.getNodeAttribute(selectedNode, "y");
+              if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+                // Use setState for immediate centering
+                const currentState = cam.getState();
+                cam.setState({
+                  x: nodeX,
+                  y: nodeY,
+                  ratio: currentState.ratio
+                });
+                console.log("Centered on node:", selectedNode, "at", nodeX, nodeY);
+              }
+            } catch (error) {
+              console.warn("Error centering on node:", error);
+            }
           }}
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
