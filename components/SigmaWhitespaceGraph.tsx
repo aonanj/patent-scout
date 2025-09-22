@@ -24,9 +24,6 @@ export type WsGraph = { nodes: WsNode[]; edges: WsEdge[] };
 export type SigmaWhitespaceGraphProps = {
   data: WsGraph | null;
   height?: number;
-  // Default zoom ratio used when centering on a node via click
-  // Smaller values zoom in; larger values zoom out. Defaults to 0.5.
-  defaultZoomRatio?: number;
 };
 
 function hslToHex(h: number, s: number, l: number): string {
@@ -71,7 +68,7 @@ function formatGooglePatentId(pubId: string): string {
   return cleanedId;
 }
 
-export default function SigmaWhitespaceGraph({ data, height = 400, defaultZoomRatio = 0.5 }: SigmaWhitespaceGraphProps) {
+export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhitespaceGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any | null>(null);
   const graphRef = useRef<any | null>(null);
@@ -197,15 +194,17 @@ export default function SigmaWhitespaceGraph({ data, height = 400, defaultZoomRa
       }
       if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2 };
       if (neighborsRef.current.has(node)) return { ...data, size: (data.size || 4) * 1.1 };
-      return { ...data, color: "#cbd5e1" };
+      // Slightly dim non-neighbors instead of fully greying out
+      const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
+      return { ...data, color: orig, opacity: 0.35 };
     };
     const edgeReducer = (edge: string, data: any) => {
       const sel = selectedRef.current;
       if (!sel) return data;
       const s = g.source(edge);
       const t = g.target(edge);
-      if (s === sel || t === sel) return { ...data, color: "#94a3b8" };
-      return { ...data, color: "#e2e8f0" };
+      if (s === sel || t === sel) return { ...data, color: "#94a3b8", size: (data.size || 1) };
+      return { ...data, color: "#e2e8f0", opacity: 0.3 };
     };
     renderer.setSetting("nodeReducer", nodeReducer as any);
     renderer.setSetting("edgeReducer", edgeReducer as any);
@@ -218,14 +217,13 @@ export default function SigmaWhitespaceGraph({ data, height = 400, defaultZoomRa
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Soft-center on selection without altering zoom drastically
+      // Soft-center on selection without altering zoom level
       try {
         const cam = renderer.getCamera();
         const x = g.getNodeAttribute(node, "x");
         const y = g.getNodeAttribute(node, "y");
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          const nextRatio = defaultZoomRatio; // configurable default zoom level
-          cam.animate({ x, y, ratio: nextRatio }, { duration: 300 });
+          cam.goto({ x, y });
         }
       } catch {}
       renderer.refresh();
@@ -291,54 +289,27 @@ export default function SigmaWhitespaceGraph({ data, height = 400, defaultZoomRa
           onClick={() => {
             const g = graphRef.current;
             const r = rendererRef.current;
-            if (!g || !r) return;
+            if (!g || !r || !selectedNode) return;
+            const x = g.getNodeAttribute(selectedNode, "x");
+            const y = g.getNodeAttribute(selectedNode, "y");
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
             try {
-              // Compute bounding box of all nodes
-              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-              g.forEachNode((n: string, attrs: any) => {
-                const x = Number(attrs.x);
-                const y = Number(attrs.y);
-                if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-              });
-              if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) return;
-
-              const width = Math.max(1e-6, maxX - minX);
-              const height = Math.max(1e-6, maxY - minY);
-              const dims: any = typeof r.getDimensions === "function" ? r.getDimensions() : { width: (r as any).width ?? 800, height: (r as any).height ?? 600 };
-              const vw = Math.max(1, dims.width || 0);
-              const vh = Math.max(1, dims.height || 0);
-
-              // Add some padding around the graph bbox
-              const padding = 0.1; // 10%
-              const paddedW = width * (1 + padding);
-              const paddedH = height * (1 + padding);
-
-              // Determine ratio to fit bbox into viewport. In Sigma v2, higher ratio zooms out.
-              let ratio = Math.max(paddedW / vw, paddedH / vh);
-              if (!Number.isFinite(ratio) || ratio <= 0) ratio = defaultZoomRatio;
-              ratio = Math.max(0.05, Math.min(10, ratio));
-
-              const cx = minX + width / 2;
-              const cy = minY + height / 2;
               const cam = r.getCamera();
-              cam.animate({ x: cx, y: cy, ratio }, { duration: 500 });
+              cam.goto({ x, y });
             } catch {}
+            r.refresh();
           }}
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}
+          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
-          Fit to graph
+          Center on Node
         </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "none", color: "#0f172a" }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "6px 10px", background: "white", textDecoration: "underline", color: "#0f172a", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
-          Open on Google Patents
+          View Publication
         </a>
       </div>
     </div>
