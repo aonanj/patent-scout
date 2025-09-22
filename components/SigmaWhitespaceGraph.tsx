@@ -143,6 +143,9 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       allowInvalidContainer: true,
       zIndex: true,
       defaultEdgeColor: "#cbd5e1",
+      defaultNodeColor: "#475569",
+      minCameraRatio: 0.01,
+      maxCameraRatio: 10,
     });
 
     rendererRef.current = renderer;
@@ -211,10 +214,30 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       return false;
     };
 
-    // Wait for next frame to ensure renderer is fully initialized
-    requestAnimationFrame(() => {
-      fitCameraToGraph(false); // No animation for initial fit
-    });
+    // Try to fit camera with multiple attempts to ensure visibility
+    const attemptFit = (attempts = 0) => {
+      if (attempts > 3) {
+        console.warn("Failed to fit camera after multiple attempts");
+        // As a last resort, reset camera to origin
+        try {
+          const cam = renderer.getCamera();
+          cam.setState({ x: 0, y: 0, ratio: 0.5 });
+        } catch {}
+        return;
+      }
+      
+      requestAnimationFrame(() => {
+        if (!fitCameraToGraph(false)) {
+          // If fit failed, try again after a short delay
+          setTimeout(() => attemptFit(attempts + 1), 100 * (attempts + 1));
+        } else {
+          // Force a refresh after successful fit
+          renderer.refresh();
+        }
+      });
+    };
+    
+    attemptFit();
 
     // simple hover tooltips
     const el = containerRef.current;
@@ -465,8 +488,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   ) : null;
 
   return (
-    <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8 }}>
-      <div style={{ flex: 1, position: "relative" }} ref={containerRef} />
+    <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ flex: 1, position: "relative", minHeight: "100%" }} ref={containerRef} />
       {details}
     </div>
   );
