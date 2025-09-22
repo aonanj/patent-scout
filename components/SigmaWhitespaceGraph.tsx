@@ -147,6 +147,48 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     rendererRef.current = renderer;
     graphRef.current = g;
 
+    // Fit camera to show entire graph
+    try {
+      const nodes = g.nodes();
+      if (nodes.length > 0) {
+        const positions = nodes.map((nodeId: string) => ({
+          x: g.getNodeAttribute(nodeId, "x"),
+          y: g.getNodeAttribute(nodeId, "y")
+        }));
+        
+        const minX = Math.min(...positions.map((p: any) => p.x));
+        const maxX = Math.max(...positions.map((p: any) => p.x));
+        const minY = Math.min(...positions.map((p: any) => p.y));
+        const maxY = Math.max(...positions.map((p: any) => p.y));
+        
+        const graphWidth = maxX - minX;
+        const graphHeight = maxY - minY;
+        const graphCenterX = (minX + maxX) / 2;
+        const graphCenterY = (minY + maxY) / 2;
+        
+        const container = containerRef.current;
+        if (container) {
+          const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+          
+          // Calculate ratio to fit graph in container with some padding
+          const padding = 50;
+          const ratioX = (containerWidth - padding * 2) / graphWidth;
+          const ratioY = (containerHeight - padding * 2) / graphHeight;
+          const ratio = Math.min(ratioX, ratioY, 1); // Don't zoom in more than 1:1
+          
+          // Set camera to center graph
+          const cam = renderer.getCamera();
+          cam.setState({
+            x: graphCenterX,
+            y: graphCenterY,
+            ratio: ratio
+          });
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to fit camera to graph:", error);
+    }
+
     // simple hover tooltips
     const el = containerRef.current;
     const tooltip = document.createElement("div");
@@ -217,8 +259,22 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Disable camera movement for now - just selection
-      // TODO: Fix camera centering
+      // Center camera on clicked node
+      try {
+        const cam = renderer.getCamera();
+        const nodeX = g.getNodeAttribute(node, "x");
+        const nodeY = g.getNodeAttribute(node, "y");
+        
+        if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+          cam.animate({
+            x: nodeX,
+            y: nodeY,
+            ratio: cam.getState().ratio
+          }, { duration: 350 });
+        }
+      } catch (error) {
+        console.warn("Camera centering error:", error);
+      }
       renderer.refresh();
     });
     renderer.on("clickStage", () => {
@@ -287,30 +343,17 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const nodeY = g.getNodeAttribute(selectedNode, "y");
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
-              // Try using a different approach - calculate relative position
               const cam = r.getCamera();
-              
-              // Get all node positions to understand the graph bounds
-              const nodes = g.nodes();
-              const positions = nodes.map((nodeId: string) => ({
-                x: g.getNodeAttribute(nodeId, "x"),
-                y: g.getNodeAttribute(nodeId, "y")
-              }));
-              
-              const minX = Math.min(...positions.map((p: any) => p.x));
-              const maxX = Math.max(...positions.map((p: any) => p.x));
-              const minY = Math.min(...positions.map((p: any) => p.y));
-              const maxY = Math.max(...positions.map((p: any) => p.y));
-              
               const nodeX = g.getNodeAttribute(selectedNode, "x");
               const nodeY = g.getNodeAttribute(selectedNode, "y");
               
-              console.log("Graph bounds:", { minX, maxX, minY, maxY });
-              console.log("Node position:", { nodeX, nodeY });
-              console.log("Current camera:", cam.getState());
-              
-              // For now, just log - don't move camera until we understand the coordinate system
-              
+              if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+                cam.animate({
+                  x: nodeX,
+                  y: nodeY,
+                  ratio: cam.getState().ratio
+                }, { duration: 500 });
+              }
             } catch (error) {
               console.warn("Error centering on node:", error);
             }
