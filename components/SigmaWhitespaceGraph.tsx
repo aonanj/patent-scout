@@ -72,6 +72,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any | null>(null);
   const graphRef = useRef<any | null>(null);
+  const initialCamRef = useRef<any | null>(null);
   const selectedRef = useRef<string | null>(null);
   const neighborsRef = useRef<Set<string>>(new Set());
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -146,6 +147,10 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
 
     rendererRef.current = renderer;
     graphRef.current = g;
+    try {
+      // Save initial camera state to allow resetting the view later
+      initialCamRef.current = renderer.getCamera().getState();
+    } catch {}
 
     // simple hover tooltips
     const el = containerRef.current;
@@ -287,21 +292,18 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
         <button
           onClick={() => {
-            const g = graphRef.current;
             const r = rendererRef.current;
-            if (!g || !r || !selectedNode) return;
-            const x = g.getNodeAttribute(selectedNode, "x");
-            const y = g.getNodeAttribute(selectedNode, "y");
-            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+            const init = initialCamRef.current;
+            if (!r || !init) return;
             try {
               const cam = r.getCamera();
-              cam.goto({ x, y });
+              cam.goto(init);
             } catch {}
             r.refresh();
           }}
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
-          Center on Node
+          Reset View
         </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
