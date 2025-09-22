@@ -171,15 +171,24 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const centerX = (minX + maxX) / 2;
             const centerY = (minY + maxY) / 2;
             
-            // Simply center the camera on the graph without changing zoom
-            const cam = renderer.getCamera();
-            const currentState = cam.getState();
+            // Calculate the graph size
+            const graphWidth = maxX - minX;
+            const graphHeight = maxY - minY;
             
-            cam.setState({
+            // Calculate zoom ratio to fit the graph with some padding
+            const padding = 0.9; // 90% of container size
+            const ratioX = (containerWidth * padding) / graphWidth;
+            const ratioY = (containerHeight * padding) / graphHeight;
+            const targetRatio = Math.min(ratioX, ratioY, 1); // Don't zoom in too much
+            
+            const cam = renderer.getCamera();
+            
+            // Animate to the calculated position
+            cam.animate({
               x: centerX,
               y: centerY,
-              ratio: currentState.ratio // Keep the current zoom level
-            });
+              ratio: Math.max(targetRatio, 0.1) // Ensure minimum zoom level
+            }, { duration: 500 });
             
             return true;
           }
@@ -267,11 +276,14 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const cam = renderer.getCamera();
         const nodeX = g.getNodeAttribute(node, "x");
         const nodeY = g.getNodeAttribute(node, "y");
-        const nodeSize = g.getNodeAttribute(node, "size") || 4;
+        const currentState = cam.getState();
         
         if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-          // Calculate a reasonable ratio to show the node well
-          const targetRatio = Math.max(0.1, Math.min(1.0, 50 / nodeSize));
+          // Keep the current zoom level or zoom in slightly if too far out
+          // This prevents the camera from zooming away
+          const currentRatio = currentState.ratio;
+          const minZoom = 0.3; // Don't zoom out too much
+          const targetRatio = Math.min(currentRatio, minZoom);
           
           cam.animate({
             x: nodeX,
@@ -346,7 +358,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         )}
         <div><span style={{ color: "#64748b" }}>Neighbors:</span> {neighborsRef.current.size}</div>
       </div>
-      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+      <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button
           onClick={() => {
             const g = graphRef.current;
@@ -356,12 +368,13 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
               const cam = r.getCamera();
               const nodeX = g.getNodeAttribute(selectedNode, "x");
               const nodeY = g.getNodeAttribute(selectedNode, "y");
-              const nodeSize = g.getNodeAttribute(selectedNode, "size") || 4;
+              const currentState = cam.getState();
               
               if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-                // Calculate a reasonable ratio to show the node well
-                // Make sure the node appears at a good size (not too small, not too big)
-                const targetRatio = Math.max(0.1, Math.min(1.0, 50 / nodeSize));
+                // Keep the current zoom level or zoom in slightly if too far out
+                const currentRatio = currentState.ratio;
+                const minZoom = 0.3;
+                const targetRatio = Math.min(currentRatio, minZoom);
                 
                 cam.animate({
                   x: nodeX,
@@ -376,6 +389,55 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
         >
           Center on Node
+        </button>
+        <button
+          onClick={() => {
+            const g = graphRef.current;
+            const r = rendererRef.current;
+            if (!g || !r) return;
+            try {
+              const nodes = g.nodes();
+              if (nodes.length > 0 && containerRef.current) {
+                const container = containerRef.current;
+                const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+                
+                if (containerWidth > 0 && containerHeight > 0) {
+                  const positions = nodes.map((nodeId: string) => ({
+                    x: g.getNodeAttribute(nodeId, "x"),
+                    y: g.getNodeAttribute(nodeId, "y")
+                  }));
+                  
+                  const minX = Math.min(...positions.map((p: any) => p.x));
+                  const maxX = Math.max(...positions.map((p: any) => p.x));
+                  const minY = Math.min(...positions.map((p: any) => p.y));
+                  const maxY = Math.max(...positions.map((p: any) => p.y));
+                  
+                  const centerX = (minX + maxX) / 2;
+                  const centerY = (minY + maxY) / 2;
+                  
+                  const graphWidth = maxX - minX;
+                  const graphHeight = maxY - minY;
+                  
+                  const padding = 0.9;
+                  const ratioX = (containerWidth * padding) / graphWidth;
+                  const ratioY = (containerHeight * padding) / graphHeight;
+                  const targetRatio = Math.min(ratioX, ratioY, 1);
+                  
+                  const cam = r.getCamera();
+                  cam.animate({
+                    x: centerX,
+                    y: centerY,
+                    ratio: Math.max(targetRatio, 0.1)
+                  }, { duration: 500 });
+                }
+              }
+            } catch (error) {
+              console.warn("Error fitting to view:", error);
+            }
+          }}
+          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
+        >
+          Fit to View
         </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
