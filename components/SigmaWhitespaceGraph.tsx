@@ -115,8 +115,9 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     const g = new Graph();
     for (const n of data.nodes) {
       const key = n.id;
-      const x = Number.isFinite(n.x as number) ? Number(n.x) : Math.random();
-      const y = Number.isFinite(n.y as number) ? Number(n.y) : Math.random();
+      // Use larger random positions if coordinates are missing to avoid tiny graph
+      const x = Number.isFinite(n.x as number) ? Number(n.x) : (Math.random() - 0.5) * 100;
+      const y = Number.isFinite(n.y as number) ? Number(n.y) : (Math.random() - 0.5) * 100;
       const size = sizeScale(Number(n.score) || 0);
       const color = clusterColor.get(Number(n.cluster_id)) || colorForCluster(n.cluster_id);
       if (!g.hasNode(key)) {
@@ -148,7 +149,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     graphRef.current = g;
 
     // Fit camera to show entire graph immediately
-    const fitCameraToGraph = () => {
+    const fitCameraToGraph = (useAnimation = false) => {
       try {
         const nodes = g.nodes();
         if (nodes.length > 0 && containerRef.current) {
@@ -172,23 +173,34 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const centerY = (minY + maxY) / 2;
             
             // Calculate the graph size
-            const graphWidth = maxX - minX;
-            const graphHeight = maxY - minY;
+            const graphWidth = maxX - minX || 1; // Prevent division by zero
+            const graphHeight = maxY - minY || 1; // Prevent division by zero
             
             // Calculate zoom ratio to fit the graph with some padding
-            const padding = 0.9; // 90% of container size
+            const padding = 0.85; // 85% of container size for better visibility
             const ratioX = (containerWidth * padding) / graphWidth;
             const ratioY = (containerHeight * padding) / graphHeight;
-            const targetRatio = Math.min(ratioX, ratioY, 1); // Don't zoom in too much
+            let targetRatio = Math.min(ratioX, ratioY);
+            
+            // Clamp the ratio to reasonable bounds
+            targetRatio = Math.max(0.05, Math.min(targetRatio, 2)); // Between 0.05 and 2
             
             const cam = renderer.getCamera();
             
-            // Animate to the calculated position
-            cam.animate({
-              x: centerX,
-              y: centerY,
-              ratio: Math.max(targetRatio, 0.1) // Ensure minimum zoom level
-            }, { duration: 500 });
+            // Use setState for initial positioning, animate for user-triggered actions
+            if (useAnimation) {
+              cam.animate({
+                x: centerX,
+                y: centerY,
+                ratio: targetRatio
+              }, { duration: 500 });
+            } else {
+              cam.setState({
+                x: centerX,
+                y: centerY,
+                ratio: targetRatio
+              });
+            }
             
             return true;
           }
@@ -199,10 +211,10 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       return false;
     };
 
-    // Try to fit immediately, then retry with timeout if needed
-    if (!fitCameraToGraph()) {
-      setTimeout(fitCameraToGraph, 100);
-    }
+    // Wait for next frame to ensure renderer is fully initialized
+    requestAnimationFrame(() => {
+      fitCameraToGraph(false); // No animation for initial fit
+    });
 
     // simple hover tooltips
     const el = containerRef.current;
@@ -415,19 +427,20 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
                   const centerX = (minX + maxX) / 2;
                   const centerY = (minY + maxY) / 2;
                   
-                  const graphWidth = maxX - minX;
-                  const graphHeight = maxY - minY;
+                  const graphWidth = maxX - minX || 1;
+                  const graphHeight = maxY - minY || 1;
                   
-                  const padding = 0.9;
+                  const padding = 0.85;
                   const ratioX = (containerWidth * padding) / graphWidth;
                   const ratioY = (containerHeight * padding) / graphHeight;
-                  const targetRatio = Math.min(ratioX, ratioY, 1);
+                  let targetRatio = Math.min(ratioX, ratioY);
+                  targetRatio = Math.max(0.05, Math.min(targetRatio, 2));
                   
                   const cam = r.getCamera();
                   cam.animate({
                     x: centerX,
                     y: centerY,
-                    ratio: Math.max(targetRatio, 0.1)
+                    ratio: targetRatio
                   }, { duration: 500 });
                 }
               }
