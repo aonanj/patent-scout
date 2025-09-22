@@ -266,121 +266,20 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       return false;
     };
 
-    // Try to fit camera with multiple attempts to ensure visibility
-    const attemptFit = (attempts = 0) => {
-      if (attempts > 10) {
-        console.warn("Failed to fit camera after multiple attempts");
-        // As a last resort, reset camera to origin
-        try {
-          const cam = renderer.getCamera();
-          cam.setState({ x: 0, y: 0, ratio: 1 });
-        } catch {}
-        return;
-      }
-      
-      requestAnimationFrame(() => {
-        if (!fitCameraToGraph(false)) {
-          // If fit failed, try again after a short delay
-          const delay = Math.min(100 * Math.pow(1.3, attempts), 600);
-          setTimeout(() => attemptFit(attempts + 1), delay);
-        } else {
-          // Force a refresh after successful fit
-          renderer.refresh();
-        }
-      });
-    };
     // Ensure visibility by fitting on the first rendered frame
-    let didInitialFrameFit = false;
-    let triedFlipAfterRender = false;
-    let didChooseBestOrientation = false;
+    let didInitialFit = false;
     const afterRenderHandler = () => {
-      if (!didInitialFrameFit) {
+      if (!didInitialFit) {
         if (fitCameraToGraph(false)) {
-          didInitialFrameFit = true;
+          didInitialFit = true;
           renderer.refresh();
         }
-        return;
-      }
-
-      // After first fit, validate on-screen position once and flip if needed
-      if (!triedFlipAfterRender) {
-        try {
-          const nodes = g.nodes();
-          if (nodes.length > 0 && containerRef.current) {
-            const sample = nodes[0];
-            const dd = renderer.getNodeDisplayData(sample) as any;
-            const { width: cw, height: ch } = containerRef.current.getBoundingClientRect();
-            if (dd && (dd.x < -cw || dd.x > cw * 2 || dd.y < -ch || dd.y > ch * 2)) {
-              const cam = renderer.getCamera();
-              const st = cam.getState();
-              cam.setState({ x: -st.x, y: -st.y, ratio: st.ratio });
-              renderer.refresh();
-            }
-          }
-        } catch {}
-        triedFlipAfterRender = true;
-      }
-
-      // One-time robust orientation chooser: try four center sign combinations
-      if (!didChooseBestOrientation && containerRef.current) {
-        try {
-          const nodes = g.nodes();
-          if (nodes.length === 0) return;
-          const container = containerRef.current;
-          const { width: cw, height: ch } = container.getBoundingClientRect();
-          if (!(cw > 0 && ch > 0)) return;
-          const positions = nodes.map((id: string) => ({ x: g.getNodeAttribute(id, "x"), y: g.getNodeAttribute(id, "y") }));
-          const minX = Math.min(...positions.map((p: any) => p.x));
-          const maxX = Math.max(...positions.map((p: any) => p.x));
-          const minY = Math.min(...positions.map((p: any) => p.y));
-          const maxY = Math.max(...positions.map((p: any) => p.y));
-          const cx = (minX + maxX) / 2;
-          const cy = (minY + maxY) / 2;
-          const graphWidth = maxX - minX || 1;
-          const graphHeight = maxY - minY || 1;
-          const padding = 0.85;
-          const ratioX = graphWidth / (cw * padding);
-          const ratioY = graphHeight / (ch * padding);
-          const targetRatio = Math.max(0.05, Math.min(Math.max(ratioX, ratioY), 10));
-          const cam = renderer.getCamera();
-          const candidates = [
-            { x: cx, y: cy },
-            { x: -cx, y: cy },
-            { x: cx, y: -cy },
-            { x: -cx, y: -cy },
-          ];
-          const margin = 20;
-          const sampleCount = Math.min(nodes.length, 100);
-          const sampleNodes = nodes.slice(0, sampleCount);
-          let bestIdx = 0;
-          let bestScore = -Infinity;
-          candidates.forEach((c, idx) => {
-            cam.setState({ x: c.x, y: c.y, ratio: targetRatio });
-            renderer.refresh();
-            // Score = fraction of sampled nodes within viewport with margin
-            let inside = 0;
-            for (const n of sampleNodes) {
-              const dd = renderer.getNodeDisplayData(n) as any;
-              if (!dd) continue;
-              if (dd.x >= -margin && dd.x <= cw + margin && dd.y >= -margin && dd.y <= ch + margin) inside++;
-            }
-            const score = inside / sampleCount;
-            if (score > bestScore) {
-              bestScore = score;
-              bestIdx = idx;
-            }
-          });
-          // Apply best candidate
-          const best = candidates[bestIdx];
-          cam.setState({ x: best.x, y: best.y, ratio: targetRatio });
-          renderer.refresh();
-          didChooseBestOrientation = true;
-        } catch {}
       }
     };
     renderer.on("afterRender", afterRenderHandler);
 
-    attemptFit();
+    // Initial attempt to fit, in case the container is already sized.
+    fitCameraToGraph(false);
 
     // simple hover tooltips
     const el = containerRef.current;
