@@ -139,7 +139,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     // create sigma renderer
     const renderer = new Sigma(g, containerRef.current, {
       renderLabels: false,
-      allowInvalidContainer: false,
+      allowInvalidContainer: true,
       zIndex: true,
       defaultEdgeColor: "#cbd5e1",
     });
@@ -147,47 +147,50 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     rendererRef.current = renderer;
     graphRef.current = g;
 
-    // Fit camera to show entire graph
-    try {
-      const nodes = g.nodes();
-      if (nodes.length > 0) {
-        const positions = nodes.map((nodeId: string) => ({
-          x: g.getNodeAttribute(nodeId, "x"),
-          y: g.getNodeAttribute(nodeId, "y")
-        }));
-        
-        const minX = Math.min(...positions.map((p: any) => p.x));
-        const maxX = Math.max(...positions.map((p: any) => p.x));
-        const minY = Math.min(...positions.map((p: any) => p.y));
-        const maxY = Math.max(...positions.map((p: any) => p.y));
-        
-        const graphWidth = maxX - minX;
-        const graphHeight = maxY - minY;
-        const graphCenterX = (minX + maxX) / 2;
-        const graphCenterY = (minY + maxY) / 2;
-        
-        const container = containerRef.current;
-        if (container) {
+    // Fit camera to show entire graph - delay to ensure container is sized
+    setTimeout(() => {
+      try {
+        const nodes = g.nodes();
+        if (nodes.length > 0 && containerRef.current) {
+          const container = containerRef.current;
           const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
           
-          // Calculate ratio to fit graph in container with some padding
-          const padding = 50;
-          const ratioX = (containerWidth - padding * 2) / graphWidth;
-          const ratioY = (containerHeight - padding * 2) / graphHeight;
-          const ratio = Math.min(ratioX, ratioY, 1); // Don't zoom in more than 1:1
-          
-          // Set camera to center graph
-          const cam = renderer.getCamera();
-          cam.setState({
-            x: graphCenterX,
-            y: graphCenterY,
-            ratio: ratio
-          });
+          // Only proceed if container has valid dimensions
+          if (containerWidth > 0 && containerHeight > 0) {
+            const positions = nodes.map((nodeId: string) => ({
+              x: g.getNodeAttribute(nodeId, "x"),
+              y: g.getNodeAttribute(nodeId, "y")
+            }));
+            
+            const minX = Math.min(...positions.map((p: any) => p.x));
+            const maxX = Math.max(...positions.map((p: any) => p.x));
+            const minY = Math.min(...positions.map((p: any) => p.y));
+            const maxY = Math.max(...positions.map((p: any) => p.y));
+            
+            const graphWidth = maxX - minX;
+            const graphHeight = maxY - minY;
+            const graphCenterX = (minX + maxX) / 2;
+            const graphCenterY = (minY + maxY) / 2;
+            
+            // Calculate ratio to fit graph in container with some padding
+            const padding = 50;
+            const ratioX = (containerWidth - padding * 2) / graphWidth;
+            const ratioY = (containerHeight - padding * 2) / graphHeight;
+            const ratio = Math.min(ratioX, ratioY, 1); // Don't zoom in more than 1:1
+            
+            // Set camera to center graph
+            const cam = renderer.getCamera();
+            cam.setState({
+              x: graphCenterX,
+              y: graphCenterY,
+              ratio: ratio
+            });
+          }
         }
+      } catch (error) {
+        console.warn("Failed to fit camera to graph:", error);
       }
-    } catch (error) {
-      console.warn("Failed to fit camera to graph:", error);
-    }
+    }, 100);
 
     // simple hover tooltips
     const el = containerRef.current;
@@ -251,10 +254,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     renderer.setSetting("nodeReducer", nodeReducer as any);
     renderer.setSetting("edgeReducer", edgeReducer as any);
 
-    renderer.on("enterNode", handleEnterNode);
-    renderer.on("leaveNode", handleLeaveNode);
-
-    renderer.on("clickNode", ({ node }: any) => {
+    const handleClickNode = ({ node }: any) => {
       selectedRef.current = node;
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
@@ -276,15 +276,21 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         console.warn("Camera centering error:", error);
       }
       renderer.refresh();
-    });
-    renderer.on("clickStage", () => {
+    };
+
+    const handleClickStage = () => {
       selectedRef.current = null;
       neighborsRef.current = new Set();
       setSelectedNode(null);
       setSelectedAttrs(null);
       hideTooltip();
       renderer.refresh();
-    });
+    };
+
+    renderer.on("enterNode", handleEnterNode);
+    renderer.on("leaveNode", handleLeaveNode);
+    renderer.on("clickNode", handleClickNode);
+    renderer.on("clickStage", handleClickStage);
 
     // resize observer
     const ro = new ResizeObserver(() => renderer.refresh());
@@ -293,8 +299,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     return () => {
       renderer.off("enterNode", handleEnterNode);
       renderer.off("leaveNode", handleLeaveNode);
-      renderer.off("clickNode");
-      renderer.off("clickStage");
+      renderer.off("clickNode", handleClickNode);
+      renderer.off("clickStage", handleClickStage);
       try { ro.disconnect(); } catch {}
       try { renderer.kill(); } catch {}
       rendererRef.current = null;
@@ -339,9 +345,6 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const g = graphRef.current;
             const r = rendererRef.current;
             if (!g || !r || !selectedNode) return;
-            const nodeX = g.getNodeAttribute(selectedNode, "x");
-            const nodeY = g.getNodeAttribute(selectedNode, "y");
-            if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
               const cam = r.getCamera();
               const nodeX = g.getNodeAttribute(selectedNode, "x");
