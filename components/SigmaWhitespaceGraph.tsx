@@ -256,6 +256,25 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
                 ratio: targetRatio
               });
             }
+
+            // Validate: ensure a sample node is actually within or near viewport; if not, flip sign
+            try {
+              renderer.refresh();
+              const sample = nodes[0];
+              const dd = renderer.getNodeDisplayData(sample) as any;
+              if (dd && containerWidth && containerHeight) {
+                const outOfView = dd.x < -containerWidth || dd.x > containerWidth * 2 || dd.y < -containerHeight || dd.y > containerHeight * 2;
+                if (outOfView) {
+                  // Flip center sign and apply again
+                  if (useAnimation) {
+                    cam.animate({ x: -centerX, y: -centerY, ratio: targetRatio }, { duration: 300 });
+                  } else {
+                    cam.setState({ x: -centerX, y: -centerY, ratio: targetRatio });
+                  }
+                  renderer.refresh();
+                }
+              }
+            } catch {}
             
             return true;
           }
@@ -286,6 +305,21 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         } else {
           // Force a refresh after successful fit
           renderer.refresh();
+          // Additional sanity check: if graph still off-screen, try flipping center sign once
+          try {
+            const nodes = g.nodes();
+            if (nodes.length > 0) {
+              const sample = nodes[0];
+              const dd = renderer.getNodeDisplayData(sample) as any;
+              const { width: cw, height: ch } = containerRef.current!.getBoundingClientRect();
+              if (dd && (dd.x < -cw || dd.x > cw * 2 || dd.y < -ch || dd.y > ch * 2)) {
+                const cam = renderer.getCamera();
+                const st = cam.getState();
+                cam.setState({ x: -st.x, y: -st.y, ratio: st.ratio });
+                renderer.refresh();
+              }
+            }
+          } catch {}
         }
       });
     };
