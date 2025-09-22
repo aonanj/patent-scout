@@ -74,7 +74,6 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   const graphRef = useRef<any | null>(null);
   const selectedRef = useRef<string | null>(null);
   const neighborsRef = useRef<Set<string>>(new Set());
-  const [containerReady, setContainerReady] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedAttrs, setSelectedAttrs] = useState<any | null>(null);
 
@@ -98,25 +97,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     return map;
   }, [data]);
 
-  // Observe container size and mark ready when it has non-zero dimensions
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const check = () => {
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) setContainerReady(true);
-    };
-    // Initial check
-    check();
-    const ro = new ResizeObserver(() => check());
-    ro.observe(el);
-    return () => {
-      try { ro.disconnect(); } catch {}
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current || !containerReady) return;
+    if (!containerRef.current) return;
 
     // dispose previous renderer
     if (rendererRef.current) {
@@ -133,9 +115,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     const g = new Graph();
     for (const n of data.nodes) {
       const key = n.id;
-      // Use larger random positions if coordinates are missing to avoid tiny graph
-      const x = Number.isFinite(n.x as number) ? Number(n.x) : (Math.random() - 0.5) * 100;
-      const y = Number.isFinite(n.y as number) ? Number(n.y) : (Math.random() - 0.5) * 100;
+      const x = Number.isFinite(n.x as number) ? Number(n.x) : Math.random();
+      const y = Number.isFinite(n.y as number) ? Number(n.y) : Math.random();
       const size = sizeScale(Number(n.score) || 0);
       const color = clusterColor.get(Number(n.cluster_id)) || colorForCluster(n.cluster_id);
       if (!g.hasNode(key)) {
@@ -155,131 +136,16 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       forceAtlas2.assign(g, { iterations: 200, settings: { slowDown: 10, gravity: 1, scalingRatio: 10 } });
     } catch {}
 
-    // Normalize positions to avoid extreme scales that can break initial fit
-    try {
-      const nodes = g.nodes();
-      if (nodes.length > 0) {
-        const xs = nodes.map((n: string) => g.getNodeAttribute(n, "x") as number).filter((v: any) => Number.isFinite(v));
-        const ys = nodes.map((n: string) => g.getNodeAttribute(n, "y") as number).filter((v: any) => Number.isFinite(v));
-        if (xs.length && ys.length) {
-          const minX = Math.min(...xs);
-          const maxX = Math.max(...xs);
-          const minY = Math.min(...ys);
-          const maxY = Math.max(...ys);
-          const width = Math.max(maxX - minX, 1e-6);
-          const height = Math.max(maxY - minY, 1e-6);
-          // If too large or too tiny, rescale into [-100, 100]
-          if (width > 1e4 || height > 1e4 || width < 1e-3 || height < 1e-3) {
-            const cx = (minX + maxX) / 2;
-            const cy = (minY + maxY) / 2;
-            const target = 200; // full span across x or y
-            const scale = Math.min(target / width, target / height);
-            nodes.forEach((n: string) => {
-              const x = g.getNodeAttribute(n, "x") as number;
-              const y = g.getNodeAttribute(n, "y") as number;
-              if (Number.isFinite(x) && Number.isFinite(y)) {
-                g.setNodeAttribute(n, "x", (x - cx) * scale);
-                g.setNodeAttribute(n, "y", (y - cy) * scale);
-              }
-            });
-          }
-        }
-      }
-    } catch {}
-
     // create sigma renderer
     const renderer = new Sigma(g, containerRef.current, {
       renderLabels: false,
-      allowInvalidContainer: true,
+      allowInvalidContainer: false,
       zIndex: true,
       defaultEdgeColor: "#cbd5e1",
-      defaultNodeColor: "#475569",
-      minCameraRatio: 0.001,
-      maxCameraRatio: 100,
     });
 
-  rendererRef.current = renderer;
+    rendererRef.current = renderer;
     graphRef.current = g;
-  // Ensure canvas matches current container size at start
-  try { renderer.resize(); } catch {}
-
-    // Fit camera to show entire graph immediately
-    const fitCameraToGraph = (useAnimation = false) => {
-      try {
-        const nodes = g.nodes();
-        if (nodes.length > 0 && containerRef.current) {
-          const container = containerRef.current;
-          const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
-          
-          // Only proceed if container has valid dimensions
-          if (containerWidth > 0 && containerHeight > 0) {
-            // Get the bounding box of all nodes
-            const positions = nodes.map((nodeId: string) => ({
-              x: g.getNodeAttribute(nodeId, "x"),
-              y: g.getNodeAttribute(nodeId, "y")
-            }));
-            
-            const minX = Math.min(...positions.map((p: any) => p.x));
-            const maxX = Math.max(...positions.map((p: any) => p.x));
-            const minY = Math.min(...positions.map((p: any) => p.y));
-            const maxY = Math.max(...positions.map((p: any) => p.y));
-            
-            const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
-            
-            // Calculate the graph size
-            const graphWidth = maxX - minX || 1; // Prevent division by zero
-            const graphHeight = maxY - minY || 1; // Prevent division by zero
-            
-            // Calculate zoom ratio to fit the graph with some padding
-            // In Sigma, larger ratio means more zoomed out. Fit uses graph/container.
-            const padding = 0.85; // display at 85% of container
-            const ratioX = graphWidth / (containerWidth * padding);
-            const ratioY = graphHeight / (containerHeight * padding);
-            let targetRatio = Math.max(ratioX, ratioY);
-            // Clamp the ratio to reasonable bounds
-            targetRatio = Math.max(0.05, Math.min(targetRatio, 10));
-            
-            const cam = renderer.getCamera();
-            
-            // Use setState for initial positioning, animate for user-triggered actions
-            if (useAnimation) {
-              cam.animate({
-                x: centerX,
-                y: centerY,
-                ratio: targetRatio
-              }, { duration: 500 });
-            } else {
-              cam.setState({
-                x: centerX,
-                y: centerY,
-                ratio: targetRatio
-              });
-            }
-
-            return true;
-          }
-        }
-      } catch (error) {
-        console.warn("Failed to fit camera to graph:", error);
-      }
-      return false;
-    };
-
-    // Ensure visibility by fitting on the first rendered frame
-    let didInitialFit = false;
-    const afterRenderHandler = () => {
-      if (!didInitialFit) {
-        if (fitCameraToGraph(false)) {
-          didInitialFit = true;
-          renderer.refresh();
-        }
-      }
-    };
-    renderer.on("afterRender", afterRenderHandler);
-
-    // Initial attempt to fit, in case the container is already sized.
-    fitCameraToGraph(false);
 
     // simple hover tooltips
     const el = containerRef.current;
@@ -328,100 +194,64 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       }
       if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2 };
       if (neighborsRef.current.has(node)) return { ...data, size: (data.size || 4) * 1.1 };
-      // Slightly dim non-neighbors instead of fully greying out
-      const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
-      return { ...data, color: orig, opacity: 0.35 };
+      return { ...data, color: "#cbd5e1" };
     };
     const edgeReducer = (edge: string, data: any) => {
       const sel = selectedRef.current;
       if (!sel) return data;
       const s = g.source(edge);
       const t = g.target(edge);
-      if (s === sel || t === sel) return { ...data, color: "#94a3b8", size: (data.size || 1) };
-      return { ...data, color: "#e2e8f0", opacity: 0.3 };
+      if (s === sel || t === sel) return { ...data, color: "#94a3b8" };
+      return { ...data, color: "#e2e8f0" };
     };
     renderer.setSetting("nodeReducer", nodeReducer as any);
     renderer.setSetting("edgeReducer", edgeReducer as any);
 
-    const handleClickNode = ({ node }: any) => {
+    renderer.on("enterNode", handleEnterNode);
+    renderer.on("leaveNode", handleLeaveNode);
+
+    renderer.on("clickNode", ({ node }: any) => {
       selectedRef.current = node;
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Center camera on clicked node
+      // Soft-center on selection without altering zoom drastically
       try {
         const cam = renderer.getCamera();
-        const nodeX = g.getNodeAttribute(node, "x");
-        const nodeY = g.getNodeAttribute(node, "y");
-        const currentState = cam.getState();
-        
-        if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-          // Keep the current zoom level
-          const targetRatio = currentState.ratio;
-
-          cam.animate({
-            x: nodeX,
-            y: nodeY,
-            ratio: targetRatio
-          }, { duration: 350 });
+        const state = cam.getState();
+        const x = g.getNodeAttribute(node, "x");
+        const y = g.getNodeAttribute(node, "y");
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
+          cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 300 });
         }
-      } catch (error) {
-        console.warn("Camera centering error:", error);
-      }
+      } catch {}
       renderer.refresh();
-    };
-
-    const handleClickStage = () => {
+    });
+    renderer.on("clickStage", () => {
       selectedRef.current = null;
       neighborsRef.current = new Set();
       setSelectedNode(null);
       setSelectedAttrs(null);
       hideTooltip();
       renderer.refresh();
-    };
-
-    renderer.on("enterNode", handleEnterNode);
-    renderer.on("leaveNode", handleLeaveNode);
-    renderer.on("clickNode", handleClickNode);
-    renderer.on("clickStage", handleClickStage);
-
-    // resize observer - fit once when we get a real size, then refresh afterward
-    let didFitOnResize = false;
-    const ro = new ResizeObserver((entries) => {
-      try {
-        const entry = entries[0];
-        const rect = entry?.contentRect;
-        const w = rect?.width ?? 0;
-        const h = rect?.height ?? 0;
-        if (w > 0 && h > 0) {
-          try { renderer.resize(); } catch {}
-          if (!didFitOnResize && !selectedRef.current) {
-            // Perform a single fit once we know dimensions, if nothing is selected
-            if (fitCameraToGraph(false)) {
-              renderer.refresh();
-              didFitOnResize = true;
-              return;
-            }
-          }
-          // Otherwise, just refresh on resize
-          renderer.refresh();
-        }
-      } catch {}
     });
+
+    // resize observer
+    const ro = new ResizeObserver(() => renderer.refresh());
     ro.observe(containerRef.current);
 
     return () => {
       renderer.off("enterNode", handleEnterNode);
       renderer.off("leaveNode", handleLeaveNode);
-      renderer.off("clickNode", handleClickNode);
-      renderer.off("clickStage", handleClickStage);
-      try { renderer.off("afterRender", afterRenderHandler); } catch {}
+      renderer.off("clickNode");
+      renderer.off("clickStage");
       try { ro.disconnect(); } catch {}
       try { renderer.kill(); } catch {}
       rendererRef.current = null;
       graphRef.current = null;
     };
-  }, [data, sizeScale, containerReady]);
+  }, [data, sizeScale]);
 
   // Sidebar details for selected node
   const details = selectedNode && selectedAttrs ? (
@@ -454,154 +284,43 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         )}
         <div><span style={{ color: "#64748b" }}>Neighbors:</span> {neighborsRef.current.size}</div>
       </div>
-      <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
         <button
           onClick={() => {
             const g = graphRef.current;
             const r = rendererRef.current;
             if (!g || !r || !selectedNode) return;
+            const x = g.getNodeAttribute(selectedNode, "x");
+            const y = g.getNodeAttribute(selectedNode, "y");
             try {
+              if (!Number.isFinite(x) || !Number.isFinite(y)) return;
               const cam = r.getCamera();
-              const nodeX = g.getNodeAttribute(selectedNode, "x");
-              const nodeY = g.getNodeAttribute(selectedNode, "y");
-              const currentState = cam.getState();
-              
-              if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-                // Keep the current zoom level or zoom in slightly if too far out
-                const currentRatio = currentState.ratio;
-                const minZoom = 0.3;
-                const targetRatio = Math.min(currentRatio, minZoom);
-                
-                cam.animate({
-                  x: nodeX,
-                  y: nodeY,
-                  ratio: targetRatio
-                }, { duration: 500 });
-              }
-            } catch (error) {
-              console.warn("Error centering on node:", error);
-            }
+              const state = cam.getState();
+              // Preserve current zoom, but clamp to sane bounds
+              const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
+              // Keep other state (angle etc.) intact
+              cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 500 });
+            } catch {}
           }}
-          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}
         >
-          Center on Node
-        </button>
-        <button
-          onClick={() => {
-            const g = graphRef.current;
-            const r = rendererRef.current;
-            if (!g || !r) return;
-            try {
-              const nodes = g.nodes();
-              if (nodes.length > 0 && containerRef.current) {
-                const container = containerRef.current;
-                const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
-                
-                if (containerWidth > 0 && containerHeight > 0) {
-                  const positions = nodes.map((nodeId: string) => ({
-                    x: g.getNodeAttribute(nodeId, "x"),
-                    y: g.getNodeAttribute(nodeId, "y")
-                  }));
-                  
-                  const minX = Math.min(...positions.map((p: any) => p.x));
-                  const maxX = Math.max(...positions.map((p: any) => p.x));
-                  const minY = Math.min(...positions.map((p: any) => p.y));
-                  const maxY = Math.max(...positions.map((p: any) => p.y));
-                  
-                  const centerX = (minX + maxX) / 2;
-                  const centerY = (minY + maxY) / 2;
-                  
-                  const graphWidth = maxX - minX || 1;
-                  const graphHeight = maxY - minY || 1;
-                  
-                  const padding = 0.85;
-                  // Fit using graph size vs container size
-                  const ratioX = graphWidth / (containerWidth * padding);
-                  const ratioY = graphHeight / (containerHeight * padding);
-                  let targetRatio = Math.max(ratioX, ratioY);
-                  targetRatio = Math.max(0.05, Math.min(targetRatio, 10));
-                  
-                  const cam = r.getCamera();
-                  cam.animate({
-                    x: centerX,
-                    y: centerY,
-                    ratio: targetRatio
-                  }, { duration: 500 });
-                }
-              }
-            } catch (error) {
-              console.warn("Error fitting to view:", error);
-            }
-          }}
-          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
-        >
-          Fit to View
+          Center on node
         </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", justifyContent: "center", borderRadius: 6, padding: "6px 10px", background: "white", textDecoration: "underline", color: "#0f172a", alignContent: "center", alignItems: "center", fontWeight: 500 }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", textDecoration: "none", color: "#0f172a" }}
         >
-          View Publication
+          Open on Google Patents
         </a>
       </div>
     </div>
   ) : null;
 
   return (
-    <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8, overflow: "hidden" }}>
-      <div style={{ flex: 1, position: "relative", minHeight: "100%", width: "100%", height: "100%", minWidth: 0 }} ref={containerRef} />
-      {/* Reset View button overlay */}
-      <div style={{ position: "absolute", top: 8, left: 8, zIndex: 20, display: "flex", gap: 8 }}>
-        <button
-          onClick={() => {
-            try {
-              const r = rendererRef.current;
-              const g = graphRef.current;
-              if (!r || !g) return;
-              // clear selection
-              selectedRef.current = null;
-              neighborsRef.current = new Set();
-              setSelectedNode(null);
-              setSelectedAttrs(null);
-
-              // Fit to full graph
-              const nodes = g.nodes();
-              if (nodes.length > 0 && containerRef.current) {
-                const container = containerRef.current;
-                const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
-                if (containerWidth > 0 && containerHeight > 0) {
-                  const positions = nodes.map((nodeId: string) => ({
-                    x: g.getNodeAttribute(nodeId, "x"),
-                    y: g.getNodeAttribute(nodeId, "y"),
-                  }));
-                  const minX = Math.min(...positions.map((p: any) => p.x));
-                  const maxX = Math.max(...positions.map((p: any) => p.x));
-                  const minY = Math.min(...positions.map((p: any) => p.y));
-                  const maxY = Math.max(...positions.map((p: any) => p.y));
-                  const centerX = (minX + maxX) / 2;
-                  const centerY = (minY + maxY) / 2;
-                  const graphWidth = maxX - minX || 1;
-                  const graphHeight = maxY - minY || 1;
-                  const padding = 0.85;
-                  const ratioX = graphWidth / (containerWidth * padding);
-                  const ratioY = graphHeight / (containerHeight * padding);
-                  let targetRatio = Math.max(ratioX, ratioY);
-                  targetRatio = Math.max(0.05, Math.min(targetRatio, 10));
-                  const cam = r.getCamera();
-                  cam.animate({ x: centerX, y: centerY, ratio: targetRatio }, { duration: 400 });
-                }
-              }
-              r.refresh();
-            } catch {}
-          }}
-          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", fontWeight: 500 }}
-          title="Reset view"
-        >
-          Reset View
-        </button>
-      </div>
+    <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8 }}>
+      <div style={{ flex: 1, position: "relative" }} ref={containerRef} />
       {details}
     </div>
   );
