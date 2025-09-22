@@ -155,6 +155,38 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       forceAtlas2.assign(g, { iterations: 200, settings: { slowDown: 10, gravity: 1, scalingRatio: 10 } });
     } catch {}
 
+    // Normalize positions to avoid extreme scales that can break initial fit
+    try {
+      const nodes = g.nodes();
+      if (nodes.length > 0) {
+        const xs = nodes.map((n: string) => g.getNodeAttribute(n, "x") as number).filter((v: any) => Number.isFinite(v));
+        const ys = nodes.map((n: string) => g.getNodeAttribute(n, "y") as number).filter((v: any) => Number.isFinite(v));
+        if (xs.length && ys.length) {
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+          const minY = Math.min(...ys);
+          const maxY = Math.max(...ys);
+          const width = Math.max(maxX - minX, 1e-6);
+          const height = Math.max(maxY - minY, 1e-6);
+          // If too large or too tiny, rescale into [-100, 100]
+          if (width > 1e4 || height > 1e4 || width < 1e-3 || height < 1e-3) {
+            const cx = (minX + maxX) / 2;
+            const cy = (minY + maxY) / 2;
+            const target = 200; // full span across x or y
+            const scale = Math.min(target / width, target / height);
+            nodes.forEach((n: string) => {
+              const x = g.getNodeAttribute(n, "x") as number;
+              const y = g.getNodeAttribute(n, "y") as number;
+              if (Number.isFinite(x) && Number.isFinite(y)) {
+                g.setNodeAttribute(n, "x", (x - cx) * scale);
+                g.setNodeAttribute(n, "y", (y - cy) * scale);
+              }
+            });
+          }
+        }
+      }
+    } catch {}
+
     // create sigma renderer
     const renderer = new Sigma(g, containerRef.current, {
       renderLabels: false,
@@ -162,12 +194,14 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       zIndex: true,
       defaultEdgeColor: "#cbd5e1",
       defaultNodeColor: "#475569",
-      minCameraRatio: 0.01,
-      maxCameraRatio: 10,
+      minCameraRatio: 0.001,
+      maxCameraRatio: 100,
     });
 
-    rendererRef.current = renderer;
+  rendererRef.current = renderer;
     graphRef.current = g;
+  // Ensure canvas matches current container size at start
+  try { renderer.resize(); } catch {}
 
     // Fit camera to show entire graph immediately
     const fitCameraToGraph = (useAnimation = false) => {
@@ -234,12 +268,12 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
 
     // Try to fit camera with multiple attempts to ensure visibility
     const attemptFit = (attempts = 0) => {
-      if (attempts > 3) {
+      if (attempts > 10) {
         console.warn("Failed to fit camera after multiple attempts");
         // As a last resort, reset camera to origin
         try {
           const cam = renderer.getCamera();
-          cam.setState({ x: 0, y: 0, ratio: 0.5 });
+          cam.setState({ x: 0, y: 0, ratio: 1 });
         } catch {}
         return;
       }
@@ -247,14 +281,26 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       requestAnimationFrame(() => {
         if (!fitCameraToGraph(false)) {
           // If fit failed, try again after a short delay
-          setTimeout(() => attemptFit(attempts + 1), 100 * (attempts + 1));
+          const delay = Math.min(100 * Math.pow(1.3, attempts), 600);
+          setTimeout(() => attemptFit(attempts + 1), delay);
         } else {
           // Force a refresh after successful fit
           renderer.refresh();
         }
       });
     };
-    
+    // Ensure visibility by fitting on the first rendered frame
+    let didInitialFrameFit = false;
+    const afterRenderHandler = () => {
+      if (!didInitialFrameFit) {
+        if (fitCameraToGraph(false)) {
+          didInitialFrameFit = true;
+          renderer.refresh();
+        }
+      }
+    };
+    renderer.on("afterRender", afterRenderHandler);
+
     attemptFit();
 
     // simple hover tooltips
@@ -370,6 +416,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const w = rect?.width ?? 0;
         const h = rect?.height ?? 0;
         if (w > 0 && h > 0) {
+          try { renderer.resize(); } catch {}
           if (!didFitOnResize && !selectedRef.current) {
             // Perform a single fit once we know dimensions, if nothing is selected
             if (fitCameraToGraph(false)) {
@@ -390,6 +437,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       renderer.off("leaveNode", handleLeaveNode);
       renderer.off("clickNode", handleClickNode);
       renderer.off("clickStage", handleClickStage);
+      try { renderer.off("afterRender", afterRenderHandler); } catch {}
       try { ro.disconnect(); } catch {}
       try { renderer.kill(); } catch {}
       rendererRef.current = null;
@@ -525,7 +573,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
 
   return (
     <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8, overflow: "hidden" }}>
-      <div style={{ flex: 1, position: "relative", minHeight: "100%", width: "100%", height: "100%" }} ref={containerRef} />
+      <div style={{ flex: 1, position: "relative", minHeight: "100%", width: "100%", height: "100%", minWidth: 0 }} ref={containerRef} />
       {details}
     </div>
   );

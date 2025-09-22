@@ -275,7 +275,11 @@ export default function WhitespacePage() {
           {whitespaceLoading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
           {whitespaceError && <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {whitespaceError}</div>}
           <div style={{ height: 520, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
-            <SigmaWhitespaceGraph data={whitespaceGraph as any} height={520} />
+            <SigmaWhitespaceGraph
+              key={`${whitespaceGraph?.nodes?.length ?? 0}-${whitespaceGraph?.edges?.length ?? 0}`}
+              data={whitespaceGraph as any}
+              height={520}
+            />
           </div>
         </Card>
       </div>
