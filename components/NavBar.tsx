@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 type SavedQuery = {
   id: number | string;
@@ -38,6 +39,7 @@ export default function NavBar() {
   const { isAuthenticated, isLoading, user, loginWithRedirect, logout, getAccessTokenSilently } = useAuth0();
 
   const [showAlerts, setShowAlerts] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [alerts, setAlerts] = useState<SavedQuery[]>([]);
   const [alertsLoading, setAlertsLoading] = useState(false);
   const [alertsErr, setAlertsErr] = useState<string | null>(null);
@@ -114,6 +116,37 @@ export default function NavBar() {
     }
   }, [getAccessTokenSilently]);
 
+  // Mount flag to safely use document in Next.js app router
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!mounted) return;
+    if (showAlerts) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [showAlerts, mounted]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!mounted || !showAlerts) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setShowAlerts(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mounted, showAlerts]);
+
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-slate-200">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-2">
@@ -179,90 +212,93 @@ export default function NavBar() {
         </div>
       </nav>
 
-      {/* Alerts Modal */}
-      {showAlerts && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-          <div className="w-[min(1200px,95vw)] max-h-[80vh] bg-white rounded-xl shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div className="flex items-center gap-2">
-                <h3 className="m-0 font-semibold">Your Alerts</h3>
-              </div>
-              <button onClick={closeAlerts} className="h-8 px-3 text-sm rounded-md border border-slate-200 bg-white hover:bg-slate-50">Close</button>
-            </div>
-            <div className="p-4 overflow-auto">
-              {alertsLoading ? (
-                <div className="text-sm text-slate-500">Loading…</div>
-              ) : alertsErr ? (
-                <div className="text-sm text-red-600">Error: {alertsErr}</div>
-              ) : alerts.length === 0 ? (
-                <div className="text-sm text-slate-500">No alerts saved yet.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 text-slate-700">
-                        <th className="text-left px-3 py-2 border-b">Name</th>
-                        <th className="text-left px-3 py-2 border-b">Keywords</th>
-                        <th className="text-left px-3 py-2 border-b">Assignee</th>
-                        <th className="text-left px-3 py-2 border-b">CPC</th>
-                        <th className="text-left px-3 py-2 border-b">Date Range</th>
-                        <th className="text-left px-3 py-2 border-b">Semantic</th>
-                        <th className="text-left px-3 py-2 border-b">Schedule</th>
-                        <th className="text-left px-3 py-2 border-b">Active</th>
-                        <th className="text-left px-3 py-2 border-b">Created</th>
-                        <th className="px-3 py-2 border-b"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {alerts.map((a) => {
-                        const f = (a.filters ?? {}) as Record<string, any>;
-                        const kw = f.keywords ?? f.q ?? "";
-                        const ass = f.assignee ?? "";
-                        const cpcv = f.cpc ?? "";
-                        const df = f.date_from ?? "";
-                        const dt = f.date_to ?? "";
-                        const dr = df || dt ? `${fmtDateCell(df)} – ${fmtDateCell(dt)}` : "";
-                        return (
-                          <tr key={String(a.id)} className="odd:bg-white even:bg-slate-50/40">
-                            <td className="px-3 py-2 align-top">{a.name}</td>
-                            <td className="px-3 py-2 align-top">{String(kw).length > 36 ? String(kw).slice(0, 35) + "…" : String(kw)}</td>
-                            <td className="px-3 py-2 align-top">{String(ass).length > 24 ? String(ass).slice(0, 23) + "…" : String(ass)}</td>
-                            <td className="px-3 py-2 align-top">{Array.isArray(cpcv) ? cpcv.join(', ') : String(cpcv ?? '')}</td>
-                            <td className="px-3 py-2 align-top">{dr}</td>
-                            <td className="px-3 py-2 align-top">{String(a.semantic_query ?? '')}</td>
-                            <td className="px-3 py-2 align-top">{a.schedule_cron ?? '—'}</td>
-                            <td className="px-3 py-2 align-top">
-                              <label className="inline-flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  checked={!!(a.is_active ?? true)}
-                                  onChange={(e) => toggleActive(a.id, e.currentTarget.checked)}
-                                />
-                                <span className="text-xs text-slate-600">{(a.is_active ?? true) ? 'Active' : 'Inactive'}</span>
-                              </label>
-                            </td>
-                            <td className="px-3 py-2 align-top">{a.created_at ? fmtDateCell(a.created_at) : ''}</td>
-                            <td className="px-3 py-2 align-top text-right">
-                              <button
-                                onClick={() => deleteAlert(a.id)}
-                                disabled={deletingId === a.id}
-                                className="h-7 px-2 text-xs rounded border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
-                                title="Delete alert"
-                              >
-                                {deletingId === a.id ? 'Deleting…' : 'Delete'}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+      {/* Alerts Modal via Portal to escape header's containing context */}
+      {mounted && showAlerts && typeof document !== "undefined"
+        ? createPortal(
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+              <div className="w-[min(1200px,95vw)] max-h-[80vh] bg-white rounded-xl shadow-xl overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-2">
+                    <h3 className="m-0 font-semibold">Your Alerts</h3>
+                  </div>
+                  <button onClick={closeAlerts} className="h-8 px-3 text-sm rounded-md border border-slate-200 bg-white hover:bg-slate-50">Close</button>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="p-4 overflow-auto">
+                  {alertsLoading ? (
+                    <div className="text-sm text-slate-500">Loading…</div>
+                  ) : alertsErr ? (
+                    <div className="text-sm text-red-600">Error: {alertsErr}</div>
+                  ) : alerts.length === 0 ? (
+                    <div className="text-sm text-slate-500">No alerts saved yet.</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 text-slate-700">
+                            <th className="text-left px-3 py-2 border-b">Name</th>
+                            <th className="text-left px-3 py-2 border-b">Keywords</th>
+                            <th className="text-left px-3 py-2 border-b">Assignee</th>
+                            <th className="text-left px-3 py-2 border-b">CPC</th>
+                            <th className="text-left px-3 py-2 border-b">Date Range</th>
+                            <th className="text-left px-3 py-2 border-b">Semantic</th>
+                            <th className="text-left px-3 py-2 border-b">Schedule</th>
+                            <th className="text-left px-3 py-2 border-b">Active</th>
+                            <th className="text-left px-3 py-2 border-b">Created</th>
+                            <th className="px-3 py-2 border-b"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {alerts.map((a) => {
+                            const f = (a.filters ?? {}) as Record<string, any>;
+                            const kw = f.keywords ?? f.q ?? "";
+                            const ass = f.assignee ?? "";
+                            const cpcv = f.cpc ?? "";
+                            const df = f.date_from ?? "";
+                            const dt = f.date_to ?? "";
+                            const dr = df || dt ? `${fmtDateCell(df)} – ${fmtDateCell(dt)}` : "";
+                            return (
+                              <tr key={String(a.id)} className="odd:bg-white even:bg-slate-50/40">
+                                <td className="px-3 py-2 align-top">{a.name}</td>
+                                <td className="px-3 py-2 align-top">{String(kw).length > 36 ? String(kw).slice(0, 35) + "…" : String(kw)}</td>
+                                <td className="px-3 py-2 align-top">{String(ass).length > 24 ? String(ass).slice(0, 23) + "…" : String(ass)}</td>
+                                <td className="px-3 py-2 align-top">{Array.isArray(cpcv) ? cpcv.join(', ') : String(cpcv ?? '')}</td>
+                                <td className="px-3 py-2 align-top">{dr}</td>
+                                <td className="px-3 py-2 align-top">{String(a.semantic_query ?? '')}</td>
+                                <td className="px-3 py-2 align-top">{a.schedule_cron ?? '—'}</td>
+                                <td className="px-3 py-2 align-top">
+                                  <label className="inline-flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(a.is_active ?? true)}
+                                      onChange={(e) => toggleActive(a.id, e.currentTarget.checked)}
+                                    />
+                                    <span className="text-xs text-slate-600">{(a.is_active ?? true) ? 'Active' : 'Inactive'}</span>
+                                  </label>
+                                </td>
+                                <td className="px-3 py-2 align-top">{a.created_at ? fmtDateCell(a.created_at) : ''}</td>
+                                <td className="px-3 py-2 align-top text-right">
+                                  <button
+                                    onClick={() => deleteAlert(a.id)}
+                                    disabled={deletingId === a.id}
+                                    className="h-7 px-2 text-xs rounded border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+                                    title="Delete alert"
+                                  >
+                                    {deletingId === a.id ? 'Deleting…' : 'Delete'}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </header>
   );
 }
