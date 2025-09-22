@@ -74,6 +74,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   const graphRef = useRef<any | null>(null);
   const selectedRef = useRef<string | null>(null);
   const neighborsRef = useRef<Set<string>>(new Set());
+  const [containerReady, setContainerReady] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedAttrs, setSelectedAttrs] = useState<any | null>(null);
 
@@ -97,8 +98,25 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     return map;
   }, [data]);
 
+  // Observe container size and mark ready when it has non-zero dimensions
   useEffect(() => {
-    if (!containerRef.current) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const check = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) setContainerReady(true);
+    };
+    // Initial check
+    check();
+    const ro = new ResizeObserver(() => check());
+    ro.observe(el);
+    return () => {
+      try { ro.disconnect(); } catch {}
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current || !containerReady) return;
 
     // dispose previous renderer
     if (rendererRef.current) {
@@ -377,7 +395,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       rendererRef.current = null;
       graphRef.current = null;
     };
-  }, [data, sizeScale]);
+  }, [data, sizeScale, containerReady]);
 
   // Sidebar details for selected node
   const details = selectedNode && selectedAttrs ? (

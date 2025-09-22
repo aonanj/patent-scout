@@ -4,22 +4,22 @@ Search, volume trend, and alerting on AI-related patents and publications using 
 
 - **Hybrid search**: full-text (Postgres GIN) + vector similarity (pgvector)
 - **ETL**: directly query BigQuery patents dataset, generate embeddings (OpenAI or deterministic hash fallback), and build indexes
-- **FastAPI backend**: `/search`, `/saved-queries`, `/trend/volume`
+- **FastAPI backend**: `/search`, `/saved-queries`, `/trend/volume`, `/whitespace`
 - **Alerts runner**: scheduled job sends email digests via Mailgun
-- **Frontend**: Next.js app (App Router) with `/api/search` and `/api/saved-queries` proxy routes, and a simple search + “Save as Alert” UI
-- **Deployments**: Render (Web Service) and Vercel. See [https://patent-scout.vercel.app/](https://patent-scout.vercel.app/)
+- **Frontend**: Next.js app (App Router) with `/api/search` and `/api/saved-queries` proxy routes, and a search + “Save as Alert” UI
+- **Deployments**: Render (Web Service), Neon.tech (Database), and Vercel. See [https://patent-scout.vercel.app/](https://patent-scout.vercel.app/)
 
 ---
 
 ## Screenshots
 
-### Next.js Search UI
+### _Next.js Search UI_
 ![Search UI](docs/screenshots/search-ui.png)
 
-### Next.js Whitespace Analysis UI
+### _Next.js Whitespace Analysis UI_
 ![Whitespace Analysis UI](docs/screenshots/whitespace-ui.png)
 
-### FastAPI Swagger Docs
+### _FastAPI Swagger Docs_
 ![API Docs](docs/screenshots/api-docs.png)
 
 ---
@@ -28,13 +28,17 @@ Search, volume trend, and alerting on AI-related patents and publications using 
 
 - `etl.py` — ETL and ingestion script that creates the DB schema, upserts patents, and generates embeddings. Handles CPC parsing and indexing.
 - `app/api.py` — FastAPI application wiring routes and startup; uses repository helpers for search and trends.
+- `app.whitespace_api.py` - FastAPI application wiring for the Whitespace Analysis route; uses db helper for db connection. 
 - `app/repository.py` — Database query layer: hybrid search (keyword + pgvector), trends, and detail fetches.
 - `app/embed.py` — Embedding helper (OpenAI wrapper) used to produce semantic vectors.
 - `app/db.py` — Database connection / pool helpers used by the API and ETL.
 - `app/schemas.py` — Pydantic models for requests/responses (SearchRequest, PatentHit, PatentDetail, etc.).
 - `app/page.tsx` — Next.js frontend search UI: keyword, CPC, date filters, results and trend chart.
+- `app/whitepace/page.tsx` - Next.js frontend whitespace analysis UI: focus assignee, CPC (like)
 - `app/api/search/route.ts` — Next.js server route that proxies frontend search requests to the FastAPI backend.
 - `app/api/saved-queries/route.ts` and `app/api/saved-queries/[id]/route.ts` — Proxy routes for saved-query CRUD used by the UI.
+- `app/components/NavBar.tsx` - Next.js header navigation bar; includes login/logout
+- `app/components/SigmaWhitespaceGraph.tsx` - Next.js component for the whitespace analysis graph; uses Sigma + Graphology 
 - `alerts_runner.py` — Background/cron runner that evaluates saved queries, records alert events, and sends digests (Mailgun or stdout).
 
 ---
