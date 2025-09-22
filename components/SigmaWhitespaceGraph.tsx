@@ -180,11 +180,13 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             
             // Set camera to center graph
             const cam = renderer.getCamera();
+            console.log("Setting initial camera state:", { x: graphCenterX, y: graphCenterY, ratio });
             cam.setState({
               x: graphCenterX,
               y: graphCenterY,
               ratio: ratio
             });
+            console.log("Camera state after setting:", cam.getState());
           }
         }
       } catch (error) {
@@ -293,7 +295,11 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     renderer.on("clickStage", handleClickStage);
 
     // resize observer
-    const ro = new ResizeObserver(() => renderer.refresh());
+    const ro = new ResizeObserver(() => {
+      console.log("ResizeObserver triggered, camera state before refresh:", renderer.getCamera().getState());
+      renderer.refresh();
+      console.log("ResizeObserver triggered, camera state after refresh:", renderer.getCamera().getState());
+    });
     ro.observe(containerRef.current);
 
     return () => {
