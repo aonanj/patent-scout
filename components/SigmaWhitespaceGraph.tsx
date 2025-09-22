@@ -147,8 +147,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     rendererRef.current = renderer;
     graphRef.current = g;
 
-    // Fit camera to show entire graph - delay to ensure container is sized
-    setTimeout(() => {
+    // Fit camera to show entire graph immediately
+    const fitCameraToGraph = () => {
       try {
         const nodes = g.nodes();
         if (nodes.length > 0 && containerRef.current) {
@@ -180,19 +180,25 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             
             // Set camera to center graph
             const cam = renderer.getCamera();
-            console.log("Setting initial camera state:", { x: graphCenterX, y: graphCenterY, ratio });
+            console.log("Setting camera state:", { x: graphCenterX, y: graphCenterY, ratio });
             cam.setState({
               x: graphCenterX,
               y: graphCenterY,
               ratio: ratio
             });
-            console.log("Camera state after setting:", cam.getState());
+            return true;
           }
         }
       } catch (error) {
         console.warn("Failed to fit camera to graph:", error);
       }
-    }, 100);
+      return false;
+    };
+
+    // Try to fit immediately, then retry with timeout if needed
+    if (!fitCameraToGraph()) {
+      setTimeout(fitCameraToGraph, 100);
+    }
 
     // simple hover tooltips
     const el = containerRef.current;
@@ -294,12 +300,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     renderer.on("clickNode", handleClickNode);
     renderer.on("clickStage", handleClickStage);
 
-    // resize observer
-    const ro = new ResizeObserver(() => {
-      console.log("ResizeObserver triggered, camera state before refresh:", renderer.getCamera().getState());
-      renderer.refresh();
-      console.log("ResizeObserver triggered, camera state after refresh:", renderer.getCamera().getState());
-    });
+    // resize observer - just refresh the renderer
+    const ro = new ResizeObserver(() => renderer.refresh());
     ro.observe(containerRef.current);
 
     return () => {
