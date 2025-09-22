@@ -574,6 +574,56 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   return (
     <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8, overflow: "hidden" }}>
       <div style={{ flex: 1, position: "relative", minHeight: "100%", width: "100%", height: "100%", minWidth: 0 }} ref={containerRef} />
+      {/* Reset View button overlay */}
+      <div style={{ position: "absolute", top: 8, left: 8, zIndex: 20, display: "flex", gap: 8 }}>
+        <button
+          onClick={() => {
+            try {
+              const r = rendererRef.current;
+              const g = graphRef.current;
+              if (!r || !g) return;
+              // clear selection
+              selectedRef.current = null;
+              neighborsRef.current = new Set();
+              setSelectedNode(null);
+              setSelectedAttrs(null);
+
+              // Fit to full graph
+              const nodes = g.nodes();
+              if (nodes.length > 0 && containerRef.current) {
+                const container = containerRef.current;
+                const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+                if (containerWidth > 0 && containerHeight > 0) {
+                  const positions = nodes.map((nodeId: string) => ({
+                    x: g.getNodeAttribute(nodeId, "x"),
+                    y: g.getNodeAttribute(nodeId, "y"),
+                  }));
+                  const minX = Math.min(...positions.map((p: any) => p.x));
+                  const maxX = Math.max(...positions.map((p: any) => p.x));
+                  const minY = Math.min(...positions.map((p: any) => p.y));
+                  const maxY = Math.max(...positions.map((p: any) => p.y));
+                  const centerX = (minX + maxX) / 2;
+                  const centerY = (minY + maxY) / 2;
+                  const graphWidth = maxX - minX || 1;
+                  const graphHeight = maxY - minY || 1;
+                  const padding = 0.85;
+                  const ratioX = graphWidth / (containerWidth * padding);
+                  const ratioY = graphHeight / (containerHeight * padding);
+                  let targetRatio = Math.max(ratioX, ratioY);
+                  targetRatio = Math.max(0.05, Math.min(targetRatio, 10));
+                  const cam = r.getCamera();
+                  cam.animate({ x: centerX, y: centerY, ratio: targetRatio }, { duration: 400 });
+                }
+              }
+              r.refresh();
+            } catch {}
+          }}
+          style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", fontWeight: 500 }}
+          title="Reset view"
+        >
+          Reset View
+        </button>
+      </div>
       {details}
     </div>
   );
