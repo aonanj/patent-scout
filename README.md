@@ -13,13 +13,13 @@ Search, volume trend, and alerting on AI-related patents and publications using 
 
 ## Screenshots
 
-### _Next.js Search UI_
+### <u>Next.js Search UI</u>
 ![Search UI](docs/screenshots/search-ui.png)
 
-### _Next.js Whitespace Analysis UI_
+### <u>Next.js Whitespace Analysis UI</u>
 ![Whitespace Analysis UI](docs/screenshots/whitespace-ui.png)
 
-### _FastAPI Swagger Docs_
+### <u>FastAPI Swagger Docs</u>
 ![API Docs](docs/screenshots/api-docs.png)
 
 ---
