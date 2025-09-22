@@ -217,30 +217,32 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Debug camera and node coordinates
+      // Center camera on clicked node using proper coordinate transformation
       try {
         const cam = renderer.getCamera();
         const nodeX = g.getNodeAttribute(node, "x");
         const nodeY = g.getNodeAttribute(node, "y");
-        const currentState = cam.getState();
         
-        console.log("=== NODE CLICK DEBUG ===");
-        console.log("Node:", node);
-        console.log("Node coordinates:", { x: nodeX, y: nodeY });
-        console.log("Current camera state:", currentState);
-        console.log("Are coordinates finite?", Number.isFinite(nodeX), Number.isFinite(nodeY));
-        
-        // Don't move camera yet, just log
-        // if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-        //   const currentState = cam.getState();
-        //   cam.setState({
-        //     x: nodeX,
-        //     y: nodeY,
-        //     ratio: currentState.ratio
-        //   });
-        // }
+        if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+          // Get current viewport dimensions
+          const container = containerRef.current;
+          if (container) {
+            const { width, height } = container.getBoundingClientRect();
+            
+            // Calculate camera position to center the node in the viewport
+            // In Sigma, camera coordinates represent the top-left of the viewport in graph space
+            const targetCameraX = nodeX - width / 2;
+            const targetCameraY = nodeY - height / 2;
+            
+            cam.setState({
+              x: targetCameraX,
+              y: targetCameraY,
+              ratio: cam.getState().ratio
+            });
+          }
+        }
       } catch (error) {
-        console.error("Click handler error:", error);
+        console.warn("Camera centering error:", error);
       }
       renderer.refresh();
     });
@@ -310,25 +312,31 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const nodeY = g.getNodeAttribute(selectedNode, "y");
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
-              console.log("=== CENTER BUTTON DEBUG ===");
-              console.log("Selected node:", selectedNode);
-              console.log("Graph ref:", !!g);
-              console.log("Renderer ref:", !!r);
+              const cam = r.getCamera();
+              const nodeX = g.getNodeAttribute(selectedNode, "x");
+              const nodeY = g.getNodeAttribute(selectedNode, "y");
               
-              if (g && selectedNode) {
-                const nodeX = g.getNodeAttribute(selectedNode, "x");
-                const nodeY = g.getNodeAttribute(selectedNode, "y");
-                console.log("Node coordinates:", { x: nodeX, y: nodeY });
-                console.log("Are coordinates finite?", Number.isFinite(nodeX), Number.isFinite(nodeY));
-                
-                if (r) {
-                  const cam = r.getCamera();
-                  const currentState = cam.getState();
-                  console.log("Current camera state:", currentState);
+              if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+                // Get current viewport dimensions
+                const container = containerRef.current;
+                if (container) {
+                  const { width, height } = container.getBoundingClientRect();
+                  
+                  // Calculate camera position to center the node in the viewport
+                  const targetCameraX = nodeX - width / 2;
+                  const targetCameraY = nodeY - height / 2;
+                  
+                  cam.setState({
+                    x: targetCameraX,
+                    y: targetCameraY,
+                    ratio: cam.getState().ratio
+                  });
+                  
+                  console.log(`Centered camera at (${targetCameraX.toFixed(2)}, ${targetCameraY.toFixed(2)}) to show node at (${nodeX.toFixed(2)}, ${nodeY.toFixed(2)})`);
                 }
               }
             } catch (error) {
-              console.error("Center button error:", error);
+              console.warn("Error centering on node:", error);
             }
           }}
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
