@@ -169,23 +169,22 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             
             const graphWidth = maxX - minX;
             const graphHeight = maxY - minY;
-            const graphCenterX = (minX + maxX) / 2;
-            const graphCenterY = (minY + maxY) / 2;
             
-            // Calculate ratio to fit graph in container with some padding
-            const padding = 50;
+            // Calculate padding and ratio more conservatively
+            const padding = 100;
             const ratioX = (containerWidth - padding * 2) / graphWidth;
             const ratioY = (containerHeight - padding * 2) / graphHeight;
-            const ratio = Math.min(ratioX, ratioY, 1); // Don't zoom in more than 1:1
+            const ratio = Math.min(ratioX, ratioY, 0.5); // Cap at 0.5 to prevent being too zoomed in
             
-            // Set camera to center graph
+            // Use a simpler approach - start with default camera position and only adjust ratio
             const cam = renderer.getCamera();
-            console.log("Setting camera state:", { x: graphCenterX, y: graphCenterY, ratio });
+            console.log("Setting camera state with ratio only:", { ratio });
             cam.setState({
-              x: graphCenterX,
-              y: graphCenterY,
+              x: 0,
+              y: 0,
               ratio: ratio
             });
+            console.log("Camera state after setting:", cam.getState());
             return true;
           }
         }
