@@ -157,6 +157,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           
           // Only proceed if container has valid dimensions
           if (containerWidth > 0 && containerHeight > 0) {
+            // Get the bounding box of all nodes
             const positions = nodes.map((nodeId: string) => ({
               x: g.getNodeAttribute(nodeId, "x"),
               y: g.getNodeAttribute(nodeId, "y")
@@ -167,26 +168,19 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const minY = Math.min(...positions.map((p: any) => p.y));
             const maxY = Math.max(...positions.map((p: any) => p.y));
             
-            const graphWidth = maxX - minX;
-            const graphHeight = maxY - minY;
             const centerX = (minX + maxX) / 2;
             const centerY = (minY + maxY) / 2;
             
-            // Calculate padding and ratio more conservatively
-            const padding = 100;
-            const ratioX = (containerWidth - padding * 2) / graphWidth;
-            const ratioY = (containerHeight - padding * 2) / graphHeight;
-            const ratio = Math.min(ratioX, ratioY, 0.5); // Cap at 0.5 to prevent being too zoomed in
-            
-            // Center camera on the graph's center of mass
+            // Simply center the camera on the graph without changing zoom
             const cam = renderer.getCamera();
-            console.log("Setting camera state with center and ratio:", { centerX, centerY, ratio });
+            const currentState = cam.getState();
+            
             cam.setState({
               x: centerX,
               y: centerY,
-              ratio: ratio
+              ratio: currentState.ratio // Keep the current zoom level
             });
-            console.log("Camera state after setting:", cam.getState());
+            
             return true;
           }
         }
