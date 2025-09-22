@@ -24,6 +24,9 @@ export type WsGraph = { nodes: WsNode[]; edges: WsEdge[] };
 export type SigmaWhitespaceGraphProps = {
   data: WsGraph | null;
   height?: number;
+  // Default zoom ratio used when centering on a node via click
+  // Smaller values zoom in; larger values zoom out. Defaults to 0.5.
+  defaultZoomRatio?: number;
 };
 
 function hslToHex(h: number, s: number, l: number): string {
@@ -68,7 +71,7 @@ function formatGooglePatentId(pubId: string): string {
   return cleanedId;
 }
 
-export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhitespaceGraphProps) {
+export default function SigmaWhitespaceGraph({ data, height = 400, defaultZoomRatio = 0.5 }: SigmaWhitespaceGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any | null>(null);
   const graphRef = useRef<any | null>(null);
@@ -218,11 +221,10 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       // Soft-center on selection without altering zoom drastically
       try {
         const cam = renderer.getCamera();
-        const state = cam.getState();
         const x = g.getNodeAttribute(node, "x");
         const y = g.getNodeAttribute(node, "y");
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          const nextRatio = 0.5; // A sensible default zoom level
+          const nextRatio = defaultZoomRatio; // configurable default zoom level
           cam.animate({ x, y, ratio: nextRatio }, { duration: 300 });
         }
       } catch {}
@@ -289,22 +291,46 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           onClick={() => {
             const g = graphRef.current;
             const r = rendererRef.current;
-            if (!g || !r || !selectedNode) return;
-            const x = g.getNodeAttribute(selectedNode, "x");
-            const y = g.getNodeAttribute(selectedNode, "y");
+            if (!g || !r) return;
             try {
-              if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+              // Compute bounding box of all nodes
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              g.forEachNode((n: string, attrs: any) => {
+                const x = Number(attrs.x);
+                const y = Number(attrs.y);
+                if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+              });
+              if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) return;
+
+              const width = Math.max(1e-6, maxX - minX);
+              const height = Math.max(1e-6, maxY - minY);
+              const dims: any = typeof r.getDimensions === "function" ? r.getDimensions() : { width: (r as any).width ?? 800, height: (r as any).height ?? 600 };
+              const vw = Math.max(1, dims.width || 0);
+              const vh = Math.max(1, dims.height || 0);
+
+              // Add some padding around the graph bbox
+              const padding = 0.1; // 10%
+              const paddedW = width * (1 + padding);
+              const paddedH = height * (1 + padding);
+
+              // Determine ratio to fit bbox into viewport. In Sigma v2, higher ratio zooms out.
+              let ratio = Math.max(paddedW / vw, paddedH / vh);
+              if (!Number.isFinite(ratio) || ratio <= 0) ratio = defaultZoomRatio;
+              ratio = Math.max(0.05, Math.min(10, ratio));
+
+              const cx = minX + width / 2;
+              const cy = minY + height / 2;
               const cam = r.getCamera();
-              const state = cam.getState();
-              // Preserve current zoom, but clamp to sane bounds
-              const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
-              // Keep other state (angle etc.) intact
-              cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 500 });
+              cam.animate({ x: cx, y: cy, ratio }, { duration: 500 });
             } catch {}
           }}
           style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px", background: "white", cursor: "pointer" }}
         >
-          Center on node
+          Fit to graph
         </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
