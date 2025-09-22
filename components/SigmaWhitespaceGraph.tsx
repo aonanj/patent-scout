@@ -217,33 +217,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Center camera on clicked node using proper coordinate transformation
-      try {
-        const cam = renderer.getCamera();
-        const nodeX = g.getNodeAttribute(node, "x");
-        const nodeY = g.getNodeAttribute(node, "y");
-        
-        if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-          // Get current viewport dimensions
-          const container = containerRef.current;
-          if (container) {
-            const { width, height } = container.getBoundingClientRect();
-            
-            // Calculate camera position to center the node in the viewport
-            // In Sigma, camera coordinates represent the top-left of the viewport in graph space
-            const targetCameraX = nodeX - width / 2;
-            const targetCameraY = nodeY - height / 2;
-            
-            cam.setState({
-              x: targetCameraX,
-              y: targetCameraY,
-              ratio: cam.getState().ratio
-            });
-          }
-        }
-      } catch (error) {
-        console.warn("Camera centering error:", error);
-      }
+      // Disable camera movement for now - just selection
+      // TODO: Fix camera centering
       renderer.refresh();
     });
     renderer.on("clickStage", () => {
@@ -312,29 +287,30 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const nodeY = g.getNodeAttribute(selectedNode, "y");
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
+              // Try using a different approach - calculate relative position
               const cam = r.getCamera();
+              
+              // Get all node positions to understand the graph bounds
+              const nodes = g.nodes();
+              const positions = nodes.map((nodeId: string) => ({
+                x: g.getNodeAttribute(nodeId, "x"),
+                y: g.getNodeAttribute(nodeId, "y")
+              }));
+              
+              const minX = Math.min(...positions.map((p: any) => p.x));
+              const maxX = Math.max(...positions.map((p: any) => p.x));
+              const minY = Math.min(...positions.map((p: any) => p.y));
+              const maxY = Math.max(...positions.map((p: any) => p.y));
+              
               const nodeX = g.getNodeAttribute(selectedNode, "x");
               const nodeY = g.getNodeAttribute(selectedNode, "y");
               
-              if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-                // Get current viewport dimensions
-                const container = containerRef.current;
-                if (container) {
-                  const { width, height } = container.getBoundingClientRect();
-                  
-                  // Calculate camera position to center the node in the viewport
-                  const targetCameraX = (nodeX - width) / 2;
-                  const targetCameraY = (nodeY - height) / 2;
-
-                  cam.setState({
-                    x: targetCameraX,
-                    y: targetCameraY,
-                    ratio: cam.getState().ratio
-                  });
-                  
-                  console.log(`Centered camera at (${targetCameraX.toFixed(2)}, ${targetCameraY.toFixed(2)}) to show node at (${nodeX.toFixed(2)}, ${nodeY.toFixed(2)})`);
-                }
-              }
+              console.log("Graph bounds:", { minX, maxX, minY, maxY });
+              console.log("Node position:", { nodeX, nodeY });
+              console.log("Current camera:", cam.getState());
+              
+              // For now, just log - don't move camera until we understand the coordinate system
+              
             } catch (error) {
               console.warn("Error centering on node:", error);
             }
