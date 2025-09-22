@@ -323,9 +323,9 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
                   const { width, height } = container.getBoundingClientRect();
                   
                   // Calculate camera position to center the node in the viewport
-                  const targetCameraX = nodeX - width / 2;
-                  const targetCameraY = nodeY - height / 2;
-                  
+                  const targetCameraX = (nodeX - width) / 2;
+                  const targetCameraY = (nodeY - height) / 2;
+
                   cam.setState({
                     x: targetCameraX,
                     y: targetCameraY,
