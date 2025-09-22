@@ -217,22 +217,30 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
       setSelectedAttrs(g.getNodeAttributes(node));
-      // Simple camera centering on node click
+      // Debug camera and node coordinates
       try {
         const cam = renderer.getCamera();
         const nodeX = g.getNodeAttribute(node, "x");
         const nodeY = g.getNodeAttribute(node, "y");
-        if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-          // Use animateState instead of animate to be more explicit
-          const currentState = cam.getState();
-          cam.setState({
-            x: nodeX,
-            y: nodeY,
-            ratio: currentState.ratio
-          });
-        }
+        const currentState = cam.getState();
+        
+        console.log("=== NODE CLICK DEBUG ===");
+        console.log("Node:", node);
+        console.log("Node coordinates:", { x: nodeX, y: nodeY });
+        console.log("Current camera state:", currentState);
+        console.log("Are coordinates finite?", Number.isFinite(nodeX), Number.isFinite(nodeY));
+        
+        // Don't move camera yet, just log
+        // if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+        //   const currentState = cam.getState();
+        //   cam.setState({
+        //     x: nodeX,
+        //     y: nodeY,
+        //     ratio: currentState.ratio
+        //   });
+        // }
       } catch (error) {
-        console.warn("Camera animation error:", error);
+        console.error("Click handler error:", error);
       }
       renderer.refresh();
     });
@@ -302,21 +310,25 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const nodeY = g.getNodeAttribute(selectedNode, "y");
             if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY)) return;
             try {
-              const cam = r.getCamera();
-              const nodeX = g.getNodeAttribute(selectedNode, "x");
-              const nodeY = g.getNodeAttribute(selectedNode, "y");
-              if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-                // Use setState for immediate centering
-                const currentState = cam.getState();
-                cam.setState({
-                  x: nodeX,
-                  y: nodeY,
-                  ratio: currentState.ratio
-                });
-                console.log("Centered on node:", selectedNode, "at", nodeX, nodeY);
+              console.log("=== CENTER BUTTON DEBUG ===");
+              console.log("Selected node:", selectedNode);
+              console.log("Graph ref:", !!g);
+              console.log("Renderer ref:", !!r);
+              
+              if (g && selectedNode) {
+                const nodeX = g.getNodeAttribute(selectedNode, "x");
+                const nodeY = g.getNodeAttribute(selectedNode, "y");
+                console.log("Node coordinates:", { x: nodeX, y: nodeY });
+                console.log("Are coordinates finite?", Number.isFinite(nodeX), Number.isFinite(nodeY));
+                
+                if (r) {
+                  const cam = r.getCamera();
+                  const currentState = cam.getState();
+                  console.log("Current camera state:", currentState);
+                }
               }
             } catch (error) {
-              console.warn("Error centering on node:", error);
+              console.error("Center button error:", error);
             }
           }}
           style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
