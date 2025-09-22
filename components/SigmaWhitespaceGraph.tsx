@@ -169,6 +169,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             
             const graphWidth = maxX - minX;
             const graphHeight = maxY - minY;
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
             
             // Calculate padding and ratio more conservatively
             const padding = 100;
@@ -176,12 +178,12 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const ratioY = (containerHeight - padding * 2) / graphHeight;
             const ratio = Math.min(ratioX, ratioY, 0.5); // Cap at 0.5 to prevent being too zoomed in
             
-            // Use a simpler approach - start with default camera position and only adjust ratio
+            // Center camera on the graph's center of mass
             const cam = renderer.getCamera();
-            console.log("Setting camera state with ratio only:", { ratio });
+            console.log("Setting camera state with center and ratio:", { centerX, centerY, ratio });
             cam.setState({
-              x: 0,
-              y: 0,
+              x: centerX,
+              y: centerY,
               ratio: ratio
             });
             console.log("Camera state after setting:", cam.getState());
@@ -271,12 +273,16 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const cam = renderer.getCamera();
         const nodeX = g.getNodeAttribute(node, "x");
         const nodeY = g.getNodeAttribute(node, "y");
+        const nodeSize = g.getNodeAttribute(node, "size") || 4;
         
         if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+          // Calculate a reasonable ratio to show the node well
+          const targetRatio = Math.max(0.1, Math.min(1.0, 50 / nodeSize));
+          
           cam.animate({
             x: nodeX,
             y: nodeY,
-            ratio: cam.getState().ratio
+            ratio: targetRatio
           }, { duration: 350 });
         }
       } catch (error) {
@@ -356,12 +362,17 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
               const cam = r.getCamera();
               const nodeX = g.getNodeAttribute(selectedNode, "x");
               const nodeY = g.getNodeAttribute(selectedNode, "y");
+              const nodeSize = g.getNodeAttribute(selectedNode, "size") || 4;
               
               if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
+                // Calculate a reasonable ratio to show the node well
+                // Make sure the node appears at a good size (not too small, not too big)
+                const targetRatio = Math.max(0.1, Math.min(1.0, 50 / nodeSize));
+                
                 cam.animate({
                   x: nodeX,
                   y: nodeY,
-                  ratio: cam.getState().ratio
+                  ratio: targetRatio
                 }, { duration: 500 });
               }
             } catch (error) {
