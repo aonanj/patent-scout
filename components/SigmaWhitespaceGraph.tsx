@@ -222,8 +222,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const x = g.getNodeAttribute(node, "x");
         const y = g.getNodeAttribute(node, "y");
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          const nextRatio = Math.max(0.2, Math.min(5, state.ratio || 1));
-          cam.animate({ ...state, x, y, ratio: nextRatio }, { duration: 300 });
+          const nextRatio = 0.5; // A sensible default zoom level
+          cam.animate({ x, y, ratio: nextRatio }, { duration: 300 });
         }
       } catch {}
       renderer.refresh();
