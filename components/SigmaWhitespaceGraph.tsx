@@ -180,13 +180,13 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
             const graphHeight = maxY - minY || 1; // Prevent division by zero
             
             // Calculate zoom ratio to fit the graph with some padding
-            const padding = 0.85; // 85% of container size for better visibility
-            const ratioX = (containerWidth * padding) / graphWidth;
-            const ratioY = (containerHeight * padding) / graphHeight;
-            let targetRatio = Math.min(ratioX, ratioY);
-            
+            // In Sigma, larger ratio means more zoomed out. Fit uses graph/container.
+            const padding = 0.85; // display at 85% of container
+            const ratioX = graphWidth / (containerWidth * padding);
+            const ratioY = graphHeight / (containerHeight * padding);
+            let targetRatio = Math.max(ratioX, ratioY);
             // Clamp the ratio to reasonable bounds
-            targetRatio = Math.max(0.05, Math.min(targetRatio, 2)); // Between 0.05 and 2
+            targetRatio = Math.max(0.05, Math.min(targetRatio, 10));
             
             const cam = renderer.getCamera();
             
@@ -314,12 +314,9 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         const currentState = cam.getState();
         
         if (Number.isFinite(nodeX) && Number.isFinite(nodeY)) {
-          // Keep the current zoom level or zoom in slightly if too far out
-          // This prevents the camera from zooming away
-          const currentRatio = currentState.ratio;
-          const minZoom = 0.3; // Don't zoom out too much
-          const targetRatio = Math.min(currentRatio, minZoom);
-          
+          // Keep the current zoom level
+          const targetRatio = currentState.ratio;
+
           cam.animate({
             x: nodeX,
             y: nodeY,
@@ -346,8 +343,28 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     renderer.on("clickNode", handleClickNode);
     renderer.on("clickStage", handleClickStage);
 
-    // resize observer - just refresh the renderer
-    const ro = new ResizeObserver(() => renderer.refresh());
+    // resize observer - fit once when we get a real size, then refresh afterward
+    let didFitOnResize = false;
+    const ro = new ResizeObserver((entries) => {
+      try {
+        const entry = entries[0];
+        const rect = entry?.contentRect;
+        const w = rect?.width ?? 0;
+        const h = rect?.height ?? 0;
+        if (w > 0 && h > 0) {
+          if (!didFitOnResize && !selectedRef.current) {
+            // Perform a single fit once we know dimensions, if nothing is selected
+            if (fitCameraToGraph(false)) {
+              renderer.refresh();
+              didFitOnResize = true;
+              return;
+            }
+          }
+          // Otherwise, just refresh on resize
+          renderer.refresh();
+        }
+      } catch {}
+    });
     ro.observe(containerRef.current);
 
     return () => {
@@ -454,10 +471,11 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
                   const graphHeight = maxY - minY || 1;
                   
                   const padding = 0.85;
-                  const ratioX = (containerWidth * padding) / graphWidth;
-                  const ratioY = (containerHeight * padding) / graphHeight;
-                  let targetRatio = Math.min(ratioX, ratioY);
-                  targetRatio = Math.max(0.05, Math.min(targetRatio, 2));
+                  // Fit using graph size vs container size
+                  const ratioX = graphWidth / (containerWidth * padding);
+                  const ratioY = graphHeight / (containerHeight * padding);
+                  let targetRatio = Math.max(ratioX, ratioY);
+                  targetRatio = Math.max(0.05, Math.min(targetRatio, 10));
                   
                   const cam = r.getCamera();
                   cam.animate({
@@ -489,7 +507,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
 
   return (
     <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8, overflow: "hidden" }}>
-      <div style={{ flex: 1, position: "relative", minHeight: "100%" }} ref={containerRef} />
+      <div style={{ flex: 1, position: "relative", minHeight: "100%", width: "100%", height: "100%" }} ref={containerRef} />
       {details}
     </div>
   );
