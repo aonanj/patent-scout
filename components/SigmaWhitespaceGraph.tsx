@@ -9,6 +9,7 @@ export type WsNode = {
   cluster_id: number;
   score: number; // used for size
   density?: number;
+  title?: string;
   x?: number;
   y?: number;
 };
@@ -21,9 +22,21 @@ export type WsEdge = {
 
 export type WsGraph = { nodes: WsNode[]; edges: WsEdge[] };
 
+export type WhitespaceRunContext = {
+  focusKeywords?: string[];
+  focusCpcLike?: string[];
+  alpha?: number;
+  beta?: number;
+  neighbors?: number; // K in KNN
+  resolution?: number; // community detection granularity
+  dateFrom?: string;
+  dateTo?: string;
+};
+
 export type SigmaWhitespaceGraphProps = {
   data: WsGraph | null;
   height?: number;
+  context?: WhitespaceRunContext;
 };
 
 function hslToHex(h: number, s: number, l: number): string {
@@ -68,7 +81,7 @@ function formatGooglePatentId(pubId: string): string {
   return cleanedId;
 }
 
-export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhitespaceGraphProps) {
+export default function SigmaWhitespaceGraph({ data, height = 400, context }: SigmaWhitespaceGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any | null>(null);
   const graphRef = useRef<any | null>(null);
@@ -130,6 +143,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           score: n.score,
           cluster_id: n.cluster_id,
           label: key,
+          title: (n as any).title,
           // Thin black outline around each node
           borderColor: "#000000",
           borderSize: 1,
@@ -281,7 +295,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
 
   // Sidebar details for selected node
   const details = selectedNode && selectedAttrs ? (
-    <div style={{ width: 280, padding: 12, borderLeft: "1px solid #e5e7eb", background: "#fff" }}>
+    <div style={{ width: 320, padding: 12, borderLeft: "1px solid #e5e7eb", background: "#fff" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <strong style={{ fontSize: 13 }}>Details</strong>
         <button
@@ -297,18 +311,68 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
           Clear
         </button>
       </div>
-      <div style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.6, display: "grid", gap: 8 }}>
         <div><span style={{ color: "#64748b" }}>ID:</span> {selectedNode}</div>
+        {selectedAttrs?.title && (
+          <div style={{ color: "#334155" }}>
+            {String(selectedAttrs.title)}
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ color: "#64748b" }}>Cluster:</span>
           <span>{String(selectedAttrs.cluster_id)}</span>
           <span style={{ width: 10, height: 10, background: selectedAttrs.color || "#000", display: "inline-block", borderRadius: 2, border: "1px solid #e2e8f0" }} />
         </div>
-        <div><span style={{ color: "#64748b" }}>Score:</span> {Number(selectedAttrs.score).toFixed(3)}</div>
+        <div>
+          <div><span style={{ color: "#64748b" }}>Score:</span> {Number(selectedAttrs.score).toFixed(3)}</div>
+          <div style={{ color: "#475569", marginTop: 4 }}>
+            This score estimates how promising this publication is as whitespace relative to your focus. Larger = farther from your focus in the similarity graph while still connected, and boosted by recent momentum in its cluster.
+          </div>
+          {context && (
+            <div style={{ color: "#64748b", marginTop: 4 }}>
+              α (distance weight) = <strong style={{ color: "#0f172a" }}>{Number(context.alpha ?? 0).toFixed(2)}</strong>,
+              {' '}β (momentum weight) = <strong style={{ color: "#0f172a" }}>{Number(context.beta ?? 0).toFixed(2)}</strong>. Node size is a normalized view of this score across the returned set.
+            </div>
+          )}
+        </div>
         {selectedAttrs.density !== undefined && (
           <div><span style={{ color: "#64748b" }}>Density:</span> {Number(selectedAttrs.density).toFixed(3)}</div>
         )}
-        <div><span style={{ color: "#64748b" }}>Neighbors:</span> {neighborsRef.current.size}</div>
+        <div>
+          <span style={{ color: "#64748b" }}>Neighbors:</span> {neighborsRef.current.size}
+          {context?.neighbors !== undefined && (
+            <span style={{ color: "#64748b" }}> (K = {context.neighbors})</span>
+          )}
+        </div>
+
+        {context && (
+          <div style={{ marginTop: 4 }}>
+            <div style={{ fontWeight: 600, fontSize: 12 }}>Relation to your search</div>
+            <div style={{ color: "#475569" }}>
+              The graph was built from recent publications filtered by your focus
+              {Array.isArray(context.focusKeywords) && context.focusKeywords.length > 0 && (
+                <>
+                  {" "}keywords: <em>{context.focusKeywords.join(", ")}</em>
+                </>
+              )}
+              {Array.isArray(context.focusCpcLike) && context.focusCpcLike.length > 0 && (
+                <>
+                  {context.focusKeywords && context.focusKeywords.length > 0 ? "; " : " "}
+                  CPC like: <em>{context.focusCpcLike.join(", ")}</em>
+                </>
+              )}
+              {(context.dateFrom || context.dateTo) && (
+                <>
+                  {"; window: "}
+                  <em>{context.dateFrom || "…"}</em>
+                  {" → "}
+                  <em>{context.dateTo || "…"}</em>
+                </>
+              )}.
+              This node appears because it is connected within that similarity network. A higher score suggests it sits in a sparsely explored area adjacent to your focus.
+            </div>
+          </div>
+        )}
       </div>
       <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
         <a
