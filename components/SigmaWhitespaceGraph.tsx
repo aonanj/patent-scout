@@ -208,7 +208,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
     // create sigma renderer
     const renderer = new Sigma(g, containerRef.current, {
       renderLabels: false,
-      allowInvalidContainer: false,
+      allowInvalidContainer: true,
       zIndex: true,
       defaultEdgeColor: "#cbd5e1",
     });
@@ -323,7 +323,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
     renderer.on("enterNode", handleEnterNode);
     renderer.on("leaveNode", handleLeaveNode);
 
-    renderer.on("clickNode", ({ node }: any) => {
+    const onClickNode = ({ node }: any) => {
       selectedRef.current = node;
       neighborsRef.current = new Set(g.neighbors(node));
       setSelectedNode(node);
@@ -338,25 +338,28 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
         }
       } catch {}
       renderer.refresh();
-    });
-    renderer.on("clickStage", () => {
+    };
+    const onClickStage = () => {
       selectedRef.current = null;
       neighborsRef.current = new Set();
       setSelectedNode(null);
       setSelectedAttrs(null);
       hideTooltip();
       renderer.refresh();
-    });
+    };
+
+    renderer.on("clickNode", onClickNode);
+    renderer.on("clickStage", onClickStage);
 
     // resize observer
     const ro = new ResizeObserver(() => renderer.refresh());
     ro.observe(containerRef.current);
 
     return () => {
-      renderer.off("enterNode", handleEnterNode);
-      renderer.off("leaveNode", handleLeaveNode);
-      renderer.off("clickNode");
-      renderer.off("clickStage");
+  try { renderer.off("enterNode", handleEnterNode); } catch {}
+  try { renderer.off("leaveNode", handleLeaveNode); } catch {}
+  try { renderer.off("clickNode", onClickNode); } catch {}
+  try { renderer.off("clickStage", onClickStage); } catch {}
       try { ro.disconnect(); } catch {}
       try { renderer.kill(); } catch {}
       rendererRef.current = null;
