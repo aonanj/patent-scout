@@ -219,6 +219,24 @@ Behavior
 
 ---
 
+## Whitespace graph (Sigma + Graphology)
+
+- Component: `components/SigmaWhitespaceGraph.tsx` (dynamically imported to avoid SSR/WebGL issues)
+- API: `POST /api/whitespace/graph` → forwards to FastAPI `/whitespace/graph`
+- Rendering
+  - Node size = whitespace score; node color = cluster
+  - Edge weight = similarity; optional client-side ForceAtlas2 refinement
+
+Local try
+```bash
+npm install
+npm run dev
+```
+
+Then open the Whitespace page, fill parameters, and click “Run Analysis”.
+
+---
+
 ## Docker
 
 The provided `Dockerfile` builds the FastAPI service (Python slim base, installs `requirements.txt`, runs `uvicorn app.api:app`). Set `PORT` and required env vars. For multi-service deployment (frontend + backend), deploy Next.js separately (e.g., Vercel) and set `BACKEND_URL`.
@@ -241,21 +259,3 @@ Note: `package.json` may list a different license string; the authoritative lice
 ## Contact
 
 Questions or support: support@phaethon.llc
-
----
-
-## Whitespace graph (Sigma + Graphology)
-
-- Component: `components/SigmaWhitespaceGraph.tsx` (dynamically imported to avoid SSR/WebGL issues)
-- API: `POST /api/whitespace/graph` → forwards to FastAPI `/whitespace/graph`
-- Rendering
-  - Node size = whitespace score; node color = cluster
-  - Edge weight = similarity; optional client-side ForceAtlas2 refinement
-
-Local try
-```bash
-npm install
-npm run dev
-```
-
-Then open the Whitespace page, fill parameters, and click “Run Analysis”.
