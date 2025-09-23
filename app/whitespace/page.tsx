@@ -180,7 +180,7 @@ export default function WhitespacePage() {
                   id="ws-focus-keywords"
                   value={whitespaceFocusKeywords}
                   onChange={(e) => setWhitespaceFocusKeywords(e.target.value)}
-                  placeholder="e.g., battery management, graphene, LLM agents"
+                  placeholder="e.g., graphene, LLM agents, quantum computing"
                   style={inputStyle}
                 />
               </div>
@@ -337,10 +337,10 @@ export default function WhitespacePage() {
                 </div>
                 <div style={{ fontWeight: 600 }}>Inputs</div>
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  <li><strong>Focus Keywords</strong>: comma-separated phrases you care about (searches title/abstract/claims). The algorithm finds areas related to these but under-explored.</li>
+                  <li><strong>Focus Keywords</strong>: comma-separated phrases of interest (searches title/abstract/claims). The algorithm finds areas related to these but under-explored.</li>
                   <li><strong>Focus CPC (LIKE)</strong>: optional CPC wildcards (e.g., G06N%, H04L%).</li>
                   <li><strong>Date From/To</strong>: restrict the publication window.</li>
-                  <li><strong>Limit</strong>: max number of recent patents to sample for the graph.</li>
+                  <li><strong>Limit</strong>: max number of recent publications to sample for the graph.</li>
                 </ul>
                 <div style={{ fontWeight: 600 }}>Algorithm knobs</div>
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
