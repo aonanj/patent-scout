@@ -1,6 +1,6 @@
 # Patent Scout
 
-Search, trend analysis, whitespace graphing, and alerts for AI-related patents/publications using Postgres (Neon/Supabase), pgvector, FastAPI, and a Next.js frontend.
+Search, trend analysis, whitespace graphing, and alerts for AI-related patents/publications using Postgres (Neon), pgvector, FastAPI, and a Next.js frontend.
 
 - Hybrid search: full-text (GIN) + vector similarity (pgvector)
 - Whitespace graph: KNN + Leiden clusters + UMAP layout, rendered with Sigma
@@ -59,7 +59,7 @@ Visit: https://patent-scout.vercel.app/
 ## Requirements
 
 - Python 3.12+ (tested on 3.13)
-- Postgres with `pgvector` extension (Neon or Supabase recommended)
+- Postgres with `pgvector` extension (Neon.tech recommended)
 - Node.js 18+ (Next.js 15, React 19)
 
 Python highlights (see `requirements.txt`):
@@ -116,7 +116,7 @@ Optional claim search speedup: add a computed `search_vector` (title+abstract+cl
 ## Setup and run
 
 1) Postgres
-- Create a Neon/Supabase Postgres DB and enable the extension:
+- Create a Postgres DB and enable the extension:
   `CREATE EXTENSION IF NOT EXISTS vector;`
 
 2) Backend (FastAPI)
