@@ -91,6 +91,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
   const neighborsRef = useRef<Set<string>>(new Set());
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedAttrs, setSelectedAttrs] = useState<any | null>(null);
+  const [highlightMatches, setHighlightMatches] = useState<boolean>(true);
 
   // compute min/max score for sizing
   const sizeScale = useMemo(() => {
@@ -111,6 +112,43 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
     });
     return map;
   }, [data]);
+
+  // normalized keywords from context
+  const normKeywords = useMemo(() => {
+    const kws = Array.isArray(context?.focusKeywords) ? context!.focusKeywords : [];
+    return kws.map((k) => k.toLowerCase().trim()).filter(Boolean);
+  }, [context?.focusKeywords]);
+
+  // helpers for tooltip highlighting
+  function escapeHtml(s: string) {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+  function escapeRegExp(s: string) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  function highlightHtml(text: string, keywords: string[]) {
+    let out = escapeHtml(text || "");
+    if (!keywords.length || !out) return out;
+    // replace longest first to avoid nested marks
+    const sorted = [...keywords].sort((a, b) => b.length - a.length);
+    for (const kw of sorted) {
+      if (!kw) continue;
+      const re = new RegExp(`(${escapeRegExp(kw)})`, "ig");
+      out = out.replace(re, "<mark>$1</mark>");
+    }
+    return out;
+  }
+  function computeHitTerms(text: string, keywords: string[]) {
+    const t = (text || "").toLowerCase();
+    const set = new Set<string>();
+    for (const kw of keywords) if (kw && t.includes(kw)) set.add(kw);
+    return Array.from(set);
+  }
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -134,6 +172,8 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
       const y = Number.isFinite(n.y as number) ? Number(n.y) : Math.random();
       const size = sizeScale(Number(n.score) || 0);
       const color = clusterColor.get(Number(n.cluster_id)) || colorForCluster(n.cluster_id);
+      const title: string = (n as any).title || "";
+      const matchTerms = computeHitTerms(title, normKeywords);
       if (!g.hasNode(key)) {
         g.addNode(key, {
           x,
@@ -143,7 +183,9 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
           score: n.score,
           cluster_id: n.cluster_id,
           label: key,
-          title: (n as any).title,
+          title,
+          hasMatch: matchTerms.length > 0,
+          matchTerms,
           // Thin black outline around each node
           borderColor: "#000000",
           borderSize: 1,
@@ -197,7 +239,16 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
 
     const displayTooltip = (nodeKey: string, x: number, y: number) => {
       const attrs = g.getNodeAttributes(nodeKey) as any;
-      tooltip.innerHTML = `<strong>${nodeKey}</strong><br/>score: ${Number(attrs.score).toFixed(3)}<br/>cluster: ${attrs.cluster_id}`;
+      const titleHtml = attrs?.title ? highlightHtml(String(attrs.title), normKeywords) : "";
+      const matches = Array.isArray(attrs?.matchTerms) && attrs.matchTerms.length > 0
+        ? `<div style=\"margin-top:4px;color:#475569;font-size:11px\">matches: <em>${escapeHtml(attrs.matchTerms.join(", "))}</em></div>`
+        : "";
+      tooltip.innerHTML = `<div style=\"font-size:12px;max-width:360px\">`
+        + `<div style=\"font-weight:700;color:#0f172a\">${escapeHtml(nodeKey)}</div>`
+        + (titleHtml ? `<div style=\"margin-top:2px;color:#0f172a\">${titleHtml}</div>` : "")
+        + `<div style=\"color:#64748b\">score: ${Number(attrs.score).toFixed(3)} · cluster: ${attrs.cluster_id}</div>`
+        + matches
+        + `</div>`;
       tooltip.style.left = `${x + 12}px`;
       tooltip.style.top = `${y + 12}px`;
       tooltip.style.display = "block";
@@ -225,10 +276,19 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
     const nodeReducer = (node: string, data: any) => {
       const sel = selectedRef.current;
       const hov = hoveredRef.current;
+      const emphasizeMatches = highlightMatches && normKeywords.length > 0;
       if (!sel) {
         // ensure original color is applied (avoid default black)
         const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
         const isHovered = hov === node;
+        if (emphasizeMatches) {
+          const isMatch = !!data.hasMatch;
+          if (isMatch) {
+            return { ...data, color: orig, borderColor: "#2563eb", borderSize: 3 };
+          } else {
+            return { ...data, color: orig, opacity: 0.25, borderColor: "#000000", borderSize: isHovered ? 2 : 1 };
+          }
+        }
         return { ...data, color: orig, borderColor: "#000000", borderSize: isHovered ? 2 : 1 };
       }
       if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2, borderColor: "#000000", borderSize: 2 };
@@ -240,7 +300,18 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
     };
     const edgeReducer = (edge: string, data: any) => {
       const sel = selectedRef.current;
-      if (!sel) return data;
+      if (!sel) {
+        if (highlightMatches && normKeywords.length > 0) {
+          try {
+            const s = g.source(edge);
+            const t = g.target(edge);
+            const sMatch = g.getNodeAttribute(s, "hasMatch");
+            const tMatch = g.getNodeAttribute(t, "hasMatch");
+            if (!sMatch && !tMatch) return { ...data, color: "#e2e8f0", opacity: 0.2 };
+          } catch {}
+        }
+        return data;
+      }
       const s = g.source(edge);
       const t = g.target(edge);
       if (s === sel || t === sel) return { ...data, color: "#94a3b8", size: (data.size || 1) };
@@ -291,7 +362,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
       rendererRef.current = null;
       graphRef.current = null;
     };
-  }, [data, sizeScale]);
+  }, [data, sizeScale, highlightMatches, normKeywords]);
 
   // Sidebar details for selected node
   const details = selectedNode && selectedAttrs ? (
@@ -316,6 +387,11 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
         {selectedAttrs?.title && (
           <div style={{ color: "#334155" }}>
             {String(selectedAttrs.title)}
+          </div>
+        )}
+        {Array.isArray(selectedAttrs?.matchTerms) && selectedAttrs.matchTerms.length > 0 && (
+          <div style={{ color: "#475569" }}>
+            <span style={{ color: "#64748b" }}>Matches:</span> {selectedAttrs.matchTerms.join(", ")}
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -390,6 +466,15 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
   return (
     <div style={{ height, display: "flex", position: "relative", background: "#f8fafc", borderRadius: 8 }}>
       <div style={{ flex: 1, position: "relative" }} ref={containerRef} />
+      {/* Overlay controls */}
+      {normKeywords.length > 0 && (
+        <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(255,255,255,0.95)", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 8px", fontSize: 12, color: "#0f172a", display: "flex", gap: 8, alignItems: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="checkbox" checked={highlightMatches} onChange={(e) => setHighlightMatches(e.target.checked)} />
+            Highlight keyword matches
+          </label>
+        </div>
+      )}
       {details}
     </div>
   );

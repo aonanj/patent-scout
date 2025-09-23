@@ -103,6 +103,7 @@ class GraphNode(BaseModel):
     density: float
     x: float
     y: float
+    title: str | None = None
 
 class GraphEdge(BaseModel):
     source: str
@@ -131,16 +132,46 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     if dt is not None:
         where.append("p.pub_date < %s")
         params.append(dt)
+    # Build a focus expression consistent with load_focus_mask to bias sampling
+    focus_conds: list[str] = []
+    if req.focus_keywords:
+        kw_conds = [f"(({SEARCH_EXPR}) @@ plainto_tsquery('english', %s))" for _ in req.focus_keywords]
+        if kw_conds:
+            focus_conds.append("(" + " OR ".join(kw_conds) + ")")
+    if req.focus_cpc_like:
+        focus_conds.append(
+            """
+            EXISTS (
+              SELECT 1 FROM jsonb_array_elements(p.cpc) c(obj)
+              WHERE (
+                coalesce(obj->>'section','')||coalesce(obj->>'class','')||coalesce(obj->>'subclass','')||
+                coalesce(obj->>'main_group','')||'/'||coalesce(obj->>'subgroup','')
+              ) LIKE ANY(%s)
+            )
+            """
+        )
+    # params for focus expr appear after date params
+    focus_params: list[Any] = []
+    if req.focus_keywords:
+        focus_params.extend(req.focus_keywords)
+    if req.focus_cpc_like:
+        focus_params.append(req.focus_cpc_like)
+
+    focus_expr = " AND ".join(focus_conds) if focus_conds else "FALSE"
+
     sql = f"""
-    SELECT e.pub_id, e.embedding
+    SELECT e.pub_id, e.embedding, ({focus_expr}) AS is_focus
     FROM patent_embeddings e
     JOIN patent p USING (pub_id)
     WHERE {' AND '.join(where)}
-    ORDER BY p.pub_date DESC, e.pub_id
+    ORDER BY is_focus DESC, p.pub_date DESC, e.pub_id
     """
     if req.limit:
         sql += " LIMIT %s"
-        params.append(req.limit)
+        # final params ordering: base + focus + limit
+        params = params + focus_params + [req.limit]
+    else:
+        params = params + focus_params
     pub_ids: list[str] = []
     vecs: list[np.ndarray] = []
     with conn.cursor(row_factory=dict_row) as cur:
@@ -156,6 +187,17 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     norms[norms == 0] = 1.0
     X = X / norms
     return X, pub_ids
+
+def load_titles(conn: psycopg.Connection, pub_ids: list[str]) -> dict[str, str | None]:
+    if not pub_ids:
+        return {}
+    q = "SELECT pub_id, title FROM patent WHERE pub_id = ANY(%s)"
+    m: dict[str, str | None] = {}
+    with conn.cursor() as cur:
+        cur.execute(q, (pub_ids,))
+        for pid, title in cur.fetchall():
+            m[pid] = title
+    return m
 
 def load_focus_mask(conn: psycopg.Connection, pub_ids: list[str], req: GraphRequest) -> np.ndarray:
     if not req.focus_keywords and not req.focus_cpc_like:
@@ -407,6 +449,7 @@ def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depe
             XY = (Xc @ Vt[:2].T).astype(np.float32)
 
         # build graph response (cap edges per node for UI)
+        title_map = load_titles(conn, pub_ids)
         nodes = []
         for i, pid in enumerate(pub_ids):
             nodes.append(
@@ -417,6 +460,7 @@ def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depe
                     density=float(dens[i]),
                     x=float(XY[i, 0]),
                     y=float(XY[i, 1]),
+                    title=title_map.get(pid),
                 )
             )
 
