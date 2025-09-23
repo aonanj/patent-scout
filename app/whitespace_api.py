@@ -5,11 +5,11 @@ import json
 import os
 from typing import Annotated, Any
 
-import igraph as ig  # optional
-import leidenalg as la  # optional
+import igraph as ig
+import leidenalg as la
 import numpy as np
 import psycopg
-import umap  # optional
+import umap
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from sklearn.neighbors import NearestNeighbors
 
 from .db import get_conn
+from .repository import SEARCH_EXPR
 
 router = APIRouter(prefix="/whitespace", tags=["whitespace"])
 
@@ -89,7 +90,7 @@ class GraphRequest(BaseModel):
     alpha: float = 0.8
     beta: float = 0.5
     limit: int | None = 2000
-    focus_assignees: list[str] = []
+    focus_keywords: list[str] = []
     focus_cpc_like: list[str] = []
     layout: bool = True          # compute 2D layout for graph response
     layout_min_dist: float = 0.1 # UMAP param
@@ -157,14 +158,17 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     return X, pub_ids
 
 def load_focus_mask(conn: psycopg.Connection, pub_ids: list[str], req: GraphRequest) -> np.ndarray:
-    if not req.focus_assignees and not req.focus_cpc_like:
+    if not req.focus_keywords and not req.focus_cpc_like:
         return np.zeros(len(pub_ids), dtype=bool)
     q = "SELECT p.pub_id FROM patent p WHERE p.pub_id = ANY(%s)"
     params: list[Any] = [pub_ids]
     conds = []
-    if req.focus_assignees:
-        conds.append("p.assignee_name = ANY(%s)")
-        params.append(req.focus_assignees)
+    if req.focus_keywords:
+        # OR together each keyword using full-text search on title/abstract/claims
+        kw_conds = [f"(({SEARCH_EXPR}) @@ plainto_tsquery('english', %s))" for _ in req.focus_keywords]
+        if kw_conds:
+            conds.append("(" + " OR ".join(kw_conds) + ")")
+            params.extend(req.focus_keywords)
     if req.focus_cpc_like:
         conds.append("""
           EXISTS (

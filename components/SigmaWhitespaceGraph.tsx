@@ -290,21 +290,6 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
         <div><span style={{ color: "#64748b" }}>Neighbors:</span> {neighborsRef.current.size}</div>
       </div>
       <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-        <button
-          onClick={() => {
-            const r = rendererRef.current;
-            const init = initialCamRef.current;
-            if (!r || !init) return;
-            try {
-              const cam = r.getCamera();
-              cam.goto(init);
-            } catch {}
-            r.refresh();
-          }}
-          style={{ fontSize: 12, justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 10px", background: "white", cursor: "pointer", textDecoration: "underline", alignContent: "center", alignItems: "center", fontWeight: 500 }}
-        >
-          Reset View
-        </button>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}
           target="_blank"

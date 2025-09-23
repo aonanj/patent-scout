@@ -79,11 +79,12 @@ export default function WhitespacePage() {
   const [whitespaceBeta, setWhitespaceBeta] = useState(0.5);
   const [whitespaceLimit, setWhitespaceLimit] = useState(1000);
   const [whitespaceLayout, setWhitespaceLayout] = useState(true);
-  const [whitespaceFocusAssignees, setWhitespaceFocusAssignees] = useState("");
+  const [whitespaceFocusKeywords, setWhitespaceFocusKeywords] = useState("");
   const [whitespaceFocusCpcLike, setWhitespaceFocusCpcLike] = useState("");
   const [whitespaceLoading, setWhitespaceLoading] = useState(false);
   const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
   const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[]; edges: any } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const runWhitespaceAnalysis = useCallback(async () => {
     setWhitespaceLoading(true);
@@ -99,8 +100,8 @@ export default function WhitespacePage() {
         beta: whitespaceBeta,
         limit: whitespaceLimit,
         layout: whitespaceLayout,
-        focus_assignees: whitespaceFocusAssignees
-          ? whitespaceFocusAssignees.split(",").map((s) => s.trim()).filter(Boolean)
+        focus_keywords: whitespaceFocusKeywords
+          ? whitespaceFocusKeywords.split(",").map((s) => s.trim()).filter(Boolean)
           : [],
         focus_cpc_like: whitespaceFocusCpcLike
           ? whitespaceFocusCpcLike.split(",").map((s) => s.trim()).filter(Boolean)
@@ -136,7 +137,7 @@ export default function WhitespacePage() {
     whitespaceBeta,
     whitespaceLimit,
     whitespaceLayout,
-    whitespaceFocusAssignees,
+    whitespaceFocusKeywords,
     whitespaceFocusCpcLike,
   ]);
 
@@ -146,6 +147,24 @@ export default function WhitespacePage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Whitespace Analysis</h1>
+            <button
+              aria-label="How this works"
+              title="How this works"
+              onClick={() => setShowHelp(true)}
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                border: "1px solid #e5e7eb",
+                background: "white",
+                color: "#0f172a",
+                cursor: "pointer",
+                fontWeight: 700,
+                lineHeight: "20px",
+              }}
+            >
+              ?
+            </button>
           </div>
           {!isLoading && !isAuthenticated && (
             <button onClick={() => loginWithRedirect()} style={ghostBtn}>Log in</button>
@@ -156,12 +175,12 @@ export default function WhitespacePage() {
           <div style={{ display: "grid", gap: 12 }}>
             <Row>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-focus-assignees">Focus Assignees</Label>
+                <Label htmlFor="ws-focus-keywords">Focus Keywords</Label>
                 <input
-                  id="ws-focus-assignees"
-                  value={whitespaceFocusAssignees}
-                  onChange={(e) => setWhitespaceFocusAssignees(e.target.value)}
-                  placeholder="e.g., Google, Apple"
+                  id="ws-focus-keywords"
+                  value={whitespaceFocusKeywords}
+                  onChange={(e) => setWhitespaceFocusKeywords(e.target.value)}
+                  placeholder="e.g., battery management, graphene, LLM agents"
                   style={inputStyle}
                 />
               </div>
@@ -278,6 +297,69 @@ export default function WhitespacePage() {
             <SigmaWhitespaceGraph data={whitespaceGraph as any} height={520} />
           </div>
         </Card>
+
+        {showHelp && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ws-help-title"
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15,23,42,0.55)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+              padding: 16,
+            }}
+            onClick={() => setShowHelp(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: 760,
+                width: "100%",
+                background: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: 10,
+                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                padding: 16,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <h3 id="ws-help-title" style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>How to use Whitespace Analysis</h3>
+                <button onClick={() => setShowHelp(false)} style={{ ...ghostBtn, height: 28 }}>Close</button>
+              </div>
+              <div style={{ fontSize: 13, color: "#0f172a", lineHeight: 1.6, display: "grid", gap: 8 }}>
+                <div>
+                  This tool highlights potential whitespace in the patent landscape by scoring publications that are distant from your focus while still connected in the similarity graph.
+                </div>
+                <div style={{ fontWeight: 600 }}>Inputs</div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  <li><strong>Focus Keywords</strong>: comma-separated phrases you care about (searches title/abstract/claims). The algorithm finds areas related to these but under-explored.</li>
+                  <li><strong>Focus CPC (LIKE)</strong>: optional CPC wildcards (e.g., G06N%, H04L%).</li>
+                  <li><strong>Date From/To</strong>: restrict the publication window.</li>
+                  <li><strong>Limit</strong>: max number of recent patents to sample for the graph.</li>
+                </ul>
+                <div style={{ fontWeight: 600 }}>Algorithm knobs</div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  <li><strong>Neighbors</strong>: K in the KNN graph (higher = denser graph).</li>
+                  <li><strong>Resolution</strong>: community detection granularity (higher = more clusters).</li>
+                  <li><strong>Alpha</strong>: how strongly distance from the focus increases whitespace score.</li>
+                  <li><strong>Beta</strong>: how much recent momentum in a cluster boosts score.</li>
+                  <li><strong>Compute Layout</strong>: runs a 2D layout for nicer graph positions.</li>
+                </ul>
+                <div style={{ fontWeight: 600 }}>Graph tips</div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  <li>Node size encodes whitespace score; color encodes detected cluster.</li>
+                  <li>Click a node to highlight its neighbors and open details; click background to clear.</li>
+                  <li>Use your browser zoom or trackpad to zoom/pan; the camera will soft-center on selection.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
