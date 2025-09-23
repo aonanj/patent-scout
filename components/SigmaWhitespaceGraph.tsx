@@ -74,6 +74,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
   const graphRef = useRef<any | null>(null);
   const initialCamRef = useRef<any | null>(null);
   const selectedRef = useRef<string | null>(null);
+  const hoveredRef = useRef<string | null>(null);
   const neighborsRef = useRef<Set<string>>(new Set());
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedAttrs, setSelectedAttrs] = useState<any | null>(null);
@@ -121,7 +122,18 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
       const size = sizeScale(Number(n.score) || 0);
       const color = clusterColor.get(Number(n.cluster_id)) || colorForCluster(n.cluster_id);
       if (!g.hasNode(key)) {
-        g.addNode(key, { x, y, size, color, score: n.score, cluster_id: n.cluster_id, label: key });
+        g.addNode(key, {
+          x,
+          y,
+          size,
+          color,
+          score: n.score,
+          cluster_id: n.cluster_id,
+          label: key,
+          // Thin black outline around each node
+          borderColor: "#000000",
+          borderSize: 1,
+        });
       }
     }
     for (const e of data.edges) {
@@ -184,24 +196,33 @@ export default function SigmaWhitespaceGraph({ data, height = 400 }: SigmaWhites
     const handleEnterNode = ({ node }: any) => {
       const dd = renderer.getNodeDisplayData(node) as any;
       if (!dd) return;
+      hoveredRef.current = node;
+      renderer.refresh();
       displayTooltip(node, dd.x, dd.y);
     };
 
-    const handleLeaveNode = () => hideTooltip();
+    const handleLeaveNode = () => {
+      hoveredRef.current = null;
+      hideTooltip();
+      renderer.refresh();
+    };
 
     // reducers for highlighting selection
     const nodeReducer = (node: string, data: any) => {
       const sel = selectedRef.current;
+      const hov = hoveredRef.current;
       if (!sel) {
         // ensure original color is applied (avoid default black)
         const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
-        return { ...data, color: orig };
+        const isHovered = hov === node;
+        return { ...data, color: orig, borderColor: "#000000", borderSize: isHovered ? 2 : 1 };
       }
-      if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2 };
-      if (neighborsRef.current.has(node)) return { ...data, size: (data.size || 4) * 1.1 };
+      if (node === sel) return { ...data, size: (data.size || 4) * 1.3, zIndex: 2, borderColor: "#000000", borderSize: 2 };
+      if (hov === node) return { ...data, borderColor: "#000000", borderSize: 2 };
+      if (neighborsRef.current.has(node)) return { ...data, size: (data.size || 4) * 1.1, borderColor: "#000000", borderSize: 1 };
       // Slightly dim non-neighbors instead of fully greying out
       const orig = (graphRef.current?.getNodeAttribute(node, "color")) || data.color;
-      return { ...data, color: orig, opacity: 0.35 };
+      return { ...data, color: orig, opacity: 0.35, borderColor: "#000000", borderSize: 1 };
     };
     const edgeReducer = (edge: string, data: any) => {
       const sel = selectedRef.current;
