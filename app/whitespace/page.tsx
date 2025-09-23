@@ -252,7 +252,7 @@ export default function WhitespacePage() {
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-alpha">Alpha</Label>
+                <Label htmlFor="ws-alpha">Alpha (Distance Weight)</Label>
                 <input
                   id="ws-alpha"
                   type="number"
@@ -263,7 +263,7 @@ export default function WhitespacePage() {
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-beta">Beta</Label>
+                <Label htmlFor="ws-beta">Beta (Momentum Weight)</Label>
                 <input
                   id="ws-beta"
                   type="number"

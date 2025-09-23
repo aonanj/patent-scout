@@ -405,12 +405,12 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
         <div>
           <div><span style={{ color: "#64748b" }}>Score:</span> {Number(selectedAttrs.score).toFixed(3)}</div>
           <div style={{ color: "#475569", marginTop: 4 }}>
-            This score estimates how promising this publication is as whitespace relative to your focus. Larger = farther from your focus in the similarity graph while still connected, and boosted by recent momentum in its cluster.
+            Score estimates how promising this publication is as whitespace relative to your focus. Larger = farther from your focus (weighted by recent momentum in its cluster).
           </div>
           {context && (
             <div style={{ color: "#64748b", marginTop: 4 }}>
               α (distance weight) = <strong style={{ color: "#0f172a" }}>{Number(context.alpha ?? 0).toFixed(2)}</strong>,
-              {' '}β (momentum weight) = <strong style={{ color: "#0f172a" }}>{Number(context.beta ?? 0).toFixed(2)}</strong>. Node size is a normalized view of this score across the returned set.
+              {' '}β (momentum weight) = <strong style={{ color: "#0f172a" }}>{Number(context.beta ?? 0).toFixed(2)}</strong>. Node size is a normalized view of this score.
             </div>
           )}
         </div>
@@ -428,7 +428,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
           <div style={{ marginTop: 4 }}>
             <div style={{ fontWeight: 600, fontSize: 12 }}>Relation to your search</div>
             <div style={{ color: "#475569" }}>
-              The graph was built from recent publications filtered by your focus
+              The graph is built from publications filtered by focus: 
               {Array.isArray(context.focusKeywords) && context.focusKeywords.length > 0 && (
                 <>
                   {" "}keywords: <em>{context.focusKeywords.join(", ")}</em>
@@ -448,7 +448,7 @@ export default function SigmaWhitespaceGraph({ data, height = 400, context }: Si
                   <em>{context.dateTo || "…"}</em>
                 </>
               )}.
-              This node appears because it is connected within that similarity network. A higher score suggests it sits in a sparsely explored area adjacent to your focus.
+              This node is connected within that similarity network. A higher score indicates a sparsely explored area adjacent to your focus.
             </div>
           </div>
         )}
