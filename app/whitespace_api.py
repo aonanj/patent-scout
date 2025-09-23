@@ -81,6 +81,48 @@ def ensure_schema(conn: psycopg.Connection) -> None:
             cur.execute(_sql.SQL(stmt)) # type: ignore
     conn.commit()
 
+def pick_model(conn: psycopg.Connection, preferred: str | None = None) -> str:
+    """Choose an available embedding model.
+
+    Preference order:
+    1) If `preferred` provided and exists, use it.
+    2) Any model matching '%|ta' with the highest row count.
+    3) Fallback: the model with the highest row count overall.
+    """
+    with conn.cursor() as cur:
+        if preferred:
+            cur.execute("SELECT 1 FROM patent_embeddings WHERE model = %s LIMIT 1", (preferred,))
+            if cur.fetchone():
+                return preferred
+
+        cur.execute(
+            """
+            SELECT model
+            FROM patent_embeddings
+            WHERE model LIKE '%%|ta'
+            GROUP BY model
+            ORDER BY COUNT(*) DESC
+            LIMIT 1
+            """
+        )
+        row = cur.fetchone()
+        if row and row[0]:
+            return str(row[0])
+
+        cur.execute(
+            """
+            SELECT model
+            FROM patent_embeddings
+            GROUP BY model
+            ORDER BY COUNT(*) DESC
+            LIMIT 1
+            """
+        )
+        row2 = cur.fetchone()
+        if not row2 or not row2[0]:
+            raise HTTPException(400, "No embeddings available in the database.")
+        return str(row2[0])
+
 # --- Request and response models ---
 class GraphRequest(BaseModel):
     date_from: str | None = Field(None, description="YYYY-MM-DD")
@@ -123,15 +165,15 @@ def _to_int_date(s: str | None) -> int | None:
 
 def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> tuple[np.ndarray, list[str]]:
     where = ["e.model = %s"]
-    params: list[Any] = [model]
+    base_params: list[Any] = [model]
     df = _to_int_date(req.date_from)
     dt = _to_int_date(req.date_to)
     if df is not None:
         where.append("p.pub_date >= %s")
-        params.append(df)
+        base_params.append(df)
     if dt is not None:
         where.append("p.pub_date < %s")
-        params.append(dt)
+        base_params.append(dt)
     # Build a focus expression consistent with load_focus_mask to bias sampling
     focus_conds: list[str] = []
     if req.focus_keywords:
@@ -166,12 +208,14 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     WHERE {' AND '.join(where)}
     ORDER BY is_focus DESC, p.pub_date DESC, e.pub_id
     """
+    params: list[Any] = []
+    # IMPORTANT: Parameter order must match placeholder order in SQL string
+    # Placeholders appear first in SELECT (focus_expr), then in WHERE (base_params), then LIMIT
+    params.extend(focus_params)
+    params.extend(base_params)
     if req.limit:
         sql += " LIMIT %s"
-        # final params ordering: base + focus + limit
-        params = params + focus_params + [req.limit]
-    else:
-        params = params + focus_params
+        params.append(req.limit)
     pub_ids: list[str] = []
     vecs: list[np.ndarray] = []
     with conn.cursor(row_factory=dict_row) as cur:
@@ -423,7 +467,7 @@ def persist(
 def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depends(get_pool)]) -> GraphResponse:
     with pool.connection() as conn:
         ensure_schema(conn)
-        model = "text-embedding-3-small|ta"
+        model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
         X, pub_ids = load_embeddings(conn, model, req)
         focus_mask = load_focus_mask(conn, pub_ids, req)
 
