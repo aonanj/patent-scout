@@ -27,7 +27,7 @@ the exclusion of warranty; and each file should have at least the
 “copyright” line and a pointer to where the full notice is found.
 
     Search, volume trend, and alerting on AI-related patents and publications using Postgres, pgvector, FastAPI, and a Next.js frontend.
-    Copyright (C) 2025  Phaethon Order LLC
+    Copyright © 2025 Phaethon Order LLC
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
