@@ -2,7 +2,7 @@ name: Patent Scout Alerts
 
 on:
   schedule:
-    - cron: "0 14 * * *"   # 14:00 UTC = 07:00 PT (standard). GitHub uses UTC.
+    - cron: "0 14 * * 1"   # 14:00 UTC = 07:00 PT (standard). GitHub uses UTC.
   workflow_dispatch: {}     # allow manual run
 
 jobs:
