@@ -245,17 +245,16 @@ The provided `Dockerfile` builds the FastAPI service (Python slim base, installs
 
 ## License
 
-AGPLv3 — see [LICENSE](LICENSE)
+This repository is publicly viewable for portfolio purposes only. The code is proprietary.
+Copyright © 2025 Phaethon Order LLC. All rights reserved. 
+Contact [support@phaethon.llc](mailto:support@phaethon.llc) for licensing or reuse requests.
 
-Note: `package.json` may list a different license string; the authoritative license for this repository is AGPLv3.
+See [LICENSE](LICENSE)
 
-## Contributing
+Note: `package.json` may list a different license string; the authoritative license for this repository is proprietary.
 
-1. Fork the repo
-2. Create a feature branch
-3. Make changes (include tests where sensible)
-4. Open a PR
+---
 
 ## Contact
 
-Questions or support: support@phaethon.llc
+Questions or support: [support@phaethon.llc](mailto:support@phaethon.llc).
