@@ -1,9 +1,60 @@
 "use client";
+
 import { useAuth0 } from "@auth0/auth0-react";
-import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import type { SignalKind, WsGraph } from "../../components/SigmaWhitespaceGraph";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 const SigmaWhitespaceGraph = dynamic(() => import("../../components/SigmaWhitespaceGraph"), { ssr: false });
+
+type SignalStatus = "none" | "weak" | "medium" | "strong";
+
+type SignalInfo = {
+  type: SignalKind;
+  status: SignalStatus;
+  confidence: number;
+  why: string;
+  node_ids: string[];
+  debug?: Record<string, number> | null;
+};
+
+type AssigneeSignals = {
+  assignee: string;
+  k: string;
+  signals: SignalInfo[];
+  summary?: string | null;
+  debug?: Record<string, unknown> | null;
+};
+
+type WhitespaceResponse = {
+  k: string;
+  assignees: AssigneeSignals[];
+  graph: WsGraph | null;
+  debug?: Record<string, unknown> | null;
+};
+
+const SIGNAL_LABELS: Record<SignalKind, string> = {
+  focus_shift: "Focus Shift",
+  emerging_gap: "Emerging Gap",
+  crowd_out: "Crowd-out Risk",
+  bridge: "Bridge Opportunity",
+};
+
+const SIGNAL_ICONS: Record<SignalKind, string> = {
+  focus_shift: "↑",
+  emerging_gap: "◎",
+  crowd_out: "↓",
+  bridge: "↔",
+};
+
+const STATUS_COLORS: Record<SignalStatus, string> = {
+  none: "#cbd5f5",
+  weak: "#fde68a",
+  medium: "#fbbf24",
+  strong: "#16a34a",
+};
+
+type ActiveKey = { assignee: string; type: SignalKind } | null;
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -15,7 +66,7 @@ function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNo
 
 function Row({ children, gap = 12 }: { children: React.ReactNode; gap?: number }) {
   return (
-    <div style={{ display: "flex", gap, alignItems: "end", flexWrap: "wrap" }}>{children}</div>
+    <div style={{ display: "flex", gap, flexWrap: "wrap" }}>{children}</div>
   );
 }
 
@@ -23,11 +74,11 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        background: "white",
-        border: "1px solid #e5e7eb",
-        borderRadius: 10,
-        padding: 16,
-        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+        background: "#ffffff",
+        border: "1px solid #e2e8f0",
+        borderRadius: 12,
+        padding: 18,
+        boxShadow: "0 4px 12px rgba(15,23,42,0.05)",
       }}
     >
       {children}
@@ -36,75 +87,103 @@ function Card({ children }: { children: React.ReactNode }) {
 }
 
 const inputStyle: React.CSSProperties = {
-  height: 36,
-  border: "1px solid #e5e7eb",
-  borderRadius: 8,
-  padding: "0 10px",
+  height: 38,
+  border: "1px solid #e2e8f0",
+  borderRadius: 10,
+  padding: "0 12px",
   outline: "none",
   minWidth: 220,
+  fontSize: 13,
 };
 
 const primaryBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: "1px solid #0284c7",
-  background: "#0ea5e9",
-  color: "white",
+  height: 38,
+  padding: "0 16px",
+  borderRadius: 10,
+  border: "1px solid #0ea5e9",
+  background: "#0284c7",
+  color: "#ffffff",
   cursor: "pointer",
   fontWeight: 600,
+  fontSize: 13,
 };
 
 const ghostBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: "1px solid #e5e7eb",
-  background: "white",
+  height: 38,
+  padding: "0 16px",
+  borderRadius: 10,
+  border: "1px solid #e2e8f0",
+  background: "#ffffff",
   color: "#0f172a",
   cursor: "pointer",
   fontWeight: 600,
+  fontSize: 13,
 };
+
+function formatConfidence(conf: number): string {
+  if (!Number.isFinite(conf)) return "0.00";
+  return conf.toFixed(2);
+}
+
+function formatStatus(status: SignalStatus, confidence: number): string {
+  if (status === "none") return "None";
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  return `${label} (${formatConfidence(confidence)})`;
+}
+
+function scopeSummary(resp: WhitespaceResponse | null): string {
+  if (!resp) return "Focus scope";
+  return resp.k || "Focus scope";
+}
 
 export default function WhitespacePage() {
   const { isAuthenticated, isLoading, getAccessTokenSilently, loginWithRedirect } = useAuth0();
   const today = useRef<string>(new Date().toISOString().slice(0, 10)).current;
 
-  // form state
-  const [whitespaceDateFrom, setWhitespaceDateFrom] = useState("");
-  const [whitespaceDateTo, setWhitespaceDateTo] = useState("");
-  const [whitespaceNeighbors, setWhitespaceNeighbors] = useState(15);
-  const [whitespaceResolution, setWhitespaceResolution] = useState(0.5);
-  const [whitespaceAlpha, setWhitespaceAlpha] = useState(0.8);
-  const [whitespaceBeta, setWhitespaceBeta] = useState(0.5);
-  const [whitespaceLimit, setWhitespaceLimit] = useState(1000);
-  const [whitespaceLayout, setWhitespaceLayout] = useState(true);
-  const [whitespaceFocusKeywords, setWhitespaceFocusKeywords] = useState("");
-  const [whitespaceFocusCpcLike, setWhitespaceFocusCpcLike] = useState("");
-  const [whitespaceLoading, setWhitespaceLoading] = useState(false);
-  const [whitespaceError, setWhitespaceError] = useState<string | null>(null);
-  const [whitespaceGraph, setWhitespaceGraph] = useState<{ nodes: any[]; edges: any } | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
+  const [focusKeywords, setFocusKeywords] = useState("");
+  const [focusCpcLike, setFocusCpcLike] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [neighbors, setNeighbors] = useState(15);
+  const [resolution, setResolution] = useState(0.5);
+  const [alpha, setAlpha] = useState(0.8);
+  const [beta, setBeta] = useState(0.5);
+  const [limit, setLimit] = useState(1000);
+  const [layout, setLayout] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<WhitespaceResponse | null>(null);
+
+  const [activeKey, setActiveKey] = useState<ActiveKey>(null);
+  const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
+
+  const selectedSignal = activeKey?.type ?? null;
 
   const runWhitespaceAnalysis = useCallback(async () => {
-    setWhitespaceLoading(true);
-    setWhitespaceError(null);
+    setLoading(true);
+    setError(null);
+    setHighlightedNodes([]);
+    setActiveKey(null);
     try {
       const token = await getAccessTokenSilently();
       const payload = {
-        date_from: whitespaceDateFrom || undefined,
-        date_to: whitespaceDateTo || undefined,
-        neighbors: whitespaceNeighbors,
-        resolution: whitespaceResolution,
-        alpha: whitespaceAlpha,
-        beta: whitespaceBeta,
-        limit: whitespaceLimit,
-        layout: whitespaceLayout,
-        focus_keywords: whitespaceFocusKeywords
-          ? whitespaceFocusKeywords.split(",").map((s) => s.trim()).filter(Boolean)
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        neighbors,
+        resolution,
+        alpha,
+        beta,
+        limit,
+        layout,
+        debug: debugMode,
+        focus_keywords: focusKeywords
+          ? focusKeywords.split(",").map((s) => s.trim()).filter(Boolean)
           : [],
-        focus_cpc_like: whitespaceFocusCpcLike
-          ? whitespaceFocusCpcLike.split(",").map((s) => s.trim()).filter(Boolean)
+        focus_cpc_like: focusCpcLike
+          ? focusCpcLike.split(",").map((s) => s.trim()).filter(Boolean)
           : [],
       };
 
@@ -120,51 +199,64 @@ export default function WhitespacePage() {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
-      const data = await res.json();
-      setWhitespaceGraph(data);
-    } catch (e: any) {
-      setWhitespaceError(e?.message ?? "Whitespace analysis failed");
+      const data = (await res.json()) as WhitespaceResponse;
+      setResult(data);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Whitespace analysis failed";
+      setError(message);
     } finally {
-      setWhitespaceLoading(false);
+      setLoading(false);
     }
   }, [
+    alpha,
+    beta,
+    dateFrom,
+    dateTo,
+    debugMode,
+    focusCpcLike,
+    focusKeywords,
     getAccessTokenSilently,
-    whitespaceDateFrom,
-    whitespaceDateTo,
-    whitespaceNeighbors,
-    whitespaceResolution,
-    whitespaceAlpha,
-    whitespaceBeta,
-    whitespaceLimit,
-    whitespaceLayout,
-    whitespaceFocusKeywords,
-    whitespaceFocusCpcLike,
+    layout,
+    limit,
+    neighbors,
+    resolution,
   ]);
+
+  const handleToggleSignal = useCallback((assignee: string, signal: SignalInfo) => {
+    setHighlightedNodes([]);
+    setActiveKey((current) => {
+      if (current && current.assignee === assignee && current.type === signal.type) {
+        return null;
+      }
+      return { assignee, type: signal.type };
+    });
+  }, []);
+
+  const handleViewExamples = useCallback((nodeIds: string[]) => {
+    setHighlightedNodes(nodeIds);
+  }, []);
+
+  const handleClearExamples = useCallback(() => {
+    setHighlightedNodes([]);
+  }, []);
+
+  const formattedAssignees = useMemo(() => {
+    if (!result) return [];
+    return result.assignees ?? [];
+  }, [result]);
+
+  const debugSummary = useMemo(() => {
+    if (!debugMode || !result?.debug) return null;
+    return JSON.stringify(result.debug, null, 2);
+  }, [debugMode, result?.debug]);
 
   return (
     <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gap: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Whitespace Analysis</h1>
-            <button
-              aria-label="How this works"
-              title="How this works"
-              onClick={() => setShowHelp(true)}
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                border: "1px solid #e5e7eb",
-                background: "white",
-                color: "#0f172a",
-                cursor: "pointer",
-                fontWeight: 700,
-                lineHeight: "20px",
-              }}
-            >
-              ?
-            </button>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Whitespace Signals</h1>
+            <span style={{ fontSize: 12, color: "#64748b" }}>Confidence-first alerts for whitespace opportunities</span>
           </div>
           {!isLoading && !isAuthenticated && (
             <button onClick={() => loginWithRedirect()} style={ghostBtn}>Log in</button>
@@ -172,15 +264,15 @@ export default function WhitespacePage() {
         </div>
 
         <Card>
-          <div style={{ display: "grid", gap: 12 }}>
-            <Row>
+          <div style={{ display: "grid", gap: 16 }}>
+            <Row gap={16}>
               <div style={{ display: "grid", gap: 6 }}>
                 <Label htmlFor="ws-focus-keywords">Focus Keywords</Label>
                 <input
                   id="ws-focus-keywords"
-                  value={whitespaceFocusKeywords}
-                  onChange={(e) => setWhitespaceFocusKeywords(e.target.value)}
-                  placeholder="e.g., graphene, LLM agents, quantum computing"
+                  value={focusKeywords}
+                  onChange={(e) => setFocusKeywords(e.target.value)}
+                  placeholder="e.g., LIDAR, perception, autonomous driving"
                   style={inputStyle}
                 />
               </div>
@@ -188,196 +280,334 @@ export default function WhitespacePage() {
                 <Label htmlFor="ws-focus-cpc">Focus CPC (LIKE)</Label>
                 <input
                   id="ws-focus-cpc"
-                  value={whitespaceFocusCpcLike}
-                  onChange={(e) => setWhitespaceFocusCpcLike(e.target.value)}
+                  value={focusCpcLike}
+                  onChange={(e) => setFocusCpcLike(e.target.value)}
                   placeholder="e.g., G06N%, H04L%"
                   style={inputStyle}
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-limit">Limit</Label>
+                <Label htmlFor="ws-date-from">From</Label>
                 <input
-                  id="ws-limit"
-                  type="number"
-                  value={whitespaceLimit}
-                  onChange={(e) => setWhitespaceLimit(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-date_from">From</Label>
-                <input
-                  id="ws-date_from"
+                  id="ws-date-from"
                   type="date"
                   min="2022-01-01"
-                  max={whitespaceDateTo || today}
-                  value={whitespaceDateFrom}
-                  onChange={(e) => setWhitespaceDateFrom(e.target.value)}
+                  max={dateTo || today}
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
                   style={inputStyle}
                 />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-date_to">To</Label>
+                <Label htmlFor="ws-date-to">To</Label>
                 <input
-                  id="ws-date_to"
+                  id="ws-date-to"
                   type="date"
-                  min={whitespaceDateFrom || "2022-01-02"}
+                  min={dateFrom || "2022-01-02"}
                   max={today}
-                  value={whitespaceDateTo}
-                  onChange={(e) => setWhitespaceDateTo(e.target.value)}
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
                   style={inputStyle}
                 />
               </div>
-            </Row>
-            <Row>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-neighbors">Neighbors</Label>
-                <input
-                  id="ws-neighbors"
-                  type="number"
-                  value={whitespaceNeighbors}
-                  onChange={(e) => setWhitespaceNeighbors(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-resolution">Resolution</Label>
-                <input
-                  id="ws-resolution"
-                  type="number"
-                  step="0.1"
-                  value={whitespaceResolution}
-                  onChange={(e) => setWhitespaceResolution(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-alpha">Alpha (Distance Weight)</Label>
-                <input
-                  id="ws-alpha"
-                  type="number"
-                  step="0.1"
-                  value={whitespaceAlpha}
-                  onChange={(e) => setWhitespaceAlpha(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-beta">Beta (Momentum Weight)</Label>
-                <input
-                  id="ws-beta"
-                  type="number"
-                  step="0.1"
-                  value={whitespaceBeta}
-                  onChange={(e) => setWhitespaceBeta(Number(e.target.value))}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input
-                  id="ws-layout"
-                  type="checkbox"
-                  checked={whitespaceLayout}
-                  onChange={(e) => setWhitespaceLayout(e.target.checked)}
-                />
-                <Label htmlFor="ws-layout">Compute Layout</Label>
-              </div>
-              <button onClick={runWhitespaceAnalysis} style={primaryBtn} disabled={whitespaceLoading || !isAuthenticated}>
-                {whitespaceLoading ? "Running..." : !isAuthenticated ? "Log in to run" : "Run Analysis"}
+              <button
+                onClick={runWhitespaceAnalysis}
+                style={primaryBtn}
+                disabled={loading || !isAuthenticated}
+              >
+                {loading ? "Computing..." : !isAuthenticated ? "Log in to run" : "Generate signals"}
               </button>
             </Row>
-          </div>
-        </Card>
-
-        <Card>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Whitespace Graph</h2>
-          {whitespaceLoading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
-          {whitespaceError && <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {whitespaceError}</div>}
-          <div style={{ height: 520, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 12 }}>
-            <SigmaWhitespaceGraph
-              data={whitespaceGraph as any}
-              height={520}
-              context={{
-                focusKeywords: whitespaceFocusKeywords ? whitespaceFocusKeywords.split(",").map(s => s.trim()).filter(Boolean) : [],
-                focusCpcLike: whitespaceFocusCpcLike ? whitespaceFocusCpcLike.split(",").map(s => s.trim()).filter(Boolean) : [],
-                alpha: whitespaceAlpha,
-                beta: whitespaceBeta,
-                neighbors: whitespaceNeighbors,
-                resolution: whitespaceResolution,
-                dateFrom: whitespaceDateFrom || undefined,
-                dateTo: whitespaceDateTo || undefined,
-              }}
-            />
-          </div>
-        </Card>
-
-        {showHelp && (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ws-help-title"
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(15,23,42,0.55)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1000,
-              padding: 16,
-            }}
-            onClick={() => setShowHelp(false)}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                maxWidth: 760,
-                width: "100%",
-                background: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: 10,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                padding: 16,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <h3 id="ws-help-title" style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>How to use Whitespace Analysis</h3>
-                <button onClick={() => setShowHelp(false)} style={{ ...ghostBtn, height: 28 }}>Close</button>
-              </div>
-              <div style={{ fontSize: 13, color: "#0f172a", lineHeight: 1.6, display: "grid", gap: 8 }}>
-                <div>
-                  This tool highlights potential whitespace in the patent landscape by scoring publications that are distant from your focus while still connected in the similarity graph.
+            <div>
+              <button
+                onClick={() => setAdvancedOpen((open) => !open)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  color: "#0284c7",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                {advancedOpen ? "Hide advanced settings" : "Show advanced settings"}
+              </button>
+              {advancedOpen && (
+                <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+                  <Row gap={16}>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <Label htmlFor="ws-limit">Sample Limit</Label>
+                      <input
+                        id="ws-limit"
+                        type="number"
+                        value={limit}
+                        onChange={(e) => setLimit(Number(e.target.value))}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <Label htmlFor="ws-neighbors">Neighbors (K)</Label>
+                      <input
+                        id="ws-neighbors"
+                        type="number"
+                        value={neighbors}
+                        onChange={(e) => setNeighbors(Number(e.target.value))}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <Label htmlFor="ws-resolution">Resolution</Label>
+                      <input
+                        id="ws-resolution"
+                        type="number"
+                        step="0.1"
+                        value={resolution}
+                        onChange={(e) => setResolution(Number(e.target.value))}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <Label htmlFor="ws-alpha">Alpha (distance)</Label>
+                      <input
+                        id="ws-alpha"
+                        type="number"
+                        step="0.1"
+                        value={alpha}
+                        onChange={(e) => setAlpha(Number(e.target.value))}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <Label htmlFor="ws-beta">Beta (momentum)</Label>
+                      <input
+                        id="ws-beta"
+                        type="number"
+                        step="0.1"
+                        value={beta}
+                        onChange={(e) => setBeta(Number(e.target.value))}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input
+                        id="ws-layout"
+                        type="checkbox"
+                        checked={layout}
+                        onChange={(e) => setLayout(e.target.checked)}
+                      />
+                      <Label htmlFor="ws-layout">Compute layout</Label>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input
+                        id="ws-debug"
+                        type="checkbox"
+                        checked={debugMode}
+                        onChange={(e) => setDebugMode(e.target.checked)}
+                      />
+                      <Label htmlFor="ws-debug">Debug mode</Label>
+                    </div>
+                  </Row>
                 </div>
-                <div style={{ fontWeight: 600 }}>Inputs</div>
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  <li><strong>Focus Keywords</strong>: comma-separated phrases of interest (searches title/abstract/claims). The algorithm finds areas related to these but under-explored.</li>
-                  <li><strong>Focus CPC (LIKE)</strong>: optional CPC wildcards (e.g., G06N%, H04L%).</li>
-                  <li><strong>Date From/To</strong>: restrict the publication window.</li>
-                  <li><strong>Limit</strong>: max number of recent publications to sample for the graph.</li>
-                </ul>
-                <div style={{ fontWeight: 600 }}>Algorithm knobs</div>
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  <li><strong>Neighbors</strong>: K in the KNN graph (higher = denser graph).</li>
-                  <li><strong>Resolution</strong>: community detection granularity (higher = more clusters).</li>
-                  <li><strong>Alpha</strong>: how strongly distance from the focus increases whitespace score.</li>
-                  <li><strong>Beta</strong>: how much recent momentum in a cluster boosts score.</li>
-                  <li><strong>Compute Layout</strong>: runs a 2D layout for nicer graph positions.</li>
-                </ul>
-                <div style={{ fontWeight: 600 }}>Graph tips</div>
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  <li>Node size encodes whitespace score; color encodes detected cluster.</li>
-                  <li>Click a node to highlight its neighbors and open details; click background to clear.</li>
-                  <li>Use your browser zoom or trackpad to zoom/pan; the camera will soft-center on selection.</li>
-                </ul>
-              </div>
+              )}
             </div>
+            {loading && <span style={{ fontSize: 12, color: "#64748b" }}>Crunching graph metrics...</span>}
+            {error && <div style={{ color: "#b91c1c", fontSize: 12 }}>Error: {error}</div>}
           </div>
-        )}
-      </div>
+        </Card>
 
-      <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
-        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">github</a>
-      </footer>
+        {result && (
+          <>
+            <Card>
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Signals</h2>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{scopeSummary(result)}</div>
+                  </div>
+                  {highlightedNodes.length > 0 && (
+                    <button onClick={handleClearExamples} style={{ ...ghostBtn, height: 32 }}>Clear highlights</button>
+                  )}
+                </div>
+
+                <div style={{ display: "grid", gap: 16 }}>
+                  {formattedAssignees.map((assignee) => {
+                    const active = activeKey && activeKey.assignee === assignee.assignee ? activeKey.type : null;
+                    return (
+                      <div key={assignee.assignee} style={{ display: "grid", gap: 12 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{assignee.assignee}</div>
+                        <div style={{ display: "grid", gap: 12 }}>
+                          {assignee.signals.map((signal) => {
+                            const isActive = active === signal.type;
+                            const key = `${assignee.assignee}:${signal.type}`;
+                            const hasExamples = signal.node_ids.length > 0;
+                            return (
+                              <div key={key} style={{ display: "grid", gap: 8 }}>
+                                <button
+                                  onClick={() => handleToggleSignal(assignee.assignee, signal)}
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 12,
+                                    padding: "10px 14px",
+                                    background: "#ffffff",
+                                    cursor: "pointer",
+                                    boxShadow: isActive ? "0 4px 12px rgba(15,23,42,0.08)" : "none",
+                                    transition: "box-shadow 0.2s ease",
+                                  }}
+                                >
+                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+                                      {SIGNAL_ICONS[signal.type]} {SIGNAL_LABELS[signal.type]}
+                                    </span>
+                                    <span style={{ fontSize: 12, color: "#475569" }}>
+                                      {isActive ? "Tap to collapse" : "Tap to view rationale"}
+                                    </span>
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      color: signal.status === "none" ? "#475569" : "#ffffff",
+                                      background: STATUS_COLORS[signal.status],
+                                      padding: "4px 10px",
+                                      borderRadius: 999,
+                                    }}
+                                  >
+                                    {formatStatus(signal.status, signal.confidence)}
+                                  </span>
+                                </button>
+                                {isActive && (
+                                  <div
+                                    style={{
+                                      marginLeft: 8,
+                                      borderLeft: "2px solid #e2e8f0",
+                                      paddingLeft: 12,
+                                      color: "#475569",
+                                      fontSize: 13,
+                                      lineHeight: 1.5,
+                                      display: "grid",
+                                      gap: 12,
+                                    }}
+                                  >
+                                    <div>{signal.why}</div>
+                                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                                      <button
+                                        onClick={() => handleViewExamples(signal.node_ids)}
+                                        style={{
+                                          border: "1px solid #0f172a",
+                                          background: "#0f172a",
+                                          color: "#ffffff",
+                                          borderRadius: 8,
+                                          padding: "6px 12px",
+                                          fontSize: 12,
+                                          fontWeight: 600,
+                                          cursor: hasExamples ? "pointer" : "not-allowed",
+                                          opacity: hasExamples ? 1 : 0.5,
+                                        }}
+                                        disabled={!hasExamples}
+                                      >
+                                        View examples
+                                      </button>
+                                      {!hasExamples && (
+                                        <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                                          No exemplars yet for this signal.
+                                        </span>
+                                      )}
+                                    </div>
+                                    {debugMode && signal.debug && (
+                                      <pre
+                                        style={{
+                                          background: "#0f172a",
+                                          color: "#e2e8f0",
+                                          fontSize: 11,
+                                          padding: 12,
+                                          borderRadius: 8,
+                                          overflowX: "auto",
+                                        }}
+                                      >
+                                        {JSON.stringify(signal.debug, null, 2)}
+                                      </pre>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {debugMode && assignee.debug && (
+                            <pre
+                              style={{
+                                background: "#0f172a",
+                                color: "#e2e8f0",
+                                fontSize: 11,
+                                padding: 12,
+                                borderRadius: 8,
+                                overflowX: "auto",
+                              }}
+                            >
+                              {JSON.stringify(assignee.debug, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <div style={{ display: "grid", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Graph Context</h2>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>
+                      Nodes are filings, sized by signal relevance; colors are clusters. Graph is a locator for examples.
+                    </div>
+                  </div>
+                  {selectedSignal && (
+                    <span style={{ fontSize: 12, color: "#475569" }}>
+                      Highlighting: {SIGNAL_LABELS[selectedSignal]}
+                    </span>
+                  )}
+                </div>
+                <div style={{ height: 520, border: "1px solid #e2e8f0", borderRadius: 12, background: "#ffffff" }}>
+                  <SigmaWhitespaceGraph
+                    data={result.graph}
+                    height={520}
+                    selectedSignal={selectedSignal}
+                    highlightedNodeIds={highlightedNodes}
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {debugSummary && (
+              <Card>
+                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Debug payload</div>
+                <pre
+                  style={{
+                    background: "#0f172a",
+                    color: "#e2e8f0",
+                    fontSize: 11,
+                    padding: 12,
+                    borderRadius: 8,
+                    overflowX: "auto",
+                  }}
+                >
+                  {debugSummary}
+                </pre>
+              </Card>
+            )}
+          </>
+        )}
+
+        <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", textDecoration: "underline" }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", textDecoration: "underline" }}>phaethonorder.com</a> | <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", textDecoration: "underline" }}>github</a>
+        </footer>
+      </div>
     </div>
   );
 }

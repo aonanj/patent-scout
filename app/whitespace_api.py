@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Annotated, Any
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from typing import Annotated, Any, Dict, Literal, Sequence
 
 import igraph as ig
 import leidenalg as la
@@ -19,6 +22,14 @@ from sklearn.neighbors import NearestNeighbors
 
 from .db import get_conn
 from .repository import SEARCH_EXPR
+from .whitespace_signals import (
+    SignalComputation,
+    SignalKind,
+    signal_bridge,
+    signal_crowd_out,
+    signal_emerging_gap,
+    signal_focus_shift,
+)
 
 router = APIRouter(prefix="/whitespace", tags=["whitespace"])
 
@@ -36,6 +47,44 @@ Conn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
 
 _HAVE_LEIDEN = True
 _HAVE_UMAP = True
+
+
+@dataclass(frozen=True, slots=True)
+class EmbeddingMeta:
+    """Metadata for a single embedding row used to build the graph."""
+
+    pub_id: str
+    is_focus: bool
+    pub_date: date | None
+    assignee: str | None
+    title: str | None
+
+
+@dataclass(slots=True)
+class NodeDatum:
+    """Derived metrics per node to power signal aggregation."""
+
+    index: int
+    pub_id: str
+    assignee: str
+    pub_date: date | None
+    cluster_id: int
+    score: float
+    density: float
+    proximity: float
+    distance: float
+    momentum: float
+    is_focus: bool
+    title: str | None
+
+
+SIGNAL_LABELS: Dict[SignalKind, str] = {
+    "focus_shift": "Focus Shift",
+    "emerging_gap": "Emerging Gap",
+    "crowd_out": "Crowd-out Risk",
+    "bridge": "Bridge Opportunity",
+}
+SIGNAL_ORDER: tuple[SignalKind, ...] = ("focus_shift", "emerging_gap", "crowd_out", "bridge")
 
 # --- SQL DDL and helpers ---
 DDL = [
@@ -137,24 +186,54 @@ class GraphRequest(BaseModel):
     layout: bool = True          # compute 2D layout for graph response
     layout_min_dist: float = 0.1 # UMAP param
     layout_neighbors: int = 25   # UMAP param
+    debug: bool = False
+
 
 class GraphNode(BaseModel):
     id: str
     cluster_id: int
-    score: float
-    density: float
+    assignee: str | None = None
     x: float
     y: float
+    signals: list[SignalKind] = Field(default_factory=list)
+    relevance: float = 0.0
     title: str | None = None
+    tooltip: str | None = None
+
 
 class GraphEdge(BaseModel):
     source: str
     target: str
-    w: float
+    weight: float
 
-class GraphResponse(BaseModel):
+
+class GraphContext(BaseModel):
     nodes: list[GraphNode]
     edges: list[GraphEdge]
+
+
+class SignalPayload(BaseModel):
+    type: SignalKind
+    status: Literal["none", "weak", "medium", "strong"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    why: str
+    node_ids: list[str] = Field(default_factory=list)
+    debug: dict[str, float] | None = None
+
+
+class AssigneeSignals(BaseModel):
+    assignee: str
+    k: str
+    signals: list[SignalPayload]
+    summary: str | None = None
+    debug: dict[str, Any] | None = None
+
+
+class WhitespaceResponse(BaseModel):
+    k: str
+    assignees: list[AssigneeSignals]
+    graph: GraphContext | None = None
+    debug: dict[str, Any] | None = None
 
 # --- Utilities ---
 def _to_int_date(s: str | None) -> int | None:
@@ -163,7 +242,18 @@ def _to_int_date(s: str | None) -> int | None:
     y, m, d = s.split("-")
     return int(f"{y}{m}{d}")
 
-def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> tuple[np.ndarray, list[str]]:
+
+def _from_int_date(value: int | None) -> date | None:
+    """Convert an integer YYYYMMDD date into a `date`."""
+    if value is None:
+        return None
+    s = f"{value:08d}"
+    try:
+        return date(int(s[:4]), int(s[4:6]), int(s[6:8]))
+    except ValueError:
+        return None
+
+def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> tuple[np.ndarray, list[EmbeddingMeta]]:
     where = ["e.model = %s"]
     base_params: list[Any] = [model]
     df = _to_int_date(req.date_from)
@@ -174,7 +264,7 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     if dt is not None:
         where.append("p.pub_date < %s")
         base_params.append(dt)
-    # Build a focus expression consistent with load_focus_mask to bias sampling
+    # Build a focus expression to bias sampling toward focus hits
     focus_conds: list[str] = []
     if req.focus_keywords:
         kw_conds = [f"(({SEARCH_EXPR}) @@ plainto_tsquery('english', %s))" for _ in req.focus_keywords]
@@ -202,7 +292,13 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     focus_expr = " AND ".join(focus_conds) if focus_conds else "FALSE"
 
     sql = f"""
-    SELECT e.pub_id, e.embedding, ({focus_expr}) AS is_focus
+    SELECT
+      e.pub_id,
+      e.embedding,
+      p.pub_date,
+      p.assignee_name,
+      p.title,
+      ({focus_expr}) AS is_focus
     FROM patent_embeddings e
     JOIN patent p USING (pub_id)
     WHERE {' AND '.join(where)}
@@ -216,13 +312,21 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     if req.limit:
         sql += " LIMIT %s"
         params.append(req.limit)
-    pub_ids: list[str] = []
     vecs: list[np.ndarray] = []
+    meta: list[EmbeddingMeta] = []
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(_sql.SQL(sql), params) # type: ignore
         for r in cur:
-            pub_ids.append(r["pub_id"])
             vecs.append(np.asarray(json.loads(r["embedding"]), dtype=np.float32))
+            meta.append(
+                EmbeddingMeta(
+                    pub_id=str(r["pub_id"]),
+                    is_focus=bool(r["is_focus"]),
+                    pub_date=_from_int_date(r.get("pub_date")),
+                    assignee=(r.get("assignee_name") or None),
+                    title=(r.get("title") or None),
+                )
+            )
     if not vecs:
         raise HTTPException(400, "No embeddings match the filters.")
     X = np.vstack(vecs)
@@ -230,50 +334,7 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     norms = np.linalg.norm(X, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
     X = X / norms
-    return X, pub_ids
-
-def load_titles(conn: psycopg.Connection, pub_ids: list[str]) -> dict[str, str | None]:
-    if not pub_ids:
-        return {}
-    q = "SELECT pub_id, title FROM patent WHERE pub_id = ANY(%s)"
-    m: dict[str, str | None] = {}
-    with conn.cursor() as cur:
-        cur.execute(q, (pub_ids,))
-        for pid, title in cur.fetchall():
-            m[pid] = title
-    return m
-
-def load_focus_mask(conn: psycopg.Connection, pub_ids: list[str], req: GraphRequest) -> np.ndarray:
-    if not req.focus_keywords and not req.focus_cpc_like:
-        return np.zeros(len(pub_ids), dtype=bool)
-    q = "SELECT p.pub_id FROM patent p WHERE p.pub_id = ANY(%s)"
-    params: list[Any] = [pub_ids]
-    conds = []
-    if req.focus_keywords:
-        # OR together each keyword using full-text search on title/abstract/claims
-        kw_conds = [f"(({SEARCH_EXPR}) @@ plainto_tsquery('english', %s))" for _ in req.focus_keywords]
-        if kw_conds:
-            conds.append("(" + " OR ".join(kw_conds) + ")")
-            params.extend(req.focus_keywords)
-    if req.focus_cpc_like:
-        conds.append("""
-          EXISTS (
-            SELECT 1 FROM jsonb_array_elements(p.cpc) c(obj)
-            WHERE (
-              coalesce(obj->>'section','')||coalesce(obj->>'class','')||coalesce(obj->>'subclass','')||
-              coalesce(obj->>'main_group','')||'/'||coalesce(obj->>'subgroup','')
-            ) LIKE ANY(%s)
-          )
-        """)
-        params.append(req.focus_cpc_like)
-    if conds:
-        q += " AND " + " AND ".join(conds)
-    focus = set()
-    with conn.cursor() as cur:
-        cur.execute(_sql.SQL(q), params)
-        for (pid,) in cur.fetchall():
-            focus.add(pid)
-    return np.array([pid in focus for pid in pub_ids], dtype=bool)
+    return X, meta
 
 def build_knn(X: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
     nbrs = NearestNeighbors(n_neighbors=k, metric="cosine", n_jobs=-1).fit(X)
@@ -373,7 +434,15 @@ def neighbor_momentum(conn: psycopg.Connection, pub_ids: list[str], labels: np.n
     return arr
 
 
-def whitespace_scores(X: np.ndarray, labels: np.ndarray, dens: np.ndarray, focus_mask: np.ndarray, alpha: float, beta: float, momentum: np.ndarray) -> np.ndarray:
+def compute_whitespace_metrics(
+    X: np.ndarray,
+    labels: np.ndarray,
+    dens: np.ndarray,
+    focus_mask: np.ndarray,
+    alpha: float,
+    beta: float,
+    momentum: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     if focus_mask.any():
         F = X[focus_mask].mean(axis=0)
     else:
@@ -387,7 +456,7 @@ def whitespace_scores(X: np.ndarray, labels: np.ndarray, dens: np.ndarray, focus
     mom = momentum.take(labels.astype(np.int32), mode="clip")
     score = proximity * sparse * (1.0 + beta * mom)
     score[focus_mask] = 0.0
-    return score.astype(np.float32)
+    return score.astype(np.float32), proximity, d.astype(np.float32), F.astype(np.float32)
 
 def persist(
     conn: psycopg.Connection,
@@ -463,19 +532,312 @@ def persist(
 
 # --- Endpoints ---
 
-@router.post("/graph", response_model=GraphResponse)
-def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depends(get_pool)]) -> GraphResponse:
+def _normalize_assignee(name: str | None) -> str:
+    """Coalesce empty assignee labels into a friendly placeholder."""
+    if not name:
+        return "Unknown assignee"
+    cleaned = name.strip()
+    return cleaned or "Unknown assignee"
+
+
+def _parse_date_str(value: str | None) -> date | None:
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _month_floor(d: date) -> date:
+    return date(d.year, d.month, 1)
+
+
+def _window_bounds(req: GraphRequest, nodes: Sequence[NodeDatum]) -> tuple[date | None, date | None]:
+    """Determine the rolling window used for time-series evaluation."""
+    dated_nodes = [n for n in nodes if n.pub_date]
+    if not dated_nodes:
+        return None, None
+    latest = max(n.pub_date for n in dated_nodes if n.pub_date)  # type: ignore[arg-type]
+    earliest = min(n.pub_date for n in dated_nodes if n.pub_date)  # type: ignore[arg-type]
+    req_end = _parse_date_str(req.date_to)
+    end_date = min(latest, req_end) if req_end else latest
+    req_start = _parse_date_str(req.date_from)
+    span_days = 365
+    if req_start and req_start <= end_date:
+        span = (end_date - req_start).days
+        span_days = min(max(span, 180), 365) if span > 0 else 365
+        base_start = end_date - timedelta(days=span_days)
+        start_date = max(req_start, base_start)
+    else:
+        start_date = end_date - timedelta(days=365)
+    if start_date < earliest:
+        start_date = earliest
+    if (end_date - start_date).days < 60:
+        # Require at least ~2 months to avoid spurious slopes.
+        return None, None
+    return start_date, end_date
+
+
+def _build_node_data(
+    meta: Sequence[EmbeddingMeta],
+    labels: np.ndarray,
+    scores: np.ndarray,
+    dens: np.ndarray,
+    proximity: np.ndarray,
+    distance: np.ndarray,
+    momentum: np.ndarray,
+) -> list[NodeDatum]:
+    """Combine raw arrays into a richer per-node structure."""
+    nodes: list[NodeDatum] = []
+    for idx, m in enumerate(meta):
+        cid = int(labels[idx])
+        nodes.append(
+            NodeDatum(
+                index=idx,
+                pub_id=m.pub_id,
+                assignee=_normalize_assignee(m.assignee),
+                pub_date=m.pub_date,
+                cluster_id=cid,
+                score=float(scores[idx]),
+                density=float(dens[idx]),
+                proximity=float(proximity[idx]),
+                distance=float(distance[idx]),
+                momentum=float(momentum[cid]) if cid < len(momentum) else 0.0,
+                is_focus=bool(m.is_focus),
+                title=m.title,
+            )
+        )
+    return nodes
+
+
+def _compute_bridge_inputs(
+    assignee_indices: Sequence[int],
+    labels: np.ndarray,
+    idx_matrix: np.ndarray,
+    dist_matrix: np.ndarray,
+    momentum: np.ndarray,
+) -> tuple[float, float, float, float, set[int]]:
+    """Return bridge rule inputs and the indices of interface nodes."""
+    if not assignee_indices:
+        return 1.0, 0.0, 0.0, 0.0, set()
+    cluster_counts = Counter(int(labels[i]) for i in assignee_indices)
+    if len(cluster_counts) < 2:
+        return 1.0, 0.0, 0.0, 0.0, set()
+    top_clusters = [cid for cid, _ in cluster_counts.most_common(2)]
+    c1, c2 = top_clusters[0], top_clusters[1]
+    bridge_nodes: set[int] = set()
+    weights: list[float] = []
+    for node_idx in assignee_indices:
+        node_cluster = int(labels[node_idx])
+        if node_cluster not in top_clusters:
+            continue
+        for neighbor_pos, neighbor_idx in enumerate(idx_matrix[node_idx]):
+            if int(neighbor_idx) == node_idx:
+                continue
+            neighbor_cluster = int(labels[neighbor_idx])
+            if neighbor_cluster not in top_clusters or neighbor_cluster == node_cluster:
+                continue
+            weight = float(1.0 - dist_matrix[node_idx, neighbor_pos])
+            weights.append(weight)
+            bridge_nodes.add(node_idx)
+    cluster_total = sum(1 for i in assignee_indices if int(labels[i]) in top_clusters)
+    openness = float(len(bridge_nodes) / max(1, cluster_total))
+    inter_weight = float(np.mean(weights)) if weights else 0.0
+    mom_left = float(momentum[c1]) if c1 < len(momentum) else 0.0
+    mom_right = float(momentum[c2]) if c2 < len(momentum) else 0.0
+    return openness, inter_weight, mom_left, mom_right, bridge_nodes
+
+
+def build_assignee_signals(
+    req: GraphRequest,
+    node_data: list[NodeDatum],
+    labels: np.ndarray,
+    idx_matrix: np.ndarray,
+    dist_matrix: np.ndarray,
+    momentum: np.ndarray,
+) -> tuple[list[AssigneeSignals], dict[str, set[SignalKind]], dict[str, float], dict[str, str]]:
+    """Aggregate node-level metrics into signal payloads per assignee."""
+    if not node_data:
+        return [], {}, {}, {}
+
+    cohort_scores = np.array([n.score for n in node_data], dtype=float)
+    density_values = np.array([n.density for n in node_data], dtype=float)
+    if cohort_scores.size == 0:
+        cohort_scores = np.array([0.0], dtype=float)
+    if density_values.size == 0:
+        density_values = np.array([0.0], dtype=float)
+
+    cohort_scores_list = cohort_scores.tolist()
+    high_ws_threshold = float(np.quantile(cohort_scores, 0.90))
+    low_ws_threshold = float(np.quantile(cohort_scores, 0.40))
+    high_density_threshold = float(np.quantile(density_values, 0.75))
+
+    data_by_assignee: dict[str, list[NodeDatum]] = defaultdict(list)
+    for node in node_data:
+        data_by_assignee[node.assignee].append(node)
+
+    ordered_assignees = sorted(
+        data_by_assignee.keys(),
+        key=lambda a: (-len(data_by_assignee[a]), a.lower()),
+    )
+    ordered_assignees = ordered_assignees[:5]
+
+    assignee_payloads: list[AssigneeSignals] = []
+    node_signals: dict[str, set[SignalKind]] = defaultdict(set)
+    node_relevance: dict[str, float] = defaultdict(float)
+    node_tooltips: dict[str, str] = {}
+    scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
+
+    for assignee in ordered_assignees:
+        nodes = sorted(data_by_assignee[assignee], key=lambda n: (n.pub_date or date.min, n.pub_id))
+        start_date, end_date = _window_bounds(req, nodes)
+        if not start_date or not end_date:
+            # No meaningful history; populate empty signals.
+            focus_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
+            emerging_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
+            crowd_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
+            bridge_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
+            signal_payloads: list[SignalPayload] = [
+                SignalPayload(type="focus_shift", status=focus_result.status(), confidence=0.0, why=focus_result.message, node_ids=[]),
+                SignalPayload(type="emerging_gap", status=emerging_result.status(), confidence=0.0, why=emerging_result.message, node_ids=[]),
+                SignalPayload(type="crowd_out", status=crowd_result.status(), confidence=0.0, why=crowd_result.message, node_ids=[]),
+                SignalPayload(type="bridge", status=bridge_result.status(), confidence=0.0, why=bridge_result.message, node_ids=[]),
+            ]
+            assignee_payloads.append(AssigneeSignals(assignee=assignee, k=scope_text, signals=signal_payloads))
+            continue
+
+        window_nodes = [n for n in nodes if n.pub_date and start_date <= n.pub_date <= end_date]
+        if not window_nodes:
+            continue
+
+        bucket_map: dict[date, list[NodeDatum]] = defaultdict(list)
+        for node in window_nodes:
+            bucket_map[_month_floor(node.pub_date)].append(node)  # type: ignore[arg-type]
+        bucket_items = sorted(bucket_map.items())
+        if len(bucket_items) > 12:
+            bucket_items = bucket_items[-12:]
+
+        dist_series: list[float] = []
+        share_series: list[float] = []
+        whitespace_series: list[float] = []
+        density_series: list[float] = []
+        momentum_series: list[float] = []
+        n_samples = 0
+        latest_nodes: list[NodeDatum] = []
+
+        for bucket_date, bucket_nodes in bucket_items:
+            count = len(bucket_nodes)
+            if count == 0:
+                continue
+            n_samples += count
+            dist_series.append(float(np.mean([n.distance for n in bucket_nodes])))
+            share_series.append(sum(1 for n in bucket_nodes if n.is_focus) / count)
+            whitespace_series.append(float(np.mean([n.score for n in bucket_nodes])))
+            density_series.append(float(np.mean([n.density for n in bucket_nodes])))
+            momentum_series.append(float(np.mean([n.momentum for n in bucket_nodes])))
+            latest_nodes = bucket_nodes
+
+        neighbor_momentum = momentum_series[-1] if momentum_series else 0.0
+
+        focus_result = signal_focus_shift(dist_series, share_series, n_samples)
+        emerging_result = signal_emerging_gap(whitespace_series, cohort_scores_list, neighbor_momentum)
+        crowd_result = signal_crowd_out(whitespace_series, density_series)
+
+        assignee_indices = [n.index for n in nodes]
+        openness, inter_weight, mom_left, mom_right, bridge_node_indices = _compute_bridge_inputs(
+            assignee_indices, labels, idx_matrix, dist_matrix, momentum
+        )
+        bridge_result = signal_bridge(openness, inter_weight, mom_left, mom_right)
+
+        index_lookup = {n.index: n for n in nodes}
+
+        focus_node_ids = [n.pub_id for n in sorted(latest_nodes, key=lambda n: n.distance)[:6]]
+        emerging_candidates = [n for n in nodes if n.score >= high_ws_threshold and n.proximity >= 0.4]
+        if not emerging_candidates:
+            emerging_candidates = sorted(nodes, key=lambda n: n.score, reverse=True)[:5]
+        emerging_node_ids = [n.pub_id for n in emerging_candidates[:6]]
+        crowd_candidates = [
+            n for n in latest_nodes
+            if (n.density >= high_density_threshold and n.score <= low_ws_threshold)
+        ]
+        if not crowd_candidates:
+            crowd_candidates = sorted(latest_nodes, key=lambda n: (n.density, -n.score), reverse=True)[:5]
+        crowd_node_ids = [n.pub_id for n in crowd_candidates[:6]]
+        bridge_node_ids = [index_lookup[idx].pub_id for idx in bridge_node_indices if idx in index_lookup]
+
+        def _payload(kind: SignalKind, result: SignalComputation, node_ids: list[str]) -> SignalPayload:
+            conf = float(np.clip(result.confidence, 0.0, 1.0))
+            payload = SignalPayload(
+                type=kind,
+                status=result.status(),
+                confidence=conf,
+                why=result.message,
+                node_ids=node_ids,
+                debug=result.debug if req.debug else None,
+            )
+            for nid in node_ids:
+                tooltip_msg = f"{SIGNAL_LABELS[kind]}: {result.message}"
+                current_conf = node_relevance.get(nid, 0.0)
+                node_signals[nid].add(kind)
+                if conf >= current_conf:
+                    node_tooltips[nid] = tooltip_msg
+                node_relevance[nid] = max(current_conf, conf)
+            return payload
+
+        signal_payloads = [
+            _payload("focus_shift", focus_result, focus_node_ids),
+            _payload("emerging_gap", emerging_result, emerging_node_ids),
+            _payload("crowd_out", crowd_result, crowd_node_ids),
+            _payload("bridge", bridge_result, bridge_node_ids),
+        ]
+
+        assignee_debug: dict[str, Any] | None = None
+        if req.debug:
+            assignee_debug = {
+                "window_start": start_date.isoformat(),
+                "window_end": end_date.isoformat(),
+                "dist_series": dist_series,
+                "share_series": share_series,
+                "whitespace_series": whitespace_series,
+                "density_series": density_series,
+                "momentum_series": momentum_series,
+                "neighbor_momentum": neighbor_momentum,
+                "high_ws_threshold": high_ws_threshold,
+                "low_ws_threshold": low_ws_threshold,
+                "high_density_threshold": high_density_threshold,
+                "bridge_inputs": {
+                    "openness": openness,
+                    "inter_weight": inter_weight,
+                    "momentum_left": mom_left,
+                    "momentum_right": mom_right,
+                },
+            }
+        assignee_payloads.append(
+            AssigneeSignals(
+                assignee=assignee,
+                k=scope_text,
+                signals=signal_payloads,
+                debug=assignee_debug,
+            )
+        )
+
+    return assignee_payloads, node_signals, node_relevance, node_tooltips
+
+@router.post("/graph", response_model=WhitespaceResponse)
+def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depends(get_pool)]) -> WhitespaceResponse:
     with pool.connection() as conn:
         ensure_schema(conn)
         model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
-        X, pub_ids = load_embeddings(conn, model, req)
-        focus_mask = load_focus_mask(conn, pub_ids, req)
+        X, meta = load_embeddings(conn, model, req)
+        focus_mask = np.array([m.is_focus for m in meta], dtype=bool)
+        pub_ids = [m.pub_id for m in meta]
 
         dist, idx = build_knn(X, req.neighbors)
         labels = cluster_labels(dist, idx, req.resolution)
         dens = local_density(dist)
         mom = neighbor_momentum(conn, pub_ids, labels)
-        scores = whitespace_scores(X, labels, dens, focus_mask, req.alpha, req.beta, mom)
+        scores, proximity, distance, focus_vector = compute_whitespace_metrics(X, labels, dens, focus_mask, req.alpha, req.beta, mom)
 
         # persist to DB
         persist(conn, pub_ids, model, dist, idx, labels, dens, scores)
@@ -492,30 +854,72 @@ def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depe
             U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
             XY = (Xc @ Vt[:2].T).astype(np.float32)
 
-        # build graph response (cap edges per node for UI)
-        title_map = load_titles(conn, pub_ids)
+        node_data = _build_node_data(meta, labels, scores, dens, proximity, distance, mom)
+        assignee_payloads, node_signal_map, node_relevance_map, node_tooltips = build_assignee_signals(
+            req, node_data, labels, idx, dist, mom
+        )
+
+        scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
+        if not assignee_payloads and node_data:
+            empty_signals = [
+                SignalPayload(type=kind, status="none", confidence=0.0, why="No signal detected for this scope.", node_ids=[])
+                for kind in SIGNAL_ORDER
+            ]
+            assignee_payloads = [
+                AssigneeSignals(
+                    assignee=node_data[0].assignee,
+                    k=scope_text,
+                    signals=empty_signals,
+                    debug=None,
+                )
+            ]
+
         nodes = []
-        for i, pid in enumerate(pub_ids):
+        for i, meta_row in enumerate(meta):
+            node_id = meta_row.pub_id
+            signal_list = sorted(node_signal_map.get(node_id, []))
+            relevance = node_relevance_map.get(node_id, 0.0)
+            if relevance <= 0:
+                relevance = 0.15
             nodes.append(
                 GraphNode(
-                    id=pid,
+                    id=node_id,
                     cluster_id=int(labels[i]),
-                    score=float(scores[i]),
-                    density=float(dens[i]),
+                    assignee=_normalize_assignee(meta_row.assignee),
                     x=float(XY[i, 0]),
                     y=float(XY[i, 1]),
-                    title=title_map.get(pid),
+                    signals=signal_list,
+                    relevance=float(np.clip(relevance, 0.05, 1.0)),
+                    title=meta_row.title,
+                    tooltip=node_tooltips.get(node_id),
                 )
             )
 
         edges = []
         for i, src in enumerate(pub_ids):
-            for j_idx, j in enumerate(idx[i, 1:11]): # at most 10 edges
+            for j_idx, j in enumerate(idx[i, 1:11]):  # at most 10 edges
                 edges.append(
                     GraphEdge(
                         source=src,
                         target=pub_ids[j],
-                        w=float(1.0 - dist[i, j_idx + 1]),
+                        weight=float(1.0 - dist[i, j_idx + 1]),
                     )
                 )
-        return GraphResponse(nodes=nodes, edges=edges)
+
+        debug_payload: dict[str, Any] | None = None
+        if req.debug:
+            debug_payload = {
+                "focus_mask_count": int(focus_mask.sum()),
+                "total_nodes": len(nodes),
+                "alpha": req.alpha,
+                "beta": req.beta,
+                "focus_vector_norm": float(np.linalg.norm(focus_vector)),
+            }
+
+        graph_context = GraphContext(nodes=nodes, edges=edges)
+        return WhitespaceResponse(
+            k=scope_text,
+            assignees=assignee_payloads,
+            graph=graph_context,
+            debug=debug_payload,
+        )
