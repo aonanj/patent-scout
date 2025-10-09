@@ -146,6 +146,23 @@ export default function SigmaWhitespaceGraph({
     return 4 + 10 * rel;
   }, []);
 
+  const updateGraphHighlights = useCallback(() => {
+    const g = graphRef.current;
+    if (!g) return;
+    const nodesToHighlight = new Set<string>();
+    highlightedRef.current.forEach((id) => nodesToHighlight.add(id));
+    if (selectedRef.current) {
+      nodesToHighlight.add(selectedRef.current);
+    }
+    g.forEachNode((node: string) => {
+      const shouldHighlight = nodesToHighlight.has(node);
+      const current = g.getNodeAttribute(node, "highlighted") === true;
+      if (current !== shouldHighlight) {
+        g.setNodeAttribute(node, "highlighted", shouldHighlight);
+      }
+    });
+  }, []);
+
   const zoomToHighlighted = useCallback(() => {
     if (!rendererRef.current || !graphRef.current || !highlightedNodeIds || highlightedNodeIds.length === 0) return;
     const renderer = rendererRef.current;
@@ -196,7 +213,8 @@ export default function SigmaWhitespaceGraph({
     if (highlightedNodeIds && highlightedNodeIds.length > 0) {
       zoomToHighlighted();
     }
-  }, [highlightedNodeIds, zoomToHighlighted]);
+    updateGraphHighlights();
+  }, [highlightedNodeIds, updateGraphHighlights, zoomToHighlighted]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -233,8 +251,7 @@ export default function SigmaWhitespaceGraph({
         tooltip: node.tooltip ?? "",
         title: node.title ?? "",
         relevance: normalizeRelevance(node.relevance),
-        haloColor: "#000000",
-        haloSize: 0,
+        highlighted: false,
       });
     }
     for (const edge of data.edges) {
@@ -313,18 +330,14 @@ export default function SigmaWhitespaceGraph({
       const baseColor = attributes.baseColor || attributes.color;
       let opacity = 1;
       let size = attributes.size;
-      let borderColor = "#000000";
-      let borderSize = 1;
+      let borderColor = attributes.borderColor || "#1e293b";
+      let borderSize = attributes.borderSize || 1;
       let zIndex = 1;
-      let haloColor = attributes.haloColor || "#000000";
-      let haloSize = 0;
 
       const matchesSignal = signal ? Array.isArray(attributes.signals) && attributes.signals.includes(signal) : true;
 
       const applyFocus = (primary: boolean) => {
-        haloColor = "#000000";
-        haloSize = primary ? 12 : 8;
-        borderColor = "#ffffff";
+        borderColor = primary ? "#ffffff" : "#e2e8f0";
         borderSize = primary ? 3 : 2;
       };
 
@@ -372,8 +385,6 @@ export default function SigmaWhitespaceGraph({
         borderColor,
         borderSize,
         zIndex,
-        haloColor,
-        haloSize,
       };
     };
 
@@ -441,6 +452,7 @@ export default function SigmaWhitespaceGraph({
       if (graphRef.current) {
         neighborsRef.current = new Set(graphRef.current.neighbors(node));
       }
+      updateGraphHighlights();
       renderer.refresh();
     };
 
@@ -449,6 +461,7 @@ export default function SigmaWhitespaceGraph({
       neighborsRef.current = new Set();
       setSelectedNode(null);
       setSelectedAttrs(null);
+      updateGraphHighlights();
       renderer.refresh();
     };
 
@@ -456,6 +469,8 @@ export default function SigmaWhitespaceGraph({
     renderer.on("leaveNode", handleLeaveNode);
     renderer.on("clickNode", handleClickNode);
     renderer.on("clickStage", handleClickStage);
+
+    updateGraphHighlights();
 
     return () => {
       renderer.off("enterNode", handleEnterNode);
@@ -467,7 +482,7 @@ export default function SigmaWhitespaceGraph({
       graphRef.current = null;
       container.removeChild(tooltip);
     };
-  }, [data, clusterColor, sizeForNode]);
+  }, [data, clusterColor, sizeForNode, updateGraphHighlights]);
 
   const details = selectedNode && selectedAttrs ? (
     <div
@@ -497,6 +512,7 @@ export default function SigmaWhitespaceGraph({
             neighborsRef.current = new Set();
             setSelectedNode(null);
             setSelectedAttrs(null);
+            updateGraphHighlights();
             rendererRef.current?.refresh();
           }}
           style={{
