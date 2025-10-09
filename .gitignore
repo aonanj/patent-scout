@@ -5,6 +5,7 @@ __pycache__
 .env
 __pycache__/
 copilot-instructions.md
+.instructions/
 us_patents.csv
 node_modules/
 *.csv
@@ -12,3 +13,4 @@ node_modules/
 tests/
 .next/
 .vscode/
+.ruff_cache/

@@ -146,6 +146,38 @@ export default function SigmaWhitespaceGraph({
     return 4 + 10 * rel;
   }, []);
 
+  const zoomToHighlighted = useCallback(() => {
+    if (!rendererRef.current || !graphRef.current || !highlightedNodeIds || highlightedNodeIds.length === 0) return;
+    const renderer = rendererRef.current;
+    const g = graphRef.current;
+    const coords = highlightedNodeIds
+      .map((id) => {
+        if (!g.hasNode(id)) return null;
+        try {
+          return renderer.getNodeDisplayData(id);
+        } catch {
+          return null;
+        }
+      })
+      .filter((v): v is { x: number; y: number } => Boolean(v));
+    if (coords.length > 0) {
+      const xs = coords.map((c) => c.x);
+      const ys = coords.map((c) => c.y);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const dx = maxX - minX;
+      const dy = maxY - minY;
+      const radius = Math.max(dx, dy) || 1;
+      try {
+        renderer.getCamera().animate({ x: cx, y: cy, ratio: Math.min(2.5, Math.max(0.3, 1.2 / radius)) }, { duration: 400 });
+      } catch {}
+    }
+  }, [highlightedNodeIds]);
+
   useEffect(() => {
     signalRef.current = selectedSignal ?? null;
     if (rendererRef.current) {
@@ -158,37 +190,10 @@ export default function SigmaWhitespaceGraph({
     if (rendererRef.current) {
       rendererRef.current.refresh();
     }
-    if (highlightedNodeIds && highlightedNodeIds.length > 0 && rendererRef.current && graphRef.current) {
-      const renderer = rendererRef.current;
-      const g = graphRef.current;
-      const coords = highlightedNodeIds
-        .map((id) => {
-          if (!g.hasNode(id)) return null;
-          try {
-            return renderer.getNodeDisplayData(id);
-          } catch {
-            return null;
-          }
-        })
-        .filter((v): v is { x: number; y: number } => Boolean(v));
-      if (coords.length > 0) {
-        const xs = coords.map((c) => c.x);
-        const ys = coords.map((c) => c.y);
-        const minX = Math.min(...xs);
-        const maxX = Math.max(...xs);
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
-        const cx = (minX + maxX) / 2;
-        const cy = (minY + maxY) / 2;
-        const dx = maxX - minX;
-        const dy = maxY - minY;
-        const radius = Math.max(dx, dy) || 1;
-        try {
-          renderer.getCamera().animate({ x: cx, y: cy, ratio: Math.min(2.5, Math.max(0.3, 1.2 / radius)) }, { duration: 400 });
-        } catch {}
-      }
+    if (highlightedNodeIds && highlightedNodeIds.length > 0) {
+      zoomToHighlighted();
     }
-  }, [highlightedNodeIds]);
+  }, [highlightedNodeIds, zoomToHighlighted]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -532,9 +537,38 @@ export default function SigmaWhitespaceGraph({
     </div>
   ) : null;
 
+  const hasHighlights = highlightedNodeIds && highlightedNodeIds.length > 0;
+
   return (
     <div style={{ height, position: "relative", background: "#f8fafc", borderRadius: 12, overflow: "hidden" }}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+      {hasHighlights && (
+        <button
+          onClick={zoomToHighlighted}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: selectedNode ? 304 : 12,
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: 10,
+            padding: "8px 14px",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#0f172a",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            zIndex: 10,
+          }}
+          title="Zoom to highlighted nodes"
+        >
+          <span style={{ fontSize: 14 }}>🔍</span>
+          Zoom to highlights
+        </button>
+      )}
       {details}
     </div>
   );
