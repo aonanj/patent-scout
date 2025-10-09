@@ -635,7 +635,7 @@ export default function WhitespacePage() {
                   <div>
                     <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Graph Context</h2>
                     <div style={{ fontSize: 12, color: "#64748b" }}>
-                      Nodes are filings, sized by signal relevance; colors are clusters. Graph is a locator for examples.
+                      Graph is a visual guide to illustrate signals indicated by patent filings. Nodes correspond to patent filings: size indicates signal relevance; color (cluster) indicates semantically similar patent filings; edges connect the most similar patent filings.
                     </div>
                   </div>
                   {selectedSignal && (
