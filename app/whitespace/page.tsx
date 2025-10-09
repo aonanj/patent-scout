@@ -243,6 +243,7 @@ export default function WhitespacePage() {
 
   const handleClearExamples = useCallback(() => {
     setHighlightedNodes([]);
+    setActiveKey(null);
   }, []);
 
   const formattedAssignees = useMemo(() => {

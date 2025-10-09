@@ -259,7 +259,14 @@ export default function SigmaWhitespaceGraph({
       const dst = edge.target;
       if (!g.hasNode(src) || !g.hasNode(dst)) continue;
       if (g.hasEdge(src, dst)) continue;
-      g.addEdge(src, dst, { weight: edge.weight ?? 1 });
+      const weightValue = Number(edge.weight);
+      const weight = Number.isFinite(weightValue) ? weightValue : 1;
+      const baseSize = 0.9;
+      g.addEdge(src, dst, {
+        weight,
+        size: baseSize,
+        baseSize,
+      });
     }
 
     try {
@@ -396,18 +403,22 @@ export default function SigmaWhitespaceGraph({
       if (!graphRef.current) return attributes;
       const src = graphRef.current.source(edgeKey);
       const dst = graphRef.current.target(edgeKey);
+      const baseSize = attributes.baseSize ?? attributes.size ?? 1;
+      const mutedSize = Math.max(0.4, baseSize * 0.6);
+      const focusSize = Math.max(1.6, baseSize * 1.8);
+      const defaultColor = attributes.baseColor || attributes.color || "#cbd5e1";
 
       if (highlightSet.size > 0) {
         if (highlightSet.has(src) && highlightSet.has(dst)) {
-          return { ...attributes, color: "#94a3b8", opacity: 0.9 };
+          return { ...attributes, color: "#4c51bf", opacity: 0.95, size: focusSize };
         }
-        return { ...attributes, opacity: 0.05 };
+        return { ...attributes, opacity: 0.05, size: mutedSize };
       }
       if (selected) {
         if (src === selected || dst === selected) {
-          return { ...attributes, color: "#94a3b8", opacity: 0.9 };
+          return { ...attributes, color: "#2563eb", opacity: 0.95, size: focusSize };
         }
-        return { ...attributes, opacity: 0.08 };
+        return { ...attributes, opacity: 0.08, size: mutedSize, color: defaultColor };
       }
       if (signal) {
         const srcSignals = graphRef.current.getNodeAttribute(src, "signals");
@@ -415,11 +426,11 @@ export default function SigmaWhitespaceGraph({
         const srcHas = Array.isArray(srcSignals) && srcSignals.includes(signal);
         const dstHas = Array.isArray(dstSignals) && dstSignals.includes(signal);
         if (srcHas && dstHas) {
-          return { ...attributes, opacity: 0.8, color: "#cbd5f5" };
+          return { ...attributes, opacity: 0.85, color: "#cbd5f5", size: focusSize };
         }
-        return { ...attributes, opacity: 0.08 };
+        return { ...attributes, opacity: 0.08, size: mutedSize };
       }
-      return { ...attributes, opacity: 0.35 };
+      return { ...attributes, opacity: 0.35, color: defaultColor, size: baseSize };
     };
 
     renderer.setSetting("nodeReducer", nodeReducer as any);
