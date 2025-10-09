@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 alerts_runner.py
-- Executes saved alerts against Neon/Supabase Postgres
+- Executes saved alerts against Neon.tech Postgres
 - Sends emails via Mailgun HTTP API
 - Filters by keywords, assignee, CPC codes, and date window
 - Only reports NEW results since the last run per saved_query

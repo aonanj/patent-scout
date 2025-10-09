@@ -26,7 +26,7 @@
   },
   "name": "patent-scout",
   "version": "1.0.0",
-  "description": "Lightweight patent search and alerting using Postgres (Neon/Supabase), pgvector, FastAPI, and a Next.js frontend.",
+  "description": "Lightweight patent search and alerting using Postgres (Neon.tech), pgvector, FastAPI, and a Next.js frontend.",
   "main": "tailwind.config.js",
   "repository": {
     "type": "git",

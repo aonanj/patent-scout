@@ -1,6 +1,6 @@
 # Patent Scout
 
-Confidence-first patent intelligence for AI R&D teams. Patent Scout blends semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a Postgres + pgvector corpus of AI-focused patents.
+Confidence-first patent intelligence for AI R&D teams. Patent Scout blends semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a Postgres + pgvector corpus of AI-focused patents. Automated cron job ensures up-to-date corpus of AI-focused patent filings (currently includes 45,000+ patent filings dating back to 2023). 
 
 > Confidence-first alerts for whitespace opportunities.
 
@@ -14,6 +14,17 @@ Confidence-first patent intelligence for AI R&D teams. Patent Scout blends seman
 ## Live Deployment
 - App: https://patent-scout.vercel.app/
 - Demo login: `phaethon@phaethon.llc` / `pollc123#` (Auth0 username/password grant)
+
+### Screenshots
+
+#### Next.js UI - Citation Verification List
+![Citation Verification List](docs/screenshots/CV-Screenshot-1.png)
+
+### Next.js US - Uploaded Document with Verification Indicators
+![Uploaded Document with Verification Indicators](docs/screenshots/CV-Screenshot-2.png)
+
+### Word Add-In UI
+![Word Add-In UI](docs/screenshots/CV-Screenshot-3.png)
 
 ## Architecture Overview
 ```text
@@ -45,9 +56,9 @@ Confidence-first patent intelligence for AI R&D teams. Patent Scout blends seman
 Key components:
 - **Frontend** – Next.js App Router (React 19) served via Vercel, using Auth0 React SDK for authentication and proxying API calls back to the FastAPI backend.
 - **API** – FastAPI application exposing search, trend aggregation, export, patent details, saved query CRUD, and whitespace analysis endpoints; all guarded by Auth0 JWT validation.
-- **Database** – Postgres (Neon/Supabase friendly) with `pgvector` for embeddings, analytic columns, and supporting tables for saved queries, alerts, and whitespace graph storage.
+- **Database** – Postgres (current implementation uses Neon.tech) with `pgvector` for embeddings, analytic columns, and supporting tables for saved queries, alerts, and whitespace graph storage.
 - **Analytics** – Whitespace computation performs KNN graph construction, Leiden clustering, UMAP layout, and signal scoring within the backend.
-- **Automation** – Standalone ETL ingests patents from Google BigQuery and writes embeddings with OpenAI; alerts runner sends saved-query digests via Mailgun or logs to stdout.
+- **Automation** – Standalone ETL ingests patents from Google BigQuery and writes embeddings with OpenAI; alerts runner sends saved-query digests via Mailgun or logs to stdout. ETL is automated cron job scheduled for weekly runs, ensuring up-to-date patent filings database.
 
 ## UI & UX Walkthrough
 1. **Auth overlay** – Users see a branded login overlay until Auth0 authentication completes (`app/page.tsx`).
