@@ -64,9 +64,13 @@ function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNo
   );
 }
 
-function Row({ children, gap = 12 }: { children: React.ReactNode; gap?: number }) {
+function Row({
+  children,
+  gap = 12,
+  align = "stretch",
+}: { children: React.ReactNode; gap?: number; align?: React.CSSProperties["alignItems"] }) {
   return (
-    <div style={{ display: "flex", gap, flexWrap: "wrap" }}>{children}</div>
+    <div style={{ display: "flex", gap, flexWrap: "wrap", alignItems: align }}>{children}</div>
   );
 }
 
@@ -265,7 +269,7 @@ export default function WhitespacePage() {
 
         <Card>
           <div style={{ display: "grid", gap: 16 }}>
-            <Row gap={16}>
+            <Row gap={16} align="flex-end">
               <div style={{ display: "grid", gap: 6 }}>
                 <Label htmlFor="ws-focus-keywords">Focus Keywords</Label>
                 <input
@@ -315,7 +319,7 @@ export default function WhitespacePage() {
                 style={primaryBtn}
                 disabled={loading || !isAuthenticated}
               >
-                {loading ? "Computing..." : !isAuthenticated ? "Log in to run" : "Generate signals"}
+                {loading ? "Computing..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
               </button>
             </Row>
             <div>
