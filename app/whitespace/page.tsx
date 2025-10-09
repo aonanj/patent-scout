@@ -3,7 +3,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import dynamic from "next/dynamic";
 import type { SignalKind, WsGraph } from "../../components/SigmaWhitespaceGraph";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SigmaWhitespaceGraph = dynamic(() => import("../../components/SigmaWhitespaceGraph"), { ssr: false });
 
@@ -161,6 +161,7 @@ export default function WhitespacePage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<WhitespaceResponse | null>(null);
 
+  const [openAssignees, setOpenAssignees] = useState<Record<string, boolean>>({});
   const [activeKey, setActiveKey] = useState<ActiveKey>(null);
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
 
@@ -249,10 +250,48 @@ export default function WhitespacePage() {
     return result.assignees ?? [];
   }, [result]);
 
+  useEffect(() => {
+    setOpenAssignees((prev) => {
+      let changed = false;
+      const next: Record<string, boolean> = {};
+      for (const entry of formattedAssignees) {
+        const key = entry.assignee;
+        const current = prev[key];
+        next[key] = current ?? true;
+        if (current === undefined) {
+          changed = true;
+        }
+      }
+      for (const key of Object.keys(prev)) {
+        if (!(key in next)) {
+          changed = true;
+          break;
+        }
+      }
+      if (!changed && Object.keys(prev).length === Object.keys(next).length) {
+        return prev;
+      }
+      return next;
+    });
+  }, [formattedAssignees]);
+
   const debugSummary = useMemo(() => {
     if (!debugMode || !result?.debug) return null;
     return JSON.stringify(result.debug, null, 2);
   }, [debugMode, result?.debug]);
+
+  const handleToggleAssignee = useCallback((assigneeName: string) => {
+    let nextIsOpen = true;
+    setOpenAssignees((prev) => {
+      const currentOpen = prev[assigneeName] ?? true;
+      const updated = { ...prev, [assigneeName]: !currentOpen };
+      nextIsOpen = !currentOpen;
+      return updated;
+    });
+    if (!nextIsOpen) {
+      setActiveKey((current) => (current?.assignee === assigneeName ? null : current));
+    }
+  }, []);
 
   return (
     <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
@@ -437,123 +476,149 @@ export default function WhitespacePage() {
                 <div style={{ display: "grid", gap: 16 }}>
                   {formattedAssignees.map((assignee) => {
                     const active = activeKey && activeKey.assignee === assignee.assignee ? activeKey.type : null;
+                    const isOpen = openAssignees[assignee.assignee] ?? true;
+                    const arrow = isOpen ? "▼" : "▶︎";
                     return (
                       <div key={assignee.assignee} style={{ display: "grid", gap: 12 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{assignee.assignee}</div>
-                        <div style={{ display: "grid", gap: 12 }}>
-                          {assignee.signals.map((signal) => {
-                            const isActive = active === signal.type;
-                            const key = `${assignee.assignee}:${signal.type}`;
-                            const hasExamples = signal.node_ids.length > 0;
-                            return (
-                              <div key={key} style={{ display: "grid", gap: 8 }}>
-                                <button
-                                  onClick={() => handleToggleSignal(assignee.assignee, signal)}
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    border: "1px solid #e2e8f0",
-                                    borderRadius: 12,
-                                    padding: "10px 14px",
-                                    background: "#ffffff",
-                                    cursor: "pointer",
-                                    boxShadow: isActive ? "0 4px 12px rgba(15,23,42,0.08)" : "none",
-                                    transition: "box-shadow 0.2s ease",
-                                  }}
-                                >
-                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
-                                      {SIGNAL_ICONS[signal.type]} {SIGNAL_LABELS[signal.type]}
-                                    </span>
-                                    <span style={{ fontSize: 12, color: "#475569" }}>
-                                      {isActive ? "Tap to collapse" : "Tap to view rationale"}
-                                    </span>
-                                  </div>
-                                  <span
+                        <button
+                          type="button"
+                          onClick={() => handleToggleAssignee(assignee.assignee)}
+                          aria-expanded={isOpen}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            border: "none",
+                            background: "transparent",
+                            padding: 0,
+                            cursor: "pointer",
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: "#0f172a",
+                            textAlign: "left",
+                          }}
+                        >
+                          <span style={{ fontSize: 12 }}>{arrow}</span>
+                          <span>{assignee.assignee}</span>
+                        </button>
+                        {isOpen && (
+                          <div style={{ display: "grid", gap: 12 }}>
+                            {assignee.summary && (
+                              <div style={{ fontSize: 13, color: "#475569" }}>{assignee.summary}</div>
+                            )}
+                            {assignee.signals.map((signal) => {
+                              const isActive = active === signal.type;
+                              const key = `${assignee.assignee}:${signal.type}`;
+                              const hasExamples = signal.node_ids.length > 0;
+                              return (
+                                <div key={key} style={{ display: "grid", gap: 8 }}>
+                                  <button
+                                    onClick={() => handleToggleSignal(assignee.assignee, signal)}
                                     style={{
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      color: signal.status === "none" ? "#475569" : "#ffffff",
-                                      background: STATUS_COLORS[signal.status],
-                                      padding: "4px 10px",
-                                      borderRadius: 999,
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                      border: "1px solid #e2e8f0",
+                                      borderRadius: 12,
+                                      padding: "10px 14px",
+                                      background: "#ffffff",
+                                      cursor: "pointer",
+                                      boxShadow: isActive ? "0 4px 12px rgba(15,23,42,0.08)" : "none",
+                                      transition: "box-shadow 0.2s ease",
                                     }}
                                   >
-                                    {formatStatus(signal.status, signal.confidence)}
-                                  </span>
-                                </button>
-                                {isActive && (
-                                  <div
-                                    style={{
-                                      marginLeft: 8,
-                                      borderLeft: "2px solid #e2e8f0",
-                                      paddingLeft: 12,
-                                      color: "#475569",
-                                      fontSize: 13,
-                                      lineHeight: 1.5,
-                                      display: "grid",
-                                      gap: 12,
-                                    }}
-                                  >
-                                    <div>{signal.why}</div>
-                                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                                      <button
-                                        onClick={() => handleViewExamples(signal.node_ids)}
-                                        style={{
-                                          border: "1px solid #0f172a",
-                                          background: "#0f172a",
-                                          color: "#ffffff",
-                                          borderRadius: 8,
-                                          padding: "6px 12px",
-                                          fontSize: 12,
-                                          fontWeight: 600,
-                                          cursor: hasExamples ? "pointer" : "not-allowed",
-                                          opacity: hasExamples ? 1 : 0.5,
-                                        }}
-                                        disabled={!hasExamples}
-                                      >
-                                        View examples
-                                      </button>
-                                      {!hasExamples && (
-                                        <span style={{ fontSize: 12, color: "#94a3b8" }}>
-                                          No exemplars yet for this signal.
-                                        </span>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                                      <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+                                        {SIGNAL_ICONS[signal.type]} {SIGNAL_LABELS[signal.type]}
+                                      </span>
+                                      <span style={{ fontSize: 12, color: "#475569" }}>
+                                        {isActive ? "Tap to collapse" : "Tap to view rationale"}
+                                      </span>
+                                    </div>
+                                    <span
+                                      style={{
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        color: signal.status === "none" ? "#475569" : "#ffffff",
+                                        background: STATUS_COLORS[signal.status],
+                                        padding: "4px 10px",
+                                        borderRadius: 999,
+                                      }}
+                                    >
+                                      {formatStatus(signal.status, signal.confidence)}
+                                    </span>
+                                  </button>
+                                  {isActive && (
+                                    <div
+                                      style={{
+                                        marginLeft: 8,
+                                        borderLeft: "2px solid #e2e8f0",
+                                        paddingLeft: 12,
+                                        color: "#475569",
+                                        fontSize: 13,
+                                        lineHeight: 1.5,
+                                        display: "grid",
+                                        gap: 12,
+                                      }}
+                                    >
+                                      <div>{signal.why}</div>
+                                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                                        <button
+                                          onClick={() => handleViewExamples(signal.node_ids)}
+                                          style={{
+                                            border: "1px solid #0f172a",
+                                            background: "#0f172a",
+                                            color: "#ffffff",
+                                            borderRadius: 8,
+                                            padding: "6px 12px",
+                                            fontSize: 12,
+                                            fontWeight: 600,
+                                            cursor: hasExamples ? "pointer" : "not-allowed",
+                                            opacity: hasExamples ? 1 : 0.5,
+                                          }}
+                                          disabled={!hasExamples}
+                                        >
+                                          View examples
+                                        </button>
+                                        {!hasExamples && (
+                                          <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                                            No exemplars yet for this signal.
+                                          </span>
+                                        )}
+                                      </div>
+                                      {debugMode && signal.debug && (
+                                        <pre
+                                          style={{
+                                            background: "#0f172a",
+                                            color: "#e2e8f0",
+                                            fontSize: 11,
+                                            padding: 12,
+                                            borderRadius: 8,
+                                            overflowX: "auto",
+                                          }}
+                                        >
+                                          {JSON.stringify(signal.debug, null, 2)}
+                                        </pre>
                                       )}
                                     </div>
-                                    {debugMode && signal.debug && (
-                                      <pre
-                                        style={{
-                                          background: "#0f172a",
-                                          color: "#e2e8f0",
-                                          fontSize: 11,
-                                          padding: 12,
-                                          borderRadius: 8,
-                                          overflowX: "auto",
-                                        }}
-                                      >
-                                        {JSON.stringify(signal.debug, null, 2)}
-                                      </pre>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                          {debugMode && assignee.debug && (
-                            <pre
-                              style={{
-                                background: "#0f172a",
-                                color: "#e2e8f0",
-                                fontSize: 11,
-                                padding: 12,
-                                borderRadius: 8,
-                                overflowX: "auto",
-                              }}
-                            >
-                              {JSON.stringify(assignee.debug, null, 2)}
-                            </pre>
-                          )}
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {debugMode && assignee.debug && (
+                              <pre
+                                style={{
+                                  background: "#0f172a",
+                                  color: "#e2e8f0",
+                                  fontSize: 11,
+                                  padding: 12,
+                                  borderRadius: 8,
+                                  overflowX: "auto",
+                                }}
+                              >
+                                {JSON.stringify(assignee.debug, null, 2)}
+                              </pre>
+                            )}
                         </div>
                       </div>
                     );
