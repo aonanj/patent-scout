@@ -619,7 +619,8 @@ export default function WhitespacePage() {
                                 {JSON.stringify(assignee.debug, null, 2)}
                               </pre>
                             )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
