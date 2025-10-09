@@ -415,7 +415,7 @@ export default function WhitespacePage() {
                 </div>
               )}
             </div>
-            {loading && <span style={{ fontSize: 12, color: "#64748b" }}>Crunching graph metrics...</span>}
+            {loading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading...</span>}
             {error && <div style={{ color: "#b91c1c", fontSize: 12 }}>Error: {error}</div>}
           </div>
         </Card>

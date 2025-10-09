@@ -160,22 +160,25 @@ export default function SigmaWhitespaceGraph({
         }
       })
       .filter((v): v is { x: number; y: number } => Boolean(v));
-    if (coords.length > 0) {
-      const xs = coords.map((c) => c.x);
-      const ys = coords.map((c) => c.y);
-      const minX = Math.min(...xs);
-      const maxX = Math.max(...xs);
-      const minY = Math.min(...ys);
-      const maxY = Math.max(...ys);
-      const cx = (minX + maxX) / 2;
-      const cy = (minY + maxY) / 2;
-      const dx = maxX - minX;
-      const dy = maxY - minY;
-      const radius = Math.max(dx, dy) || 1;
-      try {
-        renderer.getCamera().animate({ x: cx, y: cy, ratio: Math.min(2.5, Math.max(0.3, 1.2 / radius)) }, { duration: 400 });
-      } catch {}
-    }
+    if (coords.length === 0) return;
+
+    const xs = coords.map((c) => c.x);
+    const ys = coords.map((c) => c.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const dx = maxX - minX;
+    const dy = maxY - minY;
+    const span = Math.max(dx, dy);
+    const padded = Math.max(span, 0.15) * 1.6;
+    const ratio = Math.min(2.5, Math.max(0.28, padded));
+
+    try {
+      renderer.getCamera().animate({ x: cx, y: cy, ratio }, { duration: 450 });
+    } catch {}
   }, [highlightedNodeIds]);
 
   useEffect(() => {
@@ -230,6 +233,8 @@ export default function SigmaWhitespaceGraph({
         tooltip: node.tooltip ?? "",
         title: node.title ?? "",
         relevance: normalizeRelevance(node.relevance),
+        haloColor: "#000000",
+        haloSize: 0,
       });
     }
     for (const edge of data.edges) {
@@ -311,15 +316,23 @@ export default function SigmaWhitespaceGraph({
       let borderColor = "#000000";
       let borderSize = 1;
       let zIndex = 1;
+      let haloColor = attributes.haloColor || "#000000";
+      let haloSize = 0;
 
       const matchesSignal = signal ? Array.isArray(attributes.signals) && attributes.signals.includes(signal) : true;
+
+      const applyFocus = (primary: boolean) => {
+        haloColor = "#000000";
+        haloSize = primary ? 12 : 8;
+        borderColor = "#ffffff";
+        borderSize = primary ? 3 : 2;
+      };
 
       if (highlightSet.size > 0) {
         const isHighlight = highlightSet.has(key);
         if (isHighlight) {
           size = size * 1.3;
-          borderColor = "#0f172a";
-          borderSize = 2;
+          applyFocus(true);
           zIndex = 3;
         } else {
           opacity = 0.08;
@@ -327,13 +340,11 @@ export default function SigmaWhitespaceGraph({
       } else if (selected) {
         if (key === selected) {
           size = size * 1.35;
-          borderColor = "#0f172a";
-          borderSize = 2;
+          applyFocus(true);
           zIndex = 3;
         } else if (neighbors.has(key)) {
           size = size * 1.18;
-          borderColor = "#1e293b";
-          borderSize = 1.5;
+          applyFocus(false);
           opacity = 0.9;
           zIndex = 2;
         } else {
@@ -349,8 +360,7 @@ export default function SigmaWhitespaceGraph({
       }
 
       if (hovered === key) {
-        borderColor = "#0f172a";
-        borderSize = 2;
+        applyFocus(true);
         zIndex = 4;
       }
 
@@ -362,6 +372,8 @@ export default function SigmaWhitespaceGraph({
         borderColor,
         borderSize,
         zIndex,
+        haloColor,
+        haloSize,
       };
     };
 
