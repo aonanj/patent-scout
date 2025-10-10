@@ -81,11 +81,11 @@ def signal_focus_shift(dist_series: Sequence[float], share_series: Sequence[floa
 
     if not ok:
         conf = 0.0
-        message = "Filings are not consistently moving closer to the focus topic."
+        message = "Recent filings do not show a consistent shift toward the focus topic."
     elif trend_votes == 1:
-        message = "Filings show early signs of moving toward the focus, though the trend is still uneven."
+        message = "Recent filings show early movement toward the focus, though the shift remains uneven."
     else:
-        message = "Filings are trending closer to the focus and making up more of the assignee's activity."
+        message = "Recent filings are moving closer to the focus and account for more of the assignee's activity."
 
     debug = {
         "slope_dist": float(s_dist),
@@ -121,11 +121,11 @@ def signal_emerging_gap(
 
     if not ok:
         conf = 0.0
-        message = "Recent filings do not sit in a standout sparse area near the focus."
+        message = "Recent filings remain in well-covered areas near the focus; no notable whitespace detected."
     elif heated_neighbors:
-        message = "Recent filings land in a sparse pocket near the focus while neighboring clusters are heating up."
+        message = "Recent filings occur in a sparse area near the focus, and nearby clusters show a clear upward surge in momentum."
     else:
-        message = "Recent filings land in a very sparse pocket even though nearby clusters are only beginning to warm up."
+        message = "Recent filings occur in a sparse area, and nearby clusters show only a mild to modest upward trend in momentum."
 
     debug = {
         "current_score": current_score,
@@ -168,11 +168,11 @@ def signal_crowd_out(
 
     if not ok:
         conf = 0.0
-        message = "Whitespace levels look stable; no crowd-out pressure detected."
+        message = "Recent filings keep whitespace levels stable around the focus; no crowd-out pressure detected."
     elif ws_decline and density_gain:
-        message = "Whitespace is tightening while density increases around the focus."
+        message = "Recent filings point to tightening whitespace around the focus while nearby density accelerates."
     else:
-        message = "Whitespace remains compressed and density stays elevated around the focus cluster."
+        message = "Recent filings stay concentrated in compressed whitespace as density remains elevated around the focus cluster."
 
     debug = {
         "slope_ws": float(slope_ws),
@@ -209,11 +209,11 @@ def signal_bridge(
 
     if not ok:
         conf = 0.0
-        message = "No clear bridge opportunity between adjacent growing clusters."
+        message = "Recent filings do not reveal a clear bridge between adjacent growing clusters."
     elif shared_growth:
-        message = "Two growing clusters sit close together with little coverage at the interface."
+        message = "Recent filings show two growing clusters close together with limited coverage at their interface."
     else:
-        message = "An emerging bridge connects two clusters where at least one side is ramping up quickly."
+        message = "Recent filings highlight an emerging bridge where at least one cluster is ramping up quickly."
 
     debug = {
         "openness": float(openness),

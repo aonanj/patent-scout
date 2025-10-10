@@ -39,7 +39,7 @@ export type SigmaWhitespaceGraphProps = {
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
   focus_shift: "Focus Shift",
-  emerging_gap: "Emerging Gap",
+  emerging_gap: "Sparse Focus Area",
   crowd_out: "Crowd-out Risk",
   bridge: "Bridge Opportunity",
 };
