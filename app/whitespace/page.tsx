@@ -634,7 +634,7 @@ export default function WhitespacePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Graph Context</h2>
-                    <div style={{ fontSize: 12, color: "#64748b", maxWidth: 520 }}>
+                    <div style={{ fontSize: 12, color: "#64748b", maxWidth: 420 }}>
                       Graph is a visual guide to illustrate signals indicated by patent filings. Nodes correspond to patent filings: size indicates signal relevance; color (cluster) indicates semantically similar patent filings; edges connect the most similar patent filings.
                     </div>
                   </div>
@@ -646,14 +646,16 @@ export default function WhitespacePage() {
                         gap: 6,
                         fontSize: 12,
                         fontWeight: 600,
-                        color: "#0284c7",
-                        border: "1px solid #cbd5f5",
+                        color: "#0f172a",
+                        border: "1px solid #0284c7",
+                        outline: "2px solid rgba(2,132,199,0.35)",
+                        outlineOffset: 2,
                         borderRadius: 999,
-                        padding: "6px 12px",
-                        background: "#f8fafc",
+                        padding: "6px 14px",
+                        background: "#e0f2fe",
                       }}
                     >
-                      Highlight {SIGNAL_LABELS[selectedSignal]}
+                      Hightlight {SIGNAL_LABELS[selectedSignal]}
                     </span>
                   )}
                 </div>
