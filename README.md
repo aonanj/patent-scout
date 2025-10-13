@@ -17,14 +17,14 @@ Confidence-first patent intelligence for AI R&D teams. Patent Scout blends seman
 
 ### Screenshots
 
-#### Next.js UI - Citation Verification List
-![Citation Verification List](docs/screenshots/CV-Screenshot-1.png)
+#### Search & Trends UI
+![Search & Trends UI](docs/screenshots/search-ui.png)
 
-### Next.js US - Uploaded Document with Verification Indicators
-![Uploaded Document with Verification Indicators](docs/screenshots/CV-Screenshot-2.png)
+#### Whitespace Signals UI
+![Whitespace Signals UI](docs/screenshots/whitespace-ui.png)
 
-### Word Add-In UI
-![Word Add-In UI](docs/screenshots/CV-Screenshot-3.png)
+#### Patent Scout API Docs
+![API Docs](docs/screenshots/api-docs.png)
 
 ## Architecture Overview
 ```text
