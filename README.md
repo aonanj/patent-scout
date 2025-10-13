@@ -1,8 +1,6 @@
 # Patent Scout
 
-Confidence-first patent intelligence for AI R&D teams. Patent Scout blends semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a Postgres + pgvector corpus of AI-focused patents. Automated cron job ensures up-to-date corpus of AI-focused patent filings (currently includes 45,000+ patent filings dating back to 2023). 
-
-> Confidence-first alerts for whitespace opportunities.
+> Confidence-first patent intelligence for AI R&D teams. Patent Scout blends semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a Postgres + pgvector corpus of AI-focused patents. Automated cron job ensures up-to-date corpus of AI-focused patent filings (currently includes 45,000+ patent filings dating back to 2023). 
 
 ## Highlights
 - Hybrid keyword + vector search with debounced filters, semantic queries, paginated results, and CSV/PDF export (`app/page.tsx`).
