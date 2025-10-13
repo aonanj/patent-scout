@@ -185,7 +185,7 @@ def signal_crowd_out(
         "recent_ws": recent_ws,
         "recent_density": recent_density,
     }
-    return SignalComputation(ok, conf, message, debug)
+    return SignalComputation(ok, conf, message, debug) # type: ignore[return]
 
 
 def signal_bridge(

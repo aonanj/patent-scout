@@ -30,26 +30,61 @@
                         │      Auth0         │
                         └────────┬───────────┘
                                  │
-┌──────────────────────┐   SPA + API proxy    ┌────────────────────┐
+┌──────────────────────┐   SPA + API proxy   ┌─────────────────────┐
 │  Next.js App Router  │────────────────────►│   FastAPI service   │
 │ (app/*.tsx, NavBar)  │◄────────────────────│ (app/api.py + auth) │
-└─────────┬────────────┘        JWT          └─────────┬──────────┘
-          │                                        async pg pool
-          │
-          │            embeddings + metadata             │
-          ▼                                              ▼
+└─────────┬────────────┘        JWT          └─────────┬───────────┘
+          │                                       async pg pool
+          │                                            │
+          │            embeddings + metadata           │
+          ▼                                            ▼
 ┌──────────────────────┐                      ┌────────────────────┐
 │ BigQuery ETL (etl.py)│────────────────────► │ Postgres + pgvector│
 │ + OpenAI embeddings   │                     │ patent corpus      │
 └─────────┬────────────┘                      └─────────┬──────────┘
           │                                             │
           │ new results / saved filters                 │
-          ▼                                             │
-┌──────────────────────┐                      ┌─────────▼──────────┐
-│ Alerts Runner         │────Mailgun/stdout→  │ saved_query /      │
-│ (alerts_runner.py)    │                     │ alert_event tables │
+          ▼                                             ▼
+┌──────────────────────┐                      ┌────────────────────┐
+│ Alerts Runner        │ ────Mailgun/stdout─► │ saved_query /      │
+│ (alerts_runner.py)   │                      │ alert_event tables │
 └──────────────────────┘                      └────────────────────┘
 ```
+#### Repo layout
+```
+├── etl.py                     # Corpus update / cron job logic
+├── alerts_runner.py           # Alerts / cron job logic
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Container configuration
+├── .github/workflows          # cron job scripts
+│   ├── alerts.yml             # alerts cron job script
+│   └── etl_weekly.yml         # corpus update cron job script
+├── app/                    
+│   ├── api.py                 # REST API endpoints
+│   ├── auth.py                # Authentication via Auth0
+│   ├── config.py              # Configuration
+│   ├── db.py                  # Database connection/config
+│   ├── embed.py               # Embeddings
+│   ├── globals.css            # CSS styles
+│   ├── layout.tsx             # Typescript layout
+│   ├── page.tsx               # Search & Trends page
+│   ├── providers.tsx          # Providers config
+│   ├── repository.py          # Search & trends logic
+│   ├── schemas.py             # Models
+│   ├── whitespace_api.py      # REST API endpoints for whitespace
+│   ├── whitespace_signals.py  # Whitespace signals logic
+│   ├── api/                   # Search & Trends API endpoints
+│   │    └── ...
+│   └── whitespace/              # Whitespace API endpoints
+│   │    └── ...
+├── infrastructure/            # Core processing modules
+│   └── logger.py              # Logging configuration
+└── components/                # Web UI components
+    ├── NavBar.tsx             # Navigation Bar UI
+    └── SigmaWhitespaceGraph.tsx  # Whitespace signals graph
+
+```
+
 
 Key components:
 - **Frontend** – Next.js App Router (React 19) served via Vercel, using Auth0 React SDK for authentication and proxying API calls back to the FastAPI backend.
