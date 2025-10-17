@@ -48,10 +48,10 @@ const SIGNAL_ICONS: Record<SignalKind, string> = {
 };
 
 const STATUS_COLORS: Record<SignalStatus, string> = {
-  none: "#cbd5f5",
-  weak: "#fde68a",
-  medium: "#fbbf24",
-  strong: "#16a34a",
+  none: "#aecce4",
+  weak: "#a7f1a8",
+  medium: "#fff59e",
+  strong: "#ca3433",
 };
 
 type ActiveKey = { assignee: string; type: SignalKind } | null;
