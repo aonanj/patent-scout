@@ -40,7 +40,7 @@
           ▼                                            ▼
 ┌──────────────────────┐                      ┌────────────────────┐
 │ BigQuery ETL (etl.py)│────────────────────► │ Postgres + pgvector│
-│ + OpenAI embeddings   │                     │ patent corpus      │
+│ + OpenAI embeddings  │                      │ patent corpus      │
 └─────────┬────────────┘                      └─────────┬──────────┘
           │                                             │
           │ new results / saved filters                 │
