@@ -72,13 +72,13 @@ export default function LegalIndexPage() {
             </p>
             
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="●" title="Service Description" text="What Patent Scout provides and how it works" />
-              <DetailItem icon="●" title="Critical Disclaimers" text="NOT legal advice; no warranty of accuracy or completeness" />
-              <DetailItem icon="●" title="Account & Registration" text="Eligibility requirements, authentication, and account security" />
-              <DetailItem icon="●" title="Subscription & Payment" text="Pricing, billing, refunds, and cancellation policies" />
-              <DetailItem icon="●" title="Acceptable Use" text="Permitted and prohibited uses of the Service" />
-              <DetailItem icon="●" title="Intellectual Property" text="Ownership of Service, data, and user content" />
-              <DetailItem icon="●" title="Liability & Disputes" text="Limitation of liability, indemnification, and arbitration" />
+              <DetailItem icon="・" title="Service Description" text="What Patent Scout provides and how it works" />
+              <DetailItem icon="・" title="Critical Disclaimers" text="NOT legal advice; no warranty of accuracy or completeness" />
+              <DetailItem icon="・" title="Account & Registration" text="Eligibility requirements, authentication, and account security" />
+              <DetailItem icon="・" title="Subscription & Payment" text="Pricing, billing, refunds, and cancellation policies" />
+              <DetailItem icon="・" title="Acceptable Use" text="Permitted and prohibited uses of the Service" />
+              <DetailItem icon="・" title="Intellectual Property" text="Ownership of Service, data, and user content" />
+              <DetailItem icon="・" title="Liability & Disputes" text="Limitation of liability, indemnification, and arbitration" />
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
@@ -122,13 +122,13 @@ export default function LegalIndexPage() {
             </p>
             
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="●" title="Information We Collect" text="Account data, usage data, technical data, and payment information" />
-              <DetailItem icon="●" title="How We Use Your Data" text="Service provision, payment processing, communications, and improvements" />
-              <DetailItem icon="●" title="Data Sharing" text="Service providers (Auth0, Stripe, Vercel, OpenAI, etc.) and legal requirements" />
-              <DetailItem icon="●" title="Data Security" text="Encryption, access controls, monitoring, and breach notification" />
-              <DetailItem icon="●" title="International Transfers" text="Data processing in the United States with appropriate safeguards" />
-              <DetailItem icon="●" title="Cookies & Tracking" text="Types of cookies used and how to manage preferences" />
-              <DetailItem icon="●" title="Your Privacy Rights" text="Access, correction, deletion, portability, and opt-out rights (GDPR/CCPA)" />
+              <DetailItem icon="・" title="Information We Collect" text="Account data, usage data, technical data, and payment information" />
+              <DetailItem icon="・" title="How We Use Your Data" text="Service provision, payment processing, communications, and improvements" />
+              <DetailItem icon="・" title="Data Sharing" text="Service providers (Auth0, Stripe, Vercel, OpenAI, etc.) and legal requirements" />
+              <DetailItem icon="・" title="Data Security" text="Encryption, access controls, monitoring, and breach notification" />
+              <DetailItem icon="・" title="International Transfers" text="Data processing in the United States with appropriate safeguards" />
+              <DetailItem icon="・" title="Cookies & Tracking" text="Types of cookies used and how to manage preferences" />
+              <DetailItem icon="・" title="Your Privacy Rights" text="Access, correction, deletion, portability, and opt-out rights (GDPR/CCPA)" />
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
@@ -172,14 +172,14 @@ export default function LegalIndexPage() {
             </p>
             
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="●" title="Controller-Processor Relationship" text="Roles, responsibilities, and processing instructions" />
-              <DetailItem icon="●" title="Processing Details" text="Subject matter, duration, types of data, and data subjects (Annex A)" />
-              <DetailItem icon="●" title="Security Measures" text="Technical and organizational safeguards to protect data (Annex B)" />
-              <DetailItem icon="●" title="Breach Notification" text="Procedures for reporting and responding to data breaches" />
-              <DetailItem icon="●" title="Data Subject Rights" text="Assistance with access, correction, deletion, and portability requests" />
-              <DetailItem icon="●" title="Sub-Processors" text="List of authorized third-party processors and notification rights (Annex C)" />
-              <DetailItem icon="●" title="International Transfers" text="Standard Contractual Clauses (SCCs) for EEA/UK/Swiss transfers (Annex D)" />
-              <DetailItem icon="●" title="Audit Rights" text="Customer rights to inspect and verify compliance" />
+              <DetailItem icon="・" title="Controller-Processor Relationship" text="Roles, responsibilities, and processing instructions" />
+              <DetailItem icon="・" title="Processing Details" text="Subject matter, duration, types of data, and data subjects (Annex A)" />
+              <DetailItem icon="・" title="Security Measures" text="Technical and organizational safeguards to protect data (Annex B)" />
+              <DetailItem icon="・" title="Breach Notification" text="Procedures for reporting and responding to data breaches" />
+              <DetailItem icon="・" title="Data Subject Rights" text="Assistance with access, correction, deletion, and portability requests" />
+              <DetailItem icon="・" title="Sub-Processors" text="List of authorized third-party processors and notification rights (Annex C)" />
+              <DetailItem icon="・" title="International Transfers" text="Standard Contractual Clauses (SCCs) for EEA/UK/Swiss transfers (Annex D)" />
+              <DetailItem icon="・" title="Audit Rights" text="Customer rights to inspect and verify compliance" />
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#FFF4E6", borderRadius: 6, border: "1px solid #FFD666" }}>
@@ -203,22 +203,22 @@ export default function LegalIndexPage() {
           
           <div style={{ display: "grid", gap: 20 }}>
             <InfoSection 
-              title="▶︎ Effective Date"
+              title="➤ Effective Date"
               content="All documents became effective on October 17, 2025. Continued use of the Service after this date constitutes acceptance of these terms."
             />
             
             <InfoSection 
-              title="▶︎ Updates and Changes"
+              title="➤ Updates and Changes"
               content="We may update these documents from time to time to reflect changes in our practices, legal requirements, or service features. We will notify you of material changes via email or in-app notification at least 30 days in advance."
             />
             
             <InfoSection 
-              title="▶︎ Governing Law"
+              title="➤ Governing Law"
               content="These documents are governed by the laws of the State of Wyoming, United States, except where Data Protection Laws require application of specific jurisdictions (e.g., GDPR for EEA customers)."
             />
             
             <InfoSection 
-              title="▶︎ Contact Us"
+              title="➤ Contact Us"
               content={
                 <>
                   For questions, concerns, or requests regarding these legal documents, please contact:<br />
@@ -230,12 +230,12 @@ export default function LegalIndexPage() {
             />
             
             <InfoSection 
-              title="▶︎ Multi-Jurisdictional Compliance"
+              title="➤ Multi-Jurisdictional Compliance"
               content="Patent Scout complies with data protection laws in multiple jurisdictions including GDPR (EEA), UK GDPR, Swiss FADP, CCPA/CPRA (California), and privacy laws in Virginia, Colorado, Connecticut, and Utah. Our legal framework is designed to meet the requirements of all applicable jurisdictions."
             />
             
             <InfoSection 
-              title="▶︎ Document Versions"
+              title="➤ Document Versions"
               content="We maintain an archive of prior versions of these documents. To request a previous version for reference or compliance purposes, please contact support@phaethon.llc."
             />
           </div>
