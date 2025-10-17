@@ -3,11 +3,12 @@ from __future__ import annotations
 import importlib.util
 import inspect
 import os
-from pathlib import Path
 
 # Standard library imports
 from collections.abc import Sequence
+from contextlib import asynccontextmanager
 from io import BytesIO
+from pathlib import Path
 from typing import Annotated, Any, cast
 
 import psycopg
@@ -50,11 +51,26 @@ else:  # pragma: no cover - optional dependency missing
     _CANVAS = None  # type: ignore[assignment]
     HAVE_REPORTLAB = False
 
-app = FastAPI(title="Patent Scout API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Initialize pool at startup for early failure if misconfigured.
+    pool = init_pool()
+    try:
+        yield
+    finally:
+        await pool.close()
+
+
+app = FastAPI(title="Patent Scout API", version="0.1.0", lifespan=lifespan)
 Conn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
 User = Annotated[dict, Depends(get_current_user)]
 origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()] or [
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://localhost:3000",
+    "https://127.0.0.1:3000",
+    "https://localhost:5174",
+    "https://127.0.0.1:5174",
     "https://patent-scout.onrender.com",
     "https://patent-scout.vercel.app",
 ]
@@ -75,11 +91,6 @@ class DateRangeReponse(BaseModel):
     min_date: int | None  # YYYYMMDD
     max_date: int | None  # YYYYMMDD
 
-
-@app.on_event("startup")
-async def _startup() -> None:
-    # Initialize pool at startup for early failure if misconfigured.
-    init_pool()
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon() -> FileResponse:

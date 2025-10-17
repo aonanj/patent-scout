@@ -10,7 +10,6 @@ us_patents.csv
 node_modules/
 *.csv
 .secrets/
-tests/
 .next/
 .vscode/
 .ruff_cache/
