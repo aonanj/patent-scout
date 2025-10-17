@@ -2,24 +2,27 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from collections import Counter, defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Annotated, Any, Dict, Literal, Sequence
+from typing import Annotated, Any, Literal
 
 import igraph as ig
 import leidenalg as la
 import numpy as np
 import psycopg
 import umap
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 from sklearn.neighbors import NearestNeighbors
 
+from .auth import get_current_user
 from .db import get_conn
 from .repository import SEARCH_EXPR
 from .whitespace_signals import (
@@ -31,7 +34,17 @@ from .whitespace_signals import (
     signal_focus_shift,
 )
 
-router = APIRouter(prefix="/whitespace", tags=["whitespace"])
+router = APIRouter(
+    prefix="/whitespace",
+    tags=["whitespace"],
+    dependencies=[Depends(get_current_user)],
+)
+
+logger = logging.getLogger(__name__)
+
+MAX_GRAPH_LIMIT = 2000
+MAX_GRAPH_NEIGHBORS = 50
+MAX_GRAPH_LAYOUT_NEIGHBORS = 50
 
 # --- DB pool ---
 _DB_URL = os.getenv("DATABASE_URL")
@@ -78,7 +91,7 @@ class NodeDatum:
     title: str | None
 
 
-SIGNAL_LABELS: Dict[SignalKind, str] = {
+SIGNAL_LABELS: dict[SignalKind, str] = {
     "focus_shift": "Focus Shift",
     "emerging_gap": "Sparse Focus Area",
     "crowd_out": "Crowd-out Risk",
@@ -176,17 +189,46 @@ def pick_model(conn: psycopg.Connection, preferred: str | None = None) -> str:
 class GraphRequest(BaseModel):
     date_from: str | None = Field(None, description="YYYY-MM-DD")
     date_to: str | None = Field(None, description="YYYY-MM-DD")
-    neighbors: int = 15
+    neighbors: int = Field(
+        15,
+        ge=1,
+        le=MAX_GRAPH_NEIGHBORS,
+        description=f"KNN neighbor count (1-{MAX_GRAPH_NEIGHBORS}).",
+    )
     resolution: float = 0.5
     alpha: float = 0.8
     beta: float = 0.5
-    limit: int | None = 2000
+    limit: int = Field(
+        MAX_GRAPH_LIMIT,
+        ge=1,
+        le=MAX_GRAPH_LIMIT,
+        description=f"Maximum rows pulled from embeddings (1-{MAX_GRAPH_LIMIT}).",
+    )
     focus_keywords: list[str] = []
     focus_cpc_like: list[str] = []
     layout: bool = True          # compute 2D layout for graph response
     layout_min_dist: float = 0.1 # UMAP param
-    layout_neighbors: int = 25   # UMAP param
+    layout_neighbors: int = Field(
+        25,
+        ge=2,
+        le=MAX_GRAPH_LAYOUT_NEIGHBORS,
+        description=f"Neighborhood size for layout (2-{MAX_GRAPH_LAYOUT_NEIGHBORS}).",
+    )   # UMAP param
     debug: bool = False
+
+
+def _validate_graph_params(req: GraphRequest) -> None:
+    violations: list[str] = []
+    if not 1 <= req.limit <= MAX_GRAPH_LIMIT:
+        violations.append(f"limit must be between 1 and {MAX_GRAPH_LIMIT}")
+    if not 1 <= req.neighbors <= MAX_GRAPH_NEIGHBORS:
+        violations.append(f"neighbors must be between 1 and {MAX_GRAPH_NEIGHBORS}")
+    if not 2 <= req.layout_neighbors <= MAX_GRAPH_LAYOUT_NEIGHBORS:
+        violations.append(
+            f"layout_neighbors must be between 2 and {MAX_GRAPH_LAYOUT_NEIGHBORS}"
+        )
+    if violations:
+        raise HTTPException(status_code=400, detail=violations)
 
 
 class GraphNode(BaseModel):
@@ -458,7 +500,7 @@ def compute_whitespace_metrics(
     score[focus_mask] = 0.0
     return score.astype(np.float32), proximity, d.astype(np.float32), F.astype(np.float32)
 
-def persist(
+def _persist_sync(
     conn: psycopg.Connection,
     pub_ids: list[str],
     model: str,
@@ -528,6 +570,32 @@ def persist(
         cur.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY cluster_stats;")
 
     conn.commit()
+
+
+def _persist_background(
+    pool: ConnectionPool,
+    model: str,
+    pub_ids: Sequence[str],
+    dist: np.ndarray,
+    idx: np.ndarray,
+    labels: np.ndarray,
+    dens: np.ndarray,
+    scores: np.ndarray,
+) -> None:
+    try:
+        with pool.connection() as conn:
+            _persist_sync(
+                conn,
+                list(pub_ids),
+                model,
+                dist,
+                idx,
+                labels,
+                dens,
+                scores,
+            )
+    except Exception:
+        logger.exception("Failed to persist whitespace metrics")
 
 
 # --- Endpoints ---
@@ -726,7 +794,7 @@ def build_assignee_signals(
         n_samples = 0
         latest_nodes: list[NodeDatum] = []
 
-        for bucket_date, bucket_nodes in bucket_items:
+        for _, bucket_nodes in bucket_items:
             count = len(bucket_nodes)
             if count == 0:
                 continue
@@ -825,101 +893,137 @@ def build_assignee_signals(
     return assignee_payloads, node_signals, node_relevance, node_tooltips
 
 @router.post("/graph", response_model=WhitespaceResponse)
-def get_whitespace_graph(req: GraphRequest, pool: Annotated[ConnectionPool, Depends(get_pool)]) -> WhitespaceResponse:
+def get_whitespace_graph(
+    req: GraphRequest,
+    pool: Annotated[ConnectionPool, Depends(get_pool)],
+    background_tasks: BackgroundTasks,
+) -> WhitespaceResponse:
+    _validate_graph_params(req)
+
     with pool.connection() as conn:
         ensure_schema(conn)
         model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
         X, meta = load_embeddings(conn, model, req)
         focus_mask = np.array([m.is_focus for m in meta], dtype=bool)
         pub_ids = [m.pub_id for m in meta]
+        point_count = len(pub_ids)
+
+        if point_count < 2:
+            raise HTTPException(status_code=400, detail="Not enough embeddings to build whitespace graph.")
+        if req.neighbors >= point_count:
+            raise HTTPException(
+                status_code=400,
+                detail=f"neighbors must be less than the number of embeddings ({point_count})",
+            )
+        if req.layout_neighbors >= point_count:
+            raise HTTPException(
+                status_code=400,
+                detail=f"layout_neighbors must be less than the number of embeddings ({point_count})",
+            )
 
         dist, idx = build_knn(X, req.neighbors)
         labels = cluster_labels(dist, idx, req.resolution)
         dens = local_density(dist)
         mom = neighbor_momentum(conn, pub_ids, labels)
-        scores, proximity, distance, focus_vector = compute_whitespace_metrics(X, labels, dens, focus_mask, req.alpha, req.beta, mom)
-
-        # persist to DB
-        persist(conn, pub_ids, model, dist, idx, labels, dens, scores)
-
-        # layout
-        if req.layout and _HAVE_UMAP:
-            reducer = umap.UMAP(n_neighbors=req.layout_neighbors, min_dist=req.layout_min_dist, metric="cosine", random_state=42)
-            embedding = reducer.fit_transform(X)
-            XY = np.asarray(embedding).astype(np.float32)
-        else:
-            # PCA 2D fallback
-            mu = X.mean(axis=0, keepdims=True)
-            Xc = X - mu
-            U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
-            XY = (Xc @ Vt[:2].T).astype(np.float32)
-
-        node_data = _build_node_data(meta, labels, scores, dens, proximity, distance, mom)
-        assignee_payloads, node_signal_map, node_relevance_map, node_tooltips = build_assignee_signals(
-            req, node_data, labels, idx, dist, mom
+        scores, proximity, distance, focus_vector = compute_whitespace_metrics(
+            X, labels, dens, focus_mask, req.alpha, req.beta, mom
         )
 
-        scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
-        if not assignee_payloads and node_data:
-            empty_signals = [
-                SignalPayload(type=kind, status="none", confidence=0.0, why="No signal detected for this scope.", node_ids=[])
-                for kind in SIGNAL_ORDER
-            ]
-            assignee_payloads = [
-                AssigneeSignals(
-                    assignee=node_data[0].assignee,
-                    k=scope_text,
-                    signals=empty_signals,
-                    debug=None,
-                )
-            ]
+    # layout
+    if req.layout and _HAVE_UMAP:
+        reducer = umap.UMAP(
+            n_neighbors=req.layout_neighbors,
+            min_dist=req.layout_min_dist,
+            metric="cosine",
+            random_state=42,
+        )
+        embedding = reducer.fit_transform(X)
+        XY = np.asarray(embedding).astype(np.float32)
+    else:
+        # PCA 2D fallback
+        mu = X.mean(axis=0, keepdims=True)
+        Xc = X - mu
+        U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
+        XY = (Xc @ Vt[:2].T).astype(np.float32)
 
-        nodes = []
-        for i, meta_row in enumerate(meta):
-            node_id = meta_row.pub_id
-            signal_list = sorted(node_signal_map.get(node_id, []))
-            relevance = node_relevance_map.get(node_id, 0.0)
-            if relevance <= 0:
-                relevance = 0.15
-            nodes.append(
-                GraphNode(
-                    id=node_id,
-                    cluster_id=int(labels[i]),
-                    assignee=_normalize_assignee(meta_row.assignee),
-                    x=float(XY[i, 0]),
-                    y=float(XY[i, 1]),
-                    signals=signal_list,
-                    relevance=float(np.clip(relevance, 0.05, 1.0)),
-                    title=meta_row.title,
-                    tooltip=node_tooltips.get(node_id),
+    node_data = _build_node_data(meta, labels, scores, dens, proximity, distance, mom)
+    assignee_payloads, node_signal_map, node_relevance_map, node_tooltips = build_assignee_signals(
+        req, node_data, labels, idx, dist, mom
+    )
+
+    scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
+    if not assignee_payloads and node_data:
+        empty_signals = [
+            SignalPayload(type=kind, status="none", confidence=0.0, why="No signal detected for this scope.", node_ids=[])
+            for kind in SIGNAL_ORDER
+        ]
+        assignee_payloads = [
+            AssigneeSignals(
+                assignee=node_data[0].assignee,
+                k=scope_text,
+                signals=empty_signals,
+                debug=None,
+            )
+        ]
+
+    nodes = []
+    for i, meta_row in enumerate(meta):
+        node_id = meta_row.pub_id
+        signal_list = sorted(node_signal_map.get(node_id, []))
+        relevance = node_relevance_map.get(node_id, 0.0)
+        if relevance <= 0:
+            relevance = 0.15
+        nodes.append(
+            GraphNode(
+                id=node_id,
+                cluster_id=int(labels[i]),
+                assignee=_normalize_assignee(meta_row.assignee),
+                x=float(XY[i, 0]),
+                y=float(XY[i, 1]),
+                signals=signal_list,
+                relevance=float(np.clip(relevance, 0.05, 1.0)),
+                title=meta_row.title,
+                tooltip=node_tooltips.get(node_id),
+            )
+        )
+
+    edges = []
+    for i, src in enumerate(pub_ids):
+        for j_idx, j in enumerate(idx[i, 1:11]):  # at most 10 edges
+            edges.append(
+                GraphEdge(
+                    source=src,
+                    target=pub_ids[j],
+                    weight=float(1.0 - dist[i, j_idx + 1]),
                 )
             )
 
-        edges = []
-        for i, src in enumerate(pub_ids):
-            for j_idx, j in enumerate(idx[i, 1:11]):  # at most 10 edges
-                edges.append(
-                    GraphEdge(
-                        source=src,
-                        target=pub_ids[j],
-                        weight=float(1.0 - dist[i, j_idx + 1]),
-                    )
-                )
+    background_tasks.add_task(
+        _persist_background,
+        pool,
+        model,
+        list(pub_ids),
+        dist,
+        idx,
+        labels,
+        dens,
+        scores,
+    )
 
-        debug_payload: dict[str, Any] | None = None
-        if req.debug:
-            debug_payload = {
-                "focus_mask_count": int(focus_mask.sum()),
-                "total_nodes": len(nodes),
-                "alpha": req.alpha,
-                "beta": req.beta,
-                "focus_vector_norm": float(np.linalg.norm(focus_vector)),
-            }
+    debug_payload: dict[str, Any] | None = None
+    if req.debug:
+        debug_payload = {
+            "focus_mask_count": int(focus_mask.sum()),
+            "total_nodes": len(nodes),
+            "alpha": req.alpha,
+            "beta": req.beta,
+            "focus_vector_norm": float(np.linalg.norm(focus_vector)),
+        }
 
-        graph_context = GraphContext(nodes=nodes, edges=edges)
-        return WhitespaceResponse(
-            k=scope_text,
-            assignees=assignee_payloads,
-            graph=graph_context,
-            debug=debug_payload,
-        )
+    graph_context = GraphContext(nodes=nodes, edges=edges)
+    return WhitespaceResponse(
+        k=scope_text,
+        assignees=assignee_payloads,
+        graph=graph_context,
+        debug=debug_payload,
+    )
