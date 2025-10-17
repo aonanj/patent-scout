@@ -229,7 +229,7 @@ Deploy the Next.js frontend separately (e.g. Vercel) and set `BACKEND_URL` to th
 ## License
 This repository is publicly viewable for portfolio purposes only. The code is proprietary.
 Copyright © 2025 Phaethon Order LLC. All rights reserved.
-See [LICENSE](LICENSE) for terms.
+See [LICENSE](LICENSE.md) for terms.
 
 ## Contact
 Questions or support: [support@phaethon.llc](mailto:support@phaethon.llc).
