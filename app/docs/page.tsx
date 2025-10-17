@@ -2,7 +2,7 @@
 "use client";
 
 const TEXT_COLOR = "#102A43";
-const LINK_COLOR = "text-blue-400";
+const LINK_COLOR = "#5FA8D2";
 
 export default function TermsOfServicePage() {
   return (
@@ -596,7 +596,7 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>phaethonorder.com</a> | <a href="docs/privacy" className="text-blue-400 hover:underline">Privacy Policy</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>phaethonorder.com</a> | <a href="docs/privacy" className="hover:underline" style={{ color: LINK_COLOR }}>Privacy Policy</a>
         </footer>
       </div>
     </div>
