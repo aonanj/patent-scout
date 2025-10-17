@@ -691,7 +691,7 @@ export default function WhitespacePage() {
         )}
 
         <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", textDecoration: "underline" }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" style={{ color: "#0284c7", textDecoration: "underline" }}>phaethonorder.com</a> | <a href="/docs" target="_blank" style={{ color: "#0284c7", textDecoration: "underline" }}>Terms of Service</a> | <a href="/docs/privacy" style={{ color: "#0284c7", textDecoration: "underline" }}>Privacy Policy</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/docs" className="text-blue-400 hover:underline">Terms of Service</a> | <a href="/docs/privacy" className="text-blue-400 hover:underline">Privacy Policy</a>
         </footer>
       </div>
     </div>

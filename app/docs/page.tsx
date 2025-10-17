@@ -595,7 +595,7 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>phaethonorder.com</a> | <a href="/privacy" style={{ color: "#0284c7", textDecoration: "underline" }}>Privacy Policy</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>phaethonorder.com</a> | <a href="docs/privacy" className="text-blue-400 hover:underline">Privacy Policy</a>
         </footer>
       </div>
     </div>
