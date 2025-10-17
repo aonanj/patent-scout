@@ -22,7 +22,7 @@ from psycopg.types.json import Json
 from pydantic import BaseModel
 
 # Local application imports
-from .auth import get_current_user
+from .auth import ensure_auth0_configured, get_current_user
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
 from .repository import export_rows, get_patent_detail, search_hybrid, trend_volume
@@ -53,6 +53,7 @@ else:  # pragma: no cover - optional dependency missing
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    ensure_auth0_configured()
     # Initialize pool at startup for early failure if misconfigured.
     pool = init_pool()
     try:
