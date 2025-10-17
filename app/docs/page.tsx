@@ -248,8 +248,8 @@ export default function LegalIndexPage() {
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #e5e7eb", background: "#f8fafc" }}>
-                <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>If you want to...</th>
-                <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Read this document</th>
+                <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Documentation to...</th>
+                <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Located at...</th>
               </tr>
             </thead>
             <tbody>
@@ -307,8 +307,8 @@ function DetailItem({ icon, title, text }: { icon: string; title: string; text: 
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
       <span style={{ fontSize: 20, flexShrink: 0 }}>{icon}</span>
       <div>
-        <span style={{ fontWeight: 600, fontSize: 14, color: TEXT_COLOR }}>{title}</span>
-        <span style={{ fontSize: 14, color: "#627D98", marginLeft: 8 }}>— {text}</span>
+        <span style={{ fontWeight: 600, fontSize: 14, color: TEXT_COLOR }}>{title}:</span>
+        <span style={{ fontSize: 14, color: TEXT_COLOR, marginLeft: 4 }}>{text}</span>
       </div>
     </div>
   );
