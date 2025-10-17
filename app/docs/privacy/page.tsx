@@ -13,8 +13,8 @@ export default function PrivacyPolicyPage() {
         <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Privacy Policy</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
-            <strong>Effective Date:</strong> October 17, 2025<br />
-            <strong>Last Updated:</strong> October 17, 2025
+            <strong>Effective Date</strong>: October 17, 2025<br />
+            <strong>Last Updated</strong>: October 17, 2025
           </div>
         </div>
 
@@ -40,21 +40,21 @@ export default function PrivacyPolicyPage() {
             <p>We collect several types of information from and about users of Our Service.</p>
 
             <Subsection title="1.1 Information You Provide Directly">
-              <p><strong>Account Registration Information:</strong></p>
+              <p><strong>Account Registration Information</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Email address;</li>
                 <li>Full name and/or organization/company name;</li>
                 <li>Password (stored securely via Auth0).</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Subscription and Payment Information:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Subscription and Payment Information</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Billing address;</li>
                 <li>Payment method details (processed and stored by Stripe; We do not store complete credit card numbers);</li>
                 <li>Purchase history and transaction records.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>User-Generated Content:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>User-Generated Content</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Saved search queries and filters;</li>
                 <li>Custom alert configurations;</li>
@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
                 <li>Feedback or support communications.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Communications:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Communications</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Messages sent to support@phaethon.llc;</li>
                 <li>Survey responses or feedback submissions;</li>
@@ -73,7 +73,7 @@ export default function PrivacyPolicyPage() {
             </Subsection>
 
             <Subsection title="1.2 Information Collected Automatically">
-              <p><strong>Usage Data:</strong></p>
+              <p><strong>Usage Data</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Search queries (keywords, semantic descriptions, etc.);</li>
                 <li>Patents and publications viewed and interactions;</li>
@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
                 <li>Navigation paths and click patterns.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Technical Data:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Technical Data</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>IP address;</li>
                 <li>Browser type and version;</li>
@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
                 <li>Cookies and similar tracking technologies (see Section 8).</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Authentication Data:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Authentication Data</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Login timestamps;</li>
                 <li>Authentication method (e.g., email/password);</li>
@@ -103,19 +103,19 @@ export default function PrivacyPolicyPage() {
             </Subsection>
 
             <Subsection title="1.3 Information from Third-Party Sources">
-              <p><strong>Auth0 Authentication:</strong></p>
+              <p><strong>Auth0 Authentication</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Authentication tokens and security credentials</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Payment Processors (Stripe):</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Payment Processors (Stripe)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Payment success/failure status;</li>
                 <li>Billing disputes or chargebacks;</li>
                 <li>Fraud detection signals.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Public Patent Databases:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Public Patent Databases</strong>:</p>
               <p>
                 We access and process patent data from Google Patents (BigQuery), USPTO, Espacenet, and other public sources. This data is not "personal information" as it relates to published patent and publication documents, not individual users.
               </p>
@@ -209,10 +209,10 @@ export default function PrivacyPolicyPage() {
               If you are located in the European Economic Area (EEA), United Kingdom, or Switzerland, We process your personal information based on the following legal grounds:
             </p>
             <p style={{ marginTop: 12 }}>
-              <strong>Contractual Necessity:</strong> Processing is necessary to perform Our contract with you (providing the Service as described in Our Terms of Service).
+              <strong>Contractual Necessity</strong>: Processing is necessary to perform Our contract with you (providing the Service as described in Our Terms of Service).
             </p>
             <p style={{ marginTop: 12 }}>
-              <strong>Legitimate Interests:</strong> We have legitimate interests in:
+              <strong>Legitimate Interests</strong>: We have legitimate interests in:
             </p>
             <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
               <li>Improving and developing the Service;</li>
@@ -221,7 +221,7 @@ export default function PrivacyPolicyPage() {
               <li>Marketing Our services to existing users.</li>
             </ul>
             <p style={{ marginTop: 12 }}>
-              <strong>Consent:</strong> Where required by law, We obtain your explicit consent for:
+              <strong>Consent</strong>: Where required by law, We obtain your explicit consent for:
             </p>
             <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
               <li>Marketing communications;</li>
@@ -229,7 +229,7 @@ export default function PrivacyPolicyPage() {
               <li>Processing sensitive data (if applicable).</li>
             </ul>
             <p style={{ marginTop: 12 }}>
-              <strong>Legal Obligations:</strong> We may process your data to comply with legal requirements, such as:
+              <strong>Legal Obligations</strong>: We may process your data to comply with legal requirements, such as:
             </p>
             <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
               <li>Tax and accounting obligations;</li>
@@ -247,28 +247,28 @@ export default function PrivacyPolicyPage() {
             <Subsection title="4.1 With Service Providers and Business Partners">
               <p>We engage trusted third-party service providers to perform functions on Our behalf:</p>
               
-              <p style={{ marginTop: 12 }}><strong>Infrastructure and Hosting:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Infrastructure and Hosting</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Vercel</strong> (web hosting and deployment): <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://vercel.com/legal/privacy-policy</a></li>
                 <li><strong>Neon.tech</strong> (PostgreSQL database hosting): <a href="https://neon.tech/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://neon.tech/privacy-policy</a></li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Authentication:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Authentication</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Auth0</strong> (identity and access management): <a href="https://auth0.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://auth0.com/privacy</a></li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Payment Processing:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Payment Processing</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Stripe</strong> (payment gateway and billing): <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://stripe.com/privacy</a></li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Email Delivery:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Email Delivery</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Mailgun</strong> (transactional email and alert delivery): <a href="https://www.mailgun.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.mailgun.com/legal/privacy-policy/</a></li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>AI and Machine Learning:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>AI and Machine Learning</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>OpenAI</strong> (text embeddings for semantic search): <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://openai.com/privacy/</a></li>
               </ul>
@@ -276,7 +276,7 @@ export default function PrivacyPolicyPage() {
                 Note: We send patent titles, abstracts, and claims text to OpenAI for embedding generation. No personal user data is sent to OpenAI.
               </p>
 
-              <p style={{ marginTop: 12 }}><strong>Analytics and Monitoring:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Analytics and Monitoring</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Google Analytics (analytics and performance monitoring): <a href="https://policies.google.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://policies.google.com/</a></li>
               </ul>
@@ -325,16 +325,16 @@ export default function PrivacyPolicyPage() {
               We retain your personal information for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required or permitted by law.
             </p>
             <ul style={{ marginLeft: 20, marginTop: 12, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-              <li><strong>Account Data:</strong> Retained while your account is active and for up to 2 years after account closure to comply with legal obligations and resolve disputes.</li>
-              <li><strong>Usage and Search Data:</strong> Retained for up to 3 years to analyze trends and improve the Service. May be anonymized and retained indefinitely for analytics.</li>
-              <li><strong>Payment Records:</strong> Retained for 7 years to comply with tax and accounting regulations.</li>
-              <li><strong>Communication Records:</strong> Support emails and correspondence retained for 3 years for quality assurance and legal compliance.</li>
-              <li><strong>Cookies and Logs:</strong> Technical logs retained for 180 days; analytics cookies as described in Our cookie settings.</li>
-              <li><strong>Deleted Account Data:</strong> Upon account deletion, We will:
+              <li><strong>Account Data</strong>: Retained while your account is active and for up to 2 years after account closure to comply with legal obligations and resolve disputes.</li>
+              <li><strong>Usage and Search Data</strong>: Retained for up to 3 years to analyze trends and improve the Service. May be anonymized and retained indefinitely for analytics.</li>
+              <li><strong>Payment Records</strong>: Retained for 7 years to comply with tax and accounting regulations.</li>
+              <li><strong>Communication Records</strong>: Support emails and correspondence retained for 3 years for quality assurance and legal compliance.</li>
+              <li><strong>Cookies and Logs</strong>: Technical logs retained for 180 days; analytics cookies as described in Our cookie settings.</li>
+              <li><strong>Deleted Account Data</strong>: Upon account deletion, We will:
                 <ol style={{ marginLeft: 20, marginTop: 4 }}>
-                  <li>Immediately revoke access to the Service;</li>
-                  <li>Delete or anonymize personal information within 30 days, except where retention is required by law;</li>
-                  <li>Retain transaction records as required by financial regulations.</li>
+                  <li>1. Immediately revoke access to the Service;</li>
+                  <li>2. Delete or anonymize personal information within 30 days, except where retention is required by law;</li>
+                  <li>3. Retain transaction records as required by financial regulations.</li>
                 </ol>
               </li>
             </ul>
@@ -349,7 +349,7 @@ export default function PrivacyPolicyPage() {
             </p>
 
             <Subsection title="6.1 Security Measures">
-              <p><strong>Technical Safeguards:</strong></p>
+              <p><strong>Technical Safeguards</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Encryption in transit (TLS/SSL) for all data transmission;</li>
                 <li>Encryption at rest for database storage (pgvector in Neon.tech);</li>
@@ -358,7 +358,7 @@ export default function PrivacyPolicyPage() {
                 <li>Access controls and authentication requirements.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Administrative Safeguards:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Administrative Safeguards</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Limited employee access to personal data (need-to-know basis);</li>
                 <li>Confidentiality agreements with employees and contractors;</li>
@@ -366,7 +366,7 @@ export default function PrivacyPolicyPage() {
                 <li>Incident response procedures.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Physical Safeguards:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Physical Safeguards</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Secure data centers with restricted physical access (provided by hosting partners);</li>
                 <li>Environmental controls and redundancy systems.</li>
@@ -408,14 +408,14 @@ export default function PrivacyPolicyPage() {
                 The United States and other countries may not have the same data protection laws as your jurisdiction. We take steps to ensure adequate protection of your information when transferred internationally:
               </p>
               
-              <p style={{ marginTop: 12 }}><strong>For EEA/UK/Swiss Users:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>For EEA/UK/Swiss Users</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>We rely on Standard Contractual Clauses (SCCs) approved by the European Commission when transferring data to countries without adequacy decisions;</li>
                 <li>Our service providers (e.g., Auth0 and Stripe) have implemented appropriate safeguards for international transfers;</li>
                 <li>You have the right to request information about the safeguards We use (see Section 9).</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>For All International Users:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>For All International Users</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>By using the Service, you consent to the transfer of your information to the United States and other countries as necessary to provide the Service.</li>
               </ul>
@@ -434,7 +434,7 @@ export default function PrivacyPolicyPage() {
             </Subsection>
 
             <Subsection title="8.2 Types of Cookies We Use">
-              <p><strong>Essential Cookies (Strictly Necessary):</strong></p>
+              <p><strong>Essential Cookies (Strictly Necessary)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Authentication and session management;</li>
                 <li>Security and fraud prevention;</li>
@@ -442,7 +442,7 @@ export default function PrivacyPolicyPage() {
                 <li>These cannot be disabled without affecting functionality.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Analytics Cookies (Performance):</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Analytics Cookies (Performance)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Usage statistics and traffic analysis;</li>
                 <li>Feature adoption and user behavior tracking;</li>
@@ -450,7 +450,7 @@ export default function PrivacyPolicyPage() {
                 <li>Google Analytics.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Preference Cookies (Functionality):</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Preference Cookies (Functionality)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Remember your settings and choices;</li>
                 <li>Language preferences;</li>
@@ -458,7 +458,7 @@ export default function PrivacyPolicyPage() {
                 <li>Other preferences and/or settings.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Marketing Cookies (Targeting/Advertising):</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Marketing Cookies (Targeting/Advertising)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Deliver targeted advertising;</li>
                 <li>Measure campaign effectiveness;</li>
@@ -469,14 +469,14 @@ export default function PrivacyPolicyPage() {
             <Subsection title="8.3 Third-Party Cookies">
               <p>Some cookies are placed by third-party services:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Auth0:</strong> Authentication and security;</li>
-                <li><strong>Stripe:</strong> Payment processing and fraud detection;</li>
-                <li><strong>Google Analytics:</strong> Usage tracking and analytics.</li>
+                <li><strong>Auth0</strong>: Authentication and security;</li>
+                <li><strong>Stripe</strong>: Payment processing and fraud detection;</li>
+                <li><strong>Google Analytics</strong>: Usage tracking and analytics.</li>
               </ul>
             </Subsection>
 
             <Subsection title="8.4 Cookie Management">
-              <p><strong>Browser Controls:</strong> Most browsers allow you to:</p>
+              <p><strong>Browser Controls</strong>: Most browsers allow you to:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>View and delete cookies;</li>
                 <li>Block third-party cookies;</li>
@@ -484,10 +484,10 @@ export default function PrivacyPolicyPage() {
                 <li>Disable cookies entirely (may impact functionality).</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Opt-Out Tools:</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Opt-Out Tools</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li>Google Analytics Opt-out: <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://tools.google.com/dlpage/gaoptout</a></li>
-                <li>Industry opt-out tools: <a href="http://optout.aboutads.info/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>http://optout.aboutads.info/</a> or <a href="http://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>http://www.youronlinechoices.eu/</a></li>
+                <li>Google Analytics Opt-out: <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://tools.google.com/dlpage/gaoptout/</a></li>
+                <li>Industry opt-out tools: <a href="http://optout.aboutads.info/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>http://optout.aboutads.info/</a> or <a href="http://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>http://www.youronlinechoices.eu/</a></li>
               </ul>
             </Subsection>
 
@@ -503,29 +503,29 @@ export default function PrivacyPolicyPage() {
 
             <Subsection title="9.1 Rights for All Users">
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Access:</strong> Request a copy of the personal information We hold about you;</li>
-                <li><strong>Correction:</strong> Request correction of inaccurate or incomplete information;</li>
-                <li><strong>Deletion:</strong> Request deletion of your personal information (subject to legal retention requirements);</li>
-                <li><strong>Portability:</strong> Request a copy of your data in a structured, machine-readable format;</li>
-                <li><strong>Opt-Out of Marketing:</strong> Unsubscribe from promotional emails (transactional emails cannot be opted out);</li>
-                <li><strong>Account Closure:</strong> Close your account at any time through account settings or by contacting support.</li>
+                <li><strong>Access</strong>: Request a copy of the personal information We hold about you;</li>
+                <li><strong>Correction</strong>: Request correction of inaccurate or incomplete information;</li>
+                <li><strong>Deletion</strong>: Request deletion of your personal information (subject to legal retention requirements);</li>
+                <li><strong>Portability</strong>: Request a copy of your data in a structured, machine-readable format;</li>
+                <li><strong>Opt-Out of Marketing</strong>: Unsubscribe from promotional emails (transactional emails cannot be opted out);</li>
+                <li><strong>Account Closure</strong>: Close your account at any time through account settings or by contacting support.</li>
               </ul>
             </Subsection>
 
             <Subsection title="9.2 Additional Rights for EEA/UK/Swiss Users (GDPR)">
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Right to Object:</strong> Object to processing based on legitimate interests;</li>
-                <li><strong>Right to Restrict Processing:</strong> Request limitation of processing under certain circumstances;</li>
-                <li><strong>Right to Withdraw Consent:</strong> Withdraw consent for processing based on consent (does not affect prior processing);</li>
-                <li><strong>Right to Lodge a Complaint:</strong> File a complaint with your local data protection authority (see Section 9.7);</li>
-                <li><strong>Right to Information about Safeguards:</strong> Request information about safeguards for international data transfers.</li>
+                <li><strong>Right to Object</strong>: Object to processing based on legitimate interests;</li>
+                <li><strong>Right to Restrict Processing</strong>: Request limitation of processing under certain circumstances;</li>
+                <li><strong>Right to Withdraw Consent</strong>: Withdraw consent for processing based on consent (does not affect prior processing);</li>
+                <li><strong>Right to Lodge a Complaint</strong>: File a complaint with your local data protection authority (see Section 9.7);</li>
+                <li><strong>Right to Information about Safeguards</strong>: Request information about safeguards for international data transfers.</li>
               </ul>
             </Subsection>
 
             <Subsection title="9.3 Additional Rights for California Residents (CCPA/CPRA)">
               <p>California residents have additional rights under the California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA):</p>
               
-              <p style={{ marginTop: 12 }}><strong>Right to Know:</strong> Request disclosure of:</p>
+              <p style={{ marginTop: 12 }}><strong>Right to Know</strong>: Request disclosure of:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Categories of personal information collected;</li>
                 <li>Categories of sources;</li>
@@ -535,34 +535,34 @@ export default function PrivacyPolicyPage() {
               </ul>
 
               <ul style={{ marginLeft: 20, marginTop: 12, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Right to Delete:</strong> Request deletion of personal information (subject to exceptions);</li>
-                <li><strong>Right to Opt-Out of Sale/Sharing:</strong> We do NOT sell personal information, but if practices change, you can opt out;</li>
-                <li><strong>Right to Correct:</strong> Request correction of inaccurate information;</li>
-                <li><strong>Right to Limit Use of Sensitive Personal Information:</strong> We do not process sensitive personal information beyond what is necessary for the Service;</li>
-                <li><strong>Right to Non-Discrimination:</strong> You will not receive discriminatory treatment for exercising your privacy rights;</li>
-                <li><strong>Authorized Agents:</strong> You may designate an authorized agent to make requests on your behalf.</li>
+                <li><strong>Right to Delete</strong>: Request deletion of personal information (subject to exceptions);</li>
+                <li><strong>Right to Opt-Out of Sale/Sharing</strong>: We do NOT sell personal information, but if practices change, you can opt out;</li>
+                <li><strong>Right to Correct</strong>: Request correction of inaccurate information;</li>
+                <li><strong>Right to Limit Use of Sensitive Personal Information</strong>: We do not process sensitive personal information beyond what is necessary for the Service;</li>
+                <li><strong>Right to Non-Discrimination</strong>: You will not receive discriminatory treatment for exercising your privacy rights;</li>
+                <li><strong>Authorized Agents</strong>: You may designate an authorized agent to make requests on your behalf.</li>
               </ul>
             </Subsection>
 
             <Subsection title="9.4 Additional Rights for Other Jurisdictions">
               <p>
-                <strong>Virginia (VCDPA), Colorado (CPA), Connecticut (CTDPA), Utah (UCPA):</strong> Similar rights to CCPA (access, correction, deletion, opt-out of targeted advertising and sale);
+                <strong>Virginia (VCDPA), Colorado (CPA), Connecticut (CTDPA), Utah (UCPA)</strong>: Similar rights to CCPA (access, correction, deletion, opt-out of targeted advertising and sale);
               </p>
               <p style={{ marginTop: 8 }}>
-                <strong>Other States:</strong> We extend similar rights to residents of all U.S. states where applicable.
+                <strong>Other States</strong>: We extend similar rights to residents of all U.S. states where applicable.
               </p>
             </Subsection>
 
             <Subsection title="9.5 How to Exercise Your Rights">
               <p>To exercise any of these rights, please:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Email:</strong> <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> with "Privacy Request" in the subject line;</li>
-                <li><strong>Account Settings:</strong> Some rights can be exercised directly through your account dashboard (e.g., update information, download data, delete account, etc.);</li>
-                <li><strong>Required Information:</strong> To verify your identity, We may request:
+                <li><strong>Email</strong>: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> with "Privacy Request" in the subject line;</li>
+                <li><strong>Account Settings</strong>: Some rights can be exercised directly through your account dashboard (e.g., update information, download data, delete account, etc.);</li>
+                <li><strong>Required Information</strong>: To verify your identity, We may request:
                   <ol style={{ marginLeft: 20, marginTop: 4 }}>
-                    <li>Email address associated with your account;</li>
-                    <li>Account details or recent transaction information;</li>
-                    <li>Government-issued ID (in limited circumstances for sensitive requests).</li>
+                    <li>1. Email address associated with your account;</li>
+                    <li>2. Account details or recent transaction information;</li>
+                    <li>3. Government-issued ID (in limited circumstances for sensitive requests).</li>
                   </ol>
                 </li>
               </ul>
@@ -585,16 +585,16 @@ export default function PrivacyPolicyPage() {
                 If you are located in the EEA, UK, or Switzerland, you have the right to lodge a complaint with your local data protection authority:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>EEA:</strong> Find your authority at <a href="https://edpb.europa.eu/about-edpb/board/members_en" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://edpb.europa.eu/about-edpb/board/members_en</a></li>
-                <li><strong>UK:</strong> Information Commissioner's Office (ICO) -- <a href="https://ico.org.uk/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://ico.org.uk/</a></li>
-                <li><strong>Switzerland:</strong> Federal Data Protection and Information Commissioner (FDPIC) -- <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.edoeb.admin.ch/</a></li>
+                <li><strong>EEA</strong>: Find your authority at <a href="https://edpb.europa.eu/about-edpb/board/members_en" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://edpb.europa.eu/about-edpb/board/members_en/</a></li>
+                <li><strong>UK</strong>: Information Commissioner's Office (ICO) -- <a href="https://ico.org.uk/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://ico.org.uk/</a></li>
+                <li><strong>Switzerland</strong>: Federal Data Protection and Information Commissioner (FDPIC) -- <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.edoeb.admin.ch/</a></li>
               </ul>
             </Subsection>
           </Section>
 
           <Section title="10. Marketing Communications">
             <Subsection title="10.1 Types of Communications">
-              <p><strong>Transactional Emails (Cannot Opt Out):</strong></p>
+              <p><strong>Transactional Emails (Cannot Opt Out)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Account creation and verification;</li>
                 <li>Password resets and security alerts;</li>
@@ -604,7 +604,7 @@ export default function PrivacyPolicyPage() {
                 <li>Customer support responses.</li>
               </ul>
 
-              <p style={{ marginTop: 12 }}><strong>Marketing Emails (Can Opt Out):</strong></p>
+              <p style={{ marginTop: 12 }}><strong>Marketing Emails (Can Opt Out)</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Product updates and new feature announcements;</li>
                 <li>Educational content and best practices;</li>
@@ -615,11 +615,11 @@ export default function PrivacyPolicyPage() {
 
             <Subsection title="10.2 Opting Out">
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Unsubscribe Link:</strong> Click the "unsubscribe" link at the bottom of any marketing email;</li>
-                <li><strong>Account Settings:</strong> Manage email preferences in your account dashboard;</li>
-                <li><strong>Email Us:</strong> Send opt-out request to <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>;</li>
-                <li><strong>Timeframe:</strong> We will process opt-out requests within 10 business days;</li>
-                <li><strong>Note:</strong> Opting out of marketing does not affect transactional emails necessary for the Service.</li>
+                <li><strong>Unsubscribe Link</strong>: Click the "unsubscribe" link at the bottom of any marketing email;</li>
+                <li><strong>Account Settings</strong>: Manage email preferences in your account dashboard;</li>
+                <li><strong>Email Us</strong>: Send opt-out request to <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>;</li>
+                <li><strong>Timeframe</strong>: We will process opt-out requests within 10 business days;</li>
+                <li><strong>Note</strong>: Opting out of marketing does not affect transactional emails necessary for the Service.</li>
               </ul>
             </Subsection>
           </Section>
@@ -642,14 +642,14 @@ export default function PrivacyPolicyPage() {
             </p>
 
             <Subsection title="12.1 Notice of Changes">
-              <p><strong>Material Changes:</strong> We will notify you of material changes by:</p>
+              <p><strong>Material Changes</strong>: We will notify you of material changes by:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Sending email notification to your registered email address;</li>
                 <li>Posting a prominent notice on Our website;</li>
                 <li>Displaying an in-app notification upon your next login.</li>
               </ul>
               <p style={{ marginTop: 12 }}>
-                <strong>Effective Date:</strong> The "Last Updated" date at the top of this policy will be revised. Changes take effect on the date posted unless otherwise stated.
+                <strong>Effective Date</strong>: The "Last Updated" date at the top of this policy will be revised. Changes take effect on the date posted unless otherwise stated.
               </p>
             </Subsection>
 
@@ -712,28 +712,28 @@ export default function PrivacyPolicyPage() {
           <Section title="16. Data Controller and Contact Information">
             <p>For the purposes of data protection laws:</p>
             <p style={{ marginTop: 12, marginLeft: 20 }}>
-              <strong>Data Controller:</strong><br />
+              <strong>Data Controller</strong>:<br />
               Phaethon Order LLC<br />
               Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
               Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://phaethonorder.com</a>
             </p>
             <p style={{ marginTop: 12 }}>
-              <strong>Privacy Questions:</strong> For any questions, concerns, or requests regarding this Privacy Policy or Our data practices, please contact:
+              <strong>Privacy Questions</strong>: For any questions, concerns, or requests regarding this Privacy Policy or Our data practices, please contact:
             </p>
             <p style={{ marginTop: 8, marginLeft: 20 }}>
-              <strong>Email:</strong> <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
-              <strong>Subject Line:</strong> Privacy Inquiry<br />
-              <strong>Response Time:</strong> We aim to respond within 5 business days
+              <strong>Email</strong>: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
+              <strong>Subject Line</strong>: Privacy Inquiry<br />
+              <strong>Response Time</strong>: We aim to respond within 5 business days
             </p>
           </Section>
 
           <Section title="17. Additional Disclosures">
             <Subsection title="17.1 Patent Data Processing">
               <p>
-                <strong>Public Patent Information:</strong> Patent Scout processes publicly available patent data from government databases. This data (patent and publication titles, abstracts, claims, inventor names, assignee names) is not "personal information" under most privacy laws, as it relates to published patent documents.
+                <strong>Public Patent Information</strong>: Patent Scout processes publicly available patent data from government databases. This data (patent and publication titles, abstracts, claims, inventor names, assignee names) is not "personal information" under most privacy laws, as it relates to published patent documents.
               </p>
               <p style={{ marginTop: 12 }}>
-                <strong>Your Search Data:</strong> Your search queries, saved alerts, and usage patterns ARE personal information and are protected under this Privacy Policy.
+                <strong>Your Search Data</strong>: Your search queries, saved alerts, and usage patterns ARE personal information and are protected under this Privacy Policy.
               </p>
             </Subsection>
 
@@ -761,9 +761,9 @@ export default function PrivacyPolicyPage() {
 
           <Section title="18. Dispute Resolution">
             <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-              <li><strong>Informal Resolution:</strong> Contact <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> to attempt to resolve concerns;</li>
-              <li><strong>Arbitration/Jurisdiction:</strong> Subject to the dispute resolution provisions in Our <a href="/docs" className="hover:underline" style={{ color: LINK_COLOR }}>Terms of Service</a>;</li>
-              <li><strong>Regulatory Complaints:</strong> You may file complaints with applicable data protection authorities (see Section 9.7).</li>
+              <li><strong>Informal Resolution</strong>: Contact <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> to attempt to resolve concerns;</li>
+              <li><strong>Arbitration/Jurisdiction</strong>: Subject to the dispute resolution provisions in Our <a href="/docs" className="hover:underline" style={{ color: LINK_COLOR }}>Terms of Service</a>;</li>
+              <li><strong>Regulatory Complaints</strong>: You may file complaints with applicable data protection authorities (see Section 9.7).</li>
             </ul>
           </Section>
 

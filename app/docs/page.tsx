@@ -13,8 +13,8 @@ export default function TermsOfServicePage() {
         <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Terms of Service</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
-            <strong>Effective Date:</strong> October 17, 2025<br />
-            <strong>Last Updated:</strong> October 17, 2025
+            <strong>Effective Date</strong>: October 17, 2025<br />
+            <strong>Last Updated</strong>: October 17, 2025
           </div>
         </div>
 
@@ -152,18 +152,18 @@ export default function TermsOfServicePage() {
 
             <Subsection title="4.3 Payment Terms">
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Billing Cycle:</strong> Subscriptions are billed monthly or annually based on your selected plan;</li>
-                <li><strong>Payment Method:</strong> You authorize Us to charge your designated payment method (processed via Stripe or other payment processors) or previously used payment method;</li>
-                <li><strong>Automatic Renewal:</strong> Subscriptions automatically renew unless canceled three business days before the renewal date;</li>
-                <li><strong>Price Changes:</strong> We may modify subscription prices with at least ten days' notice. Notice will be deemed sufficient if provided via at least one of email notification or notification via the Service. Changes take effect on your next renewal date;</li>
-                <li><strong>Taxes:</strong> Prices exclude applicable taxes and fees. You are responsible for applicable taxes and fees, which We agree to itemize on the notice of invoice or billing provided to you.</li>
+                <li><strong>Billing Cycle</strong>: Subscriptions are billed monthly or annually based on your selected plan;</li>
+                <li><strong>Payment Method</strong>: You authorize Us to charge your designated payment method (processed via Stripe or other payment processors) or previously used payment method;</li>
+                <li><strong>Automatic Renewal</strong>: Subscriptions automatically renew unless canceled three business days before the renewal date;</li>
+                <li><strong>Price Changes</strong>: We may modify subscription prices with at least ten days' notice. Notice will be deemed sufficient if provided via at least one of email notification or notification via the Service. Changes take effect on your next renewal date;</li>
+                <li><strong>Taxes</strong>: Prices exclude applicable taxes and fees. You are responsible for applicable taxes and fees, which We agree to itemize on the notice of invoice or billing provided to you.</li>
               </ul>
             </Subsection>
 
             <Subsection title="4.4 Refund Policy">
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Paid Subscriptions:</strong> Subscription fees are generally non-refundable. Refund requests for exceptional circumstances (e.g., service unavailability, billing errors) will be evaluated on a case-by-case basis;</li>
-                <li><strong>Cancellation:</strong> You may cancel your subscription at any time. Access continues through the end of your current billing period.</li>
+                <li><strong>Paid Subscriptions</strong>: Subscription fees are generally non-refundable. Refund requests for exceptional circumstances (e.g., service unavailability, billing errors) will be evaluated on a case-by-case basis;</li>
+                <li><strong>Cancellation</strong>: You may cancel your subscription at any time. Access continues through the end of your current billing period.</li>
               </ul>
             </Subsection>
 
@@ -232,10 +232,10 @@ export default function TermsOfServicePage() {
 
             <Subsection title="6.3 User Content">
               <p>
-                <strong>Saved Searches and Alerts:</strong> We retain ownership of saved search queries, alert configurations, and notes. You are granted a limited and non-transferrable license to use this information. We agree to hold this information in confidentiality, subject to Our obligations under the law, court order, or other legal order.
+                <strong>Saved Searches and Alerts</strong>: We retain ownership of saved search queries, alert configurations, and notes. You are granted a limited and non-transferrable license to use this information. We agree to hold this information in confidentiality, subject to Our obligations under the law, court order, or other legal order.
               </p>
               <p style={{ marginTop: 12 }}>
-                <strong>Feedback:</strong> Any feedback, suggestions, or ideas you provide to Us become Our exclusive property, and We may use them without obligation or compensation to you.
+                <strong>Feedback</strong>: Any feedback, suggestions, or ideas you provide to Us become Our exclusive property, and We may use them without obligation or compensation to you.
               </p>
             </Subsection>
 
@@ -280,9 +280,9 @@ export default function TermsOfServicePage() {
 
             <Subsection title="7.4 Data Retention">
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Account Data:</strong> Retained while your account is active and for a reasonable period after termination;</li>
-                <li><strong>Usage Data:</strong> May be retained in anonymized form for analytics;</li>
-                <li><strong>Deletion Requests:</strong> You may request account deletion by contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>.</li>
+                <li><strong>Account Data</strong>: Retained while your account is active and for a reasonable period after termination;</li>
+                <li><strong>Usage Data</strong>: May be retained in anonymized form for analytics;</li>
+                <li><strong>Deletion Requests</strong>: You may request account deletion by contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>.</li>
               </ul>
             </Subsection>
 
@@ -322,10 +322,10 @@ export default function TermsOfServicePage() {
                 THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT</strong></li>
-                <li><strong>WARRANTIES REGARDING ACCURACY, COMPLETENESS, OR RELIABILITY OF DATA</strong></li>
-                <li><strong>WARRANTIES THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE</strong></li>
-                <li><strong>WARRANTIES THAT DEFECTS WILL BE CORRECTED</strong></li>
+                <li><strong>IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT</strong>;</li>
+                <li><strong>WARRANTIES REGARDING ACCURACY, COMPLETENESS, OR RELIABILITY OF DATA</strong>;</li>
+                <li><strong>WARRANTIES THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE</strong>;</li>
+                <li><strong>WARRANTIES THAT DEFECTS WILL BE CORRECTED</strong>.</li>
               </ul>
               <p style={{ marginTop: 12 }}>
                 Some jurisdictions do not allow disclaimer of implied warranties, so the above may not apply to you in full.
@@ -350,12 +350,12 @@ export default function TermsOfServicePage() {
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, PHAETHON ORDER LLC, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES</strong></li>
-                <li><strong>LOSS OF PROFITS, REVENUE, DATA, OR BUSINESS OPPORTUNITIES</strong></li>
-                <li><strong>COST OF SUBSTITUTE SERVICES</strong></li>
-                <li><strong>DAMAGES ARISING FROM YOUR USE OR INABILITY TO USE THE SERVICE</strong></li>
-                <li><strong>DAMAGES ARISING FROM RELIANCE ON SERVICE DATA FOR PATENT DECISIONS</strong></li>
-                <li><strong>DAMAGES ARISING FROM THIRD-PARTY SERVICES OR DATA SOURCES</strong></li>
+                <li><strong>INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES</strong>;</li>
+                <li><strong>LOSS OF PROFITS, REVENUE, DATA, OR BUSINESS OPPORTUNITIES</strong>;</li>
+                <li><strong>COST OF SUBSTITUTE SERVICES</strong>;</li>
+                <li><strong>DAMAGES ARISING FROM YOUR USE OR INABILITY TO USE THE SERVICE</strong>;</li>
+                <li><strong>DAMAGES ARISING FROM RELIANCE ON SERVICE DATA FOR PATENT DECISIONS</strong>;</li>
+                <li><strong>DAMAGES ARISING FROM THIRD-PARTY SERVICES OR DATA SOURCES</strong>.</li>
               </ul>
               <p style={{ marginTop: 12 }}>
                 This exclusion applies regardless of the legal theory (contract, tort, negligence, strict liability, or otherwise) and whether We were advised of the possibility of such damages.
@@ -366,10 +366,10 @@ export default function TermsOfServicePage() {
               <p style={{ fontWeight: 600 }}>
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATED TO THE SERVICE SHALL NOT EXCEED THE GREATER OF:
               </p>
-              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>(A) THE AMOUNT YOU PAID US IN MONTH(S) ASSOCIATED WITH THE CLAIM (NOT TO EXCEED TWELVE MONTHS), OR</strong></li>
-                <li><strong>(B) $100 USD</strong></li>
-              </ul>
+              <ol style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+                <li><strong>THE AMOUNT YOU PAID US IN THE MONTH(S) ASSOCIATED WITH THE CLAIM (NOT TO EXCEED TWELVE MONTHS)</strong>; OR</li>
+                <li><strong>$100 USD</strong></li>
+              </ol>
             </Subsection>
 
             <Subsection title="10.3 Essential Purpose">
