@@ -93,7 +93,7 @@ class NodeDatum:
 
 
 SIGNAL_LABELS: dict[SignalKind, str] = {
-    "focus_shift": "Focus Shift",
+    "focus_shift": "Focus Convergence",
     "emerging_gap": "Sparse Focus Area",
     "crowd_out": "Crowd-out Risk",
     "bridge": "Bridge Opportunity",

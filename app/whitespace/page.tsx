@@ -34,25 +34,62 @@ type WhitespaceResponse = {
 };
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
-  focus_shift: "Focus Shift",
+  focus_shift: "Focus Convergence",
   emerging_gap: "Sparse Focus Area",
   crowd_out: "Crowd-out Risk",
   bridge: "Bridge Opportunity",
 };
 
 const SIGNAL_ICONS: Record<SignalKind, string> = {
-  focus_shift: "↑",
-  emerging_gap: "◎",
-  crowd_out: "↓",
-  bridge: "↔",
+  focus_shift: "⚠",
+  emerging_gap: "🌱",
+  crowd_out: "⛔",
+  bridge: "🔗",
 };
 
-const STATUS_COLORS: Record<SignalStatus, string> = {
-  none: "#cbd5f5",
-  weak: "#fde68a",
-  medium: "#fbbf24",
-  strong: "#16a34a",
+type SignalTone = "opportunity" | "risk";
+
+const SIGNAL_TONES: Record<SignalKind, SignalTone> = {
+  focus_shift: "risk",
+  crowd_out: "risk",
+  emerging_gap: "opportunity",
+  bridge: "opportunity",
 };
+
+const SIGNAL_TONE_ICONS: Record<SignalTone, string> = {
+  opportunity: "★",
+  risk: "!",
+};
+
+const SIGNAL_TONE_LABELS: Record<SignalTone, string> = {
+  opportunity: "Opportunity",
+  risk: "Risk",
+};
+
+type StatusStyle = { background: string; color: string };
+
+const DEFAULT_STATUS_STYLE: StatusStyle = { background: "#e2e8f0", color: "#475569" };
+
+const STATUS_STYLE_PRESETS: Record<SignalTone, Record<SignalStatus, StatusStyle>> = {
+  opportunity: {
+    none: DEFAULT_STATUS_STYLE,
+    weak: { background: "#dcfce7", color: "#166534" },
+    medium: { background: "#86efac", color: "#14532d" },
+    strong: { background: "#15803d", color: "#ffffff" },
+  },
+  risk: {
+    none: DEFAULT_STATUS_STYLE,
+    weak: { background: "#fee2e2", color: "#7f1d1d" },
+    medium: { background: "#f87171", color: "#7f1d1d" },
+    strong: { background: "#b91c1c", color: "#ffffff" },
+  },
+};
+
+function statusStyleForSignal(type: SignalKind, status: SignalStatus): StatusStyle {
+  const tone = SIGNAL_TONES[type];
+  const palette = STATUS_STYLE_PRESETS[tone];
+  return palette?.[status] ?? DEFAULT_STATUS_STYLE;
+}
 
 type ActiveKey = { assignee: string; type: SignalKind } | null;
 type ExampleSortMode = "recent" | "related";
@@ -716,7 +753,7 @@ export default function WhitespacePage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Whitespace Signals</h1>
-            <span style={{ fontSize: 12, color: "#64748b" }}>Confidence-first alerts for whitespace opportunities</span>
+            <span style={{ fontSize: 12, color: "#64748b", alignItems: "baseline" }}>Confidence-first alerts for whitespace opportunities</span>
           </div>
           {!isLoading && !isAuthenticated && (
             <button onClick={() => loginWithRedirect()} style={ghostBtn}>Log in</button>
@@ -924,14 +961,18 @@ export default function WhitespacePage() {
                               <div style={{ fontSize: 13, color: "#475569" }}>{assignee.summary}</div>
                             )}
                             {assignee.signals.map((signal) => {
-                              const isActive = active === signal.type;
-                              const key = `${assignee.assignee}:${signal.type}`;
-                              const hasExamples = signal.node_ids.length > 0;
-                              return (
-                                <div key={key} style={{ display: "grid", gap: 8 }}>
-                                  <button
-                                    onClick={() => handleToggleSignal(assignee.assignee, signal)}
-                                    style={{
+                            const isActive = active === signal.type;
+                            const key = `${assignee.assignee}:${signal.type}`;
+                            const hasExamples = signal.node_ids.length > 0;
+                            const tone = SIGNAL_TONES[signal.type];
+                            const toneIcon = SIGNAL_TONE_ICONS[tone];
+                            const toneLabel = SIGNAL_TONE_LABELS[tone];
+                            const statusStyle = statusStyleForSignal(signal.type, signal.status);
+                            return (
+                              <div key={key} style={{ display: "grid", gap: 8 }}>
+                                <button
+                                  onClick={() => handleToggleSignal(assignee.assignee, signal)}
+                                  style={{
                                       display: "flex",
                                       justifyContent: "space-between",
                                       alignItems: "center",
@@ -945,9 +986,29 @@ export default function WhitespacePage() {
                                     }}
                                   >
                                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-                                      <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
-                                        {SIGNAL_ICONS[signal.type]} {SIGNAL_LABELS[signal.type]}
-                                      </span>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+                                          {SIGNAL_ICONS[signal.type]} {SIGNAL_LABELS[signal.type]}
+                                        </span>
+                                        <span
+                                          style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 4,
+                                            padding: "2px 8px",
+                                            borderRadius: 999,
+                                            background: tone === "risk" ? "#fee2e2" : "#dcfce7",
+                                            color: tone === "risk" ? "#7f1d1d" : "#166534",
+                                            fontSize: 11,
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: 0.4,
+                                          }}
+                                        >
+                                          <span>{toneIcon}</span>
+                                          <span>{toneLabel}</span>
+                                        </span>
+                                      </div>
                                       <span style={{ fontSize: 12, color: "#475569" }}>
                                         {isActive ? "Tap to collapse" : "Tap to view rationale"}
                                       </span>
@@ -956,8 +1017,8 @@ export default function WhitespacePage() {
                                       style={{
                                         fontSize: 12,
                                         fontWeight: 600,
-                                        color: signal.status === "none" ? "#475569" : "#ffffff",
-                                        background: STATUS_COLORS[signal.status],
+                                        color: statusStyle.color,
+                                        background: statusStyle.background,
                                         padding: "4px 10px",
                                         borderRadius: 999,
                                       }}

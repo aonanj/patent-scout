@@ -60,7 +60,7 @@ def pct_rank(value: float, ref: Sequence[float]) -> float:
 
 
 def signal_focus_shift(dist_series: Sequence[float], share_series: Sequence[float], n_samples: int) -> SignalComputation:
-    """Detect whether filings are migrating toward the keyword focus."""
+    """Detect whether filings are converging toward the keyword focus."""
     if len(dist_series) < 3 or len(share_series) < 3 or n_samples < 4:
         return SignalComputation(False, 0.0, "Not enough recent filings to judge movement toward the focus.", {"samples": float(n_samples)})
 
@@ -81,11 +81,11 @@ def signal_focus_shift(dist_series: Sequence[float], share_series: Sequence[floa
 
     if not ok:
         conf = 0.0
-        message = "Recent filings do not show a consistent shift toward the focus topic."
+        message = "The assignee's latest patent filings stay anchored in prior themes; no sustained convergence toward the selected keywords is visible."
     elif trend_votes == 1:
-        message = "Recent filings show early movement toward the focus, though the shift remains uneven."
+        message = "The assignee has begun converging patent filings toward the selected keywords, but the change remains uneven across volume and location."
     else:
-        message = "Recent filings are moving closer to the focus and account for more of the assignee's activity."
+        message = "The assignee's recent patent filings converge around the selected keywords and now make up a growing share of their portfolio."
 
     debug = {
         "slope_dist": float(s_dist),
@@ -121,11 +121,11 @@ def signal_emerging_gap(
 
     if not ok:
         conf = 0.0
-        message = "Recent filings remain in well-covered areas near the focus; no notable whitespace detected."
+        message = "The assignee's latest filings land in technology areas that other applicants already cover; no open pocket of whitespace is emerging near this focus."
     elif heated_neighbors:
-        message = "Recent filings occur in a sparse area near the focus, and nearby clusters show a clear upward surge in momentum."
+        message = "The assignee is filing into a lightly contested pocket near the focus while neighboring applicants accelerate, signalling a chance to establish a lead before the area fills."
     else:
-        message = "Recent filings occur in a sparse area, and nearby clusters show only a mild to modest upward trend in momentum."
+        message = "The assignee is filing into a lightly contested pocket near the focus, but neighboring applicants are only inching forward, so the window may stay open longer."
 
     debug = {
         "current_score": current_score,
@@ -168,11 +168,11 @@ def signal_crowd_out(
 
     if not ok:
         conf = 0.0
-        message = "Recent filings keep whitespace levels stable around the focus; no crowd-out pressure detected."
+        message = "Recent competitor filings still leave breathing room around the selected focus; no material crowd-out pressure is showing up."
     elif ws_decline and density_gain:
-        message = "Recent filings point to tightening whitespace around the focus while nearby density accelerates."
+        message = "Competitors are filing aggressively around the selected focus, shrinking available whitespace and concentrating coverage."
     else:
-        message = "Recent filings stay concentrated in compressed whitespace as density remains elevated around the focus cluster."
+        message = "Competitor filings remain stacked around an already tight focus area, keeping steady pressure on the remaining whitespace."
 
     debug = {
         "slope_ws": float(slope_ws),
@@ -209,11 +209,11 @@ def signal_bridge(
 
     if not ok:
         conf = 0.0
-        message = "Recent filings do not reveal a clear bridge between adjacent growing clusters."
+        message = "Recent filings do not reveal a clear linking opportunity between neighboring technology areas near the focus."
     elif shared_growth:
-        message = "Recent filings show two growing clusters close together with limited coverage at their interface."
+        message = "Neighboring technology areas near the focus are both accelerating in patent filings while the space between them stays thin, signalling a bridge opportunity."
     else:
-        message = "Recent filings highlight an emerging bridge where at least one cluster is ramping up quickly."
+        message = "At least one neighboring technology area is ramping patent filings while the gap between topics remains under-served, suggesting a bridge opportunity to connect them."
 
     debug = {
         "openness": float(openness),

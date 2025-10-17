@@ -166,7 +166,7 @@ python alerts_runner.py
 ```
 
 ## Whitespace Analytics
-`app/whitespace_api.py` builds localized patent graphs by selecting a model (`WS_EMBEDDING_MODEL`), computing cosine KNN, clustering with Leiden, scoring whitespace intensity, and evaluating signal rules for focus shift, emerging gaps, crowd-out risk, and bridge opportunities. The `/whitespace/graph` endpoint accepts filters, neighbor counts, and layout configuration; the React page renders the response with Sigma.js and surfaces per-assignee signal cards plus patent examples.
+`app/whitespace_api.py` builds localized patent graphs by selecting a model (`WS_EMBEDDING_MODEL`), computing cosine KNN, clustering with Leiden, scoring whitespace intensity, and evaluating signal rules for focus convergence, emerging gaps, crowd-out risk, and bridge opportunities. The `/whitespace/graph` endpoint accepts filters, neighbor counts, and layout configuration; the React page renders the response with Sigma.js and surfaces per-assignee signal cards plus patent examples.
 
 ## Screenshots
 - Search & Trends UI – `docs/screenshots/search-ui.png`
