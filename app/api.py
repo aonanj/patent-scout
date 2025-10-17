@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import inspect
 import os
+from pathlib import Path
 
 # Standard library imports
 from collections.abc import Sequence
@@ -14,7 +15,7 @@ import psycopg
 # Third-party imports
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 from pydantic import BaseModel
@@ -58,6 +59,8 @@ origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if 
     "https://patent-scout.vercel.app",
 ]
 
+_FAVICON_PATH = Path(__file__).resolve().parent.parent / "public" / "favicon.ico"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -77,6 +80,12 @@ class DateRangeReponse(BaseModel):
 async def _startup() -> None:
     # Initialize pool at startup for early failure if misconfigured.
     init_pool()
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> FileResponse:
+    if not _FAVICON_PATH.exists():
+        raise HTTPException(status_code=404, detail="favicon not found")
+    return FileResponse(_FAVICON_PATH, media_type="image/x-icon")
 
 
 @app.post("/search", response_model=SearchResponse)
