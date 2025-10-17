@@ -2,7 +2,7 @@
 "use client";
 
 const TEXT_COLOR = "#102A43";
-const LINK_COLOR = "#9BC7FF";
+const LINK_COLOR = "text-blue-400";
 
 export default function TermsOfServicePage() {
   return (

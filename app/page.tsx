@@ -99,6 +99,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -204,6 +205,7 @@ export default function Page() {
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
+    setTrendError(null);
     try {
       const token = await getAccessTokenSilently();
       const dateToInt = (d: string) => (d ? parseInt(d.replace(/-/g, ""), 10) : undefined);
@@ -258,8 +260,9 @@ export default function Page() {
         const top = sorted.slice(0, 15);
         setTrend(top);
       }
-    } catch {
+    } catch (err: any) {
       setTrend([]);
+      setTrendError(err?.message ?? "Trend fetch failed");
     } finally {
       setTrendLoading(false);
     }
@@ -312,6 +315,7 @@ export default function Page() {
     if (total === null) return null;
     return Math.max(1, Math.ceil(total / pageSize));
   }, [total, pageSize]);
+  const isFetchingData = loading || trendLoading;
 
   interface GooglePatentIdRegexGroups extends RegExpMatchArray {
     0: string;
@@ -532,8 +536,10 @@ export default function Page() {
               </select>
             </div>
           </div>
-          {trendLoading ? (
+          {isFetchingData ? (
             <div style={{ fontSize: 13, color: "#64748b" }}>Loading…</div>
+          ) : trendError ? (
+            <div style={{ fontSize: 13, color: "#b91c1c" }}>Error: {trendError}</div>
           ) : trend.length === 0 ? (
             <div style={{ fontSize: 13, color: "#64748b" }}>No data</div>
           ) : (
@@ -546,13 +552,13 @@ export default function Page() {
         <Card>
           <Row>
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Results</h2>
-            {loading && <span style={{ fontSize: 12, color: "#64748b" }}>Loading…</span>}
-            {total !== null && (
+            {isFetchingData && <span style={{ fontSize: 12, color: "#64748b" }}>Loading…</span>}
+            {!isFetchingData && total !== null && (
               <span style={{ marginLeft: "auto", fontSize: 12, color: "#334155" }}>
                 {total.toLocaleString()} total
               </span>
             )}
-            {total !== null && total > 0 && (
+            {!isFetchingData && total !== null && total > 0 && (
               <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
                 <button onClick={() => triggerDownload('csv')} disabled={downloading !== null} style={secondaryBtn} title="Download top 1000 as CSV">
                   {downloading === 'csv' ? 'Generating…' : 'Download CSV'}
@@ -568,37 +574,43 @@ export default function Page() {
             <div style={{ color: "#b91c1c", fontSize: 12, marginTop: 8 }}>Error: {error}</div>
           )}
 
-          <ul style={{ listStyle: "none", padding: 0, marginTop: 12, display: "grid", gap: 12 }}>
-            {hits.map((h, i) => (
-              <li key={(h.pub_id ?? "") + i} style={resultItem}>
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div style={{ fontWeight: 600 }}>
-                    {h.title || "(no title)"}{" "}
-                    {h.pub_id && (
-                      <span style={{ fontWeight: 400, color: "#64748b" }}>• <a href={`https://patents.google.com/patent/${formatGooglePatentId(h.pub_id)}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{h.pub_id}</a></span>
+          {isFetchingData ? (
+            <div style={{ fontSize: 13, color: "#64748b", marginTop: 12 }}>Loading…</div>
+          ) : hits.length === 0 ? (
+            <div style={{ fontSize: 13, color: "#64748b", marginTop: 12 }}>No results</div>
+          ) : (
+            <ul style={{ listStyle: "none", padding: 0, marginTop: 12, display: "grid", gap: 12 }}>
+              {hits.map((h, i) => (
+                <li key={(h.pub_id ?? "") + i} style={resultItem}>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    <div style={{ fontWeight: 600 }}>
+                      {h.title || "(no title)"}{" "}
+                      {h.pub_id && (
+                        <span style={{ fontWeight: 400, color: "#64748b" }}>• <a href={`https://patents.google.com/patent/${formatGooglePatentId(h.pub_id)}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{h.pub_id}</a></span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#475569" }}>
+                      {h.assignee_name ? `Assignee: ${h.assignee_name}  ` : ""}
+                      {h.pub_date ? `  |  Date: ${formatDate(h.pub_date)}` : ""}
+                    </div>
+                    {h.cpc_codes && (
+                      <div style={{ fontSize: 12, color: "#334155" }}>
+                        CPC:{" "}
+                        {Array.isArray(h.cpc_codes)
+                          ? h.cpc_codes.join(", ")
+                          : String(h.cpc_codes)}
+                      </div>
+                    )}
+                    {h.abstract && (
+                      <div style={{ fontSize: 13, color: "#334155" }}>
+                        {truncate(h.abstract, 420)}
+                      </div>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: "#475569" }}>
-                    {h.assignee_name ? `Assignee: ${h.assignee_name}  ` : ""}
-                    {h.pub_date ? `  |  Date: ${formatDate(h.pub_date)}` : ""}
-                  </div>
-                  {h.cpc_codes && (
-                    <div style={{ fontSize: 12, color: "#334155" }}>
-                      CPC:{" "}
-                      {Array.isArray(h.cpc_codes)
-                        ? h.cpc_codes.join(", ")
-                        : String(h.cpc_codes)}
-                    </div>
-                  )}
-                  {h.abstract && (
-                    <div style={{ fontSize: 13, color: "#334155" }}>
-                      {truncate(h.abstract, 420)}
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button
