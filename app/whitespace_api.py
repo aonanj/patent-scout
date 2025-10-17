@@ -197,6 +197,9 @@ class GraphNode(BaseModel):
     relevance: float = 0.0
     title: str | None = None
     tooltip: str | None = None
+    pub_date: date | None = None
+    whitespace_score: float | None = None
+    local_density: float | None = None
 
 
 class GraphEdge(BaseModel):
@@ -941,6 +944,7 @@ def get_whitespace_graph(
         relevance = node_relevance_map.get(node_id, 0.0)
         if relevance <= 0:
             relevance = 0.15
+        datum = node_data[i]
         nodes.append(
             GraphNode(
                 id=node_id,
@@ -952,6 +956,9 @@ def get_whitespace_graph(
                 relevance=float(np.clip(relevance, 0.05, 1.0)),
                 title=meta_row.title,
                 tooltip=node_tooltips.get(node_id),
+                pub_date=datum.pub_date,
+                whitespace_score=datum.score,
+                local_density=datum.density,
             )
         )
 

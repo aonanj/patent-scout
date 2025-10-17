@@ -55,6 +55,13 @@ const STATUS_COLORS: Record<SignalStatus, string> = {
 };
 
 type ActiveKey = { assignee: string; type: SignalKind } | null;
+type ExampleSortMode = "recent" | "related";
+
+type NodeMeta = {
+  pubDateValue: number;
+  whitespaceScore: number;
+  localDensity: number;
+};
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -122,6 +129,16 @@ const ghostBtn: React.CSSProperties = {
   cursor: "pointer",
   fontWeight: 600,
   fontSize: 13,
+};
+
+const exampleBtn: React.CSSProperties = {
+  border: "1px solid #0f172a",
+  background: "#0f172a",
+  color: "#ffffff",
+  borderRadius: 8,
+  padding: "6px 12px",
+  fontSize: 12,
+  fontWeight: 600,
 };
 
 function formatConfidence(conf: number): string {
@@ -237,9 +254,109 @@ export default function WhitespacePage() {
     });
   }, []);
 
-  const handleViewExamples = useCallback((nodeIds: string[]) => {
-    setHighlightedNodes(nodeIds);
-  }, []);
+  const nodeMetaLookup = useMemo(() => {
+    const map = new Map<string, NodeMeta>();
+    const nodes = result?.graph?.nodes ?? [];
+
+    const parseDateValue = (raw: unknown): number => {
+      if (raw instanceof Date) return raw.getTime();
+      if (typeof raw === "number" && Number.isFinite(raw)) {
+        const s = raw.toString().padStart(8, "0");
+        const iso = `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+        const timestamp = Date.parse(iso);
+        return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+      }
+      if (typeof raw === "string") {
+        const parsed = Date.parse(raw);
+        if (!Number.isNaN(parsed)) return parsed;
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length === 8) {
+          const iso = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+          const timestamp = Date.parse(iso);
+          if (!Number.isNaN(timestamp)) return timestamp;
+        }
+      }
+      return Number.NEGATIVE_INFINITY;
+    };
+
+    const parseMetric = (raw: unknown): number => {
+      if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+      if (typeof raw === "string" && raw.trim() !== "") {
+        const parsed = Number(raw);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      return Number.NEGATIVE_INFINITY;
+    };
+
+    nodes.forEach((node) => {
+      const pubDateRaw = (node as any).pub_date ?? (node as any).pubDate ?? null;
+      const whitespaceScoreRaw = (node as any).whitespace_score ?? (node as any).whitespaceScore ?? null;
+      const localDensityRaw = (node as any).local_density ?? (node as any).localDensity ?? null;
+      map.set(node.id, {
+        pubDateValue: parseDateValue(pubDateRaw),
+        whitespaceScore: parseMetric(whitespaceScoreRaw),
+        localDensity: parseMetric(localDensityRaw),
+      });
+    });
+    return map;
+  }, [result?.graph?.nodes]);
+
+  const sortNodeIds = useCallback(
+    (nodeIds: string[], mode: ExampleSortMode) => {
+      if (!nodeIds || nodeIds.length <= 1) {
+        return nodeIds;
+      }
+      const enriched = nodeIds.map((id, index) => {
+        const meta = nodeMetaLookup.get(id);
+        return {
+          id,
+          index,
+          pubDateValue: meta?.pubDateValue ?? Number.NEGATIVE_INFINITY,
+          whitespaceScore: meta?.whitespaceScore ?? Number.NEGATIVE_INFINITY,
+          localDensity: meta?.localDensity ?? Number.NEGATIVE_INFINITY,
+        };
+      });
+
+      const compare = (
+        a: typeof enriched[number],
+        b: typeof enriched[number],
+        key: "pubDateValue" | "whitespaceScore" | "localDensity",
+      ) => {
+        const diff = (b[key] ?? Number.NEGATIVE_INFINITY) - (a[key] ?? Number.NEGATIVE_INFINITY);
+        if (diff > 0) return 1;
+        if (diff < 0) return -1;
+        return 0;
+      };
+
+      const sorted = [...enriched].sort((a, b) => {
+        if (mode === "recent") {
+          return (
+            compare(a, b, "pubDateValue") ||
+            compare(a, b, "whitespaceScore") ||
+            compare(a, b, "localDensity") ||
+            a.index - b.index
+          );
+        }
+        return (
+          compare(a, b, "whitespaceScore") ||
+          compare(a, b, "localDensity") ||
+          compare(a, b, "pubDateValue") ||
+          a.index - b.index
+        );
+      });
+      return sorted.map((item) => item.id);
+    },
+    [nodeMetaLookup],
+  );
+
+  const handleViewExamples = useCallback(
+    (signal: SignalInfo, mode: ExampleSortMode) => {
+      const nodeIds = signal.node_ids ?? [];
+      const sorted = sortNodeIds(nodeIds, mode);
+      setHighlightedNodes(sorted);
+    },
+    [sortNodeIds],
+  );
 
   const handleClearExamples = useCallback(() => {
     setHighlightedNodes([]);
@@ -563,23 +680,30 @@ export default function WhitespacePage() {
                                       }}
                                     >
                                       <div>{signal.why}</div>
-                                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                                         <button
-                                          onClick={() => handleViewExamples(signal.node_ids)}
+                                          onClick={() => handleViewExamples(signal, "recent")}
                                           style={{
-                                            border: "1px solid #0f172a",
-                                            background: "#0f172a",
-                                            color: "#ffffff",
-                                            borderRadius: 8,
-                                            padding: "6px 12px",
-                                            fontSize: 12,
-                                            fontWeight: 600,
+                                            ...exampleBtn,
                                             cursor: hasExamples ? "pointer" : "not-allowed",
                                             opacity: hasExamples ? 1 : 0.5,
                                           }}
                                           disabled={!hasExamples}
                                         >
-                                          View examples
+                                          View Examples (Recent)
+                                        </button>
+                                        <button
+                                          onClick={() => handleViewExamples(signal, "related")}
+                                          style={{
+                                            ...exampleBtn,
+                                            background: "#1e293b",
+                                            borderColor: "#1e293b",
+                                            cursor: hasExamples ? "pointer" : "not-allowed",
+                                            opacity: hasExamples ? 1 : 0.5,
+                                          }}
+                                          disabled={!hasExamples}
+                                        >
+                                          View Examples (Related)
                                         </button>
                                         {!hasExamples && (
                                           <span style={{ fontSize: 12, color: "#94a3b8" }}>

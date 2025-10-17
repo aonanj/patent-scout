@@ -17,6 +17,9 @@ export type WsNode = {
   relevance?: number;
   title?: string | null;
   tooltip?: string | null;
+  pub_date?: string | number | null;
+  whitespace_score?: number | null;
+  local_density?: number | null;
 };
 
 export type WsEdge = {
