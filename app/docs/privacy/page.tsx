@@ -331,11 +331,11 @@ export default function PrivacyPolicyPage() {
               <li><strong>Communication Records</strong>: Support emails and correspondence retained for 3 years for quality assurance and legal compliance.</li>
               <li><strong>Cookies and Logs</strong>: Technical logs retained for 180 days; analytics cookies as described in Our cookie settings.</li>
               <li><strong>Deleted Account Data</strong>: Upon account deletion, We will:
-                <ol style={{ marginLeft: 20, marginTop: 4 }}>
-                  <li>1. Immediately revoke access to the Service;</li>
-                  <li>2. Delete or anonymize personal information within 30 days, except where retention is required by law;</li>
-                  <li>3. Retain transaction records as required by financial regulations.</li>
-                </ol>
+                <ul style={{ marginLeft: 20, marginTop: 4, listStyleType: "circle" }}>
+                  <li>Immediately revoke access to the Service;</li>
+                  <li>Delete or anonymize personal information within 30 days, except where retention is required by law;</li>
+                  <li>Retain transaction records as required by financial regulations.</li>
+                </ul>
               </li>
             </ul>
             <p style={{ marginTop: 12 }}>
@@ -559,11 +559,11 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Email</strong>: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> with "Privacy Request" in the subject line;</li>
                 <li><strong>Account Settings</strong>: Some rights can be exercised directly through your account dashboard (e.g., update information, download data, delete account, etc.);</li>
                 <li><strong>Required Information</strong>: To verify your identity, We may request:
-                  <ol style={{ marginLeft: 20, marginTop: 4 }}>
-                    <li>1. Email address associated with your account;</li>
-                    <li>2. Account details or recent transaction information;</li>
-                    <li>3. Government-issued ID (in limited circumstances for sensitive requests).</li>
-                  </ol>
+                  <ul style={{ marginLeft: 20, marginTop: 4, listStyleType: "circle" }}>
+                    <li>Email address associated with your account;</li>
+                    <li>Account details or recent transaction information;</li>
+                    <li>Government-issued ID (in limited circumstances for sensitive requests).</li>
+                  </ul>
                 </li>
               </ul>
             </Subsection>
