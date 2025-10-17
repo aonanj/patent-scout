@@ -20,6 +20,7 @@ export type WsNode = {
   pub_date?: string | number | null;
   whitespace_score?: number | null;
   local_density?: number | null;
+  abstract?: string | null;
 };
 
 export type WsEdge = {

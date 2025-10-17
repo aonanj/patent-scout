@@ -48,10 +48,10 @@ const SIGNAL_ICONS: Record<SignalKind, string> = {
 };
 
 const STATUS_COLORS: Record<SignalStatus, string> = {
-  none: "#aecce4",
-  weak: "#a7f1a8",
-  medium: "#fff59e",
-  strong: "#ca3433",
+  none: "#cbd5f5",
+  weak: "#fde68a",
+  medium: "#fbbf24",
+  strong: "#16a34a",
 };
 
 type ActiveKey = { assignee: string; type: SignalKind } | null;
@@ -71,6 +71,8 @@ type ExamplesContext = {
   signalConfidence: number;
   mode: ExampleSortMode;
 };
+
+const EXAMPLE_LIMIT = 8;
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -241,11 +243,56 @@ function escapePdfText(text: string): string {
   return text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
+function wrapPdfLine(line: string, maxChars: number): string[] {
+  if (line.length === 0) return [""];
+  if (line.length <= maxChars) return [line];
+
+  const leadingMatch = line.match(/^\s*/);
+  const leadingSpaces = leadingMatch ? leadingMatch[0] : "";
+  const available = Math.max(8, maxChars - leadingSpaces.length);
+  const words = line.trim().split(/\s+/);
+  const wrapped: string[] = [];
+  let current = "";
+
+  const pushCurrent = () => {
+    wrapped.push(`${leadingSpaces}${current}`.trimEnd());
+    current = "";
+  };
+
+  for (const word of words) {
+    if (word.length > available) {
+      if (current) pushCurrent();
+      let remainder = word;
+      while (remainder.length > available) {
+        wrapped.push(`${leadingSpaces}${remainder.slice(0, available)}`);
+        remainder = remainder.slice(available);
+      }
+      current = remainder;
+      continue;
+    }
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > available) {
+      pushCurrent();
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) {
+    pushCurrent();
+  } else if (!wrapped.length) {
+    wrapped.push(leadingSpaces.trimEnd());
+  }
+  return wrapped;
+}
+
 function buildSimplePdf(lines: string[]): Blob {
-  const sanitizedLines = lines.map((line) => escapePdfText(sanitizePdfText(line)));
+  const sanitizedLines = lines.map((line) => sanitizePdfText(line));
+  const wrappedLines = sanitizedLines.flatMap((line) => wrapPdfLine(line, 92));
+  const escapedLines = wrappedLines.map((line) => escapePdfText(line));
 
   let content = "BT\n/F1 12 Tf\n16 TL\n72 760 Td\n";
-  sanitizedLines.forEach((line, index) => {
+  escapedLines.forEach((line, index) => {
     if (index === 0) {
       content += `(${line}) Tj\n`;
     } else {
@@ -496,7 +543,8 @@ export default function WhitespacePage() {
         return;
       }
       const sorted = sortNodeIds(nodeIds, mode);
-      setHighlightedNodes(sorted);
+      const limited = sorted.slice(0, EXAMPLE_LIMIT);
+      setHighlightedNodes(limited);
       setLastExamplesContext({
         assignee: assigneeName,
         signalType: signal.type,
@@ -538,10 +586,31 @@ export default function WhitespacePage() {
         pubId: id,
         pubDate: pubDate ?? "--",
         tooltip,
+        abstract: node?.abstract ?? null,
         linkId: formatGooglePatentId(id),
       };
     });
   }, [graphNodeLookup, highlightedNodes, nodeMetaLookup]);
+
+  const examplesCardInfo = useMemo(() => {
+    if (!lastExamplesContext) return null;
+    const modeLabel = lastExamplesContext.mode === "recent" ? "Recent" : "Related";
+    const signalLabel = SIGNAL_LABELS[lastExamplesContext.signalType];
+    const signalStrength = formatStatus(lastExamplesContext.signalStatus, lastExamplesContext.signalConfidence);
+    const uniqueNotes = Array.from(
+      new Set(
+        highlightedRows
+          .map((row) => (row.tooltip ? row.tooltip.replace(/\s+/g, " ").trim() : ""))
+          .filter((note) => note.length > 0),
+      ),
+    );
+    const noteSummary = uniqueNotes.join(" • ");
+    return {
+      title: `${lastExamplesContext.assignee} - ${signalLabel}: ${signalStrength} (${modeLabel} Examples)`,
+      modeLabel,
+      note: noteSummary,
+    };
+  }, [highlightedRows, lastExamplesContext]);
 
   const handleExportExamplesPdf = useCallback(() => {
     if (!lastExamplesContext || highlightedRows.length === 0) {
@@ -553,6 +622,9 @@ export default function WhitespacePage() {
 
     const lines: string[] = [];
     lines.push(`${lastExamplesContext.assignee} - ${signalLabel}: ${signalStrength} (${modeLabel} Examples)`);
+    if (examplesCardInfo?.note) {
+      lines.push(`(${examplesCardInfo.note})`);
+    }
     lines.push(`Focus Keywords: ${focusKeywords || "--"}`);
     lines.push(`Focus CPC: ${focusCpcLike || "--"}`);
     lines.push(`From: ${dateFrom || "--"}`);
@@ -560,6 +632,7 @@ export default function WhitespacePage() {
     lines.push("");
 
     highlightedRows.forEach((row, index) => {
+      lines.push("----------------------------------------");
       lines.push(`${index + 1}. ${row.title}`);
       lines.push(`   Pub ID: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate}`);
       if (row.tooltip) {
@@ -568,8 +641,12 @@ export default function WhitespacePage() {
           lines.push(`   Note: ${cleanTooltip}`);
         }
       }
+      if (row.abstract) {
+        lines.push(`   Abstract: ${row.abstract.replace(/\\s+/g, " ").trim()}`);
+      }
       lines.push("");
     });
+    lines.push("----------------------------------------");
 
     const pdfBlob = buildSimplePdf(lines);
     const url = URL.createObjectURL(pdfBlob);
@@ -583,18 +660,7 @@ export default function WhitespacePage() {
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }, [dateFrom, dateTo, focusCpcLike, focusKeywords, highlightedRows, lastExamplesContext]);
-
-  const examplesCardInfo = useMemo(() => {
-    if (!lastExamplesContext) return null;
-    const modeLabel = lastExamplesContext.mode === "recent" ? "Recent" : "Related";
-    const signalLabel = SIGNAL_LABELS[lastExamplesContext.signalType];
-    const signalStrength = formatStatus(lastExamplesContext.signalStatus, lastExamplesContext.signalConfidence);
-    return {
-      title: `${lastExamplesContext.assignee} - ${signalLabel}: ${signalStrength} (${modeLabel} Examples)`,
-      modeLabel,
-    };
-  }, [lastExamplesContext]);
+  }, [dateFrom, dateTo, examplesCardInfo, focusCpcLike, focusKeywords, highlightedRows, lastExamplesContext]);
 
   const formattedAssignees = useMemo(() => {
     if (!result) return [];
@@ -1033,6 +1099,11 @@ export default function WhitespacePage() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                     <div style={{ display: "grid", gap: 6 }}>
                       <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{examplesCardInfo.title}</h2>
+                      {examplesCardInfo.note && (
+                        <div style={{ fontSize: 12, color: "#64748b", fontStyle: "italic" }}>
+                          ({examplesCardInfo.note})
+                        </div>
+                      )}
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12, color: "#475569" }}>
                         <span><strong>Focus Keywords:</strong> {focusKeywords || "--"}</span>
                         <span><strong>Focus CPC:</strong> {focusCpcLike || "--"}</span>
@@ -1062,12 +1133,14 @@ export default function WhitespacePage() {
                             <th style={thStyle}>Pub ID</th>
                             <th style={thStyle}>Assignee</th>
                             <th style={thStyle}>Publication Date</th>
-                            <th style={thStyle}>Notes</th>
+                            <th style={thStyle}>Abstract</th>
                           </tr>
                         </thead>
                         <tbody>
                           {highlightedRows.map((row, index) => {
-                            const cleanNote = row.tooltip ? truncate(row.tooltip.replace(/\s+/g, " "), 200) : "--";
+                            const abstractPreview = row.abstract
+                              ? truncate(row.abstract.replace(/\s+/g, " "), 280)
+                              : "--";
                             return (
                               <tr key={row.id}>
                                 <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{index + 1}</td>
@@ -1086,7 +1159,7 @@ export default function WhitespacePage() {
                                 </td>
                                 <td style={tdStyle}>{row.assignee}</td>
                                 <td style={tdStyle}>{row.pubDate}</td>
-                                <td style={tdStyle}>{cleanNote}</td>
+                                <td style={tdStyle}>{abstractPreview}</td>
                               </tr>
                             );
                           })}

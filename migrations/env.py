@@ -35,7 +35,8 @@ def _psycopg3_url(dsn: str) -> str:
 config.set_main_option("sqlalchemy.url", _psycopg3_url(get_settings().sqlalchemy_database_uri))
 
 e = create_engine(
-    config.get_main_option(name="sqlalchemy.url", default="")
+    config.get_main_option(name="sqlalchemy.url", default=""),
+    pool_pre_ping=True,
 )
 
 

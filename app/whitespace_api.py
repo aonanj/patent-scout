@@ -71,6 +71,7 @@ class EmbeddingMeta:
     pub_date: date | None
     assignee: str | None
     title: str | None
+    abstract: str | None
 
 
 @dataclass(slots=True)
@@ -200,6 +201,7 @@ class GraphNode(BaseModel):
     pub_date: date | None = None
     whitespace_score: float | None = None
     local_density: float | None = None
+    abstract: str | None = None
 
 
 class GraphEdge(BaseModel):
@@ -299,6 +301,7 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
       p.pub_date,
       p.assignee_name,
       p.title,
+      p.abstract,
       ({focus_expr}) AS is_focus
     FROM patent_embeddings e
     JOIN patent p USING (pub_id)
@@ -326,6 +329,7 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
                     pub_date=_from_int_date(r.get("pub_date")),
                     assignee=(r.get("assignee_name") or None),
                     title=(r.get("title") or None),
+                    abstract=(r.get("abstract") or None),
                 )
             )
     if not vecs:
@@ -959,6 +963,7 @@ def get_whitespace_graph(
                 pub_date=datum.pub_date,
                 whitespace_score=datum.score,
                 local_density=datum.density,
+                abstract=meta_row.abstract,
             )
         )
 
