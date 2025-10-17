@@ -2,6 +2,7 @@
 "use client";
 
 const TEXT_COLOR = "#102A43";
+const LINK_COLOR = "#9BC7FF";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -22,7 +23,7 @@ export default function PrivacyPolicyPage() {
           
           <Section title="Introduction">
             <p>
-              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the Patent Scout service (the "<strong>Service</strong>"), accessible at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://patent-scout.vercel.app/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
+              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the Patent Scout service (the "<strong>Service</strong>"), accessible at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.vercel.app/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               By using Patent Scout, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -31,7 +32,7 @@ export default function PrivacyPolicyPage() {
               If you do not agree with Our policies and practices, do not use the Service.
             </p>
             <p>
-              This Privacy Policy should be read in conjunction with Our <a href="/docs" className="hover:underline" style={{ color: TEXT_COLOR }}>Terms of Service</a>. Capitalized terms not defined in this Privacy Policy have the meanings given in the Terms of Service.
+              This Privacy Policy should be read in conjunction with Our <a href="/docs" className="hover:underline" style={{ color: LINK_COLOR }}>Terms of Service</a>. Capitalized terms not defined in this Privacy Policy have the meanings given in the Terms of Service.
             </p>
           </Section>
 
@@ -248,28 +249,28 @@ export default function PrivacyPolicyPage() {
               
               <p style={{ marginTop: 12 }}><strong>Infrastructure and Hosting:</strong></p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Vercel</strong> (web hosting and deployment): <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://vercel.com/legal/privacy-policy</a></li>
-                <li><strong>Neon.tech</strong> (PostgreSQL database hosting): <a href="https://neon.tech/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://neon.tech/privacy-policy</a></li>
+                <li><strong>Vercel</strong> (web hosting and deployment): <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://vercel.com/legal/privacy-policy</a></li>
+                <li><strong>Neon.tech</strong> (PostgreSQL database hosting): <a href="https://neon.tech/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://neon.tech/privacy-policy</a></li>
               </ul>
 
               <p style={{ marginTop: 12 }}><strong>Authentication:</strong></p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Auth0</strong> (identity and access management): <a href="https://auth0.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://auth0.com/privacy</a></li>
+                <li><strong>Auth0</strong> (identity and access management): <a href="https://auth0.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://auth0.com/privacy</a></li>
               </ul>
 
               <p style={{ marginTop: 12 }}><strong>Payment Processing:</strong></p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Stripe</strong> (payment gateway and billing): <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://stripe.com/privacy</a></li>
+                <li><strong>Stripe</strong> (payment gateway and billing): <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://stripe.com/privacy</a></li>
               </ul>
 
               <p style={{ marginTop: 12 }}><strong>Email Delivery:</strong></p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>Mailgun</strong> (transactional email and alert delivery): <a href="https://www.mailgun.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://www.mailgun.com/legal/privacy-policy/</a></li>
+                <li><strong>Mailgun</strong> (transactional email and alert delivery): <a href="https://www.mailgun.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.mailgun.com/legal/privacy-policy/</a></li>
               </ul>
 
               <p style={{ marginTop: 12 }}><strong>AI and Machine Learning:</strong></p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>OpenAI</strong> (text embeddings for semantic search): <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://openai.com/privacy/</a></li>
+                <li><strong>OpenAI</strong> (text embeddings for semantic search): <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://openai.com/privacy/</a></li>
               </ul>
               <p style={{ marginLeft: 40, marginTop: 4, fontSize: 13 }}>
                 Note: We send patent titles, abstracts, and claims text to OpenAI for embedding generation. No personal user data is sent to OpenAI.
@@ -277,7 +278,7 @@ export default function PrivacyPolicyPage() {
 
               <p style={{ marginTop: 12 }}><strong>Analytics and Monitoring:</strong></p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li>Google Analytics (analytics and performance monitoring): <a href="https://policies.google.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://policies.google.com/</a></li>
+                <li>Google Analytics (analytics and performance monitoring): <a href="https://policies.google.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://policies.google.com/</a></li>
               </ul>
 
               <p style={{ marginTop: 12 }}>
@@ -330,11 +331,11 @@ export default function PrivacyPolicyPage() {
               <li><strong>Communication Records:</strong> Support emails and correspondence retained for 3 years for quality assurance and legal compliance.</li>
               <li><strong>Cookies and Logs:</strong> Technical logs retained for 180 days; analytics cookies as described in Our cookie settings.</li>
               <li><strong>Deleted Account Data:</strong> Upon account deletion, We will:
-                <ul style={{ marginLeft: 20, marginTop: 4 }}>
+                <ol style={{ marginLeft: 20, marginTop: 4 }}>
                   <li>Immediately revoke access to the Service;</li>
                   <li>Delete or anonymize personal information within 30 days, except where retention is required by law;</li>
                   <li>Retain transaction records as required by financial regulations.</li>
-                </ul>
+                </ol>
               </li>
             </ul>
             <p style={{ marginTop: 12 }}>
@@ -558,11 +559,11 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Email:</strong> <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> with "Privacy Request" in the subject line;</li>
                 <li><strong>Account Settings:</strong> Some rights can be exercised directly through your account dashboard (e.g., update information, download data, delete account, etc.);</li>
                 <li><strong>Required Information:</strong> To verify your identity, We may request:
-                  <ul style={{ marginLeft: 20, marginTop: 4 }}>
+                  <ol style={{ marginLeft: 20, marginTop: 4 }}>
                     <li>Email address associated with your account;</li>
                     <li>Account details or recent transaction information;</li>
                     <li>Government-issued ID (in limited circumstances for sensitive requests).</li>
-                  </ul>
+                  </ol>
                 </li>
               </ul>
             </Subsection>
@@ -584,9 +585,9 @@ export default function PrivacyPolicyPage() {
                 If you are located in the EEA, UK, or Switzerland, you have the right to lodge a complaint with your local data protection authority:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>EEA:</strong> Find your authority at <a href="https://edpb.europa.eu/about-edpb/board/members_en" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://edpb.europa.eu/about-edpb/board/members_en</a></li>
-                <li><strong>UK:</strong> Information Commissioner's Office (ICO) -- <a href="https://ico.org.uk/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://ico.org.uk/</a></li>
-                <li><strong>Switzerland:</strong> Federal Data Protection and Information Commissioner (FDPIC) -- <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://www.edoeb.admin.ch/</a></li>
+                <li><strong>EEA:</strong> Find your authority at <a href="https://edpb.europa.eu/about-edpb/board/members_en" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://edpb.europa.eu/about-edpb/board/members_en</a></li>
+                <li><strong>UK:</strong> Information Commissioner's Office (ICO) -- <a href="https://ico.org.uk/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://ico.org.uk/</a></li>
+                <li><strong>Switzerland:</strong> Federal Data Protection and Information Commissioner (FDPIC) -- <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.edoeb.admin.ch/</a></li>
               </ul>
             </Subsection>
           </Section>
@@ -616,7 +617,7 @@ export default function PrivacyPolicyPage() {
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Unsubscribe Link:</strong> Click the "unsubscribe" link at the bottom of any marketing email;</li>
                 <li><strong>Account Settings:</strong> Manage email preferences in your account dashboard;</li>
-                <li><strong>Email Us:</strong> Send opt-out request to <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a>;</li>
+                <li><strong>Email Us:</strong> Send opt-out request to <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>;</li>
                 <li><strong>Timeframe:</strong> We will process opt-out requests within 10 business days;</li>
                 <li><strong>Note:</strong> Opting out of marketing does not affect transactional emails necessary for the Service.</li>
               </ul>
@@ -628,7 +629,7 @@ export default function PrivacyPolicyPage() {
               Patent Scout is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children under 18.
             </p>
             <p>
-              If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a>. We will delete such information promptly upon verification.
+              If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>. We will delete such information promptly upon verification.
             </p>
             <p>
               In accordance with the Children's Online Privacy Protection Act (COPPA), We do not knowingly collect information from children under 13.
@@ -673,7 +674,7 @@ export default function PrivacyPolicyPage() {
               We do not share personal information with third parties for their direct marketing purposes without your explicit consent.
             </p>
             <p>
-              If you are a California resident and have questions, contact <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> with "California Shine the Light Request" in the subject line.
+              If you are a California resident and have questions, contact <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> with "California Shine the Light Request" in the subject line.
             </p>
           </Section>
 
@@ -692,8 +693,9 @@ export default function PrivacyPolicyPage() {
           <Section title="15. Third-Party Links and Services">
             <p>The Service may contain links to external websites, patent databases, or third-party services:</p>
             <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-              <li><strong>Google Patents</strong> (<a href="https://patents.google.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://patents.google.com/</a>)</li>
-              <li><strong>USPTO</strong> (<a href="https://www.uspto.gov/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://www.uspto.gov/</a>)</li>
+              <li><strong>Google Patents</strong> (<a href="https://patents.google.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patents.google.com/</a>)</li>
+              <li><strong>USPTO</strong> (<a href="https://www.uspto.gov/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.uspto.gov/</a>)</li>
+              <li><strong>Espacenet</strong> (<a href="https://worldwide.espacenet.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://worldwide.espacenet.com/</a>)</li>
               <li>Other patent office databases</li>
             </ul>
             <p style={{ fontWeight: 600, marginTop: 12 }}>
@@ -712,14 +714,14 @@ export default function PrivacyPolicyPage() {
             <p style={{ marginTop: 12, marginLeft: 20 }}>
               <strong>Data Controller:</strong><br />
               Phaethon Order LLC<br />
-              Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a><br />
-              Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://phaethonorder.com</a>
+              Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
+              Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://phaethonorder.com</a>
             </p>
             <p style={{ marginTop: 12 }}>
               <strong>Privacy Questions:</strong> For any questions, concerns, or requests regarding this Privacy Policy or Our data practices, please contact:
             </p>
             <p style={{ marginTop: 8, marginLeft: 20 }}>
-              <strong>Email:</strong> <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a><br />
+              <strong>Email:</strong> <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
               <strong>Subject Line:</strong> Privacy Inquiry<br />
               <strong>Response Time:</strong> We aim to respond within 5 business days
             </p>
@@ -759,8 +761,8 @@ export default function PrivacyPolicyPage() {
 
           <Section title="18. Dispute Resolution">
             <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-              <li><strong>Informal Resolution:</strong> Contact <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> to attempt to resolve concerns;</li>
-              <li><strong>Arbitration/Jurisdiction:</strong> Subject to the dispute resolution provisions in Our <a href="/docs" className="hover:underline" style={{ color: TEXT_COLOR }}>Terms of Service</a>;</li>
+              <li><strong>Informal Resolution:</strong> Contact <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> to attempt to resolve concerns;</li>
+              <li><strong>Arbitration/Jurisdiction:</strong> Subject to the dispute resolution provisions in Our <a href="/docs" className="hover:underline" style={{ color: LINK_COLOR }}>Terms of Service</a>;</li>
               <li><strong>Regulatory Complaints:</strong> You may file complaints with applicable data protection authorities (see Section 9.7).</li>
             </ul>
           </Section>
@@ -819,7 +821,7 @@ export default function PrivacyPolicyPage() {
 
         {/* Footer */}
         <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/docs" className="text-blue-400 hover:underline">Terms of Service</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/docs" className="text-blue-400 hover:underline">Terms of Service</a>
         </footer>
       </div>
     </div>

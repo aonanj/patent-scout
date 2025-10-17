@@ -2,6 +2,7 @@
 "use client";
 
 const TEXT_COLOR = "#102A43";
+const LINK_COLOR = "#9BC7FF";
 
 export default function TermsOfServicePage() {
   return (
@@ -22,7 +23,7 @@ export default function TermsOfServicePage() {
           
           <Section title="Agreement to Terms">
             <p>
-              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
+              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. If you do not agree to these Terms, you must not access or use the Service.
@@ -281,7 +282,7 @@ export default function TermsOfServicePage() {
               <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Account Data:</strong> Retained while your account is active and for a reasonable period after termination;</li>
                 <li><strong>Usage Data:</strong> May be retained in anonymized form for analytics;</li>
-                <li><strong>Deletion Requests:</strong> You may request account deletion by contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a>.</li>
+                <li><strong>Deletion Requests:</strong> You may request account deletion by contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>.</li>
               </ul>
             </Subsection>
 
@@ -410,7 +411,7 @@ export default function TermsOfServicePage() {
               <p>You may terminate your account at any time by:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Canceling your subscription through your account settings</li>
-                <li>Contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a></li>
+                <li>Contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a></li>
                 <li>Ceasing to use the Service</li>
               </ul>
               <p style={{ marginTop: 12 }}>
@@ -477,7 +478,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="14.2 Informal Resolution">
               <p>
-                Before filing a claim, you agree to contact Us at <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> to attempt to resolve the dispute informally. We will make reasonable efforts to resolve disputes within ninety days.
+                Before filing a claim, you agree to contact Us at <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> to attempt to resolve the dispute informally. We will make reasonable efforts to resolve disputes within ninety days.
               </p>
             </Subsection>
 
@@ -550,8 +551,8 @@ export default function TermsOfServicePage() {
               <p style={{ marginTop: 12 }}>You may contact Us at:</p>
               <p style={{ marginTop: 8, marginLeft: 20 }}>
                 <strong>Phaethon Order LLC</strong><br />
-                Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a><br />
-                Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://phaethonorder.com</a>
+                Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
+                Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://phaethonorder.com</a>
               </p>
             </Subsection>
 
@@ -576,8 +577,8 @@ export default function TermsOfServicePage() {
             <p>For questions, concerns, or notices regarding these Terms, please contact:</p>
             <p style={{ marginTop: 12, marginLeft: 20 }}>
               <strong>Phaethon Order LLC</strong><br />
-              Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a><br />
-              Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://phaethonorder.com</a>
+              Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
+              Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://phaethonorder.com</a>
             </p>
           </Section>
 
@@ -595,7 +596,7 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>phaethonorder.com</a> | <a href="docs/privacy" className="text-blue-400 hover:underline">Privacy Policy</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>phaethonorder.com</a> | <a href="docs/privacy" className="text-blue-400 hover:underline">Privacy Policy</a>
         </footer>
       </div>
     </div>
