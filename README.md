@@ -103,7 +103,7 @@ Key components:
 
 ## Core Services & Modules
 - `app/api.py` – FastAPI entrypoint; configures CORS, dependency-injected connection pooling, Auth0 guard (`app/auth.py`), hybrid search (`search_hybrid` in `app/repository.py`), trend volume aggregation, patent details, exports, and saved query CRUD.
-- `app/whitespace_api.py` – `/whitespace/graph` router performing graph assembly, Leiden clustering, UMAP layout, signal computation (`app/whitespace_signals.py`), and persistence helpers such as `ensure_schema`.
+- `app/whitespace_api.py` – `/whitespace/graph` router performing graph assembly, Leiden clustering, UMAP layout, signal computation (`app/whitespace_signals.py`), and persistence helpers (schema assumed to be provisioned via migrations).
 - `app/repository.py` – SQL composition for keyword + vector hybrid search, adaptive score filtering, CSV/PDF export helpers, and utility filters.
 - `app/embed.py` – Thin wrapper around the OpenAI Embeddings API with configurable model name. 
 - `components/NavBar.tsx` – Auth-aware navigation bar with modal-based saved alert management, headless portal, and login/logout affordances.
@@ -184,7 +184,7 @@ Core tables used by the application:
 - `saved_query` – Saved filters, semantic queries, schedules, and active flag.
 - `alert_event` – Historical alert runs and samples.
 - `knn_edge` & `cluster_stats` – Materialized graph data powering whitespace analytics.
-FastAPI automatically initializes whitespace tables via `ensure_schema`; indexes for full-text search, CPC JSONB, and pgvector are expected to exist.
+Schema (tables, indexes, extensions) for the whitespace features must be created by your migration tooling before serving traffic; the runtime now assumes the database role lacks DDL privileges.
 
 ## ETL Pipeline (`etl.py`)
 - Pulls AI-focused US patents from Google’s public BigQuery dataset within a date window.

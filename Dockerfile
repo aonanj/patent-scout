@@ -29,6 +29,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy source
 COPY . /app
+RUN chmod +x /app/start.sh
 
 # Render provides PORT. Default to 8000 for local runs.
 ENV PORT=8000
@@ -41,4 +42,4 @@ USER runner
 EXPOSE 8000
 
 # Uvicorn entrypoint: import FastAPI app from api.py as "app"
-CMD ["sh", "-c", "uvicorn app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["./start.sh"]

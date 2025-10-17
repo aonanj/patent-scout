@@ -99,50 +99,6 @@ SIGNAL_LABELS: dict[SignalKind, str] = {
 }
 SIGNAL_ORDER: tuple[SignalKind, ...] = ("focus_shift", "emerging_gap", "crowd_out", "bridge")
 
-# --- SQL DDL and helpers ---
-DDL = [
-    """
-    CREATE TABLE IF NOT EXISTS knn_edge (
-      src text NOT NULL,
-      dst text NOT NULL,
-      w   real NOT NULL,
-      PRIMARY KEY (src, dst)
-    );
-    """,
-    "ALTER TABLE patent_embeddings ADD COLUMN IF NOT EXISTS cluster_id integer;",
-    "ALTER TABLE patent_embeddings ADD COLUMN IF NOT EXISTS local_density real;",
-    "ALTER TABLE patent_embeddings ADD COLUMN IF NOT EXISTS whitespace_score real;",
-    """
-    CREATE MATERIALIZED VIEW IF NOT EXISTS cluster_stats AS
-    SELECT
-      e.cluster_id,
-      count(*)::int AS n,
-      percentile_cont(0.5) WITHIN GROUP (ORDER BY p.pub_date) AS median_pub_date,
-      jsonb_agg(DISTINCT p.assignee_name) FILTER (WHERE p.assignee_name IS NOT NULL) AS assignees,
-      jsonb_agg(DISTINCT p.cpc) FILTER (WHERE p.cpc IS NOT NULL) AS cpcs
-    FROM patent_embeddings e
-    JOIN patent p ON p.pub_id = e.pub_id
-    WHERE e.cluster_id IS NOT NULL
-    GROUP BY e.cluster_id;
-    """,
-    "CREATE UNIQUE INDEX IF NOT EXISTS cluster_stats_cluster_id_idx ON cluster_stats (cluster_id);",
-]
-UPSERT_EDGE = "INSERT INTO knn_edge(src,dst,w) VALUES (%s,%s,%s) ON CONFLICT(src,dst) DO UPDATE SET w=EXCLUDED.w;"
-UPDATE_EMB = """
-UPDATE patent_embeddings AS e
-SET cluster_id = u.cluster_id,
-    local_density = u.local_density,
-    whitespace_score = u.whitespace_score
-FROM (VALUES %s) AS u(pub_id, cluster_id, local_density, whitespace_score)
-WHERE e.pub_id = u.pub_id AND e.model = %s;
-"""
-
-def ensure_schema(conn: psycopg.Connection) -> None:
-    with conn.cursor() as cur:
-        for stmt in DDL:
-            cur.execute(_sql.SQL(stmt)) # type: ignore
-    conn.commit()
-
 def pick_model(conn: psycopg.Connection, preferred: str | None = None) -> str:
     """Choose an available embedding model.
 
@@ -901,9 +857,21 @@ def get_whitespace_graph(
     _validate_graph_params(req)
 
     with pool.connection() as conn:
-        ensure_schema(conn)
-        model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
-        X, meta = load_embeddings(conn, model, req)
+        try:
+            model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
+            X, meta = load_embeddings(conn, model, req)
+        except psycopg.errors.UndefinedTable as exc:
+            logger.error("Whitespace schema missing; run database migrations before serving traffic.")
+            raise HTTPException(
+                status_code=500,
+                detail="Whitespace graph schema is not initialized. Run database migrations.",
+            ) from exc
+        except psycopg.errors.InsufficientPrivilege as exc:
+            logger.error("Database role lacks privileges for whitespace query: %s", exc)
+            raise HTTPException(
+                status_code=500,
+                detail="Database role is missing privileges required for whitespace queries.",
+            ) from exc
         focus_mask = np.array([m.is_focus for m in meta], dtype=bool)
         pub_ids = [m.pub_id for m in meta]
         point_count = len(pub_ids)
