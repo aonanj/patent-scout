@@ -1,15 +1,17 @@
 // app/docs/page.tsx
 "use client";
 
+const TEXT_COLOR = "#102A43";
+
 export default function TermsOfServicePage() {
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
+    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh", color: TEXT_COLOR }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
         
         {/* Header */}
         <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: "#0f172a" }}>Patent Scout Terms of Service</h1>
-          <div style={{ marginTop: 12, fontSize: 14, color: "#64748b" }}>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Terms of Service</h1>
+          <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
             <strong>Effective Date:</strong> October 17, 2025<br />
             <strong>Last Updated:</strong> October 17, 2025
           </div>
@@ -20,7 +22,7 @@ export default function TermsOfServicePage() {
           
           <Section title="Agreement to Terms">
             <p>
-              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>we</strong>," "<strong>us</strong>," or "<strong>our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
+              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>we</strong>," "<strong>us</strong>," or "<strong>our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. If you do not agree to these Terms, you must not access or use the Service.
@@ -30,7 +32,7 @@ export default function TermsOfServicePage() {
           <Section title="1. Service Description">
             <Subsection title="1.1 What Patent Scout Provides">
               <p>Patent Scout is a patent intelligence platform that provides:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Search and discovery tools for AI-related patent publications;</li>
                 <li>Trend analysis and visualization;</li>
                 <li>Whitespace identification and signal analysis;</li>
@@ -41,7 +43,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="1.2 Data Sources">
               <p>The Service aggregates and analyzes patent data from publicly available sources, including but not limited to:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Google Patents Public Datasets (BigQuery);</li>
                 <li>United States Patent and Trademark Office (USPTO) publications;</li>
                 <li>Espacenet publications;</li>
@@ -60,7 +62,7 @@ export default function TermsOfServicePage() {
             <Subsection title="2.1 NOT Legal Advice">
               <p style={{ fontWeight: 600 }}>THE SERVICE DOES NOT PROVIDE LEGAL ADVICE.</p>
               <p>Patent Scout is an informational tool only. The Service:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Does NOT constitute legal, patent, or professional advice of any kind;</li>
                 <li>Does NOT replace consultation with qualified patent attorneys or agents;</li>
                 <li>Does NOT provide comprehensive freedom-to-operate, patentability, or infringement analyses;</li>
@@ -70,7 +72,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="2.2 No Warranty of Accuracy">
               <p>We make no representations or warranties regarding:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>The completeness, accuracy, or currency of patent and publication data;</li>
                 <li>The correctness of trend analyses, whitespace identifications, or signal scores;</li>
                 <li>The reliability of search results or semantic matching algorithms;</li>
@@ -83,7 +85,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="2.3 Limitation of Patent Coverage">
               <p>Our current dataset focuses on AI-related patents based on specific CPC classifications and keyword matching. The Service:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Does NOT provide comprehensive coverage of all patent publications;</li>
                 <li>May exclude relevant patents due to classification or keyword limitations;</li>
                 <li>May include false positives that do not relate to your specific interests;</li>
@@ -101,7 +103,7 @@ export default function TermsOfServicePage() {
           <Section title="3. Account Registration and Security">
             <Subsection title="3.1 Account Creation">
               <p>To use certain features of the Service, you must register for an account. You agree to:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Provide accurate, current, and complete information during registration;</li>
                 <li>Maintain and promptly update your account information;</li>
                 <li>Keep your login credentials confidential;</li>
@@ -112,7 +114,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="3.2 Account Eligibility">
               <p>You represent that:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>You are at least 18 years of age;</li>
                 <li>You have the legal capacity to enter into these Terms;</li>
                 <li>If registering on behalf of an organization, you have authority to bind that entity.</li>
@@ -135,7 +137,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="4.2 Paid Subscriptions">
               <p>When available, paid subscription tiers may provide:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Enhanced search capabilities;</li>
                 <li>Increased alert limits;</li>
                 <li>Bulk export features;</li>
@@ -148,7 +150,7 @@ export default function TermsOfServicePage() {
             </Subsection>
 
             <Subsection title="4.3 Payment Terms">
-              <ul style={{ marginLeft: 20 }}>
+              <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Billing Cycle:</strong> Subscriptions are billed monthly or annually based on your selected plan;</li>
                 <li><strong>Payment Method:</strong> You authorize Us to charge your designated payment method (processed via Stripe or other payment processors) or previously used payment method;</li>
                 <li><strong>Automatic Renewal:</strong> Subscriptions automatically renew unless canceled three business days before the renewal date;</li>
@@ -158,7 +160,7 @@ export default function TermsOfServicePage() {
             </Subsection>
 
             <Subsection title="4.4 Refund Policy">
-              <ul style={{ marginLeft: 20 }}>
+              <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Paid Subscriptions:</strong> Subscription fees are generally non-refundable. Refund requests for exceptional circumstances (e.g., service unavailability, billing errors) will be evaluated on a case-by-case basis;</li>
                 <li><strong>Cancellation:</strong> You may cancel your subscription at any time. Access continues through the end of your current billing period.</li>
               </ul>
@@ -166,7 +168,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="4.5 Failed Payments">
               <p>If payment fails:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>We will attempt to process payment again;</li>
                 <li>We reserve the right to process payments that fail using payment method previously used by you to access the Service;</li>
                 <li>Your access may be suspended after multiple failed attempts;</li>
@@ -180,7 +182,7 @@ export default function TermsOfServicePage() {
           <Section title="5. Acceptable Use and Restrictions">
             <Subsection title="5.1 Permitted Uses">
               <p>You may use the Service for:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Internal business research and analysis;</li>
                 <li>Patent landscape monitoring;</li>
                 <li>Competitive intelligence gathering;</li>
@@ -192,7 +194,7 @@ export default function TermsOfServicePage() {
               <p>
                 The Service and all associated data, including all data generated by the Service in response to any and all inputs (e.g., searches, trends, alerts, whitespace signals, etc.), are exclusively and wholly owned by the Company. You are granted a non-exclusive and non-transferable limited license to use this Service and associated data obtained through authorized avenues. You agree NOT to:
               </p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Use the Service to provide patent analysis services to third parties without a separate commercial license;</li>
                 <li>Resell, redistribute, or sublicense access to the Service;</li>
                 <li>Systematically scrape, download, or extract data beyond normal use;</li>
@@ -218,7 +220,7 @@ export default function TermsOfServicePage() {
               <p>
                 Patent and publication data in Our database is sourced from public repositories. We claim no ownership of the underlying original patent and publication documents. We hold an undivided proprietary ownership interest in:
               </p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Data aggregation, processing, and normalization;</li>
                 <li>Semantic search algorithms and embeddings;</li>
                 <li>Trend analysis and whitespace scoring methodologies;</li>
@@ -252,7 +254,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="7.2 Data We Collect">
               <p>We collect:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Account information (e.g., name, email, organization, etc.);</li>
                 <li>Usage data (searches, alerts, export requests, etc.);</li>
                 <li>Authentication data (via Auth0);</li>
@@ -264,7 +266,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="7.3 Data Use">
               <p>We reserve the right to use your data to:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Provide and improve the Service;</li>
                 <li>Send transactional communications (alerts, account notifications);</li>
                 <li>Analyze usage patterns and improve features;</li>
@@ -276,10 +278,10 @@ export default function TermsOfServicePage() {
             </Subsection>
 
             <Subsection title="7.4 Data Retention">
-              <ul style={{ marginLeft: 20 }}>
+              <ul style={{ marginLeft: 20, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Account Data:</strong> Retained while your account is active and for a reasonable period after termination;</li>
                 <li><strong>Usage Data:</strong> May be retained in anonymized form for analytics;</li>
-                <li><strong>Deletion Requests:</strong> You may request account deletion by contacting <a href="mailto:support@phaethon.llc" className="text-blue-500 hover:underline">support@phaethon.llc</a>.</li>
+                <li><strong>Deletion Requests:</strong> You may request account deletion by contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a>.</li>
               </ul>
             </Subsection>
 
@@ -293,7 +295,7 @@ export default function TermsOfServicePage() {
           <Section title="8. Third-Party Services">
             <Subsection title="8.1 Dependencies">
               <p>The Service relies on third-party services, including:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Auth0</strong> (authentication);</li>
                 <li><strong>Google BigQuery</strong> (patent and publication data source);</li>
                 <li><strong>OpenAI</strong> (semantic embeddings);</li>
@@ -318,7 +320,7 @@ export default function TermsOfServicePage() {
               <p style={{ fontWeight: 600 }}>
                 THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
               </p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT</strong></li>
                 <li><strong>WARRANTIES REGARDING ACCURACY, COMPLETENESS, OR RELIABILITY OF DATA</strong></li>
                 <li><strong>WARRANTIES THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE</strong></li>
@@ -331,7 +333,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="9.2 Service Limitations">
               <p>You acknowledge and agree that:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Patent data may contain errors, omissions, or delays;</li>
                 <li>Search results may be incomplete or contain false positives;</li>
                 <li>Trend analyses and whitespace signals are algorithmic outputs, not expert opinions;</li>
@@ -346,7 +348,7 @@ export default function TermsOfServicePage() {
               <p style={{ fontWeight: 600 }}>
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, PHAETHON ORDER LLC, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR:
               </p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES</strong></li>
                 <li><strong>LOSS OF PROFITS, REVENUE, DATA, OR BUSINESS OPPORTUNITIES</strong></li>
                 <li><strong>COST OF SUBSTITUTE SERVICES</strong></li>
@@ -363,7 +365,7 @@ export default function TermsOfServicePage() {
               <p style={{ fontWeight: 600 }}>
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATED TO THE SERVICE SHALL NOT EXCEED THE GREATER OF:
               </p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>(A) THE AMOUNT YOU PAID US IN MONTH(S) ASSOCIATED WITH THE CLAIM (NOT TO EXCEED TWELVE MONTHS), OR</strong></li>
                 <li><strong>(B) $100 USD</strong></li>
               </ul>
@@ -386,7 +388,7 @@ export default function TermsOfServicePage() {
             <p>
               You agree to indemnify, defend, and hold harmless Phaethon Order LLC, its affiliates, and their respective officers, directors, employees, contractors, and agents from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising from or related to:
             </p>
-            <ul style={{ marginLeft: 20, marginTop: 8 }}>
+            <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
               <li>Your use of the Service;</li>
               <li>Your violation of these Terms or misuse of the Service;</li>
               <li>Your violation of any law or third-party rights;</li>
@@ -406,9 +408,9 @@ export default function TermsOfServicePage() {
 
             <Subsection title="12.2 Termination by You">
               <p>You may terminate your account at any time by:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Canceling your subscription through your account settings</li>
-                <li>Contacting <a href="mailto:support@phaethon.llc" className="text-blue-500 hover:underline">support@phaethon.llc</a></li>
+                <li>Contacting <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a></li>
                 <li>Ceasing to use the Service</li>
               </ul>
               <p style={{ marginTop: 12 }}>
@@ -418,7 +420,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="12.3 Termination by Us">
               <p>We may suspend or terminate your access immediately, without notice, for any reason, including:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Your violation of these Terms;</li>
                 <li>Your engagement in any prohibited and/or illegal activities;</li>
                 <li>Account inactivity;</li>
@@ -431,7 +433,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="12.4 Effect of Termination">
               <p>Upon termination:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Your right to access the Service immediately ceases</li>
                 <li>We may delete your account data after a reasonable retention period</li>
                 <li>Outstanding payment obligations survive termination</li>
@@ -443,7 +445,7 @@ export default function TermsOfServicePage() {
           <Section title="13. Modifications to Terms">
             <Subsection title="13.1 Right to Modify">
               <p>We reserve the right to modify these Terms at any time. Changes may include:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Updates to features, pricing, or service descriptions;</li>
                 <li>Modifications to legal provisions;</li>
                 <li>Changes required by law or regulation.</li>
@@ -452,7 +454,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="13.2 Notice of Changes">
               <p>We will provide notice of material changes by:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Posting updated Terms on Our website with a new "Last Updated" date;</li>
                 <li>Sending email notification to your registered email address (for significant changes);</li>
                 <li>Displaying an in-app notification upon your next login.</li>
@@ -475,7 +477,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="14.2 Informal Resolution">
               <p>
-                Before filing a claim, you agree to contact Us at <a href="mailto:support@phaethon.llc" className="text-blue-500 hover:underline">support@phaethon.llc</a> to attempt to resolve the dispute informally. We will make reasonable efforts to resolve disputes within ninety days.
+                Before filing a claim, you agree to contact Us at <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> to attempt to resolve the dispute informally. We will make reasonable efforts to resolve disputes within ninety days.
               </p>
             </Subsection>
 
@@ -540,7 +542,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="15.7 Notices">
               <p>We may provide notices to you via:</p>
-              <ul style={{ marginLeft: 20, marginTop: 8 }}>
+              <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Email to your registered email address;</li>
                 <li>In-app notifications;</li>
                 <li>Posting on Our website.</li>
@@ -548,8 +550,8 @@ export default function TermsOfServicePage() {
               <p style={{ marginTop: 12 }}>You may contact Us at:</p>
               <p style={{ marginTop: 8, marginLeft: 20 }}>
                 <strong>Phaethon Order LLC</strong><br />
-                Email: <a href="mailto:support@phaethon.llc" className="text-blue-500 hover:underline">support@phaethon.llc</a><br />
-                Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">https://phaethonorder.com</a>
+                Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a><br />
+                Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://phaethonorder.com</a>
               </p>
             </Subsection>
 
@@ -574,8 +576,8 @@ export default function TermsOfServicePage() {
             <p>For questions, concerns, or notices regarding these Terms, please contact:</p>
             <p style={{ marginTop: 12, marginLeft: 20 }}>
               <strong>Phaethon Order LLC</strong><br />
-              Email: <a href="mailto:support@phaethon.llc" className="text-blue-500 hover:underline">support@phaethon.llc</a><br />
-              Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">https://phaethonorder.com</a>
+              Email: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a><br />
+              Website: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://phaethonorder.com</a>
             </p>
           </Section>
 
@@ -592,8 +594,8 @@ export default function TermsOfServicePage() {
         </div>
 
         {/* Footer */}
-        <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">github</a>
+        <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>phaethonorder.com</a> | <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>github</a>
         </footer>
       </div>
     </div>
@@ -603,8 +605,8 @@ export default function TermsOfServicePage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section style={{ marginTop: 32 }}>
-      <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#0f172a", marginBottom: 16 }}>{title}</h2>
-      <div style={{ fontSize: 14, lineHeight: 1.7, color: "#334155" }}>{children}</div>
+      <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>{title}</h2>
+      <div style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{children}</div>
     </section>
   );
 }
@@ -612,8 +614,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Subsection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 20 }}>
-      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "#1e293b", marginBottom: 12 }}>{title}</h3>
-      <div style={{ fontSize: 14, lineHeight: 1.7, color: "#334155" }}>{children}</div>
+      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 12 }}>{title}</h3>
+      <div style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{children}</div>
     </div>
   );
 }
