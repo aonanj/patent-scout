@@ -22,7 +22,7 @@ export default function TermsOfServicePage() {
           
           <Section title="Agreement to Terms">
             <p>
-              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>we</strong>," "<strong>us</strong>," or "<strong>our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
+              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. If you do not agree to these Terms, you must not access or use the Service.
@@ -595,7 +595,7 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>phaethonorder.com</a> | <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>github</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: TEXT_COLOR }}>phaethonorder.com</a> | <a href="/privacy" style={{ color: "#0284c7", textDecoration: "underline" }}>Privacy Policy</a>
         </footer>
       </div>
     </div>
