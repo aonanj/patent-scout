@@ -158,6 +158,7 @@ Create `.env.local` with `NEXT_PUBLIC_AUTH0_DOMAIN`, `NEXT_PUBLIC_AUTH0_CLIENT_I
 
 ### Backend / FastAPI
 - `DATABASE_URL` – Postgres connection string.
+- `SQLALCHEMY_DATABASE_URI` – sqlalchemy url string for Alembic.
 - `CORS_ALLOW_ORIGINS` – CSV of allowed origins (defaults include localhost, Render, and Vercel hosts).
 - `AUTH0_DOMAIN`, `AUTH0_API_AUDIENCE` – Required for JWT validation.
 - `OPENAI_API_KEY` – Enables embeddings in search + ETL.

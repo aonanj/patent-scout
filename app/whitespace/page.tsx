@@ -61,6 +61,15 @@ type NodeMeta = {
   pubDateValue: number;
   whitespaceScore: number;
   localDensity: number;
+  pubDateLabel: string | null;
+};
+
+type ExamplesContext = {
+  assignee: string;
+  signalType: SignalKind;
+  signalStatus: SignalStatus;
+  signalConfidence: number;
+  mode: ExampleSortMode;
 };
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
@@ -141,6 +150,145 @@ const exampleBtn: React.CSSProperties = {
   fontWeight: 600,
 };
 
+const exportBtn: React.CSSProperties = {
+  border: "1px solid #0f172a",
+  background: "#ffffff",
+  color: "#0f172a",
+  borderRadius: 8,
+  padding: "6px 14px",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const tableStyle: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: 12,
+};
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "8px 10px",
+  borderBottom: "1px solid #e5e7eb",
+  color: "#334155",
+  background: "#f8fafc",
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "8px 10px",
+  borderTop: "1px solid #f1f5f9",
+  verticalAlign: "top",
+};
+
+function truncate(s: string, n: number): string {
+  if (s.length <= n) return s;
+  if (n <= 3) return "...".slice(0, Math.max(0, n));
+  return `${s.slice(0, Math.max(0, n - 3))}...`;
+}
+
+function formatGooglePatentId(pubId: string): string {
+  if (!pubId) return "";
+  const cleanedId = pubId.replace(/[- ]/g, "");
+  const regex = /^(US)(\d{4})(\d{6})([A-Z]\d{1,2})$/;
+  const match = cleanedId.match(regex);
+  if (match) {
+    const [, country, year, serial, kindCode] = match;
+    const correctedSerial = `0${serial}`;
+    return `${country}${year}${correctedSerial}${kindCode}`;
+  }
+  return cleanedId;
+}
+
+function formatPubDate(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  const raw = String(value).trim();
+  if (!raw) return null;
+  if (/^\d{8}$/.test(raw)) {
+    const y = Number(raw.slice(0, 4));
+    const m = Number(raw.slice(4, 6)) - 1;
+    const d = Number(raw.slice(6, 8));
+    const dt = new Date(Date.UTC(y, m, d));
+    if (!Number.isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+  }
+  if (/^\d+$/.test(raw)) {
+    const n = Number(raw);
+    if (Number.isFinite(n)) {
+      const dt = new Date(n);
+      if (!Number.isNaN(dt.getTime())) {
+        return dt.toISOString().slice(0, 10);
+      }
+    }
+  }
+  const parsed = Date.parse(raw);
+  if (!Number.isNaN(parsed)) {
+    return new Date(parsed).toISOString().slice(0, 10);
+  }
+  return null;
+}
+
+function sanitizePdfText(text: string): string {
+  return text.replace(/[^\x20-\x7E]/g, " ");
+}
+
+function escapePdfText(text: string): string {
+  return text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function buildSimplePdf(lines: string[]): Blob {
+  const sanitizedLines = lines.map((line) => escapePdfText(sanitizePdfText(line)));
+
+  let content = "BT\n/F1 12 Tf\n16 TL\n72 760 Td\n";
+  sanitizedLines.forEach((line, index) => {
+    if (index === 0) {
+      content += `(${line}) Tj\n`;
+    } else {
+      content += "T*\n";
+      content += `(${line}) Tj\n`;
+    }
+  });
+  content += "ET";
+
+  const encoder = new TextEncoder();
+  const contentBytes = encoder.encode(content);
+
+  const objects: string[] = [
+    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
+    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+    `5 0 obj << /Length ${contentBytes.length} >>\nstream\n${content}\nendstream\nendobj`,
+  ];
+
+  const header = "%PDF-1.3\n";
+  let body = "";
+  const offsets: number[] = [];
+  let currentOffset = header.length;
+
+  objects.forEach((obj) => {
+    offsets.push(currentOffset);
+    body += `${obj}\n`;
+    currentOffset = header.length + body.length;
+  });
+
+  const xrefPosition = header.length + body.length;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.forEach((offset) => {
+    xref += `${offset.toString().padStart(10, "0")} 00000 n \n`;
+  });
+
+  const trailer = `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefPosition}\n%%EOF`;
+  const pdfString = `${header}${body}${xref}${trailer}`;
+
+  return new Blob([pdfString], { type: "application/pdf" });
+}
+
 function formatConfidence(conf: number): string {
   if (!Number.isFinite(conf)) return "0.00";
   return conf.toFixed(2);
@@ -181,6 +329,7 @@ export default function WhitespacePage() {
   const [openAssignees, setOpenAssignees] = useState<Record<string, boolean>>({});
   const [activeKey, setActiveKey] = useState<ActiveKey>(null);
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
+  const [lastExamplesContext, setLastExamplesContext] = useState<ExamplesContext | null>(null);
 
   const selectedSignal = activeKey?.type ?? null;
 
@@ -189,6 +338,7 @@ export default function WhitespacePage() {
     setError(null);
     setHighlightedNodes([]);
     setActiveKey(null);
+    setLastExamplesContext(null);
     try {
       const token = await getAccessTokenSilently();
       const payload = {
@@ -246,6 +396,7 @@ export default function WhitespacePage() {
 
   const handleToggleSignal = useCallback((assignee: string, signal: SignalInfo) => {
     setHighlightedNodes([]);
+    setLastExamplesContext(null);
     setActiveKey((current) => {
       if (current && current.assignee === assignee && current.type === signal.type) {
         return null;
@@ -258,27 +409,6 @@ export default function WhitespacePage() {
     const map = new Map<string, NodeMeta>();
     const nodes = result?.graph?.nodes ?? [];
 
-    const parseDateValue = (raw: unknown): number => {
-      if (raw instanceof Date) return raw.getTime();
-      if (typeof raw === "number" && Number.isFinite(raw)) {
-        const s = raw.toString().padStart(8, "0");
-        const iso = `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
-        const timestamp = Date.parse(iso);
-        return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
-      }
-      if (typeof raw === "string") {
-        const parsed = Date.parse(raw);
-        if (!Number.isNaN(parsed)) return parsed;
-        const digits = raw.replace(/\D/g, "");
-        if (digits.length === 8) {
-          const iso = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
-          const timestamp = Date.parse(iso);
-          if (!Number.isNaN(timestamp)) return timestamp;
-        }
-      }
-      return Number.NEGATIVE_INFINITY;
-    };
-
     const parseMetric = (raw: unknown): number => {
       if (typeof raw === "number" && Number.isFinite(raw)) return raw;
       if (typeof raw === "string" && raw.trim() !== "") {
@@ -288,12 +418,20 @@ export default function WhitespacePage() {
       return Number.NEGATIVE_INFINITY;
     };
 
+    const toDateValue = (label: string | null): number => {
+      if (!label) return Number.NEGATIVE_INFINITY;
+      const parsed = Date.parse(label);
+      return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+    };
+
     nodes.forEach((node) => {
       const pubDateRaw = (node as any).pub_date ?? (node as any).pubDate ?? null;
+      const formattedDate = formatPubDate(pubDateRaw);
       const whitespaceScoreRaw = (node as any).whitespace_score ?? (node as any).whitespaceScore ?? null;
       const localDensityRaw = (node as any).local_density ?? (node as any).localDensity ?? null;
       map.set(node.id, {
-        pubDateValue: parseDateValue(pubDateRaw),
+        pubDateLabel: formattedDate,
+        pubDateValue: toDateValue(formattedDate),
         whitespaceScore: parseMetric(whitespaceScoreRaw),
         localDensity: parseMetric(localDensityRaw),
       });
@@ -350,10 +488,22 @@ export default function WhitespacePage() {
   );
 
   const handleViewExamples = useCallback(
-    (signal: SignalInfo, mode: ExampleSortMode) => {
+    (assigneeName: string, signal: SignalInfo, mode: ExampleSortMode) => {
       const nodeIds = signal.node_ids ?? [];
+      if (!nodeIds || nodeIds.length === 0) {
+        setHighlightedNodes([]);
+        setLastExamplesContext(null);
+        return;
+      }
       const sorted = sortNodeIds(nodeIds, mode);
       setHighlightedNodes(sorted);
+      setLastExamplesContext({
+        assignee: assigneeName,
+        signalType: signal.type,
+        signalStatus: signal.status,
+        signalConfidence: signal.confidence,
+        mode,
+      });
     },
     [sortNodeIds],
   );
@@ -361,7 +511,90 @@ export default function WhitespacePage() {
   const handleClearExamples = useCallback(() => {
     setHighlightedNodes([]);
     setActiveKey(null);
+    setLastExamplesContext(null);
   }, []);
+
+  const graphNodeLookup = useMemo(() => {
+    const map = new Map<string, WsGraph["nodes"][number]>();
+    (result?.graph?.nodes ?? []).forEach((node) => {
+      map.set(node.id, node);
+    });
+    return map;
+  }, [result?.graph?.nodes]);
+
+  const highlightedRows = useMemo(() => {
+    if (!highlightedNodes || highlightedNodes.length === 0) return [];
+    return highlightedNodes.map((id) => {
+      const node = graphNodeLookup.get(id);
+      const meta = nodeMetaLookup.get(id);
+      const title = node?.title && node.title.trim().length > 0 ? node.title : id;
+      const assigneeDisplay = node?.assignee && node.assignee.trim().length > 0 ? node.assignee : "Unknown";
+      const tooltip = node?.tooltip ? node.tooltip : "";
+      const pubDate = meta?.pubDateLabel ?? null;
+      return {
+        id,
+        title,
+        assignee: assigneeDisplay,
+        pubId: id,
+        pubDate: pubDate ?? "--",
+        tooltip,
+        linkId: formatGooglePatentId(id),
+      };
+    });
+  }, [graphNodeLookup, highlightedNodes, nodeMetaLookup]);
+
+  const handleExportExamplesPdf = useCallback(() => {
+    if (!lastExamplesContext || highlightedRows.length === 0) {
+      return;
+    }
+    const modeLabel = lastExamplesContext.mode === "recent" ? "Recent" : "Related";
+    const signalLabel = SIGNAL_LABELS[lastExamplesContext.signalType];
+    const signalStrength = formatStatus(lastExamplesContext.signalStatus, lastExamplesContext.signalConfidence);
+
+    const lines: string[] = [];
+    lines.push(`${lastExamplesContext.assignee} - ${signalLabel}: ${signalStrength} (${modeLabel} Examples)`);
+    lines.push(`Focus Keywords: ${focusKeywords || "--"}`);
+    lines.push(`Focus CPC: ${focusCpcLike || "--"}`);
+    lines.push(`From: ${dateFrom || "--"}`);
+    lines.push(`To: ${dateTo || "--"}`);
+    lines.push("");
+
+    highlightedRows.forEach((row, index) => {
+      lines.push(`${index + 1}. ${row.title}`);
+      lines.push(`   Pub ID: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate}`);
+      if (row.tooltip) {
+        const cleanTooltip = row.tooltip.replace(/\s+/g, " ").trim();
+        if (cleanTooltip) {
+          lines.push(`   Note: ${cleanTooltip}`);
+        }
+      }
+      lines.push("");
+    });
+
+    const pdfBlob = buildSimplePdf(lines);
+    const url = URL.createObjectURL(pdfBlob);
+    const modeSlug = modeLabel.toLowerCase();
+    const safeAssignee = lastExamplesContext.assignee.replace(/[^A-Za-z0-9_-]+/g, "_") || "assignee";
+    const filename = `${safeAssignee}_${lastExamplesContext.signalType}_${modeSlug}_examples.pdf`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }, [dateFrom, dateTo, focusCpcLike, focusKeywords, highlightedRows, lastExamplesContext]);
+
+  const examplesCardInfo = useMemo(() => {
+    if (!lastExamplesContext) return null;
+    const modeLabel = lastExamplesContext.mode === "recent" ? "Recent" : "Related";
+    const signalLabel = SIGNAL_LABELS[lastExamplesContext.signalType];
+    const signalStrength = formatStatus(lastExamplesContext.signalStatus, lastExamplesContext.signalConfidence);
+    return {
+      title: `${lastExamplesContext.assignee} - ${signalLabel}: ${signalStrength} (${modeLabel} Examples)`,
+      modeLabel,
+    };
+  }, [lastExamplesContext]);
 
   const formattedAssignees = useMemo(() => {
     if (!result) return [];
@@ -476,7 +709,7 @@ export default function WhitespacePage() {
                 style={primaryBtn}
                 disabled={loading || !isAuthenticated}
               >
-                {loading ? "Computing..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
+                {loading ? "Identifying..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
               </button>
             </Row>
             <div>
@@ -682,7 +915,7 @@ export default function WhitespacePage() {
                                       <div>{signal.why}</div>
                                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                                         <button
-                                          onClick={() => handleViewExamples(signal, "recent")}
+                                          onClick={() => handleViewExamples(assignee.assignee, signal, "recent")}
                                           style={{
                                             ...exampleBtn,
                                             cursor: hasExamples ? "pointer" : "not-allowed",
@@ -693,7 +926,7 @@ export default function WhitespacePage() {
                                           View Examples (Recent)
                                         </button>
                                         <button
-                                          onClick={() => handleViewExamples(signal, "related")}
+                                          onClick={() => handleViewExamples(assignee.assignee, signal, "related")}
                                           style={{
                                             ...exampleBtn,
                                             background: "#1e293b",
@@ -793,6 +1026,77 @@ export default function WhitespacePage() {
                 </div>
               </div>
             </Card>
+
+            {highlightedRows.length > 0 && lastExamplesContext && examplesCardInfo && (
+              <Card>
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{examplesCardInfo.title}</h2>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12, color: "#475569" }}>
+                        <span><strong>Focus Keywords:</strong> {focusKeywords || "--"}</span>
+                        <span><strong>Focus CPC:</strong> {focusCpcLike || "--"}</span>
+                        <span><strong>From:</strong> {dateFrom || "--"}</span>
+                        <span><strong>To:</strong> {dateTo || "--"}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleExportExamplesPdf}
+                      style={{
+                        ...exportBtn,
+                        cursor: highlightedRows.length > 0 ? "pointer" : "not-allowed",
+                        opacity: highlightedRows.length > 0 ? 1 : 0.5,
+                      }}
+                      disabled={highlightedRows.length === 0}
+                    >
+                      Export PDF
+                    </button>
+                  </div>
+                  <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ maxHeight: 360, overflow: "auto" }}>
+                      <table style={tableStyle}>
+                        <thead>
+                          <tr>
+                            <th style={{ ...thStyle, width: 48 }}>#</th>
+                            <th style={thStyle}>Title</th>
+                            <th style={thStyle}>Pub ID</th>
+                            <th style={thStyle}>Assignee</th>
+                            <th style={thStyle}>Publication Date</th>
+                            <th style={thStyle}>Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {highlightedRows.map((row, index) => {
+                            const cleanNote = row.tooltip ? truncate(row.tooltip.replace(/\s+/g, " "), 200) : "--";
+                            return (
+                              <tr key={row.id}>
+                                <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{index + 1}</td>
+                                <td style={tdStyle}>
+                                  <div style={{ fontWeight: 600, color: "#0f172a" }}>{row.title}</div>
+                                </td>
+                                <td style={tdStyle}>
+                                  <a
+                                    href={`https://patents.google.com/patent/${encodeURIComponent(row.linkId)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}
+                                  >
+                                    {row.pubId}
+                                  </a>
+                                </td>
+                                <td style={tdStyle}>{row.assignee}</td>
+                                <td style={tdStyle}>{row.pubDate}</td>
+                                <td style={tdStyle}>{cleanNote}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {debugSummary && (
               <Card>
