@@ -17,10 +17,13 @@ class Settings:
     """
 
     database_url: str = os.environ.get("DATABASE_URL", "")
+    sqlalchemy_database_uri: str = os.environ.get("SQLALCHEMY_DATABASE_URI", "")
     app_debug: bool = os.environ.get("APP_DEBUG", "0") in {"1", "true", "True"}
 
 def get_settings() -> Settings:
     s = Settings()
     if not s.database_url:
         raise RuntimeError("DATABASE_URL is required")
+    if not s.sqlalchemy_database_uri:
+        raise RuntimeError("SQLALCHEMY_DATABASE_URI is required")
     return s

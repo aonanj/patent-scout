@@ -32,7 +32,7 @@ def _psycopg3_url(dsn: str) -> str:
     return str(url)
 
 
-config.set_main_option("sqlalchemy.url", _psycopg3_url(get_settings().database_url))
+config.set_main_option("sqlalchemy.url", _psycopg3_url(get_settings().sqlalchemy_database_uri))
 
 e = create_engine(
     config.get_main_option(name="sqlalchemy.url", default="")
