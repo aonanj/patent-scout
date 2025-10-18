@@ -93,12 +93,12 @@ class NodeDatum:
 
 
 SIGNAL_LABELS: dict[SignalKind, str] = {
-    "focus_shift": "Focus Convergence",
-    "emerging_gap": "Sparse Focus Area",
-    "crowd_out": "Crowd-out Risk",
-    "bridge": "Bridge Opportunity",
+    "focus_shift": "Focus Area Convergence",
+    "emerging_gap": "Less Occupied Focus Area",
+    "crowd_out": "High Density Focus Area",
+    "bridge": "Low Neighborhood Connectivity",
 }
-SIGNAL_ORDER: tuple[SignalKind, ...] = ("focus_shift", "emerging_gap", "crowd_out", "bridge")
+SIGNAL_ORDER: tuple[SignalKind, ...] = ("emerging_gap", "bridge", "crowd_out", "focus_shift")
 
 def pick_model(conn: psycopg.Connection, preferred: str | None = None) -> str:
     """Choose an available embedding model.
@@ -730,10 +730,10 @@ def build_assignee_signals(
             crowd_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
             bridge_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
             signal_payloads: list[SignalPayload] = [
-                SignalPayload(type="focus_shift", status=focus_result.status(), confidence=0.0, why=focus_result.message, node_ids=[]),
                 SignalPayload(type="emerging_gap", status=emerging_result.status(), confidence=0.0, why=emerging_result.message, node_ids=[]),
-                SignalPayload(type="crowd_out", status=crowd_result.status(), confidence=0.0, why=crowd_result.message, node_ids=[]),
                 SignalPayload(type="bridge", status=bridge_result.status(), confidence=0.0, why=bridge_result.message, node_ids=[]),
+                SignalPayload(type="crowd_out", status=crowd_result.status(), confidence=0.0, why=crowd_result.message, node_ids=[]),
+                SignalPayload(type="focus_shift", status=focus_result.status(), confidence=0.0, why=focus_result.message, node_ids=[]),
             ]
             assignee_payloads.append(AssigneeSignals(assignee=assignee, k=scope_text, signals=signal_payloads))
             continue
@@ -817,10 +817,10 @@ def build_assignee_signals(
             return payload
 
         signal_payloads = [
-            _payload("focus_shift", focus_result, focus_node_ids),
             _payload("emerging_gap", emerging_result, emerging_node_ids),
-            _payload("crowd_out", crowd_result, crowd_node_ids),
             _payload("bridge", bridge_result, bridge_node_ids),
+            _payload("crowd_out", crowd_result, crowd_node_ids),
+            _payload("focus_shift", focus_result, focus_node_ids),
         ]
 
         assignee_debug: dict[str, Any] | None = None

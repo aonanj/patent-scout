@@ -6,8 +6,9 @@ and supporting metadata so the API layer can decide how much detail to expose.
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal, Sequence
+from typing import Literal
 
 import numpy as np
 
@@ -62,7 +63,7 @@ def pct_rank(value: float, ref: Sequence[float]) -> float:
 def signal_focus_shift(dist_series: Sequence[float], share_series: Sequence[float], n_samples: int) -> SignalComputation:
     """Detect whether filings are converging toward the keyword focus."""
     if len(dist_series) < 3 or len(share_series) < 3 or n_samples < 4:
-        return SignalComputation(False, 0.0, "Not enough recent filings to judge movement toward the focus.", {"samples": float(n_samples)})
+        return SignalComputation(False, 0.0, "Not enough recent filings to judge movement toward focus input(s).", {"samples": float(n_samples)})
 
     s_dist, t_dist = slope_conf([-d for d in dist_series])  # positive slope => distance decreasing
     s_share, t_share = slope_conf(share_series)
@@ -81,11 +82,11 @@ def signal_focus_shift(dist_series: Sequence[float], share_series: Sequence[floa
 
     if not ok:
         conf = 0.0
-        message = "The assignee's latest patent filings stay anchored in prior themes; no sustained convergence toward the selected keywords is visible."
+        message = "Assignee's recent filings are anchored in prior subject matter scope; no persistent convergence toward focus input(s) is evident. Higher existing whitespace potential."
     elif trend_votes == 1:
-        message = "The assignee has begun converging patent filings toward the selected keywords, but the change remains uneven across volume and location."
+        message = "Assignee's recent filings are converging toward focus input(s), but no clear pattern across volume and subject matter. Moderate existing whitespace potential."
     else:
-        message = "The assignee's recent patent filings converge around the selected keywords and now make up a growing share of their portfolio."
+        message = "Assignee's recent filings converge around focus input(s) and now comprise a growing share of Assignee's portfolio. Lower existing whitespace potential."
 
     debug = {
         "slope_dist": float(s_dist),
@@ -121,11 +122,11 @@ def signal_emerging_gap(
 
     if not ok:
         conf = 0.0
-        message = "The assignee's latest filings land in technology areas that other applicants already cover; no open pocket of whitespace is emerging near this focus."
+        message = "Assignee's recent filings overlap or nearly overlap with subject matter area(s) already covered by other assignees' filings near focus input(s). Low whitespace potential near focus input(s)."
     elif heated_neighbors:
-        message = "The assignee is filing into a lightly contested pocket near the focus while neighboring applicants accelerate, signalling a chance to establish a lead before the area fills."
+        message = "Assignee's recent filings are directed to lower-density subject matter areas near focus input(s); other assignees' filings are markedly increasing. Moderate existing whitespace potential."
     else:
-        message = "The assignee is filing into a lightly contested pocket near the focus, but neighboring applicants are only inching forward, so the window may stay open longer."
+        message = "Assignee's recent filings are directed to lower-density subject matter areas near focus input(s); no clear pattern is emerging in other assignees' filings. Higher existing whitespace potential."
 
     debug = {
         "current_score": current_score,
@@ -168,11 +169,11 @@ def signal_crowd_out(
 
     if not ok:
         conf = 0.0
-        message = "Recent competitor filings still leave breathing room around the selected focus; no material crowd-out pressure is showing up."
+        message = "Assignee's recent filings leave some latitude around focus input(s); no patterns indicative of significant crowd-out pressure. Higher whitespace potential exists."
     elif ws_decline and density_gain:
-        message = "Competitors are filing aggressively around the selected focus, shrinking available whitespace and concentrating coverage."
+        message = "Assignee's recent filings are markedly increasing around focus input(s), reducing available whitespace and concentrating coverage. Moderate whitespace potential exists (caution)."
     else:
-        message = "Competitor filings remain stacked around an already tight focus area, keeping steady pressure on the remaining whitespace."
+        message = "Assignee's recent filings are recently concentrated around focus input(s), which is already densely populated. Low whitespace potential exists."
 
     debug = {
         "slope_ws": float(slope_ws),
@@ -209,11 +210,11 @@ def signal_bridge(
 
     if not ok:
         conf = 0.0
-        message = "Recent filings do not reveal a clear linking opportunity between neighboring technology areas near the focus."
+        message = "Recent filings in neighboring subject matter area(s) near focus input(s) are markedly increasing, and those recent filings are closely related and/or exhibit a pattern linking them. Low whitespace potential in gaps between subject matter area(s) near focus input(s)."
     elif shared_growth:
-        message = "Neighboring technology areas near the focus are both accelerating in patent filings while the space between them stays thin, signalling a bridge opportunity."
+        message = "Recent filings are markedly increasing in neighboring subject matter area(s) near focus input(s), but no clear patterns linking those recent filings are evident. Moderate whitespace potential in gaps between subject matter area(s) near focus input(s)."
     else:
-        message = "At least one neighboring technology area is ramping patent filings while the gap between topics remains under-served, suggesting a bridge opportunity to connect them."
+        message = "Recent filings in neighboring subject matter area(s) near focus input(s) do not have clear relationships, and no patterns linking recent filings are evident. Higher whitespace potential in gaps between subject matter area(s) near focus input(s)."
 
     debug = {
         "openness": float(openness),
