@@ -93,10 +93,10 @@ class NodeDatum:
 
 
 SIGNAL_LABELS: dict[SignalKind, str] = {
-    "focus_shift": "Focus Area Convergence",
-    "emerging_gap": "Less Occupied Focus Area",
-    "crowd_out": "High Density Focus Area",
-    "bridge": "Low Neighborhood Connectivity",
+    "focus_shift": "Convergence Toward Focus Area",
+    "emerging_gap": "Focus Area With Neighbor Underdevelopment",
+    "crowd_out": "Sharply Rising Density Near Focus Area",
+    "bridge": "Neighbor Linking Potential Near Focus Area",
 }
 SIGNAL_ORDER: tuple[SignalKind, ...] = ("emerging_gap", "bridge", "crowd_out", "focus_shift")
 

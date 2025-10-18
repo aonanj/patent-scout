@@ -34,17 +34,17 @@ type WhitespaceResponse = {
 };
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
-  focus_shift: "Focus Convergence",
-  emerging_gap: "Sparse Focus Area",
-  crowd_out: "Crowd-out Risk",
-  bridge: "Bridge Opportunity",
+  focus_shift: "Convergence Toward Focus Area",
+  emerging_gap: "Focus Area With Neighbor Underdevelopment",
+  crowd_out: "Sharply Rising Density Near Focus Area",
+  bridge: "Neighbor Linking Potential Near Focus Area",
 };
 
 const SIGNAL_ICONS: Record<SignalKind, string> = {
-  focus_shift: "⚠",
-  emerging_gap: "🌱",
-  crowd_out: "⛔",
-  bridge: "🔗",
+  focus_shift: "⇶",
+  emerging_gap: "☼",
+  crowd_out: "⛅︎",
+  bridge: "⫘",
 };
 
 type SignalTone = "opportunity" | "risk";
@@ -57,8 +57,8 @@ const SIGNAL_TONES: Record<SignalKind, SignalTone> = {
 };
 
 const SIGNAL_TONE_ICONS: Record<SignalTone, string> = {
-  opportunity: "★",
-  risk: "!",
+  opportunity: "☝︎",
+  risk: "⚠︎",
 };
 
 const SIGNAL_TONE_LABELS: Record<SignalTone, string> = {
