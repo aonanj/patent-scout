@@ -472,6 +472,7 @@ def _persist_sync(
     labels: np.ndarray,
     dens: np.ndarray,
     scores: np.ndarray,
+    user_id: str,
 ) -> None:
     """psycopg3 COPY-based upsert for edges and label/score updates."""
     k = idx.shape[1]
@@ -480,24 +481,25 @@ def _persist_sync(
         # 1) Temp edges
         cur.execute("""
             CREATE TEMP TABLE tmp_edges(
+              user_id text,
               src text,
               dst text,
               w   real
             ) ON COMMIT DROP
         """)
-        with cur.copy("COPY tmp_edges (src, dst, w) FROM STDIN") as cp:
+        with cur.copy("COPY tmp_edges (user_id, src, dst, w) FROM STDIN") as cp:
             for i, src in enumerate(pub_ids):
                 for jpos in range(k):
                     j = int(idx[i, jpos])
                     if i == j:
                         continue
-                    cp.write_row((src, pub_ids[j], float(1.0 - dist[i, jpos])))
+                    cp.write_row((user_id, src, pub_ids[j], float(1.0 - dist[i, jpos])))
 
-        # Upsert edges
+        # Upsert edges with user_id
         cur.execute("""
-            INSERT INTO knn_edge(src, dst, w)
-            SELECT src, dst, w FROM tmp_edges
-            ON CONFLICT (src, dst) DO UPDATE SET w = EXCLUDED.w
+            INSERT INTO knn_edge(user_id, src, dst, w)
+            SELECT user_id, src, dst, w FROM tmp_edges
+            ON CONFLICT (user_id, src, dst) DO UPDATE SET w = EXCLUDED.w
         """)
 
         # 2) Temp updates for embeddings
@@ -544,6 +546,7 @@ def _persist_background(
     labels: np.ndarray,
     dens: np.ndarray,
     scores: np.ndarray,
+    user_id: str,
 ) -> None:
     try:
         with pool.connection() as conn:
@@ -556,6 +559,7 @@ def _persist_background(
                 labels,
                 dens,
                 scores,
+                user_id,
             )
     except Exception:
         logger.exception("Failed to persist whitespace metrics")
@@ -860,8 +864,14 @@ def get_whitespace_graph(
     req: GraphRequest,
     pool: Annotated[ConnectionPool, Depends(get_pool)],
     background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
 ) -> WhitespaceResponse:
     _validate_graph_params(req)
+
+    # Extract user_id from JWT token (Auth0 uses 'sub' claim for user ID)
+    user_id = current_user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User ID not found in authentication token")
 
     with pool.connection() as conn:
         try:
@@ -988,6 +998,7 @@ def get_whitespace_graph(
         labels,
         dens,
         scores,
+        user_id,
     )
 
     debug_payload: dict[str, Any] | None = None

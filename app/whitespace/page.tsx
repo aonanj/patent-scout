@@ -111,6 +111,15 @@ type ExamplesContext = {
 
 const EXAMPLE_LIMIT = 8;
 
+const PDF_PAGE_WIDTH = 612;
+const PDF_PAGE_HEIGHT = 792;
+const PDF_MARGIN = 72;
+const PDF_LINE_HEIGHT = 16;
+const PDF_LINES_PER_PAGE = Math.max(
+  1,
+  Math.floor((PDF_PAGE_HEIGHT - PDF_MARGIN * 2) / PDF_LINE_HEIGHT),
+);
+
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
@@ -327,28 +336,55 @@ function buildSimplePdf(lines: string[]): Blob {
   const sanitizedLines = lines.map((line) => sanitizePdfText(line));
   const wrappedLines = sanitizedLines.flatMap((line) => wrapPdfLine(line, 92));
   const escapedLines = wrappedLines.map((line) => escapePdfText(line));
+  const effectiveLines = escapedLines.length > 0 ? escapedLines : [""];
 
-  let content = "BT\n/F1 12 Tf\n16 TL\n72 760 Td\n";
-  escapedLines.forEach((line, index) => {
-    if (index === 0) {
+  const pageChunks: string[][] = [];
+  for (let i = 0; i < effectiveLines.length; i += PDF_LINES_PER_PAGE) {
+    pageChunks.push(effectiveLines.slice(i, i + PDF_LINES_PER_PAGE));
+  }
+
+  const pageContents = pageChunks.map((pageLines) => {
+    let content = "BT\n/F1 12 Tf\n16 TL\n";
+    content += `1 0 0 1 ${PDF_MARGIN} ${PDF_PAGE_HEIGHT - PDF_MARGIN} Tm\n`;
+    pageLines.forEach((line, index) => {
+      if (index > 0) {
+        content += "T*\n";
+      }
       content += `(${line}) Tj\n`;
-    } else {
-      content += "T*\n";
-      content += `(${line}) Tj\n`;
-    }
+    });
+    content += "ET";
+    return content;
   });
-  content += "ET";
 
   const encoder = new TextEncoder();
-  const contentBytes = encoder.encode(content);
+  const pageContentBytes = pageContents.map((content) => encoder.encode(content));
 
-  const objects: string[] = [
-    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
-    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
-    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
-    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
-    `5 0 obj << /Length ${contentBytes.length} >>\nstream\n${content}\nendstream\nendobj`,
-  ];
+  const pageCount = pageContents.length;
+  const fontObjNumber = 3 + pageCount * 2;
+
+  const objects: string[] = [];
+
+  objects.push("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj");
+
+  const pageObjectNumbers = pageContents.map((_, idx) => 3 + idx * 2);
+  const kids = pageObjectNumbers.map((num) => `${num} 0 R`).join(" ");
+  objects.push(`2 0 obj << /Type /Pages /Kids [${kids}] /Count ${pageCount} >> endobj`);
+
+  pageContents.forEach((content, idx) => {
+    const pageObjNumber = pageObjectNumbers[idx];
+    const contentObjNumber = pageObjNumber + 1;
+    const length = pageContentBytes[idx].length;
+    objects.push(
+      `${pageObjNumber} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontObjNumber} 0 R >> >> /Contents ${contentObjNumber} 0 R >> endobj`,
+    );
+    objects.push(
+      `${contentObjNumber} 0 obj << /Length ${length} >>\nstream\n${content}\nendstream\nendobj`,
+    );
+  });
+
+  objects.push(
+    `${fontObjNumber} 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj`,
+  );
 
   const header = "%PDF-1.3\n";
   let body = "";
@@ -1253,7 +1289,7 @@ export default function WhitespacePage() {
         )}
 
         <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
         </footer>
       </div>
     </div>

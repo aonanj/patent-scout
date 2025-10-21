@@ -1,0 +1,52 @@
+{
+  "q": null,
+  "filters": [
+    {
+      "name": "applicationMetaData.cpcClassificationBag",
+      "value": [
+        "G06N*",
+        "G06V*",
+        "G06F16/90*",
+        "G06F17*",
+        "G06F18*",
+        "G06F40*",
+        "G06K9*",
+        "G06T7*",
+        "A16B*",
+        "G10L*",
+        "G05D*",
+        "B60W*"
+      ]
+    },
+    {
+      "name": "applicationMetaData.applicationTypeLabelName",
+      "value": [
+        "Utility"
+      ]
+    },
+    {
+      "name": "applicationMetaData.publicationCategoryBag",
+      "value": [
+        "Pre-Grant Publications - PGPub",
+        "Granted/Issued"
+      ]
+    }
+  ],
+  "rangeFilters": [
+    {
+      "field": "applicationMetaData.earliestPublicationDate",
+      "valueFrom": "2025-02-14",
+      "valueTo": "2025-03-17"
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 100
+  },
+  "sort": [
+    {
+      "field": "applicationMetaData.earliestPublicationDate",
+      "order": "Desc"
+    }
+  ]
+}
