@@ -249,14 +249,13 @@ python add_canon_name.py \
 The `/whitespace/graph` endpoint accepts filters (keywords, CPCs, date ranges), neighbor counts, and layout configuration. The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) renders the response with Sigma.js and Force-Atlas2 layout, surfaces per-assignee signal cards, and displays detailed patent examples. User-specific whitespace tables ensure isolated analysis per authenticated user.
 
 ## Screenshots
-- Search & Trends UI – [docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
-- Whitespace Signals UI – [docs/screenshots/whitespace-ui.png](docs/screenshots/whitespace-ui.png)
-- Patent Scout API Docs – [docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
+- Search & Trends UI – ![docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
+- Whitespace Signals UI – ![docs/screenshots/whitespace-ui.png](docs/screenshots/whitespace-ui.png)
+- Patent Scout API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
 ## Documentation & Legal Pages
 - **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [search & trends](app/help/search_trends/page.tsx) and [whitespace analytics](app/help/whitespace/page.tsx).
 - **Legal Pages**: Privacy policy ([app/docs/privacy/page.tsx](app/docs/privacy/page.tsx)), Terms of Service ([app/docs/tos/page.tsx](app/docs/tos/page.tsx)), and Data Processing Agreement ([app/docs/dpa/page.tsx](app/docs/dpa/page.tsx)).
-- **Source Documents**: Commercial policy templates stored in [resources/](resources/) (ToS.docx, privacy_policy.docx).
 
 ## License
 This repository is publicly viewable for portfolio purposes only. The code is proprietary.
