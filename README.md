@@ -1,16 +1,20 @@
 # Patent Scout
 
-> Patent Scout delivers confidence-first patent intelligence for AI R&D teams. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by an automated ETL into Postgres. Current corpus includes AI-related 46k+ patents and publications dating back to 2023. 
+> Patent Scout delivers confidence-first patent intelligence for AI R&D teams. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes AI-related 46k+ patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO PEDS API, and bulk XML feeds.
 
 ## Overview
-The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js App Router (React 19) provides the Auth0-gated UI and API proxy; a BigQuery + OpenAI ETL keeps the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes.
+The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with OpenAI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific whitespace analysis tables enable personalized patent landscape exploration with isolated graph computation.
 
 ## Feature Highlights
-- Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent detail expansion (`app/api.py`, `app/page.tsx`).
-- Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles (`components/NavBar.tsx`, `app/layout.tsx`).
-- Whitespace analytics on focus keyword(s) and/or CPC(s) using igraph, UMAP, Leiden clustering, and signal scoring ordered by Assignee, and visually indicated through an interactive Sigma.js graph (`app/whitespace_api.py`, `components/SigmaWhitespaceGraph.tsx`, `app/whitespace/page.tsx`).
-- Automated BigQuery ingestion, OpenAI embedding generation, and Mailgun/console alert notifications packaged as standalone runners (`etl.py`, `alerts_runner.py`).
-- Comprehensive pytest suite covering authentication, repository search logic, whitespace signal math, and API contracts (`tests/`).
+- Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)).
+- Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
+- Whitespace analytics on focus keyword(s) and/or CPC(s) using igraph, UMAP, Leiden clustering, and signal scoring ordered by Assignee, and visually indicated through an interactive Sigma.js graph ([app/whitespace_api.py](app/whitespace_api.py), [app/whitespace_signals.py](app/whitespace_signals.py), [components/SigmaWhitespaceGraph.tsx](components/SigmaWhitespaceGraph.tsx), [app/whitespace/page.tsx](app/whitespace/page.tsx)).
+- Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
+- Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent coverage.
+- Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
+- Automated Mailgun/console alert notifications for saved queries packaged as standalone runner ([alerts_runner.py](alerts_runner.py)).
+- User-specific whitespace analysis with isolated graph computation and personalized signal detection.
+- Comprehensive pytest suite covering authentication, repository search logic, whitespace signal math, and API contracts ([tests/](tests/)).
 
 ## Live Deployment
 - App: https://patent-scout.vercel.app/
@@ -49,34 +53,70 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 ```
 
 ## Tech Stack
-- Backend: FastAPI 0.116, Pydantic v2, psycopg 3 async pools, optional ReportLab export, whitespace analytics with igraph, leidenalg, umap-learn, and scikit-learn (`app/`).
-- Frontend: Next.js 15 App Router, React 19, Auth0 React SDK, Sigma.js, Graphology, Tailwind CLI, and inline design system (`app/*.tsx`, `components/`).
-- Data & Tooling: Google BigQuery, OpenAI `text-embedding-3` models, Alembic migrations, pip-tools lockfiles, pytest, and Ruff (`etl.py`, `migrations/`, `tests/`).
+- **Backend**: FastAPI 0.115+, Pydantic v2, psycopg 3 async pools, asyncpg 0.30+, aiosmtplib 4.0+, whitespace analytics with igraph, leidenalg, umap-learn, and scikit-learn ([app/](app/)).
+- **Frontend**: Next.js 15.5, React 19.1, Auth0 React SDK 2.4, Sigma.js 3.0-beta, Graphology 0.25, Force-Atlas2 layout, Tailwind CSS 3.4, TypeScript 5.9 ([app/*.tsx](app/), [components/](components/)).
+- **Data Pipelines**: Google BigQuery, USPTO PEDS API, USPTO bulk XML parsing, OpenAI `text-embedding-3` models ([etl.py](etl.py), [etl_uspto.py](etl_uspto.py), [etl_xml_fulltext.py](etl_xml_fulltext.py)).
+- **Infrastructure & Tooling**: Postgres 15+ with pgvector, Alembic migrations, pytest with asyncio support, Ruff linting, pip-tools lockfiles, Docker containerization ([migrations/](migrations/), [tests/](tests/)).
 
 ## Repository Layout
 ```
 ├── app/
-│   ├── api.py                  # FastAPI application & routers
-│   ├── whitespace_api.py       # Whitespace analytics endpoint
-│   ├── api/                    # Next.js route handlers (backend proxy)
-│   ├── page.tsx                # Search & trends experience
-│   ├── whitespace/page.tsx     # Whitespace exploration UI
-│   ├── docs/                   # Static docs / legal pages
-│   ├── auth.py, config.py, db.py, repository.py, schemas.py
+│   ├── api.py                       # FastAPI application & routers
+│   ├── whitespace_api.py            # Whitespace analytics endpoint
+│   ├── whitespace_signals.py        # Whitespace signal calculation logic
+│   ├── auth.py                      # Auth0 JWT validation
+│   ├── config.py                    # Settings from environment
+│   ├── db.py                        # Async DB connection pools
+│   ├── repository.py                # SQL query builders & search logic
+│   ├── schemas.py                   # Pydantic models
+│   ├── embed.py                     # OpenAI embedding client
+│   ├── api/                         # Next.js route handlers (backend proxy)
+│   │   ├── search/route.ts          # Search proxy
+│   │   ├── export/route.ts          # CSV/PDF export
+│   │   ├── trend/volume/route.ts    # Trend analytics
+│   │   ├── saved-queries/           # Alert CRUD endpoints
+│   │   └── whitespace/graph/        # Whitespace graph endpoints
+│   ├── page.tsx                     # Search & trends experience
+│   ├── whitespace/page.tsx          # Whitespace exploration UI
+│   ├── help/                        # Help documentation pages
+│   │   ├── page.tsx                 # Help index
+│   │   ├── search_trends/page.tsx   # Search & trends help
+│   │   └── whitespace/page.tsx      # Whitespace help
+│   ├── docs/                        # Legal & commercial pages
+│   │   ├── privacy/page.tsx         # Privacy policy
+│   │   ├── tos/page.tsx             # Terms of service
+│   │   └── dpa/page.tsx             # Data Processing Agreement
 │   └── providers.tsx, layout.tsx, globals.css
 ├── components/
-│   ├── NavBar.tsx              # Auth0-aware navigation & alert modal
-│   └── SigmaWhitespaceGraph.tsx# Sigma.js graph renderer
-├── tests/                      # pytest suite (API, repository, signals, auth)
-├── migrations/                 # Alembic environment + versions
-├── docs/screenshots/           # UI & API imagery
-├── infrastructure/logger.py    # Shared logging helper
-├── etl.py                      # BigQuery → Postgres loader + embeddings
-├── alerts_runner.py            # Saved-query alert executor
-├── Dockerfile & start.sh       # FastAPI container entrypoint (runs Alembic)
-├── requirements.in/.txt        # pip-tools inputs & lock
-├── package.json                # Next.js workspace configuration
-└── resources/                  # Commercial ToS & privacy policy source docs
+│   ├── NavBar.tsx                   # Auth0-aware navigation & alert modal
+│   └── SigmaWhitespaceGraph.tsx     # Sigma.js graph renderer
+├── tests/                           # pytest suite (API, repository, signals, auth)
+│   ├── test_api.py, test_auth.py, test_config.py, test_db.py
+│   ├── test_embed.py, test_repository.py
+│   └── test_whitespace_signals.py, test_whitespace_utils.py
+├── migrations/                      # Alembic environment + versions
+│   ├── env.py                       # Migration configuration
+│   └── versions/                    # Schema migrations (whitespace, user tables)
+├── docs/
+│   ├── screenshots/                 # UI & API imagery
+│   └── uspto_odp_api/               # USPTO API schema reference
+├── public/                          # Static assets (favicon, logos)
+├── types/                           # TypeScript ambient declarations
+├── infrastructure/
+│   └── logger.py                    # Centralized logging utility
+├── resources/                       # Commercial ToS & privacy policy source docs
+├── etl.py                           # BigQuery → Postgres loader + embeddings
+├── etl_uspto.py                     # USPTO PEDS API loader (alternative pipeline)
+├── etl_xml_fulltext.py              # USPTO bulk XML parser for abstracts/claims
+├── etl_add_embeddings.py            # Backfill missing embeddings by date range
+├── add_canon_name.py                # Assignee name normalization script
+├── alerts_runner.py                 # Saved-query alert executor
+├── Dockerfile & start.sh            # FastAPI container entrypoint (runs Alembic)
+├── pyproject.toml                   # Python project metadata & dependencies
+├── requirements.in/.txt             # pip-tools inputs & lock
+├── package.json                     # Next.js workspace configuration
+├── tsconfig.json                    # TypeScript configuration
+└── tailwind.config.js               # Tailwind CSS styling
 ```
 
 ## Setup
@@ -165,16 +205,58 @@ The alert runner replays saved queries, diffing against the last `alert_event` t
 python alerts_runner.py
 ```
 
+## Additional Data Pipeline Scripts
+
+### USPTO PEDS API Loader (`etl_uspto.py`)
+Alternative to BigQuery ingestion, loads patent data directly from the USPTO Patent Examination Data System API. Filters by CPC codes and AI keywords locally:
+```bash
+python etl_uspto.py \
+  --dsn "postgresql://user:pass@host/db?sslmode=require" \
+  --date-from 2024-01-01 \
+  --date-to 2024-02-01 \
+  --embed --claims
+```
+
+### USPTO Bulk XML Parser (`etl_xml_fulltext.py`)
+Parses USPTO bulk XML files (weekly patent grant feeds) to extract full-text abstracts and claims. Updates `patent_staging` table with parsed content:
+```bash
+python etl_xml_fulltext.py \
+  --xml resources/ipa250220.xml \
+  --dsn "postgresql://user:pass@host/db?sslmode=require"
+```
+
+### Embedding Backfill Utility (`etl_add_embeddings.py`)
+Backfills missing embeddings for patents within a specified date range. Supports both title+abstract (`|ta`) and claims (`|claims`) embedding models:
+```bash
+python etl_add_embeddings.py \
+  --dsn "postgresql://user:pass@host/db?sslmode=require" \
+  --date-from 2024-01-01 \
+  --date-to 2024-02-01 \
+  --model text-embedding-3-small \
+  --suffix ta
+```
+
+### Canonical Assignee Normalizer (`add_canon_name.py`)
+Generates canonical assignee names by removing common corporate suffixes (Inc., LLC, Corp., etc.) to improve entity matching and trend analysis. Creates entries in `canonical_assignee_name` and `assignee_alias` tables:
+```bash
+python add_canon_name.py \
+  --dsn "postgresql://user:pass@host/db?sslmode=require"
+```
+
 ## Whitespace Analytics
-`app/whitespace_api.py` builds localized patent graphs by selecting a model (`WS_EMBEDDING_MODEL`), computing cosine KNN, clustering with Leiden, scoring whitespace intensity, and evaluating signal rules for focus convergence, emerging gaps, crowd-out risk, and bridge opportunities. The `/whitespace/graph` endpoint accepts filters, neighbor counts, and layout configuration; the React page renders the response with Sigma.js and surfaces per-assignee signal cards plus patent examples.
+[app/whitespace_api.py](app/whitespace_api.py) builds user-specific patent graphs by selecting an embedding model (`WS_EMBEDDING_MODEL`), computing cosine KNN neighborhoods, applying Leiden community detection, and scoring whitespace intensity per assignee. Signal detection logic in [app/whitespace_signals.py](app/whitespace_signals.py) evaluates focus convergence, emerging gaps, crowd-out risk, and bridge opportunities based on patent clustering patterns and assignee behavior.
+
+The `/whitespace/graph` endpoint accepts filters (keywords, CPCs, date ranges), neighbor counts, and layout configuration. The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) renders the response with Sigma.js and Force-Atlas2 layout, surfaces per-assignee signal cards, and displays detailed patent examples. User-specific whitespace tables ensure isolated analysis per authenticated user.
 
 ## Screenshots
-- Search & Trends UI – `docs/screenshots/search-ui.png`
-- Whitespace Signals UI – `docs/screenshots/whitespace-ui.png`
-- Patent Scout API Docs – `docs/screenshots/api-docs.png`
+- Search & Trends UI – [docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
+- Whitespace Signals UI – [docs/screenshots/whitespace-ui.png](docs/screenshots/whitespace-ui.png)
+- Patent Scout API Docs – [docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
-## Commercial Collateral
-Supporting privacy policy and terms of service documents live in `resources/` alongside marketing pages under `app/docs/`.
+## Documentation & Legal Pages
+- **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [search & trends](app/help/search_trends/page.tsx) and [whitespace analytics](app/help/whitespace/page.tsx).
+- **Legal Pages**: Privacy policy ([app/docs/privacy/page.tsx](app/docs/privacy/page.tsx)), Terms of Service ([app/docs/tos/page.tsx](app/docs/tos/page.tsx)), and Data Processing Agreement ([app/docs/dpa/page.tsx](app/docs/dpa/page.tsx)).
+- **Source Documents**: Commercial policy templates stored in [resources/](resources/) (ToS.docx, privacy_policy.docx).
 
 ## License
 This repository is publicly viewable for portfolio purposes only. The code is proprietary.

@@ -174,7 +174,11 @@ export default function NavBar() {
           </button>
         </div>
 
-        <div className="hidden md:flex items-center gap-1 pl-2 ml-2 border-l border-slate-200">
+        <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
+          <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Help</Link>
+        </div>
+
+        <div className="hidden md:flex items-center gap-1 pl-2 ml-2">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (
@@ -207,8 +211,7 @@ export default function NavBar() {
           <Link href="/" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Search</Link>
           <Link href="/whitespace" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Whitespace</Link>
           <button onClick={openAlerts} className="px-2 py-1 text-xs rounded hover:bg-slate-100">Alerts</button>
-          <a href="https://www.phaethonorder.com" target="_blank" rel="noreferrer" className="px-2 py-1 text-xs rounded hover:bg-slate-100">PO</a>
-          <a href="https://github.com/aonanj/patent-scout" target="_blank" rel="noreferrer" className="px-2 py-1 text-xs rounded hover:bg-slate-100">GH</a>
+          <Link href="/help" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Help</Link>
         </div>
       </nav>
 
