@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import logging
 import os
 import re
@@ -31,11 +32,11 @@ from dotenv import load_dotenv
 from psycopg import Connection
 from psycopg.rows import TupleRow
 from tenacity import (
+    before_sleep_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    before_sleep_log,
 )
 
 from infrastructure.logger import setup_logger
@@ -397,14 +398,12 @@ def process_assignee_names(
 
                 # Safe rollback
                 safe_rollback(conn)
-
                 if retry_count < max_retries:
                     # Try to reconnect
-                    try:
+                    with contextlib.suppress(Exception):
                         conn.close()
-                    except Exception:
-                        pass
 
+                    logger.info("Attempting to reconnect to database...")
                     logger.info("Attempting to reconnect to database...")
                     conn = psycopg.connect(dsn)
                     logger.info("Successfully reconnected to database")
@@ -418,11 +417,9 @@ def process_assignee_names(
                 break
 
     # Close connection
-    try:
+    # Close connection
+    with contextlib.suppress(Exception):
         conn.close()
-    except Exception as e:
-        logger.warning(f"Error closing connection: {e}")
-
     logger.info(f"Processing complete. Created {canonical_count} canonical names and {alias_count} aliases")
 
     return canonical_count, alias_count

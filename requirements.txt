@@ -250,6 +250,7 @@ requests==2.32.5
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-bigquery
+    #   stripe
 rsa==4.9.1
     # via
     #   -r requirements.in
@@ -286,6 +287,8 @@ starlette==0.47.3
     # via
     #   -r requirements.in
     #   fastapi
+stripe==13.0.1
+    # via -r requirements.in
 tenacity==9.1.2
     # via -r requirements.in
 texttable==1.7.0
@@ -311,6 +314,7 @@ typing-extensions==4.15.0
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+    #   stripe
     #   typing-inspection
 typing-inspection==0.4.1
     # via

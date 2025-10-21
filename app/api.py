@@ -14,7 +14,7 @@ from typing import Annotated, Any, cast
 import psycopg
 
 # Third-party imports
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from psycopg.rows import dict_row
@@ -34,6 +34,9 @@ from .schemas import (
     TrendPoint,
     TrendResponse,
 )
+from .payment_api import router as payment_router
+from .stripe_config import ensure_stripe_configured
+from .stripe_webhooks import process_webhook_event, verify_webhook_signature
 from .whitespace_api import router as whitespace_router
 
 # Optional PDF support
@@ -54,6 +57,7 @@ else:  # pragma: no cover - optional dependency missing
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_auth0_configured()
+    ensure_stripe_configured()
     # Initialize pool at startup for early failure if misconfigured.
     pool = init_pool()
     try:
@@ -82,11 +86,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
 
 app.include_router(whitespace_router)
+app.include_router(payment_router)
 
 class DateRangeReponse(BaseModel):
     min_date: int | None  # YYYYMMDD
@@ -470,3 +475,33 @@ async def export(
         "Content-Disposition": f"attachment; filename={filename}.pdf",
     }
     return StreamingResponse(buffer, headers=headers, media_type="application/pdf")
+
+
+# ----------------------------- Stripe Webhooks -----------------------------
+
+
+@app.post("/webhooks/stripe")
+async def stripe_webhook(request: Request, conn: Conn) -> dict[str, str]:
+    """Handle Stripe webhook events.
+
+    This endpoint processes subscription lifecycle events from Stripe:
+    - checkout.session.completed - New subscription created
+    - customer.subscription.created - Subscription created
+    - customer.subscription.updated - Subscription modified
+    - customer.subscription.deleted - Subscription canceled
+    - invoice.payment_succeeded - Payment succeeded
+    - invoice.payment_failed - Payment failed
+
+    The webhook signature is verified to ensure requests come from Stripe.
+    All events are logged to subscription_event table for auditing.
+
+    Note: This endpoint does NOT require authentication - Stripe sends
+    webhooks directly and authenticates via signature verification.
+    """
+    # Verify webhook signature and parse event
+    event = await verify_webhook_signature(request)
+
+    # Process the event (idempotent - safe to call multiple times)
+    await process_webhook_event(conn, event)
+
+    return {"status": "success"}

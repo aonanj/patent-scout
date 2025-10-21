@@ -3,6 +3,7 @@
 __pycache__
 .DS_Store
 .env
+.env*
 __pycache__/
 copilot-instructions.md
 .instructions/

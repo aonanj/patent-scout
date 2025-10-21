@@ -161,6 +161,7 @@ export default function NavBar() {
         <div className="hidden md:flex items-center gap-2">
           <Link href="/" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Search & Trends</Link>
           <Link href="/whitespace" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
+          <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Billing</Link>
         </div>
 
         <div className="hidden md:flex items-center pl-1 ml-1">
@@ -211,6 +212,7 @@ export default function NavBar() {
           <Link href="/" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Search</Link>
           <Link href="/whitespace" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Whitespace</Link>
           <button onClick={openAlerts} className="px-2 py-1 text-xs rounded hover:bg-slate-100">Alerts</button>
+          <Link href="/billing" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Billing</Link>
           <Link href="/help" className="px-2 py-1 text-xs rounded hover:bg-slate-100">Help</Link>
         </div>
       </nav>
