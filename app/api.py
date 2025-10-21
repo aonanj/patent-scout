@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from .auth import ensure_auth0_configured, get_current_user
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
+from .payment_api import router as payment_router
 from .repository import export_rows, get_patent_detail, search_hybrid, trend_volume
 from .schemas import (
     PatentDetail,
@@ -34,7 +35,6 @@ from .schemas import (
     TrendPoint,
     TrendResponse,
 )
-from .payment_api import router as payment_router
 from .stripe_config import ensure_stripe_configured
 from .stripe_webhooks import process_webhook_event, verify_webhook_signature
 from .whitespace_api import router as whitespace_router

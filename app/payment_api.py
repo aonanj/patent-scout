@@ -9,7 +9,6 @@ This module provides endpoints for:
 
 from __future__ import annotations
 
-import logging
 import os
 from typing import Annotated
 
@@ -21,10 +20,10 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user
 from app.db import get_conn
-from app.stripe_config import get_stripe_settings
 from app.subscription_middleware import get_subscription_info
+from infrastructure.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 router = APIRouter(prefix="/api/payment", tags=["payment"])
 
@@ -146,7 +145,7 @@ async def get_or_create_stripe_customer(
         logger.info(f"Created Stripe customer {customer.id} for user {user_id}")
         return customer.id
 
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.error(f"Failed to create Stripe customer: {e}")
         raise HTTPException(
             status_code=500, detail=f"Failed to create customer: {str(e)}"
@@ -219,14 +218,19 @@ async def create_checkout_session(
             f"with price {req.price_id}"
         )
 
+        if not session.url:
+            raise HTTPException(
+                status_code=500, detail="Checkout session created but URL is missing"
+            )
+
         return CreateCheckoutSessionResponse(session_id=session.id, url=session.url)
 
-    except stripe.error.InvalidRequestError as e:
+    except stripe.InvalidRequestError as e:
         logger.error(f"Invalid checkout session request: {e}")
         raise HTTPException(
             status_code=400, detail=f"Invalid price ID or request: {str(e)}"
         ) from e
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.error(f"Stripe error creating checkout session: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to create checkout session"
@@ -289,7 +293,7 @@ async def create_portal_session(conn: Conn, user: User) -> CustomerPortalRespons
 
         return CustomerPortalResponse(url=session.url)
 
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.error(f"Failed to create portal session: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to create customer portal session"
@@ -443,7 +447,7 @@ async def cancel_subscription(conn: Conn, user: User) -> dict[str, str]:
             "message": "Subscription will be canceled at the end of the billing period"
         }
 
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.error(f"Failed to cancel subscription: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to cancel subscription"
@@ -505,7 +509,7 @@ async def reactivate_subscription(conn: Conn, user: User) -> dict[str, str]:
 
         return {"message": "Subscription reactivated successfully"}
 
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.error(f"Failed to reactivate subscription: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to reactivate subscription"
