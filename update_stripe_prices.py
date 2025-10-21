@@ -64,12 +64,12 @@ def main() -> None:
     price_updates = [
         {
             "placeholder": "price_beta_monthly_placeholder",
-            "name": "Beta Tester - Monthly ($89/month)",
+            "name": "Beta Tester - Monthly ($99/month)",
             "tier": "beta_tester",
         },
         {
             "placeholder": "price_beta_90days_placeholder",
-            "name": "Beta Tester - 90 Days ($210 for 3 months)",
+            "name": "Beta Tester - 90 Days ($259 for 3 months)",
             "tier": "beta_tester",
         },
         {

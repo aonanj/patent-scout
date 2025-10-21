@@ -42,6 +42,7 @@ class CreateCheckoutSessionRequest(BaseModel):
     """Request to create a Stripe Checkout session."""
 
     price_id: str
+    email: str  # User's email address (from Auth0 user profile)
     success_url: str | None = None
     cancel_url: str | None = None
 
@@ -179,16 +180,15 @@ async def create_checkout_session(
         HTTPException: If user missing required claims or Stripe API fails
     """
     user_id = user.get("sub")
-    email = user.get("email")
 
     if not user_id:
         raise HTTPException(status_code=400, detail="User missing 'sub' claim")
 
-    if not email:
-        raise HTTPException(status_code=400, detail="User missing 'email' claim")
+    if not req.email or not req.email.strip():
+        raise HTTPException(status_code=400, detail="Email is required")
 
     # Get or create Stripe customer
-    stripe_customer_id = await get_or_create_stripe_customer(conn, user_id, email)
+    stripe_customer_id = await get_or_create_stripe_customer(conn, user_id, req.email)
 
     # Determine frontend URL for redirects
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")

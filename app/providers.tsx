@@ -14,6 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       authorizationParams={{
         redirect_uri: typeof window !== 'undefined' ? window.location.origin : undefined,
         audience: audience,
+        scope: "openid profile email",
       }}
     >
       {children}

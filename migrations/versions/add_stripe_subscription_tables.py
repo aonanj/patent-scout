@@ -115,8 +115,8 @@ CREATE INDEX subscription_event_processed_at_idx ON subscription_event (processe
 -- Note: stripe_price_id values will need to be updated with actual Stripe price IDs after creating products in Stripe Dashboard
 INSERT INTO price_plan (stripe_price_id, tier, name, amount_cents, currency, interval, interval_count, description) VALUES
   -- Beta Tester Tier
-  ('price_beta_monthly_placeholder', 'beta_tester', 'Beta Tester - Monthly', 8900, 'usd', 'month', 1, 'Beta tester access - $89/month (auto-migrates to User tier after 90 days)'),
-  ('price_beta_90days_placeholder', 'beta_tester', 'Beta Tester - 90 Days', 21000, 'usd', 'month', 3, 'Beta tester access - $210 for 90 days (auto-migrates to User tier after period ends)'),
+  ('price_beta_monthly_placeholder', 'beta_tester', 'Beta Tester - Monthly', 9900, 'usd', 'month', 1, 'Beta tester access - $99/month (auto-migrates to User tier after 90 days)'),
+  ('price_beta_90days_placeholder', 'beta_tester', 'Beta Tester - 90 Days', 25900, 'usd', 'month', 3, 'Beta tester access - $259 for 90 days (auto-migrates to User tier after period ends)'),
 
   -- User Tier
   ('price_user_monthly_placeholder', 'user', 'User - Monthly', 18900, 'usd', 'month', 1, 'Full access - $189/month'),

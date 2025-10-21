@@ -258,7 +258,7 @@ export default function PricingPlans({ plans, onSubscribe }: PricingPlansProps) 
         <div>
           <h3 className="text-xl font-bold text-slate-900 mb-4">Standard Access</h3>
           <p className="text-sm text-slate-600 mb-6">
-            Full-featured access with no time limits. Choose monthly or annual billing.
+            Full-featured access with no limits. Choose monthly or annual billing.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {userPlans.map((plan) => (
@@ -283,7 +283,7 @@ export default function PricingPlans({ plans, onSubscribe }: PricingPlansProps) 
             </div>
             <h4 className="font-semibold text-slate-900 mb-2">Powerful Search</h4>
             <p className="text-sm text-slate-600">
-              Search millions of patents with keyword and semantic search
+              Search 50,000+ patents and applications with keyword and semantic search
             </p>
           </div>
 
@@ -373,7 +373,7 @@ export default function PricingPlans({ plans, onSubscribe }: PricingPlansProps) 
           <div>
             <h4 className="font-semibold text-slate-900 mb-2">Do you offer refunds?</h4>
             <p className="text-sm text-slate-600">
-              Please contact us at support@patentscout.ai if you have concerns about your subscription.
+              Please contact us at support@phaethon.llc if you have concerns about your subscription.
             </p>
           </div>
           <div>

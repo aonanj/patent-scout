@@ -31,7 +31,7 @@ type PricePlan = {
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 function BillingContent() {
-  const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently, user } = useAuth0();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
@@ -121,6 +121,11 @@ function BillingContent() {
         return;
       }
 
+      if (!user?.email) {
+        alert("Email not found in user profile. Please log out and log in again.");
+        return;
+      }
+
       try {
         const token = await getAccessTokenSilently();
         const response = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
@@ -129,7 +134,10 @@ function BillingContent() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ price_id: priceId }),
+          body: JSON.stringify({
+            price_id: priceId,
+            email: user.email,
+          }),
         });
 
         if (!response.ok) {
@@ -144,7 +152,7 @@ function BillingContent() {
         alert(err.message || "Failed to start checkout process");
       }
     },
-    [isAuthenticated, getAccessTokenSilently, loginWithRedirect]
+    [isAuthenticated, getAccessTokenSilently, loginWithRedirect, user]
   );
 
   const handleManageSubscription = useCallback(async () => {
@@ -254,16 +262,13 @@ function BillingContent() {
           <h3 className="text-sm font-semibold text-slate-900 mb-3">Need help?</h3>
           <p className="text-sm text-slate-600 mb-4">
             Have questions about your subscription or billing? Contact us at{" "}
-            <a href="mailto:support@patentscout.ai" className="text-sky-600 hover:underline">
-              support@patentscout.ai
+            <a href="mailto:support@phaethon.llc" className="text-sky-600 hover:underline">
+              support@phaethon.llc
             </a>
           </p>
           <div className="flex gap-4 text-xs text-slate-500">
-            <a href="/docs/privacy" className="hover:text-slate-700 hover:underline">
-              Privacy Policy
-            </a>
-            <a href="/docs/tos" className="hover:text-slate-700 hover:underline">
-              Terms of Service
+            <a href="/docs" className="hover:text-slate-700 hover:underline">
+              Legal
             </a>
           </div>
         </div>
