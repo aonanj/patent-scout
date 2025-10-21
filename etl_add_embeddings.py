@@ -15,17 +15,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
-import json
 import os
-import re
-import sys
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-import psycopg
 from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg import Connection

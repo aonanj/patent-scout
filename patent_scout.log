@@ -1,0 +1,23 @@
+[2025-10-21 03:24:06,988] - __main__ INFO Processing patents from 2025-02-20 to 2025-02-27
+[2025-10-21 03:24:06,988] - __main__ INFO Querying patents by date range
+[2025-10-21 03:24:09,036] - __main__ INFO Found 243 patents in date range
+[2025-10-21 03:24:09,070] - __main__ INFO Processing batch 1 (100 patents)
+[2025-10-21 03:24:09,280] - __main__ INFO Generating 100 title+abstract embeddings
+[2025-10-21 03:24:16,901] - __main__ INFO Generating 100 claims embeddings
+[2025-10-21 03:24:32,423] - __main__ INFO Upserting 200 embeddings
+[2025-10-21 03:25:56,719] - __main__ INFO Processing batch 2 (100 patents)
+[2025-10-21 03:25:56,931] - __main__ INFO Generating 100 title+abstract embeddings
+[2025-10-21 03:26:02,840] - __main__ INFO Generating 100 claims embeddings
+[2025-10-21 03:26:17,336] - __main__ INFO Upserting 200 embeddings
+[2025-10-21 03:26:45,972] - __main__ INFO Processing batch 3 (43 patents)
+[2025-10-21 03:26:46,185] - __main__ INFO Generating 43 title+abstract embeddings
+[2025-10-21 03:26:54,658] - __main__ INFO Generating 43 claims embeddings
+[2025-10-21 03:27:01,608] - __main__ INFO Upserting 86 embeddings
+[2025-10-21 03:27:12,532] - __main__ INFO Completed: upserted 486 embeddings out of 486 targets
+[2025-10-21 03:34:32,850] - __main__ INFO Processing patents from 2025-02-27 to 2025-03-06
+[2025-10-21 03:34:32,850] - __main__ INFO Querying patents by date range
+[2025-10-21 03:34:35,360] - __main__ INFO Found 292 patents in date range
+[2025-10-21 03:34:35,392] - __main__ INFO Processing batch 1 (100 patents)
+[2025-10-21 03:34:35,625] - __main__ INFO Generating 100 title+abstract embeddings
+[2025-10-21 03:34:41,973] - __main__ INFO Generating 100 claims embeddings
+[2025-10-21 03:34:58,217] - __main__ INFO Upserting 200 embeddings

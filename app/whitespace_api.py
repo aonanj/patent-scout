@@ -502,7 +502,7 @@ def _persist_sync(
             ON CONFLICT (user_id, src, dst) DO UPDATE SET w = EXCLUDED.w
         """)
 
-        # 2) Temp updates for embeddings
+        # 2) Temp updates for user-specific whitespace analysis
         cur.execute("""
             CREATE TEMP TABLE tmp_updates(
               pub_id          text PRIMARY KEY,
@@ -521,18 +521,18 @@ def _persist_sync(
             ):
                 cp.write_row((pid, int(cid), float(d), float(s)))
 
-        # Apply updates to target table for the selected model
+        # Upsert into user_whitespace_analysis table (user-specific)
         cur.execute("""
-            UPDATE patent_embeddings AS e
-            SET cluster_id = t.cluster_id,
-                local_density = t.local_density,
-                whitespace_score = t.whitespace_score
-            FROM tmp_updates t
-            WHERE e.pub_id = t.pub_id AND e.model = %s
-        """, (model,))
-
-        # 3) Refresh stats
-        cur.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY cluster_stats;")
+            INSERT INTO user_whitespace_analysis (user_id, pub_id, model, cluster_id, local_density, whitespace_score, updated_at)
+            SELECT %s, pub_id, %s, cluster_id, local_density, whitespace_score, NOW()
+            FROM tmp_updates
+            ON CONFLICT (user_id, pub_id, model)
+            DO UPDATE SET
+                cluster_id = EXCLUDED.cluster_id,
+                local_density = EXCLUDED.local_density,
+                whitespace_score = EXCLUDED.whitespace_score,
+                updated_at = NOW()
+        """, (user_id, model))
 
     conn.commit()
 
