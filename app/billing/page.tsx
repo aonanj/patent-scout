@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SubscriptionStatus from "@/components/billing/SubscriptionStatus";
 import PricingPlans from "@/components/billing/PricingPlans";
@@ -30,7 +30,7 @@ type PricePlan = {
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
-export default function BillingPage() {
+function BillingContent() {
   const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
@@ -269,5 +269,20 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
+          <p className="mt-4 text-sm text-slate-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BillingContent />
+    </Suspense>
   );
 }
