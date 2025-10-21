@@ -9,8 +9,6 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent detail expansion (`app/api.py`, `app/page.tsx`).
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles (`components/NavBar.tsx`, `app/layout.tsx`).
 - Whitespace analytics on focus keyword(s) and/or CPC(s) using igraph, UMAP, Leiden clustering, and signal scoring ordered by Assignee, and visually indicated through an interactive Sigma.js graph (`app/whitespace_api.py`, `components/SigmaWhitespaceGraph.tsx`, `app/whitespace/page.tsx`).
-  - Quickly assess whether investing in a patent application warrants further research
-  - 
 - Automated BigQuery ingestion, OpenAI embedding generation, and Mailgun/console alert notifications packaged as standalone runners (`etl.py`, `alerts_runner.py`).
 - Comprehensive pytest suite covering authentication, repository search logic, whitespace signal math, and API contracts (`tests/`).
 

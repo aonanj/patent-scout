@@ -20,6 +20,7 @@ import argparse
 import os
 import re
 import sys
+import time
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -59,6 +60,77 @@ RETURNING pub_id;
 CHECK_RECORD_EXISTS_SQL = """
 SELECT pub_id FROM patent_staging WHERE pub_id = %(pub_id)s;
 """
+
+
+# -----------------------
+# Connection Management
+# -----------------------
+
+def create_connection(dsn: str, max_retries: int = 3, retry_delay: float = 1.0) -> PgConn:
+    """Create a new database connection with retry logic.
+
+    Args:
+        dsn: PostgreSQL DSN string.
+        max_retries: Maximum number of connection attempts.
+        retry_delay: Delay between retries in seconds.
+
+    Returns:
+        Database connection.
+
+    Raises:
+        psycopg.OperationalError: If connection fails after all retries.
+    """
+    for attempt in range(max_retries):
+        try:
+            conn = psycopg.connect(
+                dsn,
+                autocommit=False,
+                sslmode="require",
+            )
+            logger.info("Database connection established")
+            return conn
+        except psycopg.OperationalError as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Connection attempt {attempt + 1} failed: {e}. Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+            else:
+                logger.error(f"Failed to connect after {max_retries} attempts")
+                raise
+
+
+def is_connection_alive(conn: PgConn) -> bool:
+    """Check if database connection is still alive.
+
+    Args:
+        conn: Database connection to check.
+
+    Returns:
+        True if connection is alive, False otherwise.
+    """
+    try:
+        # Try to get the connection status
+        if conn.closed:
+            return False
+        # Execute a simple query to verify connection
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+        return True
+    except (psycopg.OperationalError, psycopg.InterfaceError):
+        return False
+
+
+def safe_rollback(conn: PgConn) -> None:
+    """Safely rollback a connection, handling connection loss.
+
+    Args:
+        conn: Database connection to rollback.
+    """
+    try:
+        if not conn.closed:
+            conn.rollback()
+            logger.debug("Transaction rolled back")
+    except (psycopg.OperationalError, psycopg.InterfaceError) as e:
+        logger.warning(f"Rollback failed (connection likely lost): {e}")
 
 
 # --------------
@@ -324,6 +396,9 @@ def upsert_fulltext(conn: PgConn, record: PatentFullText) -> bool:
 
     Returns:
         True if record was updated, False if record not found in staging.
+
+    Raises:
+        Exception: For database errors that should be handled by caller.
     """
     with conn.cursor() as cur:
         # Check if record exists
@@ -351,6 +426,64 @@ def upsert_fulltext(conn: PgConn, record: PatentFullText) -> bool:
             logger.warning(f"Failed to update {record.pub_id}")
 
         return updated
+
+
+def upsert_fulltext_with_retry(
+    conn: PgConn,
+    record: PatentFullText,
+    dsn: str,
+    max_retries: int = 2
+) -> tuple[bool, PgConn]:
+    """Upsert with automatic reconnection on connection loss.
+
+    Args:
+        conn: Current database connection.
+        record: PatentFullText instance to upsert.
+        dsn: PostgreSQL DSN for reconnection.
+        max_retries: Maximum number of retry attempts.
+
+    Returns:
+        Tuple of (success, connection) where connection may be a new connection.
+    """
+    for attempt in range(max_retries):
+        try:
+            # Check connection health before attempting operation
+            if not is_connection_alive(conn):
+                logger.warning("Connection lost, attempting to reconnect...")
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                conn = create_connection(dsn)
+
+            result = upsert_fulltext(conn, record)
+            return result, conn
+
+        except (
+            psycopg.OperationalError,
+            psycopg.InterfaceError,
+            psycopg.errors.IdleInTransactionSessionTimeout
+        ) as e:
+            logger.warning(f"Database connection error on attempt {attempt + 1}: {e}")
+
+            # Try to safely rollback
+            safe_rollback(conn)
+
+            if attempt < max_retries - 1:
+                # Reconnect and retry
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+                logger.info("Reconnecting to database...")
+                conn = create_connection(dsn)
+            else:
+                logger.error(f"Failed to process record {record.pub_id} after {max_retries} attempts")
+                raise
+
+    # Should never reach here, but for type safety
+    return False, conn
 
 
 # -----------
@@ -427,11 +560,9 @@ def main() -> int:
     # Connect to database and process records
     logger.info(f"Connecting to database: {args.dsn.split('@')[-1]}")
 
-    with psycopg.connect(
-        args.dsn,
-        autocommit=False,
-        sslmode="require",
-    ) as conn:
+    conn = create_connection(args.dsn)
+
+    try:
         batch_count = 0
 
         for record in stream:
@@ -439,7 +570,9 @@ def main() -> int:
             batch_count += 1
 
             try:
-                updated = upsert_fulltext(conn, record)
+                # Use retry logic with automatic reconnection
+                updated, conn = upsert_fulltext_with_retry(conn, record, args.dsn)
+
                 if updated:
                     total_updated += 1
                 else:
@@ -447,22 +580,47 @@ def main() -> int:
 
                 # Commit in batches
                 if batch_count >= args.batch_size:
-                    conn.commit()
-                    logger.info(
-                        f"Committed batch: {total_updated} updated, {total_skipped} skipped"
-                    )
-                    batch_count = 0
+                    try:
+                        conn.commit()
+                        logger.info(
+                            f"Committed batch: {total_updated} updated, {total_skipped} skipped, "
+                            f"{total_processed} total processed"
+                        )
+                        batch_count = 0
+                    except (psycopg.OperationalError, psycopg.InterfaceError) as e:
+                        logger.error(f"Failed to commit batch: {e}")
+                        safe_rollback(conn)
+                        # Reconnect after commit failure
+                        try:
+                            conn.close()
+                        except Exception:
+                            pass
+                        conn = create_connection(args.dsn)
+                        batch_count = 0
 
             except Exception as e:
-                logger.error(f"Error processing record {record.pub_id}: {e}")
-                conn.rollback()
+                logger.error(f"Error processing record {record.pub_id}: {e}", exc_info=True)
+                safe_rollback(conn)
                 batch_count = 0
+                # Don't exit on error, continue processing
                 continue
 
         # Commit remaining records
         if batch_count > 0:
-            conn.commit()
-            logger.info(f"Committed final batch")
+            try:
+                conn.commit()
+                logger.info(f"Committed final batch")
+            except (psycopg.OperationalError, psycopg.InterfaceError) as e:
+                logger.error(f"Failed to commit final batch: {e}")
+                safe_rollback(conn)
+
+    finally:
+        # Ensure connection is closed
+        try:
+            conn.close()
+            logger.info("Database connection closed")
+        except Exception as e:
+            logger.warning(f"Error closing connection: {e}")
 
     logger.info(
         f"Completed: {total_processed} processed, {total_updated} updated, {total_skipped} skipped"

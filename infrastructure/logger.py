@@ -5,7 +5,7 @@ import tempfile
 
 _loggers = {}
 
-def setup_logger(name="patent_scout", level=logging.INFO, toFile=True, fileName="patent_scout.log"):
+def setup_logger(name="patent_scout", level=logging.INFO, toFile=False, fileName="patent_scout.log"):
     """
     Establish an instance of a logger to be used for logging in current context of app
 
