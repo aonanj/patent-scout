@@ -177,9 +177,6 @@ export default function NavBar() {
         <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
           <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Help</Link>
         </div>
-        <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
-          <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Billing</Link>
-        </div>
         <div className="hidden md:flex items-center gap-1 pl-2 ml-2">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
@@ -190,6 +187,9 @@ export default function NavBar() {
                 <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-300 text-sky-700 text-xs font-semibold grid place-items-center">
                   {userInitials}
                 </div>
+              </div>
+              <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
+                <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Billing</Link>
               </div>
               <button
                 onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
