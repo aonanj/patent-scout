@@ -24,6 +24,7 @@ import time
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from dataclasses import dataclass
+from pathlib import Path
 
 import psycopg
 from dotenv import load_dotenv
@@ -148,6 +149,17 @@ class PatentFullText:
     pub_id: str
     abstract: str | None
     claims_text: str | None
+
+
+@dataclass
+class ProcessingStats:
+    """Statistics for processing operations."""
+
+    total_processed: int = 0
+    total_updated: int = 0
+    total_skipped: int = 0
+    files_processed: int = 0
+    files_failed: int = 0
 
 
 # -----------
@@ -475,7 +487,6 @@ def upsert_fulltext_with_retry(
                     conn.close()
 
                 logger.info("Reconnecting to database...")
-                logger.info("Reconnecting to database...")
                 conn = create_connection(dsn)
             else:
                 logger.error(f"Failed to process record {record.pub_id} after {max_retries} attempts")
@@ -483,6 +494,184 @@ def upsert_fulltext_with_retry(
 
     # Should never reach here, but for type safety
     return False, conn
+
+
+# --------------------------
+# File Processing Functions
+# --------------------------
+
+def process_single_file(
+    xml_path: str,
+    conn: PgConn,
+    dsn: str,
+    batch_size: int,
+    dry_run: bool = False
+) -> tuple[ProcessingStats, PgConn]:
+    """Process a single XML file.
+
+    Args:
+        xml_path: Path to XML file.
+        conn: Database connection.
+        dsn: PostgreSQL DSN for reconnection.
+        batch_size: Number of records to process before committing.
+        dry_run: If True, parse but don't update database.
+
+    Returns:
+        Tuple of (ProcessingStats, connection) where connection may be reconnected.
+    """
+    stats = ProcessingStats()
+    
+    try:
+        stream = parse_xml_file(xml_path)
+        batch_count = 0
+
+        for record in stream:
+            stats.total_processed += 1
+            batch_count += 1
+
+            if dry_run:
+                logger.info(
+                    f"[DRY RUN] Would update {record.pub_id} "
+                    f"(abstract: {bool(record.abstract)}, claims: {bool(record.claims_text)})"
+                )
+                continue
+
+            try:
+                # Use retry logic with automatic reconnection
+                updated, conn = upsert_fulltext_with_retry(conn, record, dsn)
+
+                if updated:
+                    stats.total_updated += 1
+                else:
+                    stats.total_skipped += 1
+
+                # Commit in batches
+                if batch_count >= batch_size:
+                    try:
+                        conn.commit()
+                        logger.info(
+                            f"[{Path(xml_path).name}] Committed batch: "
+                            f"{stats.total_updated} updated, {stats.total_skipped} skipped, "
+                            f"{stats.total_processed} total processed"
+                        )
+                        batch_count = 0
+                    except (psycopg.OperationalError, psycopg.InterfaceError) as e:
+                        logger.error(f"Failed to commit batch: {e}")
+                        safe_rollback(conn)
+                        # Reconnect after commit failure
+                        with contextlib.suppress(Exception):
+                            conn.close()
+                        conn = create_connection(dsn)
+
+            except Exception as e:
+                logger.error(f"Error processing record {record.pub_id}: {e}", exc_info=True)
+                safe_rollback(conn)
+                batch_count = 0
+                # Don't exit on error, continue processing
+                continue
+
+        # Commit remaining records
+        if not dry_run and batch_count > 0:
+            try:
+                conn.commit()
+                logger.info(f"[{Path(xml_path).name}] Committed final batch")
+            except (psycopg.OperationalError, psycopg.InterfaceError) as e:
+                logger.error(f"Failed to commit final batch: {e}")
+                safe_rollback(conn)
+
+        logger.info(
+            f"[{Path(xml_path).name}] Completed: "
+            f"{stats.total_processed} processed, "
+            f"{stats.total_updated} updated, "
+            f"{stats.total_skipped} skipped"
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to process file {xml_path}: {e}", exc_info=True)
+        raise
+
+    return stats, conn
+
+
+def process_xml_files(
+    xml_paths: list[str],
+    dsn: str,
+    batch_size: int,
+    dry_run: bool = False
+) -> ProcessingStats:
+    """Process multiple XML files sequentially.
+
+    Args:
+        xml_paths: List of paths to XML files.
+        dsn: PostgreSQL DSN.
+        batch_size: Number of records to process before committing.
+        dry_run: If True, parse but don't update database.
+
+    Returns:
+        Aggregated ProcessingStats for all files.
+    """
+    total_stats = ProcessingStats()
+    conn = create_connection(dsn)
+    
+    if dry_run:
+        logger.info(f"[DRY RUN] Processing {len(xml_paths)} file(s)")
+        for xml_path in xml_paths:
+            try:
+                file_stats, _ = process_single_file(xml_path, conn, dsn, batch_size, dry_run=True)
+                total_stats.total_processed += file_stats.total_processed
+                total_stats.files_processed += 1
+            except Exception as e:
+                logger.error(f"Failed to process {xml_path}: {e}")
+                total_stats.files_failed += 1
+        
+        logger.info(
+            f"[DRY RUN] Summary: {total_stats.files_processed} files processed, "
+            f"{total_stats.files_failed} files failed, "
+            f"{total_stats.total_processed} total records"
+        )
+        return total_stats
+
+    # Connect to database for real processing
+    logger.info(f"Processing {len(xml_paths)} file(s) with batch size {batch_size}")
+    logger.info(f"Connecting to database: {dsn.split('@')[-1]}")
+
+    try:
+        for i, xml_path in enumerate(xml_paths, 1):
+            logger.info(f"Processing file {i}/{len(xml_paths)}: {xml_path}")
+            
+            try:
+                file_stats, conn = process_single_file(xml_path, conn, dsn, batch_size, dry_run=False)
+                
+                # Aggregate statistics
+                total_stats.total_processed += file_stats.total_processed
+                total_stats.total_updated += file_stats.total_updated
+                total_stats.total_skipped += file_stats.total_skipped
+                total_stats.files_processed += 1
+                
+            except Exception as e:
+                logger.error(f"Failed to process file {xml_path}: {e}", exc_info=True)
+                total_stats.files_failed += 1
+                safe_rollback(conn)
+                # Continue with next file
+                continue
+
+    finally:
+        # Ensure connection is closed
+        try:
+            conn.close()
+            logger.info("Database connection closed")
+        except Exception as e:
+            logger.warning(f"Error closing connection: {e}")
+
+    logger.info(
+        f"All files processed: {total_stats.files_processed} succeeded, "
+        f"{total_stats.files_failed} failed, "
+        f"{total_stats.total_processed} total records processed, "
+        f"{total_stats.total_updated} updated, "
+        f"{total_stats.total_skipped} skipped"
+    )
+
+    return total_stats
 
 
 # -----------
@@ -496,11 +685,27 @@ def parse_args() -> argparse.Namespace:
         Parsed arguments namespace.
     """
     p = argparse.ArgumentParser(
-        description="Load patent full text from USPTO XML into patent_staging table"
+        description="Load patent full text from USPTO XML into patent_staging table",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Process a single file
+  %(prog)s ipa250220.xml
+
+  # Process multiple files
+  %(prog)s ipa250220.xml ipa250221.xml ipa250222.xml
+
+  # Process all XML files in a directory
+  %(prog)s data/*.xml
+
+  # Dry run to test parsing
+  %(prog)s --dry-run ipa250220.xml
+        """
     )
     p.add_argument(
-        "xml_file",
-        help="Path to USPTO bulk XML file (e.g., ipa250220.xml)",
+        "xml_files",
+        nargs="+",
+        help="Path(s) to USPTO bulk XML file(s) (e.g., ipa250220.xml)",
     )
     p.add_argument(
         "--dsn",
@@ -530,98 +735,28 @@ def main() -> int:
     """
     args = parse_args()
 
-    if not args.dsn:
+    if not args.dry_run and not args.dsn:
         logger.error("PG_DSN not set and --dsn not provided")
         return 2
 
-    if not os.path.exists(args.xml_file):
-        logger.error(f"XML file not found: {args.xml_file}")
+    # Validate all files exist
+    missing_files = [f for f in args.xml_files if not os.path.exists(f)]
+    if missing_files:
+        logger.error(f"XML file(s) not found: {', '.join(missing_files)}")
         return 2
 
-    # Parse XML file
-    stream = parse_xml_file(args.xml_file)
-
-    total_processed = 0
-    total_updated = 0
-    total_skipped = 0
-
-    if args.dry_run:
-        logger.info("[DRY RUN] Parsing XML without database updates")
-        for record in stream:
-            total_processed += 1
-            logger.info(
-                f"[DRY RUN] Would update {record.pub_id} "
-                f"(abstract: {bool(record.abstract)}, claims: {bool(record.claims_text)})"
-            )
-        logger.info(f"[DRY RUN] Processed {total_processed} records")
-        return 0
-
-    # Connect to database and process records
-    logger.info(f"Connecting to database: {args.dsn.split('@')[-1]}")
-
-    conn = create_connection(args.dsn)
-
-    try:
-        batch_count = 0
-
-        for record in stream:
-            total_processed += 1
-            batch_count += 1
-
-            try:
-                # Use retry logic with automatic reconnection
-                updated, conn = upsert_fulltext_with_retry(conn, record, args.dsn)
-
-                if updated:
-                    total_updated += 1
-                else:
-                    total_skipped += 1
-
-                # Commit in batches
-                if batch_count >= args.batch_size:
-                    try:
-                        conn.commit()
-                        logger.info(
-                            f"Committed batch: {total_updated} updated, {total_skipped} skipped, "
-                            f"{total_processed} total processed"
-                        )
-                        batch_count = 0
-                    except (psycopg.OperationalError, psycopg.InterfaceError) as e:
-                        logger.error(f"Failed to commit batch: {e}")
-                        logger.error(f"Failed to commit batch: {e}")
-                        safe_rollback(conn)
-                        # Reconnect after commit failure
-                        with contextlib.suppress(Exception):
-                            conn.close()
-                        conn = create_connection(args.dsn)
-
-            except Exception as e:
-                logger.error(f"Error processing record {record.pub_id}: {e}", exc_info=True)
-                safe_rollback(conn)
-                batch_count = 0
-                # Don't exit on error, continue processing
-                continue
-
-        # Commit remaining records
-        if batch_count > 0:
-            try:
-                conn.commit()
-                logger.info("Committed final batch")
-            except (psycopg.OperationalError, psycopg.InterfaceError) as e:
-                logger.error(f"Failed to commit final batch: {e}")
-                safe_rollback(conn)
-
-    finally:
-        # Ensure connection is closed
-        try:
-            conn.close()
-            logger.info("Database connection closed")
-        except Exception as e:
-            logger.warning(f"Error closing connection: {e}")
-
-    logger.info(
-        f"Completed: {total_processed} processed, {total_updated} updated, {total_skipped} skipped"
+    # Process all files
+    stats = process_xml_files(
+        xml_paths=args.xml_files,
+        dsn=args.dsn,
+        batch_size=args.batch_size,
+        dry_run=args.dry_run
     )
+
+    # Return non-zero if any files failed
+    if stats.files_failed > 0:
+        logger.error(f"Processing completed with {stats.files_failed} file(s) failed")
+        return 1
 
     return 0
 
