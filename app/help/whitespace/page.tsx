@@ -369,7 +369,7 @@ export default function WhitespaceHelpPage() {
             <TableColumn column="Assignee" description="The entity to whom the patent is assigned." />
             <TableColumn column="Publication Date" description="The date the patent was published (YYYY-MM-DD format)." />
             <TableColumn column="Abstract" description="A truncated abstract (up to 280 characters) providing context about the patent." />
-          </TableColumn>
+          </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Exporting Examples</h3>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
