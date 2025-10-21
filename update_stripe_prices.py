@@ -63,22 +63,22 @@ def main() -> None:
     # Price tiers to update
     price_updates = [
         {
-            "placeholder": "price_beta_monthly_placeholder",
+            "placeholder": "9900",
             "name": "Beta Tester - Monthly ($99/month)",
             "tier": "beta_tester",
         },
         {
-            "placeholder": "price_beta_90days_placeholder",
+            "placeholder": "25900",
             "name": "Beta Tester - 90 Days ($259 for 3 months)",
             "tier": "beta_tester",
         },
         {
-            "placeholder": "price_user_monthly_placeholder",
+            "placeholder": "18900",
             "name": "User - Monthly ($189/month)",
             "tier": "user",
         },
         {
-            "placeholder": "price_user_yearly_placeholder",
+            "placeholder": "189900",
             "name": "User - Yearly ($1,899/year)",
             "tier": "user",
         },
