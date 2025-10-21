@@ -17,14 +17,13 @@ Each XML file contains multiple <us-patent-application> records. This script:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import re
-import sys
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Any
 
 import psycopg
 from dotenv import load_dotenv
@@ -80,6 +79,7 @@ def create_connection(dsn: str, max_retries: int = 3, retry_delay: float = 1.0) 
     Raises:
         psycopg.OperationalError: If connection fails after all retries.
     """
+    last_error: Exception | None = None
     for attempt in range(max_retries):
         try:
             conn = psycopg.connect(
@@ -90,12 +90,16 @@ def create_connection(dsn: str, max_retries: int = 3, retry_delay: float = 1.0) 
             logger.info("Database connection established")
             return conn
         except psycopg.OperationalError as e:
+            last_error = e
             if attempt < max_retries - 1:
                 logger.warning(f"Connection attempt {attempt + 1} failed: {e}. Retrying in {retry_delay}s...")
                 time.sleep(retry_delay)
             else:
                 logger.error(f"Failed to connect after {max_retries} attempts")
                 raise
+    
+    # This should never be reached due to raise above, but satisfies type checker
+    raise psycopg.OperationalError(f"Failed to connect after {max_retries} attempts") from last_error
 
 
 def is_connection_alive(conn: PgConn) -> bool:
@@ -315,9 +319,8 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
     count = 0
 
     # Read and wrap the file to handle multiple root elements
-    with open(xml_path, 'r', encoding='utf-8') as f:
+    with open(xml_path, encoding='utf-8') as f:
         # Read first few lines to check for XML declaration
-        first_line = f.readline()
         f.seek(0)
 
         # Create a temporary wrapped XML string for each application
@@ -450,10 +453,8 @@ def upsert_fulltext_with_retry(
             # Check connection health before attempting operation
             if not is_connection_alive(conn):
                 logger.warning("Connection lost, attempting to reconnect...")
-                try:
+                with contextlib.suppress(Exception):
                     conn.close()
-                except Exception:
-                    pass
                 conn = create_connection(dsn)
 
             result = upsert_fulltext(conn, record)
@@ -468,14 +469,12 @@ def upsert_fulltext_with_retry(
 
             # Try to safely rollback
             safe_rollback(conn)
-
             if attempt < max_retries - 1:
                 # Reconnect and retry
-                try:
+                with contextlib.suppress(Exception):
                     conn.close()
-                except Exception:
-                    pass
 
+                logger.info("Reconnecting to database...")
                 logger.info("Reconnecting to database...")
                 conn = create_connection(dsn)
             else:
@@ -589,14 +588,12 @@ def main() -> int:
                         batch_count = 0
                     except (psycopg.OperationalError, psycopg.InterfaceError) as e:
                         logger.error(f"Failed to commit batch: {e}")
+                        logger.error(f"Failed to commit batch: {e}")
                         safe_rollback(conn)
                         # Reconnect after commit failure
-                        try:
+                        with contextlib.suppress(Exception):
                             conn.close()
-                        except Exception:
-                            pass
                         conn = create_connection(args.dsn)
-                        batch_count = 0
 
             except Exception as e:
                 logger.error(f"Error processing record {record.pub_id}: {e}", exc_info=True)
@@ -609,7 +606,7 @@ def main() -> int:
         if batch_count > 0:
             try:
                 conn.commit()
-                logger.info(f"Committed final batch")
+                logger.info("Committed final batch")
             except (psycopg.OperationalError, psycopg.InterfaceError) as e:
                 logger.error(f"Failed to commit final batch: {e}")
                 safe_rollback(conn)
