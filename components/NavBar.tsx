@@ -166,7 +166,7 @@ export default function NavBar() {
         </div>
 
         {/* Alerts */}
-        <div className="hidden md:flex items-center px-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center px-3 border-l border-r border-slate-200">
           <button
             onClick={openAlerts}
             className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
@@ -178,12 +178,12 @@ export default function NavBar() {
         </div>
 
         {/* Help */}
-        <div className="hidden md:flex items-center px-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center px-3">
           <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Help</Link>
         </div>
 
         {/* User Section */}
-        <div className="hidden md:flex items-center gap-3 px-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center gap-3 px-3 border-l border-r border-slate-200">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (
