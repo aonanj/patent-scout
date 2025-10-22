@@ -198,7 +198,7 @@ function BillingContent() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Sign in to Continue</h2>
+          <h2 className="text-2xl font-bold mb-4" style={{ color: '#102A43' }}>Sign in to Continue</h2>
           <p className="text-slate-600 mb-6">
             Please log in to view your subscription or purchase a plan.
           </p>
@@ -218,7 +218,7 @@ function BillingContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Billing & Subscription</h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#102A43' }}>Billing & Subscription</h1>
           <p className="mt-2 text-slate-600">Manage your Patent Scout subscription</p>
         </div>
 
@@ -259,16 +259,17 @@ function BillingContent() {
 
         {/* Footer Info */}
         <div className="mt-12 p-6 bg-white rounded-lg border border-slate-200">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Need help?</h3>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: '#102A43' }}>Need help?</h3>
           <p className="text-sm text-slate-600 mb-4">
             Have questions about your subscription or billing? Contact us at{" "}
             <a href="mailto:support@phaethon.llc" className="text-sky-600 hover:underline">
               support@phaethon.llc
             </a>
           </p>
-          <div className="flex gap-4 text-xs text-slate-500">
+          <br />
+          <div className="flex gap-12 text-s text-slate-500">
             <a href="/docs" className="hover:text-slate-700 hover:underline">
-              Legal
+              LEGAL
             </a>
           </div>
         </div>

@@ -108,7 +108,7 @@ export default function SubscriptionRequired({
                 />
               </svg>
               <div>
-                <div className="font-semibold text-slate-900">Unlimited searches</div>
+                <div className="font-semibold" style={{ color: '#102A43' }}>Unlimited searches</div>
                 <div className="text-sm text-slate-600">
                   Search millions of patents with no restrictions
                 </div>
@@ -128,7 +128,7 @@ export default function SubscriptionRequired({
                 />
               </svg>
               <div>
-                <div className="font-semibold text-slate-900">AI-powered insights</div>
+                <div className="font-semibold" style={{ color: '#102A43' }}>AI-powered insights</div>
                 <div className="text-sm text-slate-600">
                   Semantic search and whitespace analysis
                 </div>
@@ -148,7 +148,7 @@ export default function SubscriptionRequired({
                 />
               </svg>
               <div>
-                <div className="font-semibold text-slate-900">Data exports & alerts</div>
+                <div className="font-semibold" style={{ color: '#102A43' }}>Data exports & alerts</div>
                 <div className="text-sm text-slate-600">
                   CSV/PDF exports and email notifications
                 </div>

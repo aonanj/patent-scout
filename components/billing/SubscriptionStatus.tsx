@@ -80,7 +80,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-sky-50 to-blue-50 px-6 py-4 border-b border-slate-200">
-        <h2 className="text-xl font-bold text-slate-900">Your Subscription</h2>
+        <h2 className="text-xl font-bold" style={{ color: '#102A43' }}>Your Subscription</h2>
       </div>
 
       {/* Content */}
@@ -89,7 +89,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
           {/* Plan */}
           <div>
             <div className="text-sm text-slate-500 mb-1">Plan</div>
-            <div className="text-lg font-semibold text-slate-900">{tierDisplay}</div>
+            <div className="text-lg font-semibold" style={{ color: '#102A43' }}>{tierDisplay}</div>
           </div>
 
           {/* Status */}
@@ -122,7 +122,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
               <div className="text-sm text-slate-500 mb-1">
                 {subscription.status === "canceled" ? "Access Until" : "Renews On"}
               </div>
-              <div className="text-lg font-semibold text-slate-900">{renewalDate}</div>
+              <div className="text-lg font-semibold" style={{ color: '#102A43' }}>{renewalDate}</div>
             </div>
           )}
 
@@ -130,7 +130,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
           {subscription.tier === "beta_tester" && subscription.days_in_tier !== null && (
             <div>
               <div className="text-sm text-slate-500 mb-1">Beta Period</div>
-              <div className="text-lg font-semibold text-slate-900">
+              <div className="text-lg font-semibold" style={{ color: '#102A43' }}>
                 {subscription.days_in_tier} days elapsed
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
 
         {/* Features List */}
         <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-          <h4 className="text-sm font-semibold text-slate-900 mb-3">Your Plan Includes:</h4>
+          <h4 className="text-sm font-semibold mb-3" style={{ color: '#102A43' }}>Your Plan Includes:</h4>
           <ul className="space-y-2">
             <li className="flex items-start gap-2 text-sm text-slate-700">
               <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">

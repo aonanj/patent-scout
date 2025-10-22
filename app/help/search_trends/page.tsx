@@ -8,7 +8,7 @@ const CARD_BORDER = "#e5e7eb";
 
 export default function SearchTrendsHelpPage() {
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh", color: TEXT_COLOR }}>
+    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
 
         {/* Header */}
@@ -490,7 +490,7 @@ function AlertAction({ action, description }: { action: string; description: str
 
 function FlowStep({ num, title, description }: { num: string; title: string; description: string }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#f8fafc" }}>
+    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#eaf6ff" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <div style={{ minWidth: 32, height: 32, borderRadius: "50%", background: TEXT_COLOR, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15 }}>
           {num}

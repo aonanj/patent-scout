@@ -8,7 +8,7 @@ const CARD_BORDER = "#e5e7eb";
 
 export default function LegalIndexPage() {
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh", color: TEXT_COLOR }}>
+    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
         
         {/* Header */}
@@ -81,7 +81,7 @@ export default function LegalIndexPage() {
               <DetailItem icon="➣" title="Liability & Disputes" text="Limitation of liability, indemnification, and arbitration" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Who Should Read This</strong>: All users of Patent Scout, whether individual researchers, corporate teams, or enterprise customers. By using the Service, you agree to these Terms.
               </p>
@@ -131,7 +131,7 @@ export default function LegalIndexPage() {
               <DetailItem icon="➣" title="Your Privacy Rights" text="Access, correction, deletion, portability, and opt-out rights (GDPR/CCPA)" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Who Should Read This</strong>: All users, especially those concerned about data privacy, GDPR/CCPA compliance, or located in the EEA, UK, Switzerland, California, or other jurisdictions with privacy laws.
               </p>
@@ -188,7 +188,7 @@ export default function LegalIndexPage() {
               </p>
             </div>
 
-            <div style={{ marginTop: 16, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div style={{ marginTop: 16, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Note</strong>: Individual users who are not processing personal data on behalf of an organization typically do not need to review the DPA. The Privacy Policy and Terms of Service are sufficient for individual use cases.
               </p>
@@ -252,7 +252,7 @@ export default function LegalIndexPage() {
           
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #e5e7eb", background: "#f8fafc" }}>
+              <tr style={{ borderBottom: "2px solid #e5e7eb", background: "#eaf6ff" }}>
                 <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Documentation to...</th>
                 <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Located at...</th>
               </tr>

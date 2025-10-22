@@ -6,7 +6,7 @@ const LINK_COLOR = "#5FA8D2";
 
 export default function DataProcessingAgreementPage() {
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh", color: TEXT_COLOR }}>
+    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
         
         {/* Header */}
@@ -669,7 +669,7 @@ export default function DataProcessingAgreementPage() {
           </Section>
 
           {/* ANNEXES */}
-          <div id="annex-a" style={{ marginTop: 48, padding: 24, background: "#f8fafc", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div id="annex-a" style={{ marginTop: 48, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex A: Details of Processing</h2>
             
             <div style={{ marginTop: 20 }}>
@@ -747,7 +747,7 @@ export default function DataProcessingAgreementPage() {
             </div>
           </div>
 
-          <div id="annex-b" style={{ marginTop: 32, padding: 24, background: "#f8fafc", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div id="annex-b" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex B: Technical and Organizational Security Measures</h2>
             
             <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
@@ -918,7 +918,7 @@ export default function DataProcessingAgreementPage() {
             </p>
           </div>
 
-          <div id="annex-c" style={{ marginTop: 32, padding: 24, background: "#f8fafc", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div id="annex-c" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex C: List of Authorized Sub-processors</h2>
             
             <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
@@ -1013,7 +1013,7 @@ export default function DataProcessingAgreementPage() {
             </div>
           </div>
 
-          <div id="annex-d" style={{ marginTop: 32, padding: 24, background: "#f8fafc", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div id="annex-d" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex D: Standard Contractual Clauses</h2>
             
             <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
@@ -1126,7 +1126,7 @@ export default function DataProcessingAgreementPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: 32, padding: 20, background: "#f8fafc", borderRadius: 8, border: "1px solid #e5e7eb" }}>
+          <div style={{ marginTop: 32, padding: 20, background: "#eaf6ff", borderRadius: 8, border: "1px solid #e5e7eb" }}>
             <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>Acknowledgment and Acceptance</p>
             <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13 }}>
               BY USING THE SERVICE, CUSTOMER ACKNOWLEDGES THAT IT HAS READ, UNDERSTOOD, AND AGREES TO BE BOUND BY THIS DATA PROCESSING AGREEMENT, INCLUDING ALL ANNEXES.

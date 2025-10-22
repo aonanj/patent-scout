@@ -583,7 +583,7 @@ export default function SigmaWhitespaceGraph({
   const hasHighlights = highlightedNodeIds && highlightedNodeIds.length > 0;
 
   return (
-    <div style={{ height, position: "relative", background: "#f8fafc", borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ height, position: "relative", background: "#eaf6ff", borderRadius: 12, overflow: "hidden" }}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       {hasHighlights && (
         <button

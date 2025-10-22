@@ -8,7 +8,7 @@ const CARD_BORDER = "#e5e7eb";
 
 export default function HelpIndexPage() {
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh", color: TEXT_COLOR }}>
+    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
 
         {/* Header */}
@@ -23,7 +23,7 @@ export default function HelpIndexPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Patent Scout?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is an advanced patent analytics platform that combines hybrid semantic search, trend analysis, and whitespace exploration to help teams make informed decisions about patent strategy and R&D investments. The platform is built on a continuously updated corpus of 46,000+ AI-related patents and publications dating back to 2023, powered by pgvector-based semantic search and OpenAI embeddings.
+            Patent Scout is an advanced patent analytics platform that combines hybrid semantic search, trend analysis, and whitespace exploration to help teams make informed decisions about patent strategy and R&D investments. The platform is built on a continuously updated corpus of 50,000+ AI-related patents and publications dating back to 2023, powered by pgvector-based semantic search and OpenAI embeddings.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
             The service offers two primary experiences:
@@ -78,7 +78,7 @@ export default function HelpIndexPage() {
               <DetailItem icon="⬩" title="Saved Alerts" text="Save your search criteria and receive notifications when new patents match your filters" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Best For</strong>: Ongoing competitive monitoring, prior art searches, technology landscape analysis, and staying current with new filings in your domain.
               </p>
@@ -126,7 +126,7 @@ export default function HelpIndexPage() {
               <DetailItem icon="⬩" title="Advanced Tuning" text="Adjust neighbor count, clustering resolution, and scoring weights to refine analysis" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#f8fafc", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Best For</strong>: Strategic patent investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in your technology area.
               </p>

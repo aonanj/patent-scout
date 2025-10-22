@@ -220,7 +220,7 @@ const thStyle: React.CSSProperties = {
   padding: "8px 10px",
   borderBottom: "1px solid #e5e7eb",
   color: "#334155",
-  background: "#f8fafc",
+  background: "#eaf6ff",
   position: "sticky",
   top: 0,
   zIndex: 1,
@@ -784,7 +784,7 @@ export default function WhitespacePage() {
   }, []);
 
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh" }}>
+    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gap: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

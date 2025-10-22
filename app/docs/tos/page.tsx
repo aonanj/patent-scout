@@ -6,7 +6,7 @@ const LINK_COLOR = "#5FA8D2";
 
 export default function TermsOfServicePage() {
   return (
-    <div style={{ padding: 20, background: "#f8fafc", minHeight: "100vh", color: TEXT_COLOR }}>
+    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
         
         {/* Header */}
@@ -582,7 +582,7 @@ export default function TermsOfServicePage() {
             </p>
           </Section>
 
-          <div style={{ marginTop: 32, padding: 20, background: "#f8fafc", borderRadius: 8, border: "1px solid #e5e7eb" }}>
+          <div style={{ marginTop: 32, padding: 20, background: "#eaf6ff", borderRadius: 8, border: "1px solid #e5e7eb" }}>
             <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>Acknowledgment</p>
             <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13 }}>
               BY CLICKING "I AGREE," CREATING AN ACCOUNT, OR USING THE SERVICE, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS OF SERVICE.
