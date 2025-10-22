@@ -99,13 +99,17 @@ async def get_subscription_info(
         # No active subscription found
         return SubscriptionInfo(has_active=False)
 
+    # Convert period_end datetime to ISO format string
+    period_end = result.get("current_period_end")
+    period_end_str = period_end.isoformat() if period_end else None
+
     return SubscriptionInfo(
         has_active=True,
         tier=result.get("tier"),
         status=result.get("status"),
         days_in_tier=result.get("days_in_tier"),
         needs_migration=result.get("needs_tier_migration", False),
-        period_end=result.get("current_period_end"),
+        period_end=period_end_str,
     )
 
 
