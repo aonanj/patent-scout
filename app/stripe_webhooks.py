@@ -7,8 +7,10 @@ All handlers are idempotent - processing the same event multiple times is safe.
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
+
+from dateutil.relativedelta import relativedelta
 
 import stripe
 from fastapi import HTTPException, Request
@@ -25,6 +27,104 @@ class WebhookError(Exception):
     """Base exception for webhook processing errors."""
 
     pass
+
+
+def _to_utc_datetime(timestamp: Any) -> datetime | None:
+    """Convert a Stripe timestamp (seconds since epoch) to aware UTC datetime."""
+    if timestamp in (None, ""):
+        return None
+    if isinstance(timestamp, datetime):
+        return timestamp.astimezone(timezone.utc)
+    try:
+        return datetime.fromtimestamp(float(timestamp), tz=timezone.utc)
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+def _compute_period_end(
+    start: datetime | None,
+    end: datetime | None,
+    interval: str | None,
+    interval_count: int | None,
+) -> tuple[datetime | None, bool]:
+    """Ensure period end is after period start, computing a fallback when needed."""
+    if start is None:
+        return None, False
+
+    if end and end > start:
+        return end, False
+
+    interval_count = interval_count or 1
+    computed_end = start
+
+    if interval == "day":
+        computed_end = start + timedelta(days=interval_count)
+    elif interval == "week":
+        computed_end = start + timedelta(weeks=interval_count)
+    elif interval == "month":
+        computed_end = start + relativedelta(months=interval_count)
+    elif interval == "year":
+        computed_end = start + relativedelta(years=interval_count)
+
+    return computed_end, True
+
+
+async def _lookup_subscription_db_id(
+    conn: AsyncConnection, stripe_subscription_id: str | None
+) -> str | None:
+    """Fetch local subscription ID that matches a Stripe subscription ID."""
+    if not stripe_subscription_id:
+        return None
+
+    async with conn.cursor() as cur:
+        await cur.execute(
+            "SELECT id FROM subscription WHERE stripe_subscription_id = %s",
+            [stripe_subscription_id],
+        )
+        row = await cur.fetchone()
+
+    if not row:
+        return None
+
+    return str(row[0])
+
+
+def _extract_stripe_subscription_id(
+    event_type: str, event_object: dict[str, Any] | Any
+) -> str | None:
+    """Pull the Stripe subscription ID from a webhook payload when available."""
+    try:
+        getter = event_object.get  # type: ignore[attr-defined]
+    except AttributeError:
+        return None
+
+    if event_type.startswith("customer.subscription."):
+        return getter("id")
+
+    if event_type.startswith("invoice."):
+        return getter("subscription")
+
+    if event_type == "checkout.session.completed":
+        return getter("subscription")
+
+    return None
+
+
+async def _resolve_subscription_id(
+    conn: AsyncConnection,
+    event_type: str,
+    event_object: Any,
+    subscription_id: str | None,
+) -> str | None:
+    """Prefer handler-provided subscription_id, otherwise look it up from payload."""
+    if subscription_id:
+        return subscription_id
+
+    stripe_subscription_id = _extract_stripe_subscription_id(event_type, event_object)
+    if not stripe_subscription_id:
+        return None
+
+    return await _lookup_subscription_db_id(conn, stripe_subscription_id)
 
 
 async def verify_webhook_signature(request: Request) -> stripe.Event:
@@ -101,7 +201,7 @@ async def log_event(
             "INSERT INTO subscription_event (stripe_event_id, subscription_id, event_type, event_data) "
             "VALUES (%s, %s, %s, %s) "
             "ON CONFLICT (stripe_event_id) DO NOTHING",
-            [event_id, subscription_id, event_type, json.dumps(event_data)],
+            [event_id, subscription_id, event_type, json.dumps(event_data, default=str)],
         )
 
 
@@ -146,26 +246,13 @@ async def upsert_subscription(
     stripe_customer_id = subscription_data["customer"]
     status = subscription_data["status"]
 
-    # Handle period dates - may not be present for incomplete subscriptions
-    current_period_start = None
-    current_period_end = None
-
-    if subscription_data.get("current_period_start"):
-        current_period_start = datetime.fromtimestamp(
-            subscription_data["current_period_start"]
-        )
-    else:
-        # Use created timestamp as fallback for incomplete subscriptions
-        current_period_start = datetime.fromtimestamp(subscription_data["created"])
-
-    if subscription_data.get("current_period_end"):
-        current_period_end = datetime.fromtimestamp(subscription_data["current_period_end"])
-    else:
-        # For incomplete subscriptions, set a temporary end date
-        # This will be updated when subscription becomes active
-        current_period_end = current_period_start
-
-    cancel_at_period_end = subscription_data.get("cancel_at_period_end", False)
+    current_period_start = (
+        _to_utc_datetime(subscription_data.get("current_period_start"))
+        or _to_utc_datetime(subscription_data.get("created"))
+        or datetime.now(timezone.utc)
+    )
+    current_period_end = _to_utc_datetime(subscription_data.get("current_period_end"))
+    cancel_at_period_end = bool(subscription_data.get("cancel_at_period_end", False))
 
     # Get the price ID from the subscription items
     items = subscription_data.get("items", {}).get("data", [])
@@ -176,9 +263,7 @@ async def upsert_subscription(
     stripe_price_id = items[0]["price"]["id"]
 
     # Handle canceled_at timestamp
-    canceled_at = None
-    if subscription_data.get("canceled_at"):
-        canceled_at = datetime.fromtimestamp(subscription_data["canceled_at"])
+    canceled_at = _to_utc_datetime(subscription_data.get("canceled_at"))
 
     # Get user_id from stripe_customer table
     async with conn.cursor(row_factory=dict_row) as cur:
@@ -197,9 +282,9 @@ async def upsert_subscription(
 
         user_id = customer["user_id"]
 
-        # Get tier from price_plan table
+        # Get plan details from price_plan table
         await cur.execute(
-            "SELECT tier FROM price_plan WHERE stripe_price_id = %s",
+            "SELECT tier, interval, interval_count FROM price_plan WHERE stripe_price_id = %s",
             [stripe_price_id],
         )
         plan = await cur.fetchone()
@@ -209,10 +294,25 @@ async def upsert_subscription(
             return None
 
         tier = plan["tier"]
+        plan_interval = plan.get("interval")
+        plan_interval_count = plan.get("interval_count", 1)
+
+        current_period_end, recomputed_period = _compute_period_end(
+            current_period_start, current_period_end, plan_interval, plan_interval_count
+        )
+
+        if recomputed_period:
+            logger.warning(
+                "Derived current_period_end=%s for subscription %s using interval %s x%s",
+                current_period_end,
+                stripe_subscription_id,
+                plan_interval,
+                plan_interval_count,
+            )
 
         # Check if subscription exists
         await cur.execute(
-            "SELECT id, tier_started_at FROM subscription WHERE stripe_subscription_id = %s",
+            "SELECT id, tier, tier_started_at FROM subscription WHERE stripe_subscription_id = %s",
             [stripe_subscription_id],
         )
         existing = await cur.fetchone()
@@ -221,8 +321,13 @@ async def upsert_subscription(
             # Update existing subscription
             # Preserve tier_started_at if tier hasn't changed
             tier_started_at = existing["tier_started_at"]
+            if tier_started_at and tier_started_at.tzinfo is None:
+                tier_started_at = tier_started_at.replace(tzinfo=timezone.utc)
+
             if existing.get("tier") != tier:
-                tier_started_at = datetime.now()
+                tier_started_at = datetime.now(timezone.utc)
+            elif not tier_started_at:
+                tier_started_at = datetime.now(timezone.utc)
 
             await cur.execute(
                 """
@@ -347,6 +452,11 @@ async def handle_checkout_session_completed(
             f"Checkout session has subscription {subscription_id}, "
             "will be processed by subscription.created event"
         )
+        existing_subscription_id = await _lookup_subscription_db_id(
+            conn, subscription_id
+        )
+        if existing_subscription_id:
+            return existing_subscription_id
 
     return None
 
@@ -528,23 +638,43 @@ async def process_webhook_event(conn: AsyncConnection, event: stripe.Event) -> N
     # Route to appropriate handler
     handler = EVENT_HANDLERS.get(event_type)
 
+    event_object = event["data"]["object"]
+
     if handler:
         logger.info(f"Processing event {event_type} (id: {event_id})")
+        subscription_id: str | None = None
         try:
             subscription_id = await handler(conn, event)
+            subscription_id = await _resolve_subscription_id(
+                conn, event_type, event_object, subscription_id
+            )
 
             # Log event to subscription_event table
             await log_event(
-                conn, event_id, event_type, event["data"]["object"], subscription_id
+                conn, event_id, event_type, event_object, subscription_id
             )
 
             logger.info(f"Successfully processed event {event_id}")
         except Exception as e:
             logger.error(f"Error processing event {event_id}: {e}", exc_info=True)
             # Still log the event even if processing failed
-            await log_event(conn, event_id, event_type, event["data"]["object"])
+            resolved_subscription_id = await _resolve_subscription_id(
+                conn, event_type, event_object, subscription_id
+            )
+            await log_event(
+                conn,
+                event_id,
+                event_type,
+                event_object,
+                resolved_subscription_id,
+            )
             raise WebhookError(f"Failed to process event {event_type}") from e
     else:
         # Log unhandled events for monitoring
         logger.info(f"Unhandled event type: {event_type} (id: {event_id})")
-        await log_event(conn, event_id, event_type, event["data"]["object"])
+        resolved_subscription_id = await _resolve_subscription_id(
+            conn, event_type, event_object, None
+        )
+        await log_event(
+            conn, event_id, event_type, event_object, resolved_subscription_id
+        )

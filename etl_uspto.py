@@ -129,6 +129,7 @@ ON CONFLICT (pub_id) DO UPDATE SET
     assignee_name     = COALESCE(EXCLUDED.assignee_name,     patent_staging.assignee_name),
     inventor_name     = COALESCE(EXCLUDED.inventor_name,     patent_staging.inventor_name),
     cpc               = COALESCE(EXCLUDED.cpc,               patent_staging.cpc)
+WHERE EXCLUDED.pub_date > patent_staging.pub_date OR patent_staging.pub_date IS NULL
 """
 
 INGEST_LOG_SQL = """
