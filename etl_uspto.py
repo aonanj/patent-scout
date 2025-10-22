@@ -310,20 +310,21 @@ def _extract_priority_date(priorities: Sequence[Mapping[str, Any]] | None) -> in
 
 def _extract_pub_id(meta: Mapping[str, Any], item: Mapping[str, Any]) -> str | None:
     candidates: Sequence[Any] = (
+        meta.get("patentNumber"),
+        item.get("patentNumber"),
         meta.get("earliestPublicationNumber"),
         meta.get("publicationNumber"),
-        meta.get("patentNumber"),
-        item.get("publicationNumber"),
-        item.get("applicationNumberText"),
     )
     for cand in candidates:
         if isinstance(cand, str) and cand.strip():
             cand_str = cand.strip()
             cand_country = cand_str[:2].upper()
-            cand_number = cand_str[2:-2]
-            cand_kind = cand_str[-2:].upper()
-            
-            return f"{cand_country}-{cand_number}-{cand_kind}"
+            if cand_country == "US":
+                cand_number = cand_str[2:-2]
+                cand_kind = cand_str[-2:].upper()
+                return f"{cand_country}-{cand_number}-{cand_kind}"
+            else:
+                return f"US-{cand_str}-B2"
     return None
 
 

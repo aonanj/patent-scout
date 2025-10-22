@@ -349,15 +349,18 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                 continue
 
             # Track when we enter/exit us-patent-application
-            if '<us-patent-application' in line:
+            if '<us-patent-application' in line or '<us-patent-grant' in line:
                 in_application = True
-                depth += line.count('<us-patent-application')
+                if '<us-patent-application' in line:
+                    depth += line.count('<us-patent-application')
+                elif '<us-patent-grant' in line:
+                    depth += line.count('<us-patent-grant')
                 buffer.append(line)
             elif in_application:
                 buffer.append(line)
                 # Track nesting depth
-                depth += line.count('<us-patent-application')
-                depth -= line.count('</us-patent-application>')
+                depth += line.count('<us-patent-application') or line.count('<us-patent-grant')
+                depth -= line.count('</us-patent-application>') or line.count('</us-patent-grant>')
 
                 # When we've closed all applications, parse the buffer
                 if depth == 0:

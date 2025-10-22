@@ -145,10 +145,26 @@ async def upsert_subscription(
     stripe_subscription_id = subscription_data["id"]
     stripe_customer_id = subscription_data["customer"]
     status = subscription_data["status"]
-    current_period_start = datetime.fromtimestamp(
-        subscription_data["current_period_start"]
-    )
-    current_period_end = datetime.fromtimestamp(subscription_data["current_period_end"])
+
+    # Handle period dates - may not be present for incomplete subscriptions
+    current_period_start = None
+    current_period_end = None
+
+    if subscription_data.get("current_period_start"):
+        current_period_start = datetime.fromtimestamp(
+            subscription_data["current_period_start"]
+        )
+    else:
+        # Use created timestamp as fallback for incomplete subscriptions
+        current_period_start = datetime.fromtimestamp(subscription_data["created"])
+
+    if subscription_data.get("current_period_end"):
+        current_period_end = datetime.fromtimestamp(subscription_data["current_period_end"])
+    else:
+        # For incomplete subscriptions, set a temporary end date
+        # This will be updated when subscription becomes active
+        current_period_end = current_period_start
+
     cancel_at_period_end = subscription_data.get("cancel_at_period_end", False)
 
     # Get the price ID from the subscription items
