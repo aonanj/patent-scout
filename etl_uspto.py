@@ -268,17 +268,17 @@ def _extract_assignee(meta: Mapping[str, Any], applicants: Sequence[Mapping[str,
 
 def _extract_inventors(inventors: Sequence[Mapping[str, Any]] | None) -> list[str]:
     if not inventors:
-        logger.debug("No inventors data provided to _extract_inventors")
+        logger.info("No inventors data provided to _extract_inventors")
         return []
     out: list[str] = []
     for inv in inventors:
         if not isinstance(inv, Mapping):
-            logger.debug("Skipping non-mapping inventor entry: %s", inv)
+            logger.info("Skipping non-mapping inventor entry: %s", inv)
             continue
         name_text = inv.get("inventorNameText")
         if isinstance(name_text, str) and name_text.strip():
             out.append(name_text.strip())
-            logger.debug("Extracted inventor name from inventorNameText: %s", name_text.strip())
+            logger.info("Extracted inventor name from inventorNameText: %s", name_text.strip())
             continue
         first = inv.get("firstName") or ""
         middle = inv.get("middleName") or ""
@@ -287,9 +287,9 @@ def _extract_inventors(inventors: Sequence[Mapping[str, Any]] | None) -> list[st
         if parts:
             full_name = " ".join(parts)
             out.append(full_name)
-            logger.debug("Extracted inventor name from parts: %s", full_name)
+            logger.info("Extracted inventor name from parts: %s", full_name)
         else:
-            logger.debug("Could not extract name from inventor entry: %s", inv)
+            logger.info("Could not extract name from inventor entry: %s", inv)
     logger.info("Extracted %d inventor names total", len(out))
     return out
 
@@ -324,16 +324,17 @@ def _extract_pub_id(meta: Mapping[str, Any], item: Mapping[str, Any]) -> str | N
                 cand_kind = cand_str[-2:].upper()
                 return f"{cand_country}-{cand_number}-{cand_kind}"
             else:
-                return f"US-{cand_str}-B2"
+                return f"US-{cand_str}"
     return None
 
 
 def _extract_pub_date(meta: Mapping[str, Any], item: Mapping[str, Any]) -> int | None:
     candidates: Sequence[Any] = (
+        meta.get("grantDate"),
+        item.get("grantDate"),
         meta.get("earliestPublicationDate"),
         meta.get("publicationDate"),
         meta.get("publicationDateText"),
-        meta.get("grantDate"),
         item.get("publicationDate"),
         meta.get("applicationStatusDate"),
         meta.get("filingDate"),
@@ -354,11 +355,11 @@ def record_from_uspto(item: Mapping[str, Any]) -> PatentRecord | None:
 
     # Log inventor data for debugging
     if inventors:
-        logger.debug("Found inventors data: %s", json.dumps(inventors)[:200])
+        logger.info("Found inventors data: %s", json.dumps(inventors)[:200])
 
     pub_id = _extract_pub_id(meta, item)
     if not pub_id:
-        logger.warning("Skipping USPTO record without publication identifier: %s", item)
+        logger.error("Skipping USPTO record without publication identifier: %s", item)
         return None
 
     pub_date = _extract_pub_date(meta, item)
@@ -378,6 +379,8 @@ def record_from_uspto(item: Mapping[str, Any]) -> PatentRecord | None:
                 cpc_codes.append(_parse_cpc_code(entry.strip()))
 
     kind_code = pub_id[-2:].upper()
+    if not kind_code.startswith("A"):
+        kind_code = None
 
     filing_date = _date_to_int(meta.get("filingDate") if isinstance(meta.get("filingDate"), str) else None)
     applicant_seq = (
@@ -514,7 +517,7 @@ def fetch_page(
 
     # Handle 404 Not Found errors gracefully - these should not be retried
     if resp.status_code == 404:
-        logger.warning(
+        logger.error(
             "USPTO API returned 404 Not Found for the requested parameters. "
             "This may indicate the date range or filters returned no results. "
             "Request params: %s",
@@ -564,7 +567,7 @@ def query_uspto(
         try:
             payload = fetch_page(session, base_url, params)
         except USPTONotFoundError as e:
-            logger.warning(
+            logger.error(
                 "USPTO API returned 404 for offset=%s. This may indicate no more records available "
                 "or the requested resource does not exist. Stopping pagination. Error: %s",
                 offset,
@@ -583,7 +586,7 @@ def query_uspto(
         page_ids: set[str] = set()
         for raw in items:
             if not isinstance(raw, Mapping):
-                logger.warning("Unexpected USPTO item payload: %s", raw)
+                logger.error("Unexpected USPTO item payload: %s", raw)
                 continue
             candidate_id = raw.get("applicationNumberText")
             if isinstance(candidate_id, str) and candidate_id.strip():
@@ -596,14 +599,14 @@ def query_uspto(
 
         if not new_records:
             duplicate_pages += 1
-            logger.warning(
+            logger.error(
                 "USPTO API returned duplicate-only page (offset=%s, size=%s); skip_count=%s",
                 offset,
                 len(items),
                 duplicate_pages,
             )
             if duplicate_pages >= 3:
-                logger.warning("Encountered %s consecutive duplicate pages; stopping pagination.", duplicate_pages)
+                logger.error("Encountered %s consecutive duplicate pages; stopping pagination.", duplicate_pages)
                 break
             offset += len(items)
             continue

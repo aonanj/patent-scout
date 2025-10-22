@@ -384,7 +384,7 @@ def ensure_embeddings_for_batch(
             ta_inputs.append((r.pub_id, text))
             total_targets += 1
         else:
-            logger.warning(f"Skipping title+abstract embedding for {r.pub_id}: no text available")
+            logger.error(f"Skipping title+abstract embedding for {r.pub_id}: no text available")
 
     if ta_inputs:
         logger.info(f"Generating {len(ta_inputs)} title+abstract embeddings")
@@ -409,7 +409,7 @@ def ensure_embeddings_for_batch(
             claims_pub_chunks.append((r.pub_id, chunks))
             total_targets += 1
         else:
-            logger.warning(f"Skipping claims embedding for {r.pub_id}: no claims text available")
+            logger.error(f"Skipping claims embedding for {r.pub_id}: no claims text available")
 
     if claims_pub_chunks:
         logger.info(f"Generating {len(claims_pub_chunks)} claims embeddings")

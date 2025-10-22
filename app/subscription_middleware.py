@@ -201,7 +201,7 @@ async def require_active_subscription(
     has_active = await check_active_subscription(user_id, conn)
 
     if not has_active:
-        logger.warning(
+        logger.error(
             f"Access denied for user {user_id}: no active subscription found"
         )
         raise SubscriptionRequiredError(
@@ -243,13 +243,13 @@ async def require_tier(
     sub_info = await get_subscription_info(user_id, conn)
 
     if not sub_info.has_active:
-        logger.warning(f"Access denied for user {user_id}: no active subscription")
+        logger.error(f"Access denied for user {user_id}: no active subscription")
         raise SubscriptionRequiredError(
             detail="This feature requires an active subscription."
         )
 
     if sub_info.tier != tier:
-        logger.warning(
+        logger.error(
             f"Access denied for user {user_id}: tier {sub_info.tier} != {tier}"
         )
         raise SubscriptionRequiredError(

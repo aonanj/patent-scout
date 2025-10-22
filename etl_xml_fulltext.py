@@ -33,7 +33,7 @@ from psycopg.rows import TupleRow
 
 from infrastructure.logger import setup_logger
 
-logger = setup_logger(__name__)
+logger = setup_logger()
 
 # -----------------------
 # Configuration constants
@@ -52,6 +52,18 @@ UPDATE patent_staging
 SET
     abstract = COALESCE(%(abstract)s, abstract),
     claims_text = COALESCE(%(claims_text)s, claims_text),
+    updated_at = NOW()
+WHERE pub_id = %(pub_id)s
+RETURNING pub_id;
+"""
+
+UPDATE_STAGING_WITH_KIND_SQL = """
+UPDATE patent_staging
+SET
+    pub_id = %(pub_id)s || '-' || %(kind_code)s,
+    abstract = COALESCE(%(abstract)s, abstract),
+    claims_text = COALESCE(%(claims_text)s, claims_text),
+    kind_code = %(kind_code)s,
     updated_at = NOW()
 WHERE pub_id = %(pub_id)s
 RETURNING pub_id;
@@ -93,7 +105,7 @@ def create_connection(dsn: str, max_retries: int = 3, retry_delay: float = 1.0) 
         except psycopg.OperationalError as e:
             last_error = e
             if attempt < max_retries - 1:
-                logger.warning(f"Connection attempt {attempt + 1} failed: {e}. Retrying in {retry_delay}s...")
+                logger.error(f"Connection attempt {attempt + 1} failed: {e}. Retrying in {retry_delay}s...")
                 time.sleep(retry_delay)
             else:
                 logger.error(f"Failed to connect after {max_retries} attempts")
@@ -133,9 +145,9 @@ def safe_rollback(conn: PgConn) -> None:
     try:
         if not conn.closed:
             conn.rollback()
-            logger.debug("Transaction rolled back")
+            logger.info("Transaction rolled back")
     except (psycopg.OperationalError, psycopg.InterfaceError) as e:
-        logger.warning(f"Rollback failed (connection likely lost): {e}")
+        logger.error(f"Rollback failed (connection likely lost): {e}")
 
 
 # --------------
@@ -149,6 +161,7 @@ class PatentFullText:
     pub_id: str
     abstract: str | None
     claims_text: str | None
+    kind: str | None = None
 
 
 @dataclass
@@ -309,8 +322,40 @@ def extract_pub_id(app_elem: ET.Element) -> str | None:
 
     if not (country and doc_number and kind):
         return None
-
+    if kind == "B2" or kind == "B1":
+        logger.info(f"Extracted pub_id: {country}-{doc_number}-{kind}")
     return f"{country}-{doc_number}-{kind}"
+
+
+def extract_pub_id_without_kind(app_elem: ET.Element) -> str | None:
+    """Extract publication ID without kind code from XML element.
+
+    Constructs pub_id as {country}-{doc_number} (without kind).
+
+    Args:
+        app_elem: XML element (<us-patent-grant> or <us-patent-application>).
+
+    Returns:
+        Publication ID string or None if components missing.
+    """
+    # Find <publication-reference> element
+    pub_ref = app_elem.find(".//publication-reference/document-id")
+    if pub_ref is None:
+        return None
+
+    country_elem = pub_ref.find("country")
+    doc_num_elem = pub_ref.find("doc-number")
+
+    if country_elem is None or doc_num_elem is None:
+        return None
+
+    country = country_elem.text.strip() if country_elem.text else ""
+    doc_number = doc_num_elem.text.strip() if doc_num_elem.text else ""
+
+    if not (country and doc_number):
+        return None
+
+    return f"{country}-{doc_number}"
 
 
 def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
@@ -339,6 +384,7 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
         # We'll parse applications one at a time to minimize memory usage
         buffer = []
         in_application = False
+        in_patent = False
         depth = 0
 
         for line in f:
@@ -349,18 +395,15 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                 continue
 
             # Track when we enter/exit us-patent-application
-            if '<us-patent-application' in line or '<us-patent-grant' in line:
+            if '<us-patent-application' in line:
                 in_application = True
-                if '<us-patent-application' in line:
-                    depth += line.count('<us-patent-application')
-                elif '<us-patent-grant' in line:
-                    depth += line.count('<us-patent-grant')
+                depth += line.count('<us-patent-application')
                 buffer.append(line)
             elif in_application:
                 buffer.append(line)
                 # Track nesting depth
-                depth += line.count('<us-patent-application') or line.count('<us-patent-grant')
-                depth -= line.count('</us-patent-application>') or line.count('</us-patent-grant>')
+                depth += line.count('<us-patent-application')
+                depth -= line.count('</us-patent-application>')
 
                 # When we've closed all applications, parse the buffer
                 if depth == 0:
@@ -372,7 +415,7 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
 
                         pub_id = extract_pub_id(elem)
                         if not pub_id:
-                            logger.warning(f"Record {count}: missing pub_id, skipping")
+                            logger.error(f"Record {count}: missing pub_id, skipping")
                             buffer = []
                             in_application = False
                             continue
@@ -386,9 +429,10 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                                 pub_id=pub_id,
                                 abstract=abstract,
                                 claims_text=claims_text,
+                                kind=None,
                             )
                         else:
-                            logger.debug(f"Record {count} ({pub_id}): no abstract or claims found")
+                            logger.info(f"Record {count} ({pub_id}): no abstract or claims found")
 
                     except Exception as e:
                         logger.error(f"Error parsing record {count}: {e}")
@@ -397,6 +441,55 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                         # Clear buffer for next application
                         buffer = []
                         in_application = False
+            elif '<us-patent-grant' in line:
+                in_patent = True
+                depth += line.count('<us-patent-grant')
+                buffer.append(line)
+            elif in_patent:
+                buffer.append(line)
+                # Track nesting depth
+                depth += line.count('<us-patent-grant')
+                depth -= line.count('</us-patent-grant>')
+
+                # When we've closed all applications, parse the buffer
+                if depth == 0:
+                    count += 1
+                    xml_string = ''.join(buffer)
+
+                    try:
+                        elem = ET.fromstring(xml_string)
+
+                        # For patent grants, extract pub_id without kind code
+                        pub_id = extract_pub_id_without_kind(elem)
+                        if not pub_id:
+                            logger.error(f"Record {count}: missing pub_id, skipping")
+                            buffer = []
+                            in_patent = False
+                            continue
+
+                        abstract = extract_abstract(elem)
+                        claims_text = extract_claims(elem)
+                        kind_elem = elem.find(".//publication-reference/document-id/kind")
+                        kind = kind_elem.text.strip() if kind_elem is not None and kind_elem.text else None
+
+                        # Only yield if we have at least one field to update
+                        if abstract or claims_text:
+                            yield PatentFullText(
+                                pub_id=pub_id,
+                                abstract=abstract,
+                                claims_text=claims_text,
+                                kind=kind,
+                            )
+                        else:
+                            logger.info(f"Record {count} ({pub_id}): no abstract or claims found")
+
+                    except Exception as e:
+                        logger.error(f"Error parsing record {count}: {e}")
+
+                    finally:
+                        # Clear buffer for next application
+                        buffer = []
+                        in_patent = False
 
     logger.info(f"Finished parsing {count} records from {xml_path}")
 
@@ -406,7 +499,7 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
 # ----------------------
 
 def upsert_fulltext(conn: PgConn, record: PatentFullText) -> bool:
-    """Upsert abstract and claims_text for existing patent_staging record.
+    """Upsert abstract, claims_text, and optionally pub_id/kind_code for existing patent_staging record.
 
     Args:
         conn: Postgres connection.
@@ -419,29 +512,44 @@ def upsert_fulltext(conn: PgConn, record: PatentFullText) -> bool:
         Exception: For database errors that should be handled by caller.
     """
     with conn.cursor() as cur:
-        # Check if record exists
+        # Always search using the original pub_id (without kind)
         cur.execute(CHECK_RECORD_EXISTS_SQL, {"pub_id": record.pub_id})
         exists = cur.fetchone() is not None
 
         if not exists:
-            logger.debug(f"Record {record.pub_id} not found in patent_staging, skipping")
             return False
 
-        # Update abstract and claims_text
-        cur.execute(
-            UPDATE_STAGING_SQL,
-            {
-                "pub_id": record.pub_id,
-                "abstract": record.abstract,
-                "claims_text": record.claims_text,
-            },
-        )
-
-        updated = cur.fetchone() is not None
-        if updated:
-            logger.debug(f"Updated {record.pub_id}")
+        # If kind is present, update pub_id to append kind and set kind_code
+        if record.kind:
+            cur.execute(
+                UPDATE_STAGING_WITH_KIND_SQL,
+                {
+                    "pub_id": record.pub_id,
+                    "abstract": record.abstract,
+                    "claims_text": record.claims_text,
+                    "kind_code": record.kind,
+                },
+            )
+            updated = cur.fetchone() is not None
+            if updated:
+                logger.info(f"Updated {record.pub_id} -> {record.pub_id}-{record.kind} with kind_code={record.kind}")
+            else:
+                logger.error(f"Failed to update {record.pub_id}")
         else:
-            logger.warning(f"Failed to update {record.pub_id}")
+            # No kind, just update abstract and claims_text
+            cur.execute(
+                UPDATE_STAGING_SQL,
+                {
+                    "pub_id": record.pub_id,
+                    "abstract": record.abstract,
+                    "claims_text": record.claims_text,
+                },
+            )
+            updated = cur.fetchone() is not None
+            if updated:
+                logger.info(f"Updated {record.pub_id}")
+            else:
+                logger.error(f"Failed to update {record.pub_id}")
 
         return updated
 
@@ -467,7 +575,7 @@ def upsert_fulltext_with_retry(
         try:
             # Check connection health before attempting operation
             if not is_connection_alive(conn):
-                logger.warning("Connection lost, attempting to reconnect...")
+                logger.error("Connection lost, attempting to reconnect...")
                 with contextlib.suppress(Exception):
                     conn.close()
                 conn = create_connection(dsn)
@@ -480,7 +588,7 @@ def upsert_fulltext_with_retry(
             psycopg.InterfaceError,
             psycopg.errors.IdleInTransactionSessionTimeout
         ) as e:
-            logger.warning(f"Database connection error on attempt {attempt + 1}: {e}")
+            logger.error(f"Database connection error on attempt {attempt + 1}: {e}")
 
             # Try to safely rollback
             safe_rollback(conn)
@@ -664,7 +772,7 @@ def process_xml_files(
             conn.close()
             logger.info("Database connection closed")
         except Exception as e:
-            logger.warning(f"Error closing connection: {e}")
+            logger.error(f"Error closing connection: {e}")
 
     logger.info(
         f"All files processed: {total_stats.files_processed} succeeded, "

@@ -331,7 +331,7 @@ async def handle_checkout_session_completed(
     )
 
     if not email:
-        logger.warning(f"No email found for checkout session {session['id']}")
+        logger.error(f"No email found for checkout session {session['id']}")
         email = f"unknown@{stripe_customer_id}"
 
     # Create stripe_customer record

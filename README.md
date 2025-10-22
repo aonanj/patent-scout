@@ -1,6 +1,6 @@
 # Patent Scout
 
-> Patent Scout delivers confidence-first patent intelligence for AI R&D teams. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes AI-related 46k+ patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO PEDS API, and bulk XML feeds.
+> Patent Scout delivers confidence-first patent intelligence for AI R&D teams. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes AI-related 52k+ patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
 
 ## Overview
 The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with OpenAI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific whitespace analysis tables enable personalized patent landscape exploration with isolated graph computation.

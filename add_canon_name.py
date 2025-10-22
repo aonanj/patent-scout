@@ -209,7 +209,7 @@ def safe_rollback(conn: psycopg.Connection) -> None:
         if conn.info.transaction_status != psycopg.pq.TransactionStatus.IDLE:
             conn.rollback()
     except (psycopg.OperationalError, AttributeError) as e:
-        logger.warning(f"Could not rollback transaction (connection may be lost): {e}")
+        logger.error(f"Could not rollback transaction (connection may be lost): {e}")
 
 
 @retry(
@@ -251,7 +251,7 @@ def get_or_create_canonical_id(
 
         if result:
             canonical_id = result[0]
-            logger.debug(f"Created new canonical name: {canonical_name} (id={canonical_id})")
+            logger.info(f"Created new canonical name: {canonical_name} (id={canonical_id})")
         else:
             # Record already exists, fetch its id
             cur.execute("""
@@ -263,7 +263,7 @@ def get_or_create_canonical_id(
             if canonical_id is None:
                 raise RuntimeError(f"Failed to get or create canonical name: {canonical_name}")
 
-            logger.debug(f"Found existing canonical name: {canonical_name} (id={canonical_id})")
+            logger.info(f"Found existing canonical name: {canonical_name} (id={canonical_id})")
 
     # Cache the result
     canonical_cache[canonical_name] = canonical_id
@@ -362,7 +362,7 @@ def process_assignee_names(
                 canonical_name = canonicalize_assignee_name(assignee_name)
 
                 if not canonical_name:
-                    logger.warning(f"Skipping empty canonical name for: {assignee_name}")
+                    logger.error(f"Skipping empty canonical name for: {assignee_name}")
                     break
 
                 # Get or create canonical_assignee_name record
@@ -376,9 +376,9 @@ def process_assignee_names(
                 if not check_alias_exists(conn, assignee_name):
                     create_alias(conn, canonical_id, assignee_name)
                     alias_count += 1
-                    logger.debug(f"Created alias: {assignee_name} -> {canonical_name}")
+                    logger.info(f"Created alias: {assignee_name} -> {canonical_name}")
                 else:
-                    logger.debug(f"Alias already exists: {assignee_name}")
+                    logger.info(f"Alias already exists: {assignee_name}")
 
                 # Commit after each record to avoid idle-in-transaction timeout
                 conn.commit()
@@ -392,7 +392,7 @@ def process_assignee_names(
 
             except (psycopg.OperationalError, psycopg.InterfaceError) as e:
                 retry_count += 1
-                logger.warning(
+                logger.error(
                     f"Connection error processing '{assignee_name}' (attempt {retry_count}/{max_retries}): {e}"
                 )
 
