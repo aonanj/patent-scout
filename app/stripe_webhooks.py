@@ -364,6 +364,21 @@ async def handle_subscription_created(
         Subscription ID if created
     """
     subscription = event["data"]["object"]
+
+    # If subscription is missing period dates, fetch from Stripe
+    # This happens when subscription is created via Checkout in incomplete state
+    if not subscription.get("current_period_start") or not subscription.get("current_period_end"):
+        logger.info(
+            f"Subscription {subscription['id']} missing period dates, "
+            "fetching from Stripe API"
+        )
+        try:
+            subscription = stripe.Subscription.retrieve(subscription["id"])
+            logger.info("Fetched complete subscription data from Stripe")
+        except Exception as e:
+            logger.error(f"Failed to fetch subscription from Stripe: {e}")
+            # Continue with event data anyway
+
     return await upsert_subscription(conn, subscription)
 
 
@@ -380,6 +395,20 @@ async def handle_subscription_updated(
         Subscription ID if updated
     """
     subscription = event["data"]["object"]
+
+    # If subscription is missing period dates, fetch from Stripe
+    if not subscription.get("current_period_start") or not subscription.get("current_period_end"):
+        logger.info(
+            f"Subscription {subscription['id']} missing period dates, "
+            "fetching from Stripe API"
+        )
+        try:
+            subscription = stripe.Subscription.retrieve(subscription["id"])
+            logger.info("Fetched complete subscription data from Stripe")
+        except Exception as e:
+            logger.error(f"Failed to fetch subscription from Stripe: {e}")
+            # Continue with event data anyway
+
     return await upsert_subscription(conn, subscription)
 
 
