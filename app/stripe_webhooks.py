@@ -17,6 +17,7 @@ import stripe
 from fastapi import HTTPException, Request
 from psycopg import AsyncConnection
 from psycopg.rows import dict_row
+from psycopg.types.json import Json
 
 from app.stripe_config import get_stripe_settings
 from infrastructure.logger import get_logger
@@ -268,7 +269,7 @@ async def log_event(
                 event_id,
                 subscription_id,
                 event_type,
-                safe_event_json,
+                Json(safe_event_json),
             ],
         )
 
