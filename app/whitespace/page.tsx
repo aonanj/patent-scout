@@ -488,8 +488,8 @@ export default function WhitespacePage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}`);
       }
       const data = (await res.json()) as WhitespaceResponse;
       setResult(data);

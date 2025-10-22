@@ -177,7 +177,7 @@ export default function NavBar() {
         <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
           <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Help</Link>
         </div>
-        <div className="hidden md:flex items-center gap-1 pl-2 ml-2">
+        <div className="hidden md:flex items-center gap-1 pl-1 ml-1">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (

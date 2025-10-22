@@ -29,7 +29,12 @@ from dotenv import load_dotenv
 from psycopg import Connection
 from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool
-from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wait_random_exponential
+from tenacity import (
+    retry,
+    retry_if_not_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from infrastructure.logger import setup_logger
 

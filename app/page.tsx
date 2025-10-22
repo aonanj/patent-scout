@@ -143,15 +143,15 @@ export default function Page() {
 
       const r = await fetch("/api/saved-queries", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
       if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`Save failed (${r.status}): ${t}`);
+        const errorData = await r.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Save failed (${r.status})`);
       }
       setSaveMsg("Alert saved");
       setTimeout(() => setSaveMsg(null), 3500);
@@ -186,13 +186,16 @@ export default function Page() {
 
       const res = await fetch(`/api/search`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setHits(data.items ?? []);
       setTotal(data.total ?? null);
@@ -224,7 +227,10 @@ export default function Page() {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       const raw: Array<Record<string, any>> = (Array.isArray(data) ? data : data?.points) || [];
 
@@ -361,8 +367,8 @@ export default function Page() {
       const url = buildExportUrl(fmt);
       const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`Export failed (${r.status}) ${t}`);
+        const errorData = await r.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Export failed (${r.status})`);
       }
       const blob = await r.blob();
       const a = document.createElement('a');
