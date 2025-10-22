@@ -145,10 +145,21 @@ def _extract_stripe_subscription_id(
         return getter("id")
 
     if event_type.startswith("invoice."):
+        # Try top-level subscription field (legacy API structure)
         subscription_id = getter("subscription")
         if subscription_id:
             return subscription_id
 
+        # Try nested parent.subscription_details.subscription (new API structure)
+        parent = getter("parent") or {}
+        if isinstance(parent, dict):
+            subscription_details = parent.get("subscription_details") or {}
+            if isinstance(subscription_details, dict):
+                subscription_id = subscription_details.get("subscription")
+                if subscription_id:
+                    return subscription_id
+
+        # Try line items (both legacy and new API structures)
         lines = getter("lines") or {}
         line_get = getattr(lines, "get", None)
         if callable(line_get):
@@ -159,12 +170,22 @@ def _extract_stripe_subscription_id(
         if isinstance(data, list):
             for item in data:
                 if isinstance(item, dict):
+                    # Legacy: subscription or subscription_id at line item level
                     candidate = item.get("subscription")
                     if candidate:
                         return candidate
                     candidate = item.get("subscription_id")
                     if candidate:
                         return candidate
+
+                    # New API: parent.subscription_item_details.subscription
+                    item_parent = item.get("parent") or {}
+                    if isinstance(item_parent, dict):
+                        sub_item_details = item_parent.get("subscription_item_details") or {}
+                        if isinstance(sub_item_details, dict):
+                            candidate = sub_item_details.get("subscription")
+                            if candidate:
+                                return candidate
 
         return None
 
@@ -207,10 +228,12 @@ async def _backfill_subscription_events(
                AND (
                    event_data ->> 'subscription' = %s
                 OR event_data ->> 'id' = %s
+                OR event_data #>> '{parent,subscription_details,subscription}' = %s
                )
             """,
             [
                 _to_uuid(subscription_uuid),
+                stripe_subscription_id,
                 stripe_subscription_id,
                 stripe_subscription_id,
             ],
