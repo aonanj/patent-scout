@@ -10,6 +10,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
@@ -82,6 +83,19 @@ def _compute_period_end(
     return computed_end, True
 
 
+def _to_uuid(value: Any) -> UUID | None:
+    """Convert a value to a UUID if possible."""
+    if not value:
+        return None
+    if isinstance(value, UUID):
+        return value
+    try:
+        return UUID(str(value))
+    except (TypeError, ValueError):
+        logger.warning("Unable to coerce value %s to UUID", value)
+        return None
+
+
 async def _lookup_subscription_db_id(
     conn: AsyncConnection, stripe_subscription_id: str | None
 ) -> str | None:
@@ -131,7 +145,28 @@ def _extract_stripe_subscription_id(
         return getter("id")
 
     if event_type.startswith("invoice."):
-        return getter("subscription")
+        subscription_id = getter("subscription")
+        if subscription_id:
+            return subscription_id
+
+        lines = getter("lines") or {}
+        line_get = getattr(lines, "get", None)
+        if callable(line_get):
+            data = line_get("data") or []
+        else:
+            data = lines.get("data", []) if isinstance(lines, dict) else []
+
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    candidate = item.get("subscription")
+                    if candidate:
+                        return candidate
+                    candidate = item.get("subscription_id")
+                    if candidate:
+                        return candidate
+
+        return None
 
     if event_type == "checkout.session.completed":
         return getter("subscription")
@@ -174,7 +209,11 @@ async def _backfill_subscription_events(
                 OR event_data ->> 'id' = %s
                )
             """,
-            [subscription_uuid, stripe_subscription_id, stripe_subscription_id],
+            [
+                _to_uuid(subscription_uuid),
+                stripe_subscription_id,
+                stripe_subscription_id,
+            ],
         )
 
 
@@ -267,7 +306,7 @@ async def log_event(
             "    event_data = EXCLUDED.event_data",
             [
                 event_id,
-                subscription_id,
+                _to_uuid(subscription_id),
                 event_type,
                 Json(safe_event_json),
             ],
