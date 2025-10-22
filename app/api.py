@@ -444,8 +444,8 @@ async def export(
             draw_label_value(lab, val)
 
     for r in rows:
-        # Pub id (bold label)
-        draw_label_value("Pub", r.get("pub_id"), label_size=10)
+        # Patent/Pub No (bold label)
+        draw_label_value("Patent/Pub No", r.get("pub_id"), label_size=10)
 
         # Title and Assignee
         if r.get("title"):

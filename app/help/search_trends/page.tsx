@@ -114,10 +114,10 @@ export default function SearchTrendsHelpPage() {
 
             <InputDescription
               label="Date Range (From / To)"
-              description="Filter patents by publication date. Both fields are optional. The default range spans the entire corpus (2023–present)."
+              description="Filter patents and publications by grant/publication date. Both fields are optional. The default range spans the entire corpus (2023–present)."
               example="Example: From 2024-01-01, To 2024-12-31"
               tips={[
-                "Dates are based on publication date, not filing date or priority date",
+                "Dates are based on earliest publication date for applications, grant date for patents",
                 "Both fields accept YYYY-MM-DD format via the date picker",
                 "Leaving fields blank uses the corpus min/max dates",
                 "Date range is displayed in the Trend chart subtitle"
@@ -161,9 +161,9 @@ export default function SearchTrendsHelpPage() {
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Result Fields</h3>
           <div style={{ display: "grid", gap: 12 }}>
             <ResultField field="Title" description="The patent title, displayed prominently with a clickable link to Google Patents." />
-            <ResultField field="Publication ID" description="The patent publication number (e.g., US2024123456A1). Clicking opens the patent on Google Patents in a new tab." />
-            <ResultField field="Assignee" description="The company or entity to whom the patent is assigned (e.g., 'Google LLC')." />
-            <ResultField field="Publication Date" description="The date the patent was published (formatted as YYYY-MM-DD)." />
+            <ResultField field="Patent/Publication No" description="The patent or publication number (e.g., US-2024123456-A1, US-12345678-B2). Clicking opens a link to Google Patents in a new tab." />
+            <ResultField field="Assignee" description="The company or entity that is assigned the patent (e.g., 'Google LLC')." />
+            <ResultField field="Grant/Publication Date" description="The date the patent was granted or the application was published (formatted as YYYY-MM-DD)." />
             <ResultField field="CPC Codes" description="Cooperative Patent Classification codes assigned to the patent, comma-separated." />
             <ResultField field="Abstract" description="A truncated preview of the patent abstract (up to 420 characters)." />
           </div>
@@ -197,15 +197,15 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 12 }}>
             <TrendOption
               mode="Month"
-              description="Displays patent count over time, grouped by publication month. The chart is a line graph with time on the x-axis and count on the y-axis. Useful for identifying filing spikes, seasonal patterns, or growth trends."
+              description="Displays patent/publication count over time, grouped by month. The chart is a line graph with time on the x-axis and count on the y-axis. Indicative of filing spikes, seasonal patterns, or growth trends."
             />
             <TrendOption
               mode="CPC (Section + Class)"
-              description="Groups patents by their CPC section and class (e.g., 'G06N', 'H04L'). Displays the top 10 CPC codes by count, with an 'Other' category aggregating the rest. Rendered as a horizontal bar chart. Useful for understanding which technology areas dominate the search results."
+              description="Groups patents by their CPC section and class (e.g., 'G06N', 'H04L'). Displays the top 10 CPC codes by count, with an 'Other' category aggregating the rest. Rendered as a horizontal bar chart. Indicative of the technological areas dominating the search results."
             />
             <TrendOption
               mode="Assignee"
-              description="Groups patents by assignee name. Displays the top 15 assignees by count as a horizontal bar chart. Useful for identifying dominant players in the technology space or competitive landscape analysis."
+              description="Groups patents by assignee name. Displays the top 15 assignees by count as a horizontal bar chart. Indicative of most relevant entities in a technology space and their movements in different directions (i.e., competitive landscape analysis)."
             />
           </div>
 
@@ -225,7 +225,7 @@ export default function SearchTrendsHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Managing Alerts</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            Alerts allow you to monitor specific search criteria over time and receive notifications when new patents match your filters. This section explains how to create, manage, and use alerts.
+            Alerts enable specific search criteria to be monitored over time. Weekly emails are sent when the search criteria is met by new patents or publications. This section explains how to create, manage, and use alerts.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Creating an Alert</h3>

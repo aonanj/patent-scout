@@ -41,10 +41,10 @@ const SIGNAL_LABELS: Record<SignalKind, string> = {
 };
 
 const SIGNAL_ICONS: Record<SignalKind, string> = {
-  focus_shift: "⇶",
+  focus_shift: "⇉",
   emerging_gap: "☼",
-  crowd_out: "⛅︎",
-  bridge: "⫘",
+  crowd_out: "☁︎",
+  bridge: "⟗",
 };
 
 type SignalTone = "opportunity" | "risk";
@@ -57,7 +57,7 @@ const SIGNAL_TONES: Record<SignalKind, SignalTone> = {
 };
 
 const SIGNAL_TONE_ICONS: Record<SignalTone, string> = {
-  opportunity: "☝︎",
+  opportunity: "✪",
   risk: "⚠︎",
 };
 
@@ -707,7 +707,7 @@ export default function WhitespacePage() {
     highlightedRows.forEach((row, index) => {
       lines.push("----------------------------------------");
       lines.push(`${index + 1}. ${row.title}`);
-      lines.push(`   Pub ID: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate}`);
+      lines.push(`   Patent/Pub No: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate}`);
       if (row.tooltip) {
         const cleanTooltip = row.tooltip.replace(/\s+/g, " ").trim();
         if (cleanTooltip) {
@@ -1103,7 +1103,7 @@ export default function WhitespacePage() {
                                         </button>
                                         {!hasExamples && (
                                           <span style={{ fontSize: 12, color: "#94a3b8" }}>
-                                            No exemplars yet for this signal.
+                                            No examples for this signal yet.
                                           </span>
                                         )}
                                       </div>
@@ -1227,7 +1227,7 @@ export default function WhitespacePage() {
                           <tr>
                             <th style={{ ...thStyle, width: 48 }}>#</th>
                             <th style={thStyle}>Title</th>
-                            <th style={thStyle}>Pub ID</th>
+                            <th style={thStyle}>Patent/Pub No</th>
                             <th style={thStyle}>Assignee</th>
                             <th style={thStyle}>Publication Date</th>
                             <th style={thStyle}>Abstract</th>

@@ -52,11 +52,11 @@ export default function WhitespaceHelpPage() {
           </p>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Identifies patents matching the focus criteria;</li>
-            <li>Computes cosine similarity between patents using OpenAI embeddings to build a K-nearest-neighbor graph;</li>
+            <li>Computes cosine similarity between patents using AI embeddings to build a K-nearest-neighbor graph;</li>
             <li>Applies Leiden clustering to group semantically similar patents into communities;</li>
             <li>Scores each patent for whitespace intensity using UMAP-based dimensionality reduction and local density measures;</li>
             <li>Evaluates four signal types (convergence, emerging gaps, crowd-out, bridges) for each assignee based on graph topology and temporal patterns;</li>
-            <li>Displays confidence-scored signals, an interactive graph visualization, and exemplar patents for each signal.</li>
+            <li>Displays confidence-scored signals, an interactive graph visualization, and example patents and publications for each signal.</li>
           </ol>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
             The result is a comprehensive view of where competitors are investing, where gaps exist, and where strategic opportunities or risks lie.
@@ -67,7 +67,7 @@ export default function WhitespaceHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Input Fields</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            The Whitespace page provides a focused set of inputs to define the analysis scope. All inputs are optional, but at least one focus criterion (keywords or CPC) is recommended for meaningful results.
+            The Whitespace page provides a focused set of inputs to define the analysis scope. All inputs are optional, but at least one focus criterion (keywords or CPC) is necessary to obtain results.
           </p>
 
           <div style={{ display: "grid", gap: 20 }}>
@@ -169,10 +169,10 @@ export default function WhitespaceHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Running the Analysis</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            Click the "Identify signals" button to run the analysis. The button is disabled if you're not authenticated. The analysis typically takes 5–30 seconds depending on the sample size and complexity.
+            Click the "Identify signals" button to run the analysis. The button is disabled if you're not authenticated. The analysis typically takes 5–30 seconds depending on the sample size and complexity, but loading time may exceed 50-60 seconds for broad queries, high K values, complex signal patterns, etc.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            During execution, the button text changes to "Identifying..." and the page displays a loading indicator. Once complete, the page populates with three main sections: Signals, Graph Context, and (if applicable) Highlighted Examples.
+            During execution, the button text changes to "Identifying..." and the page displays a loading indicator. Once complete, the page populates with two main sections: Signals and Graph Context. Selecting examples for a signal will highlight those examples in the Graph Context and a table presenting information for each highlighted example will be displayed, with an option to export the table as a PDF.
           </p>
         </div>
 
@@ -180,18 +180,18 @@ export default function WhitespaceHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Understanding Signals</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            Signals are confidence-scored indicators of strategic patterns in the patent landscape. Each signal is computed per assignee and includes a status (none/weak/medium/strong), a confidence score (0.00–1.00), a rationale, and a list of exemplar patent IDs.
+            Signals are confidence-scored indicators of strategic patterns in the patent landscape. Each signal is computed per assignee and includes a status (none/weak/medium/strong), a confidence score (0.00–1.00), a rationale, and a list of example patent and publication numbers.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Signal Types</h3>
           <div style={{ display: "grid", gap: 16 }}>
             <SignalCard
-              icon="⇶"
+              icon="⇉"
               type="Convergence Toward Focus Area"
               tone="risk"
               shortName="focus_shift"
               description="Indicates that an assignee is filing patents increasingly close to the focus area over time. This suggests they are shifting R&D resources toward the technology you're monitoring."
-              interpretation="A strong convergence signal means a competitor is actively moving into your space. Consider this a competitive threat that may warrant defensive filings or strategic positioning."
+              interpretation="A strong convergence signal means a competitor is actively moving into your space. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
               exampleRationale="Google has filed 12 patents near the focus area with recent filings moving closer to focus keywords 'LIDAR, autonomous driving'. Average distance to focus decreased from 0.45 to 0.22 over the past 6 months."
             />
 
@@ -206,7 +206,7 @@ export default function WhitespaceHelpPage() {
             />
 
             <SignalCard
-              icon="⛅︎"
+              icon="☁︎"
               type="Sharply Rising Density Near Focus Area"
               tone="risk"
               shortName="crowd_out"
@@ -216,7 +216,7 @@ export default function WhitespaceHelpPage() {
             />
 
             <SignalCard
-              icon="⫘"
+              icon="⟗"
               type="Neighbor Linking Potential Near Focus Area"
               tone="opportunity"
               shortName="bridge"
@@ -276,7 +276,7 @@ export default function WhitespaceHelpPage() {
 
             <LayoutSection
               title="4. Highlighted Examples Section (conditional)"
-              description="Appears only when you click 'View Examples (Recent)' or 'View Examples (Related)' on a signal. Displays a table of up to 8 exemplar patents sorted by publication date (recent) or whitespace relevance (related). Includes title, pub ID (linked to Google Patents), assignee, date, and abstract. An 'Export PDF' button lets you download the examples as a formatted report."
+              description="Appears only when you click 'View Examples (Recent)' or 'View Examples (Related)' on a signal. Displays a table of up to eight example patents sorted by publication date (recent) or whitespace relevance (related). Includes title, patent or publication number ('pub_id') (linked to Google Patents), assignee, date, and abstract. An 'Export PDF' button lets you download the examples as a formatted report."
             />
           </div>
 
@@ -284,12 +284,12 @@ export default function WhitespaceHelpPage() {
           <ol style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Enter focus keywords and/or CPC codes to define the analysis scope;</li>
             <li>Optionally adjust date range and advanced parameters;</li>
-            <li>Click "Identify signals" and wait for results;</li>
-            <li>Review the Signals section to identify opportunities (green) and risks (red/orange);</li>
+            <li>Click "Identify signals" to load results;</li>
+            <li>Review the Signals section to identify opportunities (green) and risks (red);</li>
             <li>Click on a signal to expand its rationale and view example buttons;</li>
-            <li>Click "View Examples (Recent)" or "View Examples (Related)" to see exemplar patents in the table below;</li>
+            <li>Click "View Examples (Recent)" or "View Examples (Related)" to see example patents and publications in the table below;</li>
             <li>Explore the Graph Context to visually understand cluster structure and node relationships;</li>
-            <li>Export exemplar patents as PDF for offline review or sharing with stakeholders;</li>
+            <li>Export example patents and publications as PDF for offline review and reference;</li>
             <li>Refine inputs or advanced parameters and re-run to explore different scenarios.</li>
           </ol>
         </div>
@@ -303,11 +303,11 @@ export default function WhitespaceHelpPage() {
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>What the Graph Represents</h3>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Nodes</strong>: Each node represents a patent in the analysis sample. Hover over a node to see its title and pub ID (if tooltips are enabled);</li>
+            <li><strong>Nodes</strong>: Each node represents a patent in the analysis sample. Hover over a node to see its title and patent/publication number (if tooltips are supported);</li>
             <li><strong>Edges</strong>: Edges connect patents that are among each other's K-nearest neighbors in the embedding space. More edges indicate tighter semantic clustering;</li>
             <li><strong>Node Size</strong>: Larger nodes have higher whitespace scores, meaning they are more isolated or occupy less crowded areas of the landscape;</li>
             <li><strong>Node Color</strong>: Colors correspond to Leiden cluster membership. Patents in the same cluster are semantically similar and likely cover related technologies;</li>
-            <li><strong>Highlighted Nodes</strong>: When you view examples for a signal, the relevant nodes are highlighted with a blue outline and slightly increased size. This helps you locate the patents contributing to the signal.</li>
+            <li><strong>Highlighted Nodes</strong>: When you view examples for a signal, the corresponding nodes are highlighted with a blue outline and slightly increased size. This helps you locate the patents contributing to the signal.</li>
           </ul>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Reading the Graph</h3>
@@ -346,18 +346,18 @@ export default function WhitespaceHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Highlighted Examples Table</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            When you click "View Examples (Recent)" or "View Examples (Related)" on a signal, the page displays a table of up to 8 exemplar patents. These are the patents that contribute most strongly to the signal.
+            When you click "View Examples (Recent)" or "View Examples (Related)" on a signal, the page displays a table of up to 8 example patents and publications. These are the patents and publications that contribute most strongly to the signal.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Sorting Modes</h3>
           <div style={{ display: "grid", gap: 12 }}>
             <SortMode
               mode="Recent"
-              description="Sorts exemplar patents by publication date (most recent first). Useful for understanding current activity and recent trends."
+              description="Sorts example patents/publications by grant date/publication date (most recent first). Useful for understanding current activity and recent trends."
             />
             <SortMode
               mode="Related"
-              description="Sorts by whitespace score and local density (highest first). Useful for identifying the most strategically relevant patents (those in isolated or low-density regions)."
+              description="Sorts by whitespace score and local density (highest first). Useful for identifying the most strategically relevant patents and publications (e.g., those in isolated or low-density regions)."
             />
           </div>
 
@@ -365,9 +365,9 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 12 }}>
             <TableColumn column="#" description="Sequential index (1–8)." />
             <TableColumn column="Title" description="Patent title, displayed in bold." />
-            <TableColumn column="Pub ID" description="Publication number, linked to Google Patents. Click to view the full patent." />
+            <TableColumn column="Patent/Pub No" description="Publication number, linked to Google Patents. Click to view the full patent." />
             <TableColumn column="Assignee" description="The entity to whom the patent is assigned." />
-            <TableColumn column="Publication Date" description="The date the patent was published (YYYY-MM-DD format)." />
+            <TableColumn column="Grant/Pub Date" description="The date the patent was granted or application was published (YYYY-MM-DD format)." />
             <TableColumn column="Abstract" description="A truncated abstract (up to 280 characters) providing context about the patent." />
           </div>
 
@@ -378,7 +378,7 @@ export default function WhitespaceHelpPage() {
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Signal metadata (assignee, signal type, confidence, sort mode);</li>
             <li>Focus scope (keywords, CPC, date range);</li>
-            <li>Full details for each exemplar patent (title, pub ID, assignee, date, abstract, and any signal-specific notes).</li>
+            <li>Full details for each example patent and publication (title, patent/pub no. (pub_id), assignee, date, abstract, and any signal-specific notes).</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
             The PDF is generated client-side using a minimal PDF builder and downloads immediately. File names are auto-generated based on assignee name and signal type (e.g., <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>Google_focus_shift_recent_examples.pdf</code>).
@@ -415,8 +415,8 @@ export default function WhitespaceHelpPage() {
               tip="Run the analysis with different date ranges (e.g., 2023 vs. 2024) to understand how the landscape is evolving. Compare convergence and crowd-out signals across time periods to identify accelerating trends."
             />
             <BestPractice
-              title="Export Exemplar PDFs for Stakeholder Review"
-              tip="When presenting findings to leadership or R&D teams, export exemplar PDFs for key signals. The PDF format is easier to annotate and share than screenshots or raw data."
+              title="Export PDFs of Example Patents and Publications"
+              tip="For later research and reference, export PDFs that include lists of the patents and publications contributing most significantly to the corresponding key signals. Easier to annotate and share than screenshots or raw data."
             />
           </div>
         </div>
@@ -443,8 +443,8 @@ export default function WhitespaceHelpPage() {
               solution="Large sample sizes (>2000) or high neighbor counts (K>25) can slow computation. Reduce the sample limit or K value. Ensure you're using a modern browser with WebGL support for graph rendering."
             />
             <Troubleshoot
-              issue="No exemplar patents shown for a signal"
-              solution="This means the signal was detected based on aggregate metrics but no individual patents met the threshold for inclusion in the node_ids list. This is rare but can happen with weak signals. Try re-running with adjusted parameters (e.g., lower alpha/beta) or broader focus."
+              issue="No example patents or publications shown for a signal"
+              solution="This means the signal was detected based on aggregate metrics but no individual patents or publications met the threshold for inclusion in the node_ids list. This is rare but can happen with weak signals. Try re-running with adjusted parameters (e.g., lower alpha/beta) or broader focus."
             />
             <Troubleshoot
               issue="PDF export fails or downloads empty file"

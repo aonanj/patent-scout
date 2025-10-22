@@ -119,10 +119,10 @@ export default function HelpIndexPage() {
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="⬩" title="Confidence-Scored Signals" text="Four signal types (convergence, emerging gaps, crowd-out, bridges) with quantitative confidence scores" />
+              <DetailItem icon="⬩" title="Confidence-Scored Signals" text="Four signal types (bridging opportunities, underdeveloped areas, high-density areas, convergence momentums) with quantitative confidence scores" />
               <DetailItem icon="⬩" title="Interactive Graph Visualization" text="Explore patent relationships through a Sigma.js-powered network graph with clustering and layout" />
               <DetailItem icon="⬩" title="Assignee-Level Intelligence" text="Signals are grouped by assignee to reveal competitor strategies and positioning" />
-              <DetailItem icon="⬩" title="Exemplar Patents" text="View concrete examples of patents driving each signal, sorted by recency or relevance" />
+              <DetailItem icon="⬩" title="Example Patent Filings" text="View concrete examples of patents and publications driving each signal, sorted by recency or relevance" />
               <DetailItem icon="⬩" title="Advanced Tuning" text="Adjust neighbor count, clustering resolution, and scoring weights to refine analysis" />
             </div>
 
@@ -162,7 +162,7 @@ export default function HelpIndexPage() {
 
             <InfoSection
               title="5. Export and Share Insights"
-              content="Use the CSV and PDF export features on Search & Trends, or export exemplar patents from Whitespace signals as PDF reports to share findings with your team."
+              content="Use the CSV and PDF export features on Search & Trends, or export example patents and publications from Whitespace signals as PDF reports for later reference."
             />
           </div>
         </div>
@@ -184,13 +184,6 @@ export default function HelpIndexPage() {
               description="Review our Terms of Service, Privacy Policy, and Data Processing Agreement."
               href="/docs"
               external={false}
-            />
-
-            <ResourceLink
-              title="API Documentation"
-              description="For developers: explore the FastAPI backend documentation and endpoints (requires authentication)."
-              href="https://patent-scout.vercel.app/docs"
-              external={true}
             />
           </div>
         </div>
