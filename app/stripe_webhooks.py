@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Any
 
 from dateutil.relativedelta import relativedelta
@@ -27,6 +28,17 @@ class WebhookError(Exception):
     """Base exception for webhook processing errors."""
 
     pass
+
+
+def _json_default(value: Any) -> Any:
+    """JSON serializer for values not handled by default encoder."""
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).isoformat()
+    if isinstance(value, (Decimal, timedelta)):
+        return str(value)
+    return str(value)
 
 
 def _to_utc_datetime(timestamp: Any) -> datetime | None:
@@ -89,6 +101,22 @@ async def _lookup_subscription_db_id(
     return str(row[0])
 
 
+def _normalize_event_object(event_object: Any) -> dict[str, Any]:
+    """Convert Stripe event payload into a JSON-serializable dictionary."""
+    if isinstance(event_object, dict):
+        return event_object
+
+    to_dict = getattr(event_object, "to_dict_recursive", None)
+    if callable(to_dict):
+        return to_dict()
+
+    try:
+        return json.loads(json.dumps(event_object, default=_json_default))
+    except (TypeError, ValueError):
+        logger.warning("Failed to normalize Stripe event object; storing string fallback")
+        return {"raw": str(event_object)}
+
+
 def _extract_stripe_subscription_id(
     event_type: str, event_object: dict[str, Any] | Any
 ) -> str | None:
@@ -125,6 +153,28 @@ async def _resolve_subscription_id(
         return None
 
     return await _lookup_subscription_db_id(conn, stripe_subscription_id)
+
+
+async def _backfill_subscription_events(
+    conn: AsyncConnection, subscription_uuid: str | None, stripe_subscription_id: str | None
+) -> None:
+    """Attach subscription UUID to any prior events missing the linkage."""
+    if not subscription_uuid or not stripe_subscription_id:
+        return
+
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            UPDATE subscription_event
+               SET subscription_id = %s
+             WHERE subscription_id IS NULL
+               AND (
+                   event_data ->> 'subscription' = %s
+                OR event_data ->> 'id' = %s
+               )
+            """,
+            [subscription_uuid, stripe_subscription_id, stripe_subscription_id],
+        )
 
 
 async def verify_webhook_signature(request: Request) -> stripe.Event:
@@ -196,12 +246,30 @@ async def log_event(
         event_data: Full event data as JSON
         subscription_id: UUID of related subscription record (if any)
     """
+    # Ensure stable JSON payload for querying
+    if hasattr(event_data, "to_dict_recursive"):
+        event_json = event_data.to_dict_recursive()
+    else:
+        event_json = event_data
+
+    try:
+        safe_event_json = json.loads(json.dumps(event_json, default=_json_default))
+    except (TypeError, ValueError):
+        safe_event_json = {"raw": str(event_json)}
+
     async with conn.cursor() as cur:
         await cur.execute(
             "INSERT INTO subscription_event (stripe_event_id, subscription_id, event_type, event_data) "
             "VALUES (%s, %s, %s, %s) "
-            "ON CONFLICT (stripe_event_id) DO NOTHING",
-            [event_id, subscription_id, event_type, json.dumps(event_data, default=str)],
+            "ON CONFLICT (stripe_event_id) DO UPDATE "
+            "SET subscription_id = COALESCE(subscription_event.subscription_id, EXCLUDED.subscription_id), "
+            "    event_data = EXCLUDED.event_data",
+            [
+                event_id,
+                subscription_id,
+                event_type,
+                safe_event_json,
+            ],
         )
 
 
@@ -357,8 +425,15 @@ async def upsert_subscription(
                 ],
             )
             result = await cur.fetchone()
+            if result:
+                subscription_uuid = str(result["id"])
+                await _backfill_subscription_events(
+                    conn, subscription_uuid, stripe_subscription_id
+                )
+                logger.info(f"Updated subscription {stripe_subscription_id}")
+                return subscription_uuid
             logger.info(f"Updated subscription {stripe_subscription_id}")
-            return str(result["id"]) if result else None
+            return None
         else:
             # Create new subscription
             await cur.execute(
@@ -393,8 +468,15 @@ async def upsert_subscription(
                 ],
             )
             result = await cur.fetchone()
+            if result:
+                subscription_uuid = str(result["id"])
+                await _backfill_subscription_events(
+                    conn, subscription_uuid, stripe_subscription_id
+                )
+                logger.info(f"Created new subscription {stripe_subscription_id}")
+                return subscription_uuid
             logger.info(f"Created new subscription {stripe_subscription_id}")
-            return str(result["id"]) if result else None
+            return None
 
 
 # ============================================================================
@@ -638,7 +720,8 @@ async def process_webhook_event(conn: AsyncConnection, event: stripe.Event) -> N
     # Route to appropriate handler
     handler = EVENT_HANDLERS.get(event_type)
 
-    event_object = event["data"]["object"]
+    event_object_raw = event["data"]["object"]
+    event_object = _normalize_event_object(event_object_raw)
 
     if handler:
         logger.info(f"Processing event {event_type} (id: {event_id})")
