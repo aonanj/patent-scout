@@ -23,7 +23,8 @@ from app.subscription_middleware import (
 @pytest.fixture
 def mock_conn():
     """Mock database connection."""
-    conn = AsyncMock()
+    conn = MagicMock()
+    # cursor() should be a regular (non-async) method that returns a context manager
     return conn
 
 
@@ -35,10 +36,13 @@ def mock_user():
 
 @pytest.fixture
 def mock_cursor():
-    """Mock database cursor."""
-    cursor = AsyncMock()
+    """Mock database cursor that supports async context manager."""
+    cursor = MagicMock()
     cursor.__aenter__ = AsyncMock(return_value=cursor)
     cursor.__aexit__ = AsyncMock(return_value=None)
+    cursor.execute = AsyncMock()
+    cursor.fetchone = AsyncMock()
+    cursor.fetchall = AsyncMock()
     return cursor
 
 

@@ -94,3 +94,18 @@ class FakePool:
 def fake_user() -> dict[str, Any]:
     return {"sub": "user-123", "email": "test@example.com"}
 
+
+def make_subscription_cursor(has_active: bool = True) -> FakeAsyncCursor:
+    """Create a cursor that returns subscription check result.
+
+    The subscription middleware calls has_active_subscription(%s) which returns
+    a boolean. This helper creates a cursor that returns the expected result.
+
+    Args:
+        has_active: Whether the user has an active subscription (default True)
+
+    Returns:
+        FakeAsyncCursor configured for subscription check
+    """
+    return FakeAsyncCursor(fetchone=(has_active,))
+

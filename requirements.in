@@ -56,6 +56,7 @@ PyJWT==2.10.1
 pynndescent==0.5.13
 pyproject_hooks==1.2.0
 pytest==8.4.2
+pytest-asyncio==0.25.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 python-jose==3.5.0

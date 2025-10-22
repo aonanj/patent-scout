@@ -37,6 +37,7 @@ from .schemas import (
 )
 from .stripe_config import ensure_stripe_configured
 from .stripe_webhooks import process_webhook_event, verify_webhook_signature
+from .subscription_middleware import ActiveSubscription
 from .whitespace_api import router as whitespace_router
 
 # Optional PDF support
@@ -45,6 +46,7 @@ _has_reportlab = (
     and importlib.util.find_spec("reportlab.pdfgen") is not None
     and importlib.util.find_spec("reportlab.lib.pagesizes") is not None
 )
+
 if _has_reportlab:
     from reportlab.lib.pagesizes import letter as _LETTER  # type: ignore
     from reportlab.pdfgen import canvas as _CANVAS  # type: ignore
@@ -106,7 +108,7 @@ async def favicon() -> FileResponse:
 
 
 @app.post("/search", response_model=SearchResponse)
-async def post_search(req: SearchRequest, conn: Conn) -> SearchResponse:
+async def post_search(req: SearchRequest, conn: Conn, user: ActiveSubscription) -> SearchResponse:
     qv: list[float] | None = None
     if req.semantic_query:
         maybe = embed_text(req.semantic_query)
@@ -141,7 +143,7 @@ class SavedQueryUpdate(BaseModel):
 
 
 @app.get("/saved-queries")
-async def list_saved_queries(conn: Conn, user: User):
+async def list_saved_queries(conn: Conn, user: ActiveSubscription):
 
     owner_id = user.get("sub")
     if owner_id is None:
@@ -161,7 +163,7 @@ async def list_saved_queries(conn: Conn, user: User):
 
 
 @app.post("/saved-queries")
-async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
+async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: ActiveSubscription):
     """Create a saved query.
     """
     owner_id = user.get("sub")
@@ -193,7 +195,7 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: User):
 
 
 @app.delete("/saved-queries/{id}")
-async def delete_saved_query(id: str, conn: Conn, user: User):
+async def delete_saved_query(id: str, conn: Conn, user: ActiveSubscription):
     """Delete a saved query owned by the current user.
 
     Requires authentication and enforces ownership in the DELETE statement.
@@ -215,7 +217,7 @@ async def delete_saved_query(id: str, conn: Conn, user: User):
 
 
 @app.patch("/saved-queries/{id}")
-async def update_saved_query(id: str, req: SavedQueryUpdate, conn: Conn, user: User):
+async def update_saved_query(id: str, req: SavedQueryUpdate, conn: Conn, user: ActiveSubscription):
     """Update a saved query owned by the current user.
 
     Currently supports toggling is_active.
@@ -243,6 +245,7 @@ async def update_saved_query(id: str, req: SavedQueryUpdate, conn: Conn, user: U
 @app.get("/trend/volume", response_model=TrendResponse)
 async def get_trend(
     conn: Conn,
+    user: ActiveSubscription,
     group_by: str = Query(...),
     q: str | None = Query(None),
     assignee: str | None = Query(None),
@@ -251,6 +254,10 @@ async def get_trend(
     date_to: int | None = Query(None),
     semantic_query: str | None = Query(None),
 ) -> TrendResponse:
+    owner_id = user.get("sub")
+    if owner_id is None:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+    
     qv: list[float] | None = None
     if semantic_query:
         maybe = embed_text(semantic_query)
@@ -308,6 +315,7 @@ def _int_date(v: int | None) -> str:
 @app.get("/export")
 async def export(
     conn: Conn,
+    user: ActiveSubscription,
     format: str = Query("csv", pattern="^(csv|pdf)$"),
     q: str | None = Query(None),
     assignee: str | None = Query(None),
@@ -317,6 +325,11 @@ async def export(
     semantic_query: str | None = Query(None),
     limit: int = Query(1000, ge=1, le=1000),
 ):
+
+    owner_id = user.get("sub")
+    if owner_id is None:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+
     qv: list[float] | None = None
     if semantic_query:
         maybe = embed_text(semantic_query)

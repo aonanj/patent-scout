@@ -149,27 +149,24 @@ export default function NavBar() {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-slate-200">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3">
-        {/* Logo */}
-        <div className="flex items-center mr-3">
-          <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
             <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={211} height={38} className="hover:scale-105 transition-transform py-2" />
           </Link>
         </div>
 
         <div className="flex-1" />
 
-        {/* Main Navigation */}
-        <div className="hidden md:flex items-center gap-1 px-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center gap-2">
           <Link href="/" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Search & Trends</Link>
           <Link href="/whitespace" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
         </div>
 
-        {/* Alerts */}
-        <div className="hidden md:flex items-center px-2 border-r border-slate-200">
+        <div className="hidden md:flex items-center pl-1 ml-1">
           <button
             onClick={openAlerts}
-            className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
+            className="px-3 py-1.5 text-sm font-semibold border-0 rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
             disabled={isLoading}
             title={isAuthenticated ? "View and manage your alerts" : "Log in to manage alerts"}
           >
@@ -177,24 +174,23 @@ export default function NavBar() {
           </button>
         </div>
 
-        {/* Help */}
-        <div className="hidden md:flex items-center px-1">
+        <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
           <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Help</Link>
         </div>
-
-        {/* User Section */}
-        <div className="hidden md:flex items-center gap-3 px-3 border-l border-slate-200">
+        <div className="hidden md:flex items-center gap-1 pl-2 ml-2">
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (
             <>
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 pr-2">
                 <span className="text-sm font-semibold text-slate-700">{user?.name || user?.email}</span>
                 <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-300 text-sky-700 text-xs font-semibold grid place-items-center">
                   {userInitials}
                 </div>
               </div>
-              <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Billing</Link>
+              <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
+                <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Billing</Link>
+              </div>
               <button
                 onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
                 className="h-8 px-3 text-sm font-semibold rounded-md border border-slate-200 bg-white hover:bg-[#BCCCDC] hover:underline text-blue-800"

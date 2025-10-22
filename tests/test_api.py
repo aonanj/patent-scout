@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app import api as api_module
 from app.schemas import PatentHit
-from tests.conftest import FakeAsyncConnection, FakeAsyncCursor
+from tests.conftest import FakeAsyncConnection, FakeAsyncCursor, make_subscription_cursor
 
 
 def _make_client(
@@ -35,7 +35,7 @@ def test_post_search_keyword(monkeypatch: pytest.MonkeyPatch, fake_user: dict[st
         return 1, [PatentHit(pub_id="US1", title="Result")]
 
     monkeypatch.setattr(api_module, "search_hybrid", fake_search)
-    conn = FakeAsyncConnection([])
+    conn = FakeAsyncConnection([make_subscription_cursor()])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -61,7 +61,7 @@ def test_post_search_semantic_invokes_embed(monkeypatch: pytest.MonkeyPatch, fak
 
     monkeypatch.setattr(api_module, "embed_text", fake_embed)
     monkeypatch.setattr(api_module, "search_hybrid", fake_search)
-    client = _make_client(monkeypatch, FakeAsyncConnection([]), fake_user)
+    client = _make_client(monkeypatch, FakeAsyncConnection([make_subscription_cursor()]), fake_user)
 
     try:
         resp = client.post("/search", json={"semantic_query": "robotics"})
@@ -77,7 +77,7 @@ def test_trend_volume_endpoint(monkeypatch: pytest.MonkeyPatch, fake_user: dict[
         return [("2024-01", 5), ("2024-02", 2)]
 
     monkeypatch.setattr(api_module, "trend_volume", fake_trend)
-    client = _make_client(monkeypatch, FakeAsyncConnection([]), fake_user)
+    client = _make_client(monkeypatch, FakeAsyncConnection([make_subscription_cursor()]), fake_user)
 
     try:
         resp = client.get("/trend/volume", params={"group_by": "month"})
@@ -131,7 +131,7 @@ def test_export_csv(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) 
         ]
 
     monkeypatch.setattr(api_module, "export_rows", fake_export)
-    client = _make_client(monkeypatch, FakeAsyncConnection([]), fake_user)
+    client = _make_client(monkeypatch, FakeAsyncConnection([make_subscription_cursor()]), fake_user)
 
     try:
         resp = client.get("/export", params={"format": "csv"})
@@ -160,7 +160,7 @@ def test_list_saved_queries(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
             }
         ]
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -174,7 +174,7 @@ def test_list_saved_queries(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
 
 def test_create_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     cursor = FakeAsyncCursor(fetchone=("new-id",))
-    conn = FakeAsyncConnection([cursor])
+    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -188,7 +188,7 @@ def test_create_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
 
 def test_delete_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     cursor = FakeAsyncCursor(rowcount=1)
-    conn = FakeAsyncConnection([cursor])
+    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -201,7 +201,7 @@ def test_delete_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
 
 def test_delete_saved_query_not_found(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     cursor = FakeAsyncCursor(rowcount=0)
-    conn = FakeAsyncConnection([cursor])
+    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -213,7 +213,7 @@ def test_delete_saved_query_not_found(monkeypatch: pytest.MonkeyPatch, fake_user
 
 def test_update_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     cursor = FakeAsyncCursor(fetchone=("123",))
-    conn = FakeAsyncConnection([cursor])
+    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -225,7 +225,7 @@ def test_update_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
 
 
 def test_update_saved_query_requires_field(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
-    client = _make_client(monkeypatch, FakeAsyncConnection([]), fake_user)
+    client = _make_client(monkeypatch, FakeAsyncConnection([make_subscription_cursor()]), fake_user)
 
     try:
         resp = client.patch("/saved-queries/123", json={})

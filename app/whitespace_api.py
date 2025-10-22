@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 from collections import Counter, defaultdict
 from collections.abc import Sequence
@@ -22,9 +21,12 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 from sklearn.neighbors import NearestNeighbors
 
+from infrastructure.logger import get_logger
+
 from .auth import get_current_user
 from .db import get_conn
 from .repository import SEARCH_EXPR
+from .subscription_middleware import ActiveSubscription
 from .whitespace_signals import (
     SignalComputation,
     SignalKind,
@@ -40,7 +42,9 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
-logger = logging.getLogger(__name__)
+User = ActiveSubscription
+
+logger = get_logger()
 
 MAX_GRAPH_LIMIT = 2000
 MAX_GRAPH_NEIGHBORS = 50
@@ -864,7 +868,7 @@ def get_whitespace_graph(
     req: GraphRequest,
     pool: Annotated[ConnectionPool, Depends(get_pool)],
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user),
+    current_user: User,
 ) -> WhitespaceResponse:
     _validate_graph_params(req)
 
