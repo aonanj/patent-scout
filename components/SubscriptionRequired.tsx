@@ -110,7 +110,7 @@ export default function SubscriptionRequired({
               <div>
                 <div className="font-semibold" style={{ color: '#102A43' }}>Unlimited searches</div>
                 <div className="text-sm text-slate-600">
-                  Search millions of patents with no restrictions
+                  Search over 55,000 AI-related patents and publications
                 </div>
               </div>
             </div>
