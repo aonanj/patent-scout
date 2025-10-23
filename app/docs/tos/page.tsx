@@ -85,10 +85,10 @@ export default function TermsOfServicePage() {
             </Subsection>
 
             <Subsection title="2.3 Limitation of Patent Coverage">
-              <p>Our current dataset focuses on AI-related patents based on specific CPC classifications and keyword matching. The Service:</p>
+              <p>Our current dataset focuses on AI-related patents and publications based on specific CPC classifications and keyword matching. The Service:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li>Does NOT provide comprehensive coverage of all patent publications;</li>
-                <li>May exclude relevant patents due to classification or keyword limitations;</li>
+                <li>Does NOT provide comprehensive coverage of all patent and publication data;</li>
+                <li>May exclude relevant patents and publications due to classification or keyword limitations;</li>
                 <li>May include false positives that do not relate to your specific interests;</li>
                 <li>Updates on a periodic basis and is not real-time.</li>
               </ul>

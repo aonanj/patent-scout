@@ -189,7 +189,7 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `EMB_BATCH_SIZE` / `EMB_MAX_CHARS` – Embedding throughput guards used by `etl.py`.
 
 ## Data Pipeline (`etl.py`)
-`etl.py` loads AI-focused US filings from Google’s public patents dataset, normalizes CPC codes, upserts metadata into Postgres, and generates OpenAI embeddings for both title+abstract (`...|ta`) and claims (`...|claims`). Runs are idempotent via the `ingest_log` table and hash-based deduplication. Usage example:
+`etl.py` loads AI-focused US filings from Google’s public patent publication dataset, normalizes CPC codes, upserts metadata into Postgres, and generates OpenAI embeddings for both title+abstract (`...|ta`) and claims (`...|claims`). Runs are idempotent via the `ingest_log` table and hash-based deduplication. Usage example:
 ```bash
 python etl.py \
   --project your-gcp-project \
@@ -226,7 +226,7 @@ python etl_xml_fulltext.py \
 ```
 
 ### Embedding Backfill Utility (`etl_add_embeddings.py`)
-Backfills missing embeddings for patents within a specified date range. Supports both title+abstract (`|ta`) and claims (`|claims`) embedding models:
+Backfills missing embeddings for patents and applications within a specified date range. Supports both title+abstract (`|ta`) and claims (`|claims`) embedding models:
 ```bash
 python etl_add_embeddings.py \
   --dsn "postgresql://user:pass@host/db?sslmode=require" \

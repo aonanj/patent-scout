@@ -29,7 +29,7 @@ export default function HelpIndexPage() {
             The service offers two primary experiences:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Search & Trends</strong>: Discover patents through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match your criteria;</li>
+            <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match your criteria;</li>
             <li><strong>Whitespace Analysis</strong>: Identify strategic opportunities and competitive risks through graph-based analysis of patent landscapes, with confidence-scored signals highlighting focus convergence, emerging gaps, crowd-out risks, and bridging opportunities.</li>
           </ul>
         </div>
@@ -71,16 +71,16 @@ export default function HelpIndexPage() {
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="⬩" title="Hybrid Search" text="Combine keyword and semantic queries to find relevant patents using both exact matches and AI-powered similarity" />
+              <DetailItem icon="⬩" title="Hybrid Search" text="Combine keyword and semantic queries to find relevant patents and publications using both exact matches and AI-powered similarity" />
               <DetailItem icon="⬩" title="Advanced Filters" text="Narrow results by assignee, CPC code, publication date range, and more" />
               <DetailItem icon="⬩" title="Trend Visualization" text="Visualize patent filing trends by month, CPC classification, or assignee to spot patterns and emerging areas" />
               <DetailItem icon="⬩" title="Export Capabilities" text="Download search results as CSV or enriched PDF reports for offline analysis" />
-              <DetailItem icon="⬩" title="Saved Alerts" text="Save your search criteria and receive notifications when new patents match your filters" />
+              <DetailItem icon="⬩" title="Saved Alerts" text="Save your search criteria and receive notifications when new patents and publications match your filters" />
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Best For</strong>: Ongoing competitive monitoring, prior art searches, technology landscape analysis, and staying current with new filings in your domain.
+                <strong>Best For</strong>: Ongoing competitive monitoring, prior art searches, technology landscape analysis, and staying current with new patent filings in your domain.
               </p>
             </div>
           </div>
@@ -115,12 +115,12 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents. Using graph algorithms, clustering, and signal scoring, it identifies where competitors are converging, where gaps exist, and where bridge opportunities might lie.
+              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, it identifies where competitors are converging, where gaps exist, and where bridge opportunities might lie.
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
               <DetailItem icon="⬩" title="Confidence-Scored Signals" text="Four signal types (bridging opportunities, underdeveloped areas, high-density areas, convergence momentums) with quantitative confidence scores" />
-              <DetailItem icon="⬩" title="Interactive Graph Visualization" text="Explore patent relationships through a Sigma.js-powered network graph with clustering and layout" />
+              <DetailItem icon="⬩" title="Interactive Graph Visualization" text="Explore patent and publication relationships through a Sigma.js-powered network graph with clustering and layout" />
               <DetailItem icon="⬩" title="Assignee-Level Intelligence" text="Signals are grouped by assignee to reveal competitor strategies and positioning" />
               <DetailItem icon="⬩" title="Example Patent Filings" text="View concrete examples of patents and publications driving each signal, sorted by recency or relevance" />
               <DetailItem icon="⬩" title="Advanced Tuning" text="Adjust neighbor count, clustering resolution, and scoring weights to refine analysis" />
@@ -152,7 +152,7 @@ export default function HelpIndexPage() {
 
             <InfoSection
               title="3. Save Important Searches as Alerts"
-              content="When you find a search configuration that matters to your work, click 'Save as Alert' to receive notifications when new patents match your criteria. Manage your alerts through the navigation bar modal."
+              content="When you find a search configuration that matters to your work, click 'Save as Alert' to receive notifications when new patents or publications match your criteria. Manage your alerts through the navigation bar modal."
             />
 
             <InfoSection
@@ -174,7 +174,7 @@ export default function HelpIndexPage() {
           <div style={{ display: "grid", gap: 16 }}>
             <ResourceLink
               title="Understanding CPC Codes"
-              description="CPC (Cooperative Patent Classification) codes categorize patents by technology area. Learn more at the USPTO CPC reference."
+              description="CPC (Cooperative Patent Classification) codes categorize patents and applications by technology area. Learn more at the USPTO CPC reference."
               href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html"
               external={true}
             />

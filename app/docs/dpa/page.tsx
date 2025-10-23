@@ -715,7 +715,7 @@ export default function DataProcessingAgreementPage() {
                 <li><strong>Account Data</strong>: Account credentials, account settings, preferences;</li>
                 <li><strong>Financial Data</strong>: Billing address, payment method details (processed by Stripe);</li>
                 <li><strong>Transaction Data</strong>: Purchase history, subscription status, invoices;</li>
-                <li><strong>Usage Data</strong>: Search queries, alerts configured, patents viewed, features used, session data;</li>
+                <li><strong>Usage Data</strong>: Search queries, alerts configured, data viewed, features used, session data;</li>
                 <li><strong>Technical Data</strong>: IP address, browser type, device information, cookies;</li>
                 <li><strong>Communication Data</strong>: Support messages, feedback submissions;</li>
                 <li><strong>User-Generated Content</strong>: Saved searches, notes, annotations (if enabled).</li>

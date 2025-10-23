@@ -40,7 +40,7 @@ export default function WhitespaceHelpPage() {
             </a>
           </div>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
-            The Whitespace Analysis page helps you identify strategic opportunities and competitive risks by analyzing the semantic relationships between patents. This guide covers all inputs, signals, graph interpretation, and advanced options.
+            The Whitespace Analysis page helps you identify strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. This guide covers all inputs, signals, graph interpretation, and advanced options.
           </p>
         </div>
 
@@ -51,10 +51,10 @@ export default function WhitespaceHelpPage() {
             Whitespace analysis uses graph-based algorithms to reveal the patent landscape around a focus area defined by keywords and/or CPC codes. The system:
           </p>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>Identifies patents matching the focus criteria;</li>
-            <li>Computes cosine similarity between patents using AI embeddings to build a K-nearest-neighbor graph;</li>
-            <li>Applies Leiden clustering to group semantically similar patents into communities;</li>
-            <li>Scores each patent for whitespace intensity using UMAP-based dimensionality reduction and local density measures;</li>
+            <li>Identifies patents and publications matching the focus criteria;</li>
+            <li>Computes cosine similarity between patents and publications using AI embeddings to build a K-nearest-neighbor graph;</li>
+            <li>Applies Leiden clustering to group semantically similar patents and publications into communities;</li>
+            <li>Scores each patent and publication for whitespace intensity using UMAP-based dimensionality reduction and local density measures;</li>
             <li>Evaluates four signal types (convergence, emerging gaps, crowd-out, bridges) for each assignee based on graph topology and temporal patterns;</li>
             <li>Displays confidence-scored signals, an interactive graph visualization, and example patents and publications for each signal.</li>
           </ol>
@@ -73,7 +73,7 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <InputDescription
               label="Focus Keywords"
-              description="Enter one or more keywords (comma-separated) that define the technology area you want to analyze. The system will identify patents containing these keywords in the title, abstract, or claims, then build a graph around them."
+              description="Enter one or more keywords (comma-separated) that define the technology area you want to analyze. The system will identify patents and publications containing these keywords in the title, abstract, or claims, then build a graph around them."
               example='Example: "LIDAR, perception, autonomous driving"'
               tips={[
                 "Use multiple related keywords to capture a broader focus area",
@@ -84,7 +84,7 @@ export default function WhitespaceHelpPage() {
 
             <InputDescription
               label="Focus CPC (LIKE)"
-              description="Enter one or more CPC code patterns (comma-separated) using SQL LIKE syntax. This allows hierarchical matching (e.g., 'G06N%' matches all neural network patents)."
+              description="Enter one or more CPC code patterns (comma-separated) using SQL LIKE syntax. This allows hierarchical matching (e.g., 'G06N%' matches all neural network patents and applications)."
               example='Example: "G06N%, H04L%"'
               tips={[
                 "Use '%' as a wildcard to match any characters (e.g., 'G06N%' matches G06N3, G06N10, etc.)",
@@ -95,7 +95,7 @@ export default function WhitespaceHelpPage() {
 
             <InputDescription
               label="Date Range (From / To)"
-              description="Filter the analysis to patents published within a specific date range. This is useful for analyzing recent activity or temporal trends."
+              description="Filter the analysis to patents granted and applications published within a specific date range. This is useful for analyzing recent activity or temporal trends."
               example="Example: From 2024-01-01, To 2024-12-31"
               tips={[
                 "Both fields are optional; omitting them uses the entire corpus date range",
@@ -117,7 +117,7 @@ export default function WhitespaceHelpPage() {
             <AdvancedOption
               param="Sample Limit"
               defaultValue="1000"
-              description="Maximum number of patents to include in the analysis. Higher values provide more comprehensive results but increase computation time."
+              description="Maximum number of patents and publications to include in the analysis. Higher values provide more comprehensive results but increase computation time."
               guidance="Start with 1000 for most analyses. Increase to 2000–5000 if the focus area is very broad and you want deeper coverage."
             />
 
@@ -190,8 +190,8 @@ export default function WhitespaceHelpPage() {
               type="Convergence Toward Focus Area"
               tone="risk"
               shortName="focus_shift"
-              description="Indicates that an assignee is filing patents increasingly close to the focus area over time. This suggests they are shifting R&D resources toward the technology you're monitoring."
-              interpretation="A strong convergence signal means a competitor is actively moving into your space. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
+              description="Indicates that an assignee is filing applications/obtaining patent grants increasingly close to the focus area over time. This suggests they are shifting R&D resources toward the technology area underlying the focus."
+              interpretation="A strong convergence signal means a competitor is actively moving into a space. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
               exampleRationale="Google has filed 12 patents near the focus area with recent filings moving closer to focus keywords 'LIDAR, autonomous driving'. Average distance to focus decreased from 0.45 to 0.22 over the past 6 months."
             />
 
@@ -201,8 +201,8 @@ export default function WhitespaceHelpPage() {
               tone="opportunity"
               shortName="emerging_gap"
               description="Identifies areas within the focus scope where the assignee has strong presence but neighboring technologies are underdeveloped. This indicates a potential whitespace opportunity where no one (including the assignee) has yet invested heavily."
-              interpretation="A strong emerging gap signal highlights areas where you could file foundational patents with limited competition. This is a strategic opportunity for first-mover advantage."
-              exampleRationale="Microsoft has 8 patents in the focus area with low local density (avg 0.18). Neighboring patents are sparse, suggesting an underdeveloped niche within 'neural network inference optimization'."
+              interpretation="A strong emerging gap signal highlights areas where you could file foundational patents and publications with limited competition. This is a strategic opportunity for first-mover advantage."
+              exampleRationale="Microsoft has 8 patents in the focus area with low local density (avg 0.18). Neighboring patents and publications are sparse, suggesting an underdeveloped niche within 'neural network inference optimization'."
             />
 
             <SignalCard
@@ -212,7 +212,7 @@ export default function WhitespaceHelpPage() {
               shortName="crowd_out"
               description="Detects rapid increases in patent filing density around the focus area, indicating a surge of activity from the assignee or competitors. This can signal a crowded or saturated space where differentiation is difficult."
               interpretation="A strong crowd-out signal warns that the focus area is becoming heavily patented. Consider pivoting to adjacent technologies or focusing on narrow, defensible niches."
-              exampleRationale="Tesla has filed 15 patents near 'autonomous vehicle perception' in the past 3 months. Local density increased from 0.30 to 0.78, indicating a crowding effect."
+              exampleRationale="Tesla has filed 15 patents and publications near 'autonomous vehicle perception' in the past 3 months. Local density increased from 0.30 to 0.78, indicating a crowding effect."
             />
 
             <SignalCard
@@ -220,9 +220,9 @@ export default function WhitespaceHelpPage() {
               type="Neighbor Linking Potential Near Focus Area"
               tone="opportunity"
               shortName="bridge"
-              description="Identifies patents that act as bridges between the focus area and other technology clusters. These are high-degree nodes (hubs) that connect otherwise disconnected communities, suggesting cross-domain innovation opportunities."
-              interpretation="A strong bridge signal highlights patents that could serve as foundational IP for multi-domain applications. These are valuable for portfolio breadth and licensing opportunities."
-              exampleRationale="NVIDIA has 5 patents with high betweenness centrality (avg 0.62) linking 'AI training' and 'edge inference'. These patents bridge two major technology areas and could enable hybrid solutions."
+              description="Identifies patents and publications that act as bridges between the focus area and other technology clusters. These are high-degree nodes (hubs) that connect otherwise disconnected communities, suggesting cross-domain innovation opportunities. (A “bridging” patent/publication is one in which the invention has one or more properties enabling patent filings across different fields of application.)"
+              interpretation="A strong bridge signal highlights patents and publications that could serve as foundational IP for multi-domain applications. These are valuable for portfolio breadth and licensing opportunities."
+              exampleRationale="NVIDIA has 5 patents with high betweenness centrality (i.e., how essential a node is for connecting different parts of the graph) (avg 0.62) linking 'AI training' and 'edge inference'. These patents bridge two major technology areas and could enable hybrid solutions."
             />
           </div>
 
@@ -231,7 +231,7 @@ export default function WhitespaceHelpPage() {
             Each signal includes a confidence score (0.00–1.00) that quantifies the strength of evidence supporting the signal. The score is derived from:
           </p>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>Number of patents contributing to the signal;</li>
+            <li>Number of patents and publications contributing to the signal;</li>
             <li>Magnitude of the metric being measured (e.g., distance change, density increase);</li>
             <li>Temporal consistency (signals are stronger if the pattern is sustained over time);</li>
             <li>Statistical significance thresholds defined in the signal evaluation logic.</li>
@@ -271,12 +271,12 @@ export default function WhitespaceHelpPage() {
 
             <LayoutSection
               title="3. Graph Context Section"
-              description="Displays an interactive Sigma.js graph visualization of the patent landscape. Nodes represent patents; edges connect semantically similar patents. Node size indicates whitespace score (larger = more isolated); node color indicates Leiden cluster membership. Clicking a signal in the Signals section highlights relevant nodes in the graph with a blue outline."
+              description="Displays an interactive Sigma.js graph visualization of the patent landscape. Nodes represent patents and publications; edges connect semantically similar patents and publications. Node size indicates whitespace score (larger = more isolated); node color indicates Leiden cluster membership. Clicking a signal in the Signals section highlights relevant nodes in the graph with a blue outline."
             />
 
             <LayoutSection
               title="4. Highlighted Examples Section (conditional)"
-              description="Appears only when you click 'View Examples (Recent)' or 'View Examples (Related)' on a signal. Displays a table of up to eight example patents sorted by publication date (recent) or whitespace relevance (related). Includes title, patent or publication number ('pub_id') (linked to Google Patents), assignee, date, and abstract. An 'Export PDF' button lets you download the examples as a formatted report."
+              description="Appears only when you click 'View Examples (Recent)' or 'View Examples (Related)' on a signal. Displays a table of up to eight example patents and publications sorted by publication date (recent) or whitespace relevance (related). Includes title, patent or publication number ('pub_id') (linked to Google Patents), assignee, date, and abstract. An 'Export PDF' button lets you download the examples as a formatted report."
             />
           </div>
 
@@ -298,16 +298,16 @@ export default function WhitespaceHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Graph Context & Interpretation</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            The graph visualization is a core feature of the Whitespace page. It provides a visual representation of the patent landscape, with nodes positioned using either UMAP coordinates or force-directed layout (if "Compute layout" is enabled).
+            The graph visualization is a core feature of the Whitespace page. It provides a visual representation of the AI/ML IP landscape, as represented by patent filings, with nodes positioned using either UMAP coordinates or force-directed layout (if "Compute layout" is enabled).
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>What the Graph Represents</h3>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Nodes</strong>: Each node represents a patent in the analysis sample. Hover over a node to see its title and patent/publication number (if tooltips are supported);</li>
-            <li><strong>Edges</strong>: Edges connect patents that are among each other's K-nearest neighbors in the embedding space. More edges indicate tighter semantic clustering;</li>
+            <li><strong>Edges</strong>: Edges connect patents and publications that are among each other's K-nearest neighbors in the embedding space. More edges indicate tighter semantic clustering;</li>
             <li><strong>Node Size</strong>: Larger nodes have higher whitespace scores, meaning they are more isolated or occupy less crowded areas of the landscape;</li>
-            <li><strong>Node Color</strong>: Colors correspond to Leiden cluster membership. Patents in the same cluster are semantically similar and likely cover related technologies;</li>
-            <li><strong>Highlighted Nodes</strong>: When you view examples for a signal, the corresponding nodes are highlighted with a blue outline and slightly increased size. This helps you locate the patents contributing to the signal.</li>
+            <li><strong>Node Color</strong>: Colors correspond to Leiden cluster membership. Patents and publications in the same cluster are semantically similar and likely cover related technologies;</li>
+            <li><strong>Highlighted Nodes</strong>: When you view examples for a signal, the corresponding nodes are highlighted with a blue outline and slightly increased size. This helps you locate the patents and publications contributing to the signal.</li>
           </ul>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Reading the Graph</h3>
@@ -318,7 +318,7 @@ export default function WhitespaceHelpPage() {
             />
             <GraphInterpretation
               pattern="Sparse regions with large nodes"
-              meaning="Represent whitespace opportunities—areas where few patents exist and those that do are isolated. These are prime targets for new filings."
+              meaning="Represent whitespace opportunities—areas where few patents and publications exist; patent filings in this space are isolated. Potential to be first mover, establish strong IP protection, etc."
             />
             <GraphInterpretation
               pattern="Bridge nodes (high degree)"
@@ -326,7 +326,7 @@ export default function WhitespaceHelpPage() {
             />
             <GraphInterpretation
               pattern="Isolated nodes far from clusters"
-              meaning="May represent niche innovations or outliers that don't fit existing categories. Could be early-stage technologies or misclassified patents."
+              meaning="May represent niche innovations or outliers that don't fit existing categories. For example, isolated and unconnected nodes may be directed to early-stage technologies. However, such nodes may also be anomalous data, such as misclassified patents or foreign translations that use inaccurate or highly irregular language."
             />
           </div>
 
@@ -391,8 +391,8 @@ export default function WhitespaceHelpPage() {
 
           <div style={{ display: "grid", gap: 16 }}>
             <BestPractice
-              title="Start with Narrow Focus Areas"
-              tip="For your first analysis, use specific focus keywords and/or CPC codes to define a well-scoped area. Overly broad queries (e.g., just 'AI') can produce overwhelming results with weak signals."
+              title="Define a Specific Focus Area"
+              tip="Generally, analysis is most informative and accurate when specific focus keywords and/or CPC codes are used to define a well-scoped area. Overly broad queries (e.g., just 'AI') introduce too much noise, diluting signals."
             />
             <BestPractice
               title="Prioritize Strong Signals"
@@ -404,7 +404,7 @@ export default function WhitespaceHelpPage() {
             />
             <BestPractice
               title="Compare Recent vs. Related Examples"
-              tip="View both 'Recent' and 'Related' examples for important signals. Recent examples show current activity; Related examples highlight the most strategically relevant patents (high whitespace scores)."
+              tip="View both 'Recent' and 'Related' examples for important signals. Recent examples show current activity; Related examples highlight the most strategically relevant patents and publications (high whitespace scores)."
             />
             <BestPractice
               title="Adjust Advanced Parameters Incrementally"
@@ -428,11 +428,11 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 16 }}>
             <Troubleshoot
               issue="All signals show 'None' status"
-              solution="This usually means the focus area is too broad or lacks sufficient patents to generate meaningful signals. Try narrowing the focus (more specific keywords or CPC codes), reducing the date range, or increasing the sample limit to capture more data."
+              solution="This usually means the focus area is too broad or lacks sufficient patents and publications to generate meaningful signals. Try narrowing the focus (more specific keywords or CPC codes), reducing the date range, or increasing the sample limit to capture more data."
             />
             <Troubleshoot
               issue="Graph is empty or shows only a few nodes"
-              solution="Verify that the focus criteria match patents in the corpus. Check that focus keywords are spelled correctly and CPC codes are valid. Ensure the date range overlaps with corpus dates (2023–present). If the sample limit is too low, increase it in advanced settings."
+              solution="Verify that the focus criteria matches AI/ML-related subject matter (patents and publications in the database are limited to this domain). Check that focus keywords are spelled correctly and CPC codes are valid. Ensure the date range overlaps with available dates (2023–present). If the sample limit is too low, increase it in advanced settings."
             />
             <Troubleshoot
               issue="Graph is cluttered and hard to read"

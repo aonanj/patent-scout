@@ -320,7 +320,7 @@ export default function PricingPlans({ plans, onSubscribe }: PricingPlansProps) 
             </div>
             <h4 className="font-semibold mb-2" style={{ color: '#102A43' }}>Email Alerts</h4>
             <p className="text-sm text-slate-600">
-              Get notified when new patents match your saved searches
+              Get notified when new patents or publications match your saved searches
             </p>
           </div>
 

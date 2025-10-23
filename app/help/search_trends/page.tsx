@@ -51,9 +51,9 @@ export default function SearchTrendsHelpPage() {
             Search & Trends combines three core capabilities:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Hybrid Search</strong>: Find patents using keyword matching, semantic similarity, or both combined;</li>
+            <li><strong>Hybrid Search</strong>: Find patents and publications using keyword matching, semantic similarity, or both combined;</li>
             <li><strong>Trend Visualization</strong>: Understand filing patterns over time, by technology classification, or by assignee;</li>
-            <li><strong>Saved Alerts</strong>: Monitor ongoing activity by saving search criteria and receiving notifications when new patents match.</li>
+            <li><strong>Saved Alerts</strong>: Monitor ongoing activity by saving search criteria and receiving notifications when new patents and publications match.</li>
           </ul>
         </div>
 
@@ -67,7 +67,7 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <InputDescription
               label="Semantic Query"
-              description="Enter a natural language description of the technology or concept you're interested in. Patent Scout uses OpenAI embeddings to find semantically similar patents, even if they don't contain exact keyword matches."
+              description="Enter a natural language description of the technology or concept you're interested in. Patent Scout uses AI embeddings to search for semantically similar patents and publications, which incorporates context, meaning, and other auxiliary information in order to return results that that are more robust, comprehensive, and relevant than traditional keyword searches."
               example='Example: "autonomous vehicle perception systems using LIDAR and camera fusion"'
               tips={[
                 "Be specific and descriptive rather than using single keywords",
@@ -91,7 +91,7 @@ export default function SearchTrendsHelpPage() {
 
             <InputDescription
               label="Assignee"
-              description="Filter results to patents assigned to a specific company or entity. Partial matching is supported."
+              description="Filter results to patents and publications assigned to a specific company or entity. Partial matching is supported."
               example='Example: "Google", "Microsoft", "Tesla"'
               tips={[
                 "Partial matches are supported (e.g., 'Google' matches 'Google LLC', 'Google Inc.')",
@@ -145,7 +145,7 @@ export default function SearchTrendsHelpPage() {
 
             <ActionDescription
               button="Save as Alert"
-              description="Saves the current search configuration (all filters and semantic query) as a named alert. When new patents matching these criteria are ingested, you'll receive a notification (via email if Mailgun is configured, or console log otherwise)."
+              description="Saves the current search configuration (all filters and semantic query) as a named alert. When new patents or publications matching these criteria are ingested, you'll automatically receive a notification."
               when="Use when you want to monitor a specific technology area, competitor, or search scope over time."
             />
           </div>
@@ -201,11 +201,11 @@ export default function SearchTrendsHelpPage() {
             />
             <TrendOption
               mode="CPC (Section + Class)"
-              description="Groups patents by their CPC section and class (e.g., 'G06N', 'H04L'). Displays the top 10 CPC codes by count, with an 'Other' category aggregating the rest. Rendered as a horizontal bar chart. Indicative of the technological areas dominating the search results."
+              description="Groups patents and publications by their CPC section and class (e.g., 'G06N', 'H04L'). Displays the top 10 CPC codes by count, with an 'Other' category aggregating the rest. Rendered as a horizontal bar chart. Indicative of the technological areas dominating the search results."
             />
             <TrendOption
               mode="Assignee"
-              description="Groups patents by assignee name. Displays the top 15 assignees by count as a horizontal bar chart. Indicative of most relevant entities in a technology space and their movements in different directions (i.e., competitive landscape analysis)."
+              description="Groups patents and publications by assignee name. Displays the top 15 assignees by count as a horizontal bar chart. Indicative of most relevant entities in a technology space and their movements in different directions (i.e., competitive landscape analysis)."
             />
           </div>
 
@@ -225,7 +225,7 @@ export default function SearchTrendsHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Managing Alerts</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            Alerts enable specific search criteria to be monitored over time. Weekly emails are sent when the search criteria is met by new patents or publications. This section explains how to create, manage, and use alerts.
+            Alerts enable specific search criteria to be monitored over time. USPTO publishes patent and publication data on a weekly basis. Search criteria is checked against the newly published data, and new matches to your criteria are sent via email. This section explains how to create, manage, and use alerts.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Creating an Alert</h3>
@@ -277,23 +277,23 @@ export default function SearchTrendsHelpPage() {
             />
             <AlertAction
               action="View Results"
-              description="Some alert implementations may include a 'View Results' button that reconstructs the original search on the Search & Trends page. This is useful for reviewing what the alert is monitoring."
+              description="Some alert implementations may include a 'View Results' button that reconstructs the original search on the Search & Trends page. Accordingly, an aggregated and historical view of the alert's activity can be reviewed."
             />
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>How Alerts Are Triggered</h3>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            The alerts system runs via the <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>alerts_runner.py</code> script, which is typically scheduled via cron or another scheduler. When the runner executes:
+            The alerts system runs via an automated backend process, which is scheduled to run on Friday at 07:00 AM PT (14:00 UTC), allowing a buffer period for the USPTO to make bulk data available. During each run, the alerts system performs the following steps for each active alert:
           </p>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>It fetches all active alerts from the database;</li>
-            <li>For each alert, it replays the saved search query against the latest corpus data;</li>
-            <li>It compares the results to the last alert event timestamp to identify new patents published since the last run;</li>
-            <li>If new matches are found, it sends a notification via Mailgun (or logs to console if Mailgun is not configured) with the patent details;</li>
-            <li>It updates the alert event log with the current run timestamp.</li>
+            <li>Fetches all active alerts from the database;</li>
+            <li>For each alert, re-executes the saved search query on the most recent data;</li>
+            <li>Compares the results to the last alert event timestamp to identify new matches to the search criteria since the last run;</li>
+            <li>If new matches are found, sends a notification (via Mailgun) with the patent or publication details;</li>
+            <li>Updates the alert event log with the current run timestamp.</li>
           </ol>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
-            This ensures you only receive notifications for truly new filings, not duplicates from previous runs.
+            This ensures email alerts are only triggered once when search criteria is met, and that the emails provide timely notifications of new matches on the alert search criteria.
           </p>
         </div>
 
@@ -301,24 +301,24 @@ export default function SearchTrendsHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>UI/UX Flow Summary</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            Here's a step-by-step walkthrough of a typical Search & Trends session:
+            Example walkthrough of a Search & Trends session:
           </p>
 
           <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
             <FlowStep
               num="1"
               title="Authentication"
-              description="Log in via Auth0 using the login button in the navigation bar. The page displays a login overlay if you're not authenticated."
+              description="Log in via Auth0 using the login button in the navigation bar. The page displays a login overlay if unauthenticated."
             />
             <FlowStep
               num="2"
               title="Enter Search Criteria"
-              description="Fill in one or more of the input fields (semantic query, keywords, assignee, CPC, date range). All inputs are debounced, so the search will trigger automatically 400ms after you stop typing."
+              description="Fill in one or more of the input fields (semantic query, keywords, assignee, CPC, date range). All inputs are debounced, so the search will trigger automatically after input is paused."
             />
             <FlowStep
               num="3"
               title="Review Results"
-              description="The Results section populates with up to 20 patents per page. Click on a publication ID to view the full patent on Google Patents. Use Prev/Next to paginate through results."
+              description="The Results section populates with up to 20 patents per page. Patent and publication number are clickable links to view the full document on Google Patents. Use Prev/Next to paginate through results."
             />
             <FlowStep
               num="4"
@@ -328,12 +328,12 @@ export default function SearchTrendsHelpPage() {
             <FlowStep
               num="5"
               title="Export Data"
-              description="If you want to save results for offline analysis, click 'Download CSV' or 'Download PDF'. The export includes up to 1,000 results matching your current filters."
+              description="To save search results for later research and review, options to export the data set are provided for CSV and PDF. Preferred format is selected by clicking the corresponding button: 'Download CSV' or 'Download PDF'. Results exporting supports up to 1,000 results matching the current semantic search, keyword(s), and other filters."
             />
             <FlowStep
               num="6"
               title="Save as Alert (Optional)"
-              description="If this is a search you want to monitor over time, click 'Save as Alert', name the alert, and confirm. The alert will be checked during the next scheduled alerts run."
+              description="If this is a search you want to monitor over time, click 'Save as Alert', name the alert, and confirm. The automated backend process will then check the whether the search criteria match any new filings during the next scheduled alerts run, not an email notification will be triggered if necessary."
             />
             <FlowStep
               num="7"
@@ -350,23 +350,23 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 16 }}>
             <BestPractice
               title="Combine Semantic and Keyword Search"
-              tip="For the most precise results, use both a semantic query (to capture conceptually similar patents) and keywords (to ensure specific terms are present). This hybrid approach leverages the strengths of both methods."
+              tip="AI semantic search and keyword search can be used together, e.g., to refine results, filter is concentrated within a specific context, or ensure that a search for keywords of interest is limited to a domain of interest. Thus, fine-grained control can be achieved by using both a semantic query (to capture conceptually similar patents and publications) and keywords (to ensure specific terms are present). This hybrid approach prevents the signal from being lost in the noise by leveraging the strengths of both methods."
             />
             <BestPractice
               title="Use Broad CPC Codes for Exploration"
-              tip="If you're exploring a new technology area, start with a broad CPC code (e.g., 'G06N' for AI) and refine based on the trend chart. This helps you understand the landscape before narrowing down."
+              tip="To broadly explore technology areas, a CPC code (e.g., 'G06N' for AI) can be used, and the results refined, e.g., by reference to the trend chart. For reference, the USPTO generally assigns AI and machine learning subject matter under one of the following CPC section (letter)+class(number)+subclass(letter) classifications: A61B, B60W, G05D, G06N, G06V, and G10L. More specific AI/ML-related subject matter is generally assigned to group, as well, as indicating by a number appended to the subclass: G06F17, G06F18, G06F40, G06K9, G06T7. A further subgroup indicates subject matter at an even more granular level, which is indicated by a third number, preceded by a backslash. For AI/ML-related subject matter, this is most commonly encoutered in CPC classification G06F16/90."
             />
             <BestPractice
               title="Monitor Competitors with Assignee Filters"
-              tip="Create alerts for specific assignees (e.g., 'Google', 'Microsoft') to stay informed about their latest filings in your domain. Combine with CPC or keyword filters to focus on relevant technologies."
+              tip="Create alerts for specific assignees (e.g., 'Google', 'Microsoft') to stay informed about their latest patents and applications. Combine with CPC and/or keyword filters to focus on relevant technologies."
             />
             <BestPractice
-              title="Review Trend Charts Before Exporting"
-              tip="Before exporting large datasets, use the Trend chart to verify the date range and filing volume. This helps you avoid exporting irrelevant or incomplete data."
+              title="Review Trend Charts For Exporting"
+              tip="Trend Chart can provide a quick and convenient visual reference in a variety of contexts. For example, momentums, new products and services, shifts in technology focus, increases/decreases in R&D investment and allocation, etc. can be easily identified by tuning semantic and keyword searching and other filters to values consistent with a trend of interest. Accordingly, Trend Chart provides a visual verification before exporting a results set."
             />
             <BestPractice
-              title="Use Alerts for Ongoing Monitoring, Not One-Time Searches"
-              tip="Alerts are designed for continuous monitoring. For one-time prior art searches or landscape analysis, use the search interface directly and export the results instead of creating an alert."
+              title="Alerts Allow Automatic Monitoring, Not One-Time Searches"
+              tip="Alerts provide a mechanism for continuous passive monitoring, avoiding the need for repetitive searches after each USPTO patent issue and application publication date."
             />
           </div>
         </div>
@@ -378,15 +378,15 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 16 }}>
             <Troubleshoot
               issue="No results found"
-              solution="Try broadening your search by removing filters or using a more general semantic query. Verify that your date range covers filings in the corpus (2023–present). Check that CPC codes are valid and assignee names are spelled correctly."
+              solution="Try broadening your search by removing filters or using a more general semantic query. Verify that your date range covers does not fall outside the searchable database(2023–present). Check that CPC codes are valid and assignee names are spelled correctly."
             />
             <Troubleshoot
               issue="Trend chart shows 'No data'"
-              solution="This usually means your filters are too restrictive and no patents match the criteria. Relax filters or check the date range. Ensure at least one filter (semantic, keyword, assignee, or CPC) is active."
+              solution="Usually caused by filters that are too narrow for any matches. If results are returned with no semantic search, keywords, or other filters applied, try incrementally narrowing your focus."
             />
             <Troubleshoot
               issue="Alert save fails"
-              solution="Ensure you are authenticated (logged in via Auth0). Check that at least one filter is active (an empty alert with no criteria cannot be saved). Verify the alert name is not empty."
+              solution="Ensure you are authenticated (logged in via Auth0) and you have an active subscription. Check that at least one filter is active (an empty alert with no criteria cannot be saved). Verify the alert name is not empty."
             />
             <Troubleshoot
               issue="Export downloads are empty or fail"
