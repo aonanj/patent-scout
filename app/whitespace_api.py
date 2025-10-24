@@ -24,9 +24,8 @@ from sklearn.neighbors import NearestNeighbors
 from infrastructure.logger import get_logger
 
 from .auth import get_current_user
-from .db import get_conn
 from .repository import SEARCH_EXPR
-from .subscription_middleware import ActiveSubscription
+from .subscription_middleware import SubscriptionRequiredError
 from .whitespace_signals import (
     SignalComputation,
     SignalKind,
@@ -42,7 +41,7 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
-User = ActiveSubscription
+User = Annotated[dict, Depends(get_current_user)]
 
 logger = get_logger()
 
@@ -60,8 +59,6 @@ def get_pool() -> ConnectionPool:
             raise RuntimeError("DATABASE_URL not set")
         _pool = ConnectionPool(conninfo=_DB_URL, min_size=1, max_size=4, kwargs={"autocommit": False})
     return _pool
-Conn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
-
 _HAVE_LEIDEN = True
 _HAVE_UMAP = True
 
@@ -571,6 +568,17 @@ def _persist_background(
 
 # --- Endpoints ---
 
+
+def _ensure_active_subscription(conn: psycopg.Connection, user_id: str) -> None:
+    with conn.cursor() as cur:
+        cur.execute("SELECT has_active_subscription(%s)", (user_id,))
+        row = cur.fetchone()
+    if not row or not bool(row[0]):
+        raise SubscriptionRequiredError(
+            detail="This feature requires an active subscription. Please subscribe to continue."
+        )
+
+
 def _normalize_assignee(name: str | None) -> str:
     """Coalesce empty assignee labels into a friendly placeholder."""
     if not name:
@@ -879,6 +887,7 @@ def get_whitespace_graph(
 
     with pool.connection() as conn:
         try:
+            _ensure_active_subscription(conn, user_id)
             model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
             X, meta = load_embeddings(conn, model, req)
         except psycopg.errors.UndefinedTable as exc:
