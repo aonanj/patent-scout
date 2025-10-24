@@ -23,13 +23,13 @@ export default function HelpIndexPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Patent Scout?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is an advanced patent analytics platform that combines hybrid semantic search, trend analysis, and whitespace exploration to help teams make informed decisions about patent strategy and R&D investments. The platform is built on a continuously updated corpus of 50,000+ AI-related patents and publications dating back to 2023, powered by pgvector-based semantic search and OpenAI embeddings.
+            Patent Scout is an advanced IP analytics platform specific to AI/ML. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML and the entities investing in this space. The platform is built on a relational database system, central to which is a corpus of 52,000+ AI/ML-related patents and publications dating back to 2023. Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry in the corpus corresponds to a patent or application with multiple associated embeddings. The multiple embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields. These dynamic capabilities allow Patent Scout to meet a wide range of requirements that accompany different business objectives. 
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            The service offers two primary experiences:
+            Patent Scout is designed with a streamlined user interface divided between two primary service pages:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match your criteria;</li>
+            <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
             <li><strong>Whitespace Analysis</strong>: Identify strategic opportunities and competitive risks through graph-based analysis of patent landscapes, with confidence-scored signals highlighting focus convergence, emerging gaps, crowd-out risks, and bridging opportunities.</li>
           </ul>
         </div>
@@ -147,7 +147,7 @@ export default function HelpIndexPage() {
 
             <InfoSection
               title="2. Start with Search & Trends"
-              content="Begin by exploring the Search & Trends page to familiarize yourself with the patent corpus. Try a semantic query like 'autonomous vehicle perception systems' or use keyword filters to narrow results. Experiment with trend groupings to understand filing patterns."
+              content="Exploring the Search & Trends page may be helpful in familiarizing yourself with the patent and publication data set accessible through Patent Scout. Try a semantic query like 'autonomous vehicle perception systems' or use keyword filters to narrow results. Experiment with trend groupings to understand filing patterns."
             />
 
             <InfoSection

@@ -299,7 +299,7 @@ export default function TermsOfServicePage() {
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li><strong>Auth0</strong> (authentication);</li>
                 <li><strong>Google BigQuery</strong> (patent and publication data source);</li>
-                <li><strong>OpenAI</strong> (semantic embeddings);</li>
+                <li><strong>Render</strong> (backend web services);</li>
                 <li><strong>Stripe</strong> (payment processing);</li>
                 <li><strong>Vercel</strong> (hosting);</li>
                 <li><strong>Neon.tech</strong> (database).</li>

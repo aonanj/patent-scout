@@ -998,7 +998,7 @@ export default function DataProcessingAgreementPage() {
 
             <div style={{ marginTop: 24, padding: 16, background: "white", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.7, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Note on OpenAI</strong>: The Company sends patent and publication text (titles, abstracts, claims) to OpenAI for embedding generation to enable semantic search functionality. <strong>No Personal Data of Customer's Data Subjects is sent to OpenAI.</strong> Patent data sent to OpenAI consists of publicly available government records and does not contain user queries, account information, or other Personal Data.
+                <strong>Note on third-party API access</strong>: The Company sends patent and publication text (titles, abstracts, claims) to a third-party API for embedding generation to enable semantic search functionality. <strong>No Personal Data of Customer's Data Subjects is sent to the API.</strong> Patent data sent to the API consists of publicly available government records and does not contain user queries, account information, or other Personal Data.
               </p>
             </div>
 

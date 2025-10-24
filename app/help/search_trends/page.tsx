@@ -114,12 +114,12 @@ export default function SearchTrendsHelpPage() {
 
             <InputDescription
               label="Date Range (From / To)"
-              description="Filter patents and publications by grant/publication date. Both fields are optional. The default range spans the entire corpus (2023–present)."
+              description="Filter patents and publications by grant/publication date. Both fields are optional. The default range spans the entire patent and publication data set (2023–present)."
               example="Example: From 2024-01-01, To 2024-12-31"
               tips={[
                 "Dates are based on earliest publication date for applications, grant date for patents",
                 "Both fields accept YYYY-MM-DD format via the date picker",
-                "Leaving fields blank uses the corpus min/max dates",
+                "Leaving fields blank uses Patent Scout's min/max dates",
                 "Date range is displayed in the Trend chart subtitle"
               ]}
             />
@@ -214,7 +214,7 @@ export default function SearchTrendsHelpPage() {
             The trend chart is interactive and updates in real time as you refine your search. Key points:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>The date range subtitle shows the effective From and To dates (either explicit or corpus min/max);</li>
+            <li>The date range subtitle shows the effective From and To dates (either explicit or data set min/max);</li>
             <li>If no data is available for the current filters, the chart displays "No data";</li>
             <li>The chart automatically scales axes to fit the data range;</li>
             <li>For CPC and Assignee modes, labels are truncated or rotated for readability.</li>

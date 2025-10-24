@@ -98,7 +98,7 @@ export default function WhitespaceHelpPage() {
               description="Filter the analysis to patents granted and applications published within a specific date range. This is useful for analyzing recent activity or temporal trends."
               example="Example: From 2024-01-01, To 2024-12-31"
               tips={[
-                "Both fields are optional; omitting them uses the entire corpus date range",
+                "Both fields are optional; omitting them uses the entire available date range",
                 "The date range affects both the initial focus set and the neighbor graph",
                 "Narrower date ranges reduce graph size and improve performance"
               ]}

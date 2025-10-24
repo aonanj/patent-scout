@@ -443,8 +443,8 @@ export default function Page() {
               </div>
 
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="cpc">
-                  <a href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">CPC</a>
+                <Label htmlFor="cpc">CPC 
+                  (<a href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">reference</a>)
                 </Label>
                 <input
                   id="cpc"

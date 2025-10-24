@@ -177,7 +177,7 @@ export default function PrivacyPolicyPage() {
                 <li>Test new features and conduct A/B testing;</li>
                 <li>Develop machine learning models for semantic search improvements;</li>
                 <li>Optimize search algorithms and relevance ranking;</li>
-                <li>Enhance user experience and interface design.</li>
+                <li>Improve user interface, user experience, and overall design.</li>
               </ul>
             </Subsection>
 
@@ -270,10 +270,10 @@ export default function PrivacyPolicyPage() {
 
               <p style={{ marginTop: 12 }}><strong>AI and Machine Learning</strong>:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li><strong>OpenAI</strong> (text embeddings for semantic search): <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://openai.com/privacy/</a></li>
+                <li><strong>AI embeddings generation</strong> (text embeddings for semantic search): <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://openai.com/privacy/</a></li>
               </ul>
               <p style={{ marginLeft: 40, marginTop: 4, fontSize: 13 }}>
-                Note: We send patent titles, abstracts, and claims text to OpenAI for embedding generation. No personal user data is sent to OpenAI.
+                Note: We send patent titles, abstracts, and claims text to a third-party API for embedding generation. No personal user data is sent to the API.
               </p>
 
               <p style={{ marginTop: 12 }}><strong>Analytics and Monitoring</strong>:</p>
@@ -739,10 +739,10 @@ export default function PrivacyPolicyPage() {
 
             <Subsection title="17.2 AI and Machine Learning">
               <p>
-                We use OpenAI's embedding models to enable semantic search functionality. Patent and publication text (titles, abstracts, claims) is sent to OpenAI to generate vector embeddings.
+                We use a third-party API for embedding models to enable semantic search functionality. Patent and publication text (titles, abstracts, claims) is sent to the API to generate vector embeddings.
               </p>
               <p style={{ fontWeight: 600, marginTop: 8 }}>
-                We do not send your personal information, account details, or identifiable search queries to OpenAI.
+                We do not send your personal information, account details, or identifiable search queries to the API.
               </p>
             </Subsection>
 
@@ -781,7 +781,7 @@ export default function PrivacyPolicyPage() {
                 </tr>
                 <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={{ padding: "8px 0", fontWeight: 600, verticalAlign: "top" }}>Who We Share With</td>
-                  <td style={{ padding: "8px 0" }}>Service providers (Auth0, Stripe, Vercel, OpenAI), legal authorities (when required)</td>
+                  <td style={{ padding: "8px 0" }}>Service providers (Auth0, Stripe, Vercel, Render), legal authorities (when required)</td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={{ padding: "8px 0", fontWeight: 600, verticalAlign: "top" }}>Your Rights</td>

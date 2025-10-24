@@ -124,7 +124,7 @@ export default function LegalIndexPage() {
             <div style={{ display: "grid", gap: 12 }}>
               <DetailItem icon="➣" title="Information We Collect" text="Account data, usage data, technical data, and payment information" />
               <DetailItem icon="➣" title="How We Use Your Data" text="Service provision, payment processing, communications, and improvements" />
-              <DetailItem icon="➣" title="Data Sharing" text="Service providers (Auth0, Stripe, Vercel, OpenAI, etc.) and legal requirements" />
+              <DetailItem icon="➣" title="Data Sharing" text="Service providers (Auth0, Stripe, Vercel, Neon.tech, etc.) and legal requirements" />
               <DetailItem icon="➣" title="Data Security" text="Encryption, access controls, monitoring, and breach notification" />
               <DetailItem icon="➣" title="International Transfers" text="Data processing in the United States with appropriate safeguards" />
               <DetailItem icon="➣" title="Cookies & Tracking" text="Types of cookies used and how to manage preferences" />
