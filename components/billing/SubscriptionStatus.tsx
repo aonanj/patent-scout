@@ -79,8 +79,8 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-sky-50 to-blue-50 px-6 py-4 border-b border-slate-200">
-        <h2 className="text-xl font-bold" style={{ color: '#102A43' }}>Your Subscription</h2>
+      <div className="bg-[#3A506B] px-6 py-4 border-b border-slate-200">
+        <h2 className="text-xl font-bold" style={{ color: '#FFFFFF' }}>Your Subscription</h2>
       </div>
 
       {/* Content */}
