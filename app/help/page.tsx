@@ -15,7 +15,7 @@ export default function HelpIndexPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Help</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
-            Welcome to Patent Scout, the confidence-first patent intelligence platform for AI R&D teams. This help center will guide you through the features and workflows that power your patent research.
+            Welcome to Patent Scout, a data and analytics platform for AI/ML IP. This help center will guide you through the features and workflows for AI/ML IP reference and research.
           </p>
         </div>
 

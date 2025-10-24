@@ -789,7 +789,7 @@ export default function WhitespacePage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Whitespace Signals</h1>
-            <span style={{ fontSize: 12, color: "#64748b", alignItems: "baseline" }}>Confidence-first alerts for whitespace opportunities</span>
+            <span style={{ fontSize: 12, color: "#64748b", alignItems: "baseline" }}>Signal identification for risks and opportunities in AI/ML IP</span>
           </div>
           {!isLoading && !isAuthenticated && (
             <button onClick={() => loginWithRedirect()} style={ghostBtn}>Log in</button>
