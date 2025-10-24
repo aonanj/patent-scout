@@ -264,13 +264,10 @@ function BillingContent() {
             Have questions about your subscription or billing? Contact us at{" "}
             <a href="mailto:support@phaethon.llc" className="text-sky-600 hover:underline">
               support@phaethon.llc
-            </a>
+            </a>.
           </p>
-          <br />
-          <div className="flex gap-12 text-s text-slate-500">
-            <a href="/docs" className="hover:text-slate-700 hover:underline">
-              LEGAL
-            </a>
+          <div className="flex gap-4">
+            2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
           </div>
         </div>
       </div>
