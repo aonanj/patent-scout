@@ -266,7 +266,7 @@ function BillingContent() {
               support@phaethon.llc
             </a>.
           </p>
-          <div className="flex gap-4" style={{ textAlign: "center", fontSize: "11px" }}>
+          <div className="flex gap-4" style={{ textAlign: "center", fontSize: "12px", justifyContent: "center"}}>
             2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
           </div>
         </div>
