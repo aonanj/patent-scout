@@ -238,8 +238,7 @@ export default function LegalIndexPage() {
               title="✧ Document Versions"
               content={
                 <>
-                  We maintain an archive of prior versions of these documents. To request a previous version for reference or compliance purposes, please contact:  
-                  <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>.
+                  We maintain an archive of prior versions of these documents. To request a previous version for reference or compliance purposes, please contact: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>.
                 </>
               }
             />
