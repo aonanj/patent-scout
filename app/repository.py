@@ -295,7 +295,10 @@ async def search_hybrid(
         items = [PatentHit(**row) for row in rows]
         return total, items
 
-    # Vector (semantic) path: rank by cosine distance while honoring requested pagination
+    # Vector (semantic) path: fetch top-K, apply adaptive filter, then paginate
+    # Fetch a larger set to ensure we have enough results after filtering
+    topk = max(SEMANTIC_TOPK, offset + limit * 2)
+
     select_core = (
         "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.kind_code, p.cpc, "
         f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
@@ -313,17 +316,22 @@ async def search_hybrid(
 
     where_sql = " AND ".join(where_clauses)
 
-    count_query = f"SELECT COUNT(DISTINCT p.pub_id) {from_clause} WHERE {where_sql}"
-    paged_query = f"{select_core} {from_clause} WHERE {where_sql} ORDER BY dist ASC LIMIT %s OFFSET %s"
+    # Fetch top-K candidates ordered by distance
+    topk_query = f"{select_core} {from_clause} WHERE {where_sql} ORDER BY dist ASC LIMIT {topk}"
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql.SQL(count_query), filter_args.copy())  # type: ignore
-        total_row = await cur.fetchone()
-        total = total_row["count"] if total_row else 0
-
-        select_args = [list(query_vec), *filter_args, limit, offset]
-        await cur.execute(_sql.SQL(paged_query), select_args)  # type: ignore
+        select_args = [list(query_vec), *filter_args]
+        await cur.execute(_sql.SQL(topk_query), select_args)  # type: ignore
         rows = await cur.fetchall()
+
+    # Apply adaptive filtering to remove irrelevant results based on distance jumps
+    kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
+
+    # Calculate total based on filtered results
+    total = len(kept)
+
+    # Apply pagination to filtered results
+    paged_results = kept[offset:offset + limit]
 
     items = [
         PatentHit(
@@ -333,9 +341,10 @@ async def search_hybrid(
             assignee_name=r.get("assignee_name"),
             pub_date=r.get("pub_date"),
             kind_code=r.get("kind_code"),
+            cpc=r.get("cpc"),
             score=r.get("dist"),
         )
-        for r in rows
+        for r in paged_results
     ]
     return total, items
 

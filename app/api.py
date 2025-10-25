@@ -177,8 +177,23 @@ async def ensure_app_user_record(conn: Conn, user: dict[str, Any]) -> str:
         SET email = EXCLUDED.email,
             display_name = COALESCE(EXCLUDED.display_name, app_user.display_name)
     """
-    async with conn.cursor() as cur:
-        await cur.execute(upsert_sql, [owner_id, email, display_name])
+    try:
+        async with conn.cursor() as cur:
+            await cur.execute(upsert_sql, [owner_id, email, display_name])
+            logger.info(f"Ensured app_user record for user {owner_id}")
+    except psycopg.Error as e:
+        logger.error(f"Error upserting app_user record for {owner_id}: {e}")
+        # If there's a unique constraint violation on email, provide a helpful message
+        if "unique constraint" in str(e).lower() and "email" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail="Email address is already associated with another account"
+            ) from e
+        # Re-raise other database errors
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create user record"
+        ) from e
     return owner_id
 
 
