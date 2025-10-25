@@ -153,6 +153,35 @@ class SavedQueryUpdate(BaseModel):
     # schedule_cron: str | None = None
 
 
+async def ensure_app_user_record(conn: Conn, user: dict[str, Any]) -> str:
+    """Ensure the Auth0 user exists in app_user for FK + email lookups."""
+    owner_id = user.get("sub")
+    if not owner_id:
+        raise HTTPException(status_code=400, detail="user missing sub claim")
+
+    email = user.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="user missing email claim")
+
+    display_name = (
+        user.get("name")
+        or user.get("nickname")
+        or user.get("given_name")
+        or user.get("email")
+    )
+
+    upsert_sql = """
+        INSERT INTO app_user (id, email, display_name)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (id) DO UPDATE
+        SET email = EXCLUDED.email,
+            display_name = COALESCE(EXCLUDED.display_name, app_user.display_name)
+    """
+    async with conn.cursor() as cur:
+        await cur.execute(upsert_sql, [owner_id, email, display_name])
+    return owner_id
+
+
 @app.get("/saved-queries")
 async def list_saved_queries(conn: Conn, user: ActiveSubscription):
 
@@ -177,10 +206,7 @@ async def list_saved_queries(conn: Conn, user: ActiveSubscription):
 async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: ActiveSubscription):
     """Create a saved query.
     """
-    owner_id = user.get("sub")
-    if not owner_id:
-        raise HTTPException(status_code=400, detail="user missing sub claim")
-
+    owner_id = await ensure_app_user_record(conn, user)
 
     insert_sq_sql = (
         "INSERT INTO saved_query (owner_id, name, filters, semantic_query, schedule_cron, is_active) "

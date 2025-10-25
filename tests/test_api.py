@@ -173,8 +173,9 @@ def test_list_saved_queries(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
 
 
 def test_create_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
+    user_cursor = FakeAsyncCursor()
     cursor = FakeAsyncCursor(fetchone=("new-id",))
-    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
+    conn = FakeAsyncConnection([make_subscription_cursor(), user_cursor, cursor])
     client = _make_client(monkeypatch, conn, fake_user)
 
     try:
@@ -182,6 +183,23 @@ def test_create_saved_query(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str
         resp = client.post("/saved-queries", json=payload)
         assert resp.status_code == 200
         assert resp.json() == {"id": "new-id"}
+        assert "INSERT INTO app_user" in user_cursor.last_sql
+    finally:
+        _cleanup_client(client)
+
+
+def test_create_saved_query_requires_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    cursor = FakeAsyncCursor(fetchone=("new-id",))
+    conn = FakeAsyncConnection([make_subscription_cursor(), cursor])
+    client = _make_client(monkeypatch, conn, {"sub": "user-123"})
+
+    try:
+        payload = {"name": "Weekly", "filters": {"keywords": "ai"}}
+        resp = client.post("/saved-queries", json=payload)
+        assert resp.status_code == 400
+        assert resp.json()["detail"] == "user missing email claim"
+        # Ensure save query insert was never attempted
+        assert cursor.last_sql is None
     finally:
         _cleanup_client(client)
 
