@@ -254,7 +254,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
         {/* Manage Subscription Button */}
         <button
           onClick={onManage}
-          className="w-1/3 px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors hover:underline"
+          className="w-1/3 mx-auto px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors hover:underline"
         >
           Manage Subscription
         </button>

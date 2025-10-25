@@ -9,6 +9,13 @@ const baseConfig = {
     // Enable instrumentation hook (app/instrumentation.ts)
     instrumentationHook: true,
   },
+  // Sentry options for Next.js (safe even when plugin is absent)
+  sentry: {
+    // Ensure source maps are removed from the client bundle and only uploaded to Sentry
+    hideSourceMaps: true,
+    // Allow larger client artifact uploads when source maps are big
+    widenClientFileUpload: true,
+  },
 };
 
 try {
@@ -16,6 +23,10 @@ try {
   // eslint-disable-next-line import/no-extraneous-dependencies, global-require
   const { withSentryConfig } = require("@sentry/nextjs");
   const sentryWebpackPluginOptions = {
+    // These can also be provided via env vars in CI
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
     // Suppress noisy logs during build
     silent: true,
   };

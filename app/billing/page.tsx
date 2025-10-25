@@ -266,8 +266,14 @@ function BillingContent() {
               support@phaethon.llc
             </a>.
           </p>
-          <p className="text-sm text-slate-600 mb-4">
-            For urgent issues, we are also available via phone and text at (949) 328-0878. Please include your account email in your message. Phone and text support require an active subscription. 
+          <p className="text-sm text-slate-600">
+            For urgent issues, we are also available via phone and text at (949) 328-0878.
+          </p>
+          <p className="text-sm text-slate-600">
+           Please include your account email in your message.
+          </p>
+          <p className="text-sm text-slate-600">
+           Phone and text support require an active subscription. 
           </p>
           <div className="flex gap-4" style={{ textAlign: "center", fontSize: "12px", justifyContent: "center"}}>
             <a>2025 © Phaethon Order LLC</a> | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>

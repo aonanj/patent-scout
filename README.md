@@ -196,6 +196,15 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` – Optional metadata.
 - `SENTRY_TRACES_SAMPLE_RATE` / `SENTRY_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
 
+### Sentry Sourcemaps (Next.js)
+- Install when ready: `npm i -E @sentry/nextjs`
+- Configure CI with the following secrets for sourcemap uploads:
+  - `SENTRY_AUTH_TOKEN` (scopes: `project:releases`, `org:read`, `org:write`)
+  - `SENTRY_ORG` (e.g., `your-org`)
+  - `SENTRY_PROJECT` (e.g., `patent-scout-web`)
+- Optionally, create `.sentryclirc` (see `.sentryclirc.example`) instead of env vars.
+- The build plugin is enabled automatically by `next.config.js` when `@sentry/nextjs` is present. Source maps are hidden from clients (`sentry.hideSourceMaps: true`) and uploaded to Sentry during production builds.
+
 ## Data Pipeline (`etl.py`)
 `etl.py` loads AI-focused US filings from Google’s public patent publication dataset, normalizes CPC codes, upserts metadata into Postgres, and generates OpenAI embeddings for both title+abstract (`...|ta`) and claims (`...|claims`). Runs are idempotent via the `ingest_log` table and hash-based deduplication. Usage example:
 ```bash
