@@ -82,7 +82,7 @@ export default function LegalIndexPage() {
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Who Should Read This</strong>: All users of Patent Scout, whether individual researchers, corporate teams, or enterprise customers. By using the Service, you agree to these Terms.
               </p>
             </div>
@@ -132,7 +132,7 @@ export default function LegalIndexPage() {
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Who Should Read This</strong>: All users, especially those concerned about data privacy, GDPR/CCPA compliance, or located in the EEA, UK, Switzerland, California, or other jurisdictions with privacy laws.
               </p>
             </div>
@@ -183,13 +183,13 @@ export default function LegalIndexPage() {
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "#FFF4E6", borderRadius: 6, border: "1px solid #FFD666" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Who Should Read This</strong>: <strong>B2B customers</strong> (companies, VCs, R&D teams, law firms) who process personal data of their employees/users through Patent Scout. Required for GDPR Article 28 compliance and enterprise contracts.
               </p>
             </div>
 
             <div style={{ marginTop: 16, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Note</strong>: Individual users who are not processing personal data on behalf of an organization typically do not need to review the DPA. The Privacy Policy and Terms of Service are sufficient for individual use cases.
               </p>
             </div>

@@ -481,7 +481,7 @@ function InputDescription({ label, description, example, tips }: { label: string
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>
       <div style={{ marginTop: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Tips:</div>
-        <ul style={{ marginLeft: 20, fontSize: 13, lineHeight: 1.6, listStyleType: "circle", listStylePosition: "outside", color: TEXT_COLOR }}>
+        <ul style={{ marginLeft: 20, fontSize: 13, lineHeight: 1.5, listStyleType: "circle", listStylePosition: "outside", color: TEXT_COLOR }}>
           {tips.map((tip, idx) => <li key={idx}>{tip}</li>)}
         </ul>
       </div>
@@ -532,7 +532,7 @@ function SignalCard({ icon, type, tone, shortName, description, interpretation, 
       <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>Interpretation:</strong> {interpretation}</p>
       <div style={{ padding: 12, background: "white", borderRadius: 8, border: `1px solid ${CARD_BORDER}` }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Example Rationale:</div>
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, fontStyle: "italic" }}>{exampleRationale}</p>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, fontStyle: "italic" }}>{exampleRationale}</p>
       </div>
     </div>
   );

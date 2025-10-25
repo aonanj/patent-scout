@@ -354,7 +354,7 @@ export default function SearchTrendsHelpPage() {
             />
             <BestPractice
               title="Use Broad CPC Codes for Exploration"
-              tip="To broadly explore technology areas, a CPC code (e.g., 'G06N' for AI) can be used, and the results refined, e.g., by reference to the trend chart. For reference, the USPTO generally assigns AI and machine learning subject matter under one of the following CPC section (letter)+class(number)+subclass(letter) classifications: A61B, B60W, G05D, G06N, G06V, and G10L. More specific AI/ML-related subject matter is generally assigned to group, as well, as indicating by a number appended to the subclass: G06F17, G06F18, G06F40, G06K9, G06T7. A further subgroup indicates subject matter at an even more granular level, which is indicated by a third number, preceded by a backslash. For AI/ML-related subject matter, this is most commonly encoutered in CPC classification G06F16/90."
+              tip="To broadly explore technology areas, a CPC code (e.g., 'G06N' for Computing and Calculating; Counting) can be specified as a search criteria. The results can be further refined, e.g., by reference to the trend chart."
             />
             <BestPractice
               title="Monitor Competitors with Assignee Filters"
@@ -427,7 +427,7 @@ function InputDescription({ label, description, example, tips }: { label: string
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>
       <div style={{ marginTop: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Tips:</div>
-        <ul style={{ marginLeft: 20, fontSize: 13, lineHeight: 1.6, listStyleType: "circle", listStylePosition: "outside", color: TEXT_COLOR }}>
+        <ul style={{ marginLeft: 20, fontSize: 13, lineHeight: 1.5, listStyleType: "circle", listStylePosition: "outside", color: TEXT_COLOR }}>
           {tips.map((tip, idx) => <li key={idx}>{tip}</li>)}
         </ul>
       </div>
