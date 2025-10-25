@@ -234,7 +234,7 @@ class TestSubscriptionRequiredError:
         error = SubscriptionRequiredError(detail="Premium feature requires subscription")
 
         assert error.status_code == 403
-        assert error.detail == "Premium feature requires subscription"
+        assert error.detail == "Subscription required: please visit the Billing page linked in the menu bar."
 
 
 # Integration-style tests (require actual database)

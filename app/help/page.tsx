@@ -15,24 +15,24 @@ export default function HelpIndexPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Help</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            Welcome to Patent Scout, a data and analytics platform for AI/ML IP. This help center will guide you through the features and workflows for AI/ML IP reference and research enabled by the Patent Scout platform.
+            Welcome to Patent Scout, an advanced data and analytics platform directed to artificial intelligence (AI) and machine learning (ML) intellectual property (IP). This help center includes documentation describing the platform's various features and terminology, as well as guides to the user interfaces and workflows on the platform.
           </p>
         </div>
 
         {/* Overview */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Patent Scout?</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Introduction to the Patent Scout Platform</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-            Patent Scout is an advanced IP analytics platform specific to AI/ML. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML and the entities investing in this space. The platform is built on a relational database system, central to which is a corpus of 53,000+ AI/ML-related patents and publications dating back to 2023. 
+            Patent Scout is an IP platform specific to AI/ML data and analytics. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML innovations and investments and the entities active in this space. The platform is built on a relational database system, central to which is a corpus of 53,000+ AI/ML-related patents and publications dating back to 2023.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-            Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry in the corpus corresponds to a patent or application with multiple associated embeddings. The multiple embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields.
+            Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry corresponds to a patent or publication with multiple associated AI embeddings. The multiple AI embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Metadata and context for each entry further include the assignee name. The Patent Scout platform normalizes each assignee name to ensure that the AI/ML IP assets held by different entities are accurately represented and easily searchable.
+            Metadata and context for each entry further include the assignee name (i.e., owner). The Patent Scout platform normalizes each assignee name to ensure that the AI/ML IP assets held by different entities are accurately and comprehensively represented.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is designed with a streamlined user interface divided between two primary service pages:
+            Patent Scout is designed with a streamlined user interface divided between two primary web service pages:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
@@ -74,7 +74,7 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Search & Trends page is the primary interface for discovering and monitoring patent filings. It combines powerful search capabilities with visual trend analytics to provide an easily comprehensible view of the AI/ML IP landscape. The intuitive interface allows users to construct complex queries using both keywords and semantic similarity, filter results by various metadata fields, and visualize filing trends over time, by CPC classification, or by assignee. 
+              The Search & Trends page is the primary interface for discovering and monitoring granted patent and published application. It combines powerful search capabilities with visual trend analytics to provide an easily comprehensible view of the AI/ML IP landscape. The intuitive interface allows users to construct complex queries using both keywords and semantic similarity, filter results by various metadata fields, and visualize filing trends over time, by CPC classification, or by assignee. 
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
               The Search & Trends page further includes the option to save a particular search configuration as an alert. Patent Scout updates its database on a weekly basis, following the USPTO schedule. Saved searches are automatically run when new data becomes available, and users are notified of new matches.
@@ -90,7 +90,7 @@ export default function HelpIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Best For</strong>: Ongoing competitive monitoring, prior art searches, freedom-to-operate and clearance analysis, and staying current with AI/ML IP as it relates to specific technology areas. Graphs provide visual guides on trends across the AI/ML IP landscape.
+                <strong>Example Use Cases</strong>: Ongoing competitive monitoring, prior art searches, freedom-to-operate and clearance analysis, and staying current with AI/ML IP as it relates to specific technology areas. Graphs provide visual guides on trends across the AI/ML IP landscape.
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function HelpIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Best For</strong>: Strategic IP investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
+                <strong>Example Use Cases</strong>: Strategic IP investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
               </p>
             </div>
           </div>

@@ -35,7 +35,7 @@ class SubscriptionRequiredError(HTTPException):
         """Returns HTTP 403 Forbidden."""
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=detail,
+            detail="Subscription required: please visit the Billing page linked in the menu bar.",
             **kwargs,
         )
 
