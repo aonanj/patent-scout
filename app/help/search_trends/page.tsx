@@ -33,7 +33,7 @@ export default function SearchTrendsHelpPage() {
                 fontSize: 14,
                 transition: "background 0.2s"
               }}
-              onMouseOver={(e) => e.currentTarget.style.background = "#4A90B5"}
+              onMouseOver={(e) => e.currentTarget.style.background = "#3A506B"}
               onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
             >
               Go to Search & Trends →

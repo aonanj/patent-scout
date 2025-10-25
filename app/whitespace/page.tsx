@@ -207,6 +207,7 @@ const exportBtn: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   cursor: "pointer",
+  whiteSpace: "nowrap",
 };
 
 const tableStyle: React.CSSProperties = {
@@ -1193,25 +1194,53 @@ export default function WhitespacePage() {
             {highlightedRows.length > 0 && lastExamplesContext && examplesCardInfo && (
               <Card>
                 <div style={{ display: "grid", gap: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                    <div style={{ display: "grid", gap: 6 }}>
-                      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{examplesCardInfo.title}</h2>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 12,
+                      flexWrap: "nowrap",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 6,
+                        flex: "0 0 75%",
+                        width: "75%",
+                        minWidth: 0,
+                      }}
+                    >
+                      <h2
+                        style={{
+                          margin: 0,
+                          fontSize: 18,
+                          fontWeight: 700,
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {examplesCardInfo.title}
+                      </h2>
                       {examplesCardInfo.note && (
-                        <div style={{ fontSize: 12, color: "#64748b", fontStyle: "italic" }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: "#64748b",
+                            fontStyle: "italic",
+                            wordBreak: "break-word",
+                          }}
+                        >
                           ({examplesCardInfo.note})
                         </div>
                       )}
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12, color: "#475569" }}>
-                        <span><strong>Focus Keywords:</strong> {focusKeywords || "--"}</span>
-                        <span><strong>Focus CPC:</strong> {focusCpcLike || "--"}</span>
-                        <span><strong>From:</strong> {dateFrom || "--"}</span>
-                        <span><strong>To:</strong> {dateTo || "--"}</span>
-                      </div>
                     </div>
                     <button
+                      className="hover:underline"
                       onClick={handleExportExamplesPdf}
                       style={{
                         ...exportBtn,
+                        alignSelf: "flex-start",
                         cursor: highlightedRows.length > 0 ? "pointer" : "not-allowed",
                         opacity: highlightedRows.length > 0 ? 1 : 0.5,
                       }}
@@ -1219,6 +1248,12 @@ export default function WhitespacePage() {
                     >
                       Export PDF
                     </button>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12, color: "#475569" }}>
+                    <span><strong>Focus Keywords:</strong> {focusKeywords || "--"}</span>
+                    <span><strong>Focus CPC:</strong> {focusCpcLike || "--"}</span>
+                    <span><strong>From:</strong> {dateFrom || "--"}</span>
+                    <span><strong>To:</strong> {dateTo || "--"}</span>
                   </div>
                   <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
                     <div style={{ maxHeight: 360, overflow: "auto" }}>

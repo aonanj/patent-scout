@@ -33,7 +33,7 @@ export default function WhitespaceHelpPage() {
                 fontSize: 14,
                 transition: "background 0.2s"
               }}
-              onMouseOver={(e) => e.currentTarget.style.background = "#4A90B5"}
+              onMouseOver={(e) => e.currentTarget.style.background = "#3A506B"}
               onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
             >
               Go to Whitespace →
@@ -186,16 +186,6 @@ export default function WhitespaceHelpPage() {
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Signal Types</h3>
           <div style={{ display: "grid", gap: 16 }}>
             <SignalCard
-              icon="⇉"
-              type="Convergence Toward Focus Area"
-              tone="risk"
-              shortName="focus_shift"
-              description="Indicates that an assignee is filing applications/obtaining patent grants increasingly close to the focus area over time. This suggests they are shifting R&D resources toward the technology area underlying the focus."
-              interpretation="A strong convergence signal means a competitor is actively moving into a space. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
-              exampleRationale="Google has filed 12 patents near the focus area with recent filings moving closer to focus keywords 'LIDAR, autonomous driving'. Average distance to focus decreased from 0.45 to 0.22 over the past 6 months."
-            />
-
-            <SignalCard
               icon="☼"
               type="Focus Area With Neighbor Underdevelopment"
               tone="opportunity"
@@ -206,16 +196,6 @@ export default function WhitespaceHelpPage() {
             />
 
             <SignalCard
-              icon="☁︎"
-              type="Sharply Rising Density Near Focus Area"
-              tone="risk"
-              shortName="crowd_out"
-              description="Detects rapid increases in patent filing density around the focus area, indicating a surge of activity from the assignee or competitors. This can signal a crowded or saturated space where differentiation is difficult."
-              interpretation="A strong crowd-out signal warns that the focus area is becoming heavily patented. Consider pivoting to adjacent technologies or focusing on narrow, defensible niches."
-              exampleRationale="Tesla has filed 15 patents and publications near 'autonomous vehicle perception' in the past 3 months. Local density increased from 0.30 to 0.78, indicating a crowding effect."
-            />
-
-            <SignalCard
               icon="⟗"
               type="Neighbor Linking Potential Near Focus Area"
               tone="opportunity"
@@ -223,6 +203,26 @@ export default function WhitespaceHelpPage() {
               description="Identifies patents and publications that act as bridges between the focus area and other technology clusters. These are high-degree nodes (hubs) that connect otherwise disconnected communities, suggesting cross-domain innovation opportunities. (A “bridging” patent/publication is one in which the invention has one or more properties enabling patent filings across different fields of application.)"
               interpretation="A strong bridge signal highlights patents and publications that could serve as foundational IP for multi-domain applications. These are valuable for portfolio breadth and licensing opportunities."
               exampleRationale="NVIDIA has 5 patents with high betweenness centrality (i.e., how essential a node is for connecting different parts of the graph) (avg 0.62) linking 'AI training' and 'edge inference'. These patents bridge two major technology areas and could enable hybrid solutions."
+            />
+
+            <SignalCard
+              icon="⇉"
+              type="Convergence Toward Focus Area"
+              tone="risk"
+              shortName="focus_shift"
+              description="Indicates that an assignee is filing applications/obtaining patent grants increasingly close to the focus area over time. This suggests they are shifting R&D resources toward the technology area underlying the focus."
+              interpretation="A strong convergence signal means a competitor is actively moving into a space. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
+              exampleRationale="Google has filed 12 patents near the focus area with recent filings moving closer to focus keywords 'LIDAR, autonomous driving'. Average distance to focus decreased from 0.45 to 0.22 over the past 6 months."
+            />
+
+            <SignalCard
+              icon="☁︎"
+              type="Sharply Rising Density Near Focus Area"
+              tone="risk"
+              shortName="crowd_out"
+              description="Detects rapid increases in patent filing density around the focus area, indicating a surge of activity from the assignee or competitors. This can signal a crowded or saturated space where differentiation is difficult."
+              interpretation="A strong crowd-out signal warns that the focus area is becoming heavily patented. Consider pivoting to adjacent technologies or focusing on narrow, defensible niches."
+              exampleRationale="Tesla has filed 15 patents and publications near 'autonomous vehicle perception' in the past 3 months. Local density increased from 0.30 to 0.78, indicating a crowding effect."
             />
           </div>
 
