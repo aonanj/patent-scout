@@ -14,12 +14,15 @@ from typing import Annotated, Any, cast
 import psycopg
 
 # Third-party imports
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 from pydantic import BaseModel
+
+from infrastructure.logger import get_logger
 
 # Local application imports
 from .auth import ensure_auth0_configured, get_current_user
@@ -40,6 +43,11 @@ from .stripe_config import ensure_stripe_configured
 from .stripe_webhooks import process_webhook_event, verify_webhook_signature
 from .subscription_middleware import ActiveSubscription
 from .whitespace_api import router as whitespace_router
+
+# Load environment variables from .env file
+load_dotenv()
+
+logger = get_logger()
 
 # Optional PDF support
 _has_reportlab = (
@@ -194,6 +202,7 @@ async def create_saved_query(req: SavedQueryCreate, conn: Conn, user: ActiveSubs
             row = await cur.fetchone()
         return {"id": row[0] if row else None}
     except psycopg.Error as e:  # unique violation, FK errors, etc.
+        logger.error(f"Error creating saved query: {e}")
         raise HTTPException(status_code=400, detail=str(e).split("\n")[0]) from e
 
 
@@ -215,6 +224,7 @@ async def delete_saved_query(id: str, conn: Conn, user: ActiveSubscription):
         deleted = cur.rowcount if hasattr(cur, "rowcount") else None  # type: ignore[attr-defined]
     # If nothing was deleted, either it doesn't exist or user doesn't own it
     if not deleted:
+        logger.error(f"User {owner_id} attempted to delete non-existent saved query {id}")
         raise HTTPException(status_code=404, detail="saved query not found")
     return {"deleted": deleted}
 
@@ -227,9 +237,11 @@ async def update_saved_query(id: str, req: SavedQueryUpdate, conn: Conn, user: A
     """
     owner_id = user.get("sub")
     if owner_id is None:
+        logger.error("User missing sub claim")
         raise HTTPException(status_code=400, detail="user missing sub claim")
 
     if req.is_active is None:
+        logger.error("No updatable fields provided")
         raise HTTPException(status_code=400, detail="no updatable fields provided")
 
     async with conn.cursor() as cur:
@@ -239,7 +251,10 @@ async def update_saved_query(id: str, req: SavedQueryUpdate, conn: Conn, user: A
         )
         row = await cur.fetchone()
     if not row:
+        logger.error(f"User {owner_id} attempted to update non-existent saved query {id}")
         raise HTTPException(status_code=404, detail="saved query not found")
+    
+    logger.info(f"User {owner_id} updated saved query {id} to is_active={req.is_active}")
     return {"id": row[0], "is_active": req.is_active}
 
 
@@ -259,6 +274,7 @@ async def get_trend(
 ) -> TrendResponse:
     owner_id = user.get("sub")
     if owner_id is None:
+        logger.error("User missing sub claim")
         raise HTTPException(status_code=400, detail="user missing sub claim")
     
     qv: list[float] | None = None
@@ -302,6 +318,7 @@ async def get_patent_date_range(conn: Conn) -> DateRangeReponse:
 async def get_detail(pub_id: str, conn: Conn) -> PatentDetail:
     detail = await get_patent_detail(conn, pub_id)
     if not detail:
+        logger.error(f"Attempt to access non-existent patent {pub_id}")
         raise HTTPException(status_code=404, detail="not found")
     return detail
 
@@ -387,6 +404,7 @@ async def export(
 
     # PDF
     if not HAVE_REPORTLAB:
+        logger.error("PDF export requested but reportlab is not installed")
         raise HTTPException(status_code=500, detail="PDF generation not available on server")
 
     buffer = BytesIO()
@@ -525,5 +543,10 @@ async def stripe_webhook(request: Request, conn: Conn) -> dict[str, str]:
 # ----------------------------- Sentry Integration -----------------------------
 @app.get("/sentry-debug")
 async def trigger_error():
-    division_by_zero = 1 / 0
-    return {"result": division_by_zero}
+    try:
+        division_by_zero = 1 / 0
+        return {"result": division_by_zero}
+    except Exception as e:
+        logger.error(f"Sentry Debug Error: {e}")
+        # Optionally, re-raise the error to be caught by Sentry
+        raise
