@@ -11,27 +11,30 @@ from infrastructure.logger import get_logger
 
 logger = get_logger()
 
-def init_sentry_if_configured() -> None:
-    """Initialize Sentry only when SENTRY_DSN is provided.
+
+def _glitchtip_env(key: str, default: str | None = None) -> str | None:
+    """Prefer GLITCHTIP_* env vars but fall back to legacy SENTRY_* names."""
+    return os.getenv(f"GLITCHTIP_{key}") or os.getenv(f"NEXT_PUBLIC_GLITCHTIP_{key}") or os.getenv(f"SENTRY_{key}") or os.getenv(f"NEXT_PUBLIC_SENTRY_{key}") or default
+
+
+def init_glitchtip_if_configured() -> None:
+    """Initialize GlitchTip (Sentry-compatible) when GLITCHTIP_DSN is provided.
 
     Environment variables (optional):
-      - SENTRY_DSN
-      - SENTRY_ENVIRONMENT (default: "production")
-      - SENTRY_RELEASE
-      - SENTRY_TRACES_SAMPLE_RATE (float, default: 0.0)
-      - SENTRY_PROFILES_SAMPLE_RATE (float, default: 0.0)
+      - GLITCHTIP_DSN (or SENTRY_DSN)
+      - GLITCHTIP_ENVIRONMENT / GLITCHTIP_RELEASE
+      - GLITCHTIP_TRACES_SAMPLE_RATE / GLITCHTIP_PROFILES_SAMPLE_RATE
     """
-    dsn = os.getenv("SENTRY_DSN")
+    dsn = _glitchtip_env("DSN")
     if not dsn:
-        logger.error("SENTRY_DSN not set; skipping Sentry initialization")
+        logger.error("GLITCHTIP_DSN not set; skipping GlitchTip initialization")
         return
 
     try:
-
-        traces = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0"))
-        profiles = float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.0"))
-        environment = os.getenv("SENTRY_ENVIRONMENT", "production")
-        release = os.getenv("SENTRY_RELEASE")
+        traces = float(_glitchtip_env("TRACES_SAMPLE_RATE", "0.0") or "0.0")
+        profiles = float(_glitchtip_env("PROFILES_SAMPLE_RATE", "0.0") or "0.0")
+        environment = _glitchtip_env("ENVIRONMENT", "production") or "production"
+        release = _glitchtip_env("RELEASE")
 
         sentry_sdk.init(
             dsn=dsn,
@@ -44,7 +47,6 @@ def init_sentry_if_configured() -> None:
                 LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
             ],
         )
-        logger.info("✓ Sentry initialized for FastAPI (env=%s)", environment)
+        logger.info("✓ GlitchTip initialized for FastAPI (env=%s)", environment)
     except Exception as exc:  # pragma: no cover - defensive
-        logger.error("Failed to initialize Sentry: %s", exc)
-
+        logger.error("Failed to initialize GlitchTip: %s", exc)

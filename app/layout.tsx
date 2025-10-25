@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import NavBar from "../components/NavBar";
-import SentryInit from "../components/SentryInit";
+import GlitchtipInit from "../components/GlitchtipInit";
 
 export const metadata: Metadata = {
   title: "Patent Scout",
@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen bg-white text-gray-900">
         {/* Client-side observability hooks */}
-        <SentryInit />
+        <GlitchtipInit />
         <Providers>
           <NavBar />
           {children}

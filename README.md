@@ -1,9 +1,9 @@
 # Patent Scout
 
-> Patent Scout is a data and analytics platform for artificial intelligence (AI) and machine learning (ML) IP. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes AI-related 52k+ patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
+> Patent Scout is a data and analytics platform for artificial intelligence (AI) and machine learning (ML) IP. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes 53k+ AI/ML-related patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
 
 ## Overview
-The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with OpenAI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific whitespace analysis tables enable personalized patent landscape exploration with isolated graph computation.
+The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific whitespace analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
 
 ## Feature Highlights
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)).
@@ -181,9 +181,9 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `NEXT_PUBLIC_AUTH0_CLIENT_ID`
 - `NEXT_PUBLIC_AUTH0_AUDIENCE`
 - `BACKEND_URL` – Origin of the FastAPI service consumed by proxy routes.
-- `NEXT_PUBLIC_SENTRY_DSN` – Optional: browser Sentry DSN to capture client errors.
-- `NEXT_PUBLIC_SENTRY_ENVIRONMENT` / `NEXT_PUBLIC_SENTRY_RELEASE` – Optional metadata.
-- `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` / `NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
+- `NEXT_PUBLIC_GLITCHTIP_DSN` – Optional: browser GlitchTip DSN to capture client errors.
+- `NEXT_PUBLIC_GLITCHTIP_ENVIRONMENT` / `NEXT_PUBLIC_GLITCHTIP_RELEASE` – Optional metadata for GlitchTip issues.
+- `NEXT_PUBLIC_GLITCHTIP_TRACES_SAMPLE_RATE` / `NEXT_PUBLIC_GLITCHTIP_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
 
 ### ETL & Alerts
 - `GOOGLE_APPLICATION_CREDENTIALS` – Service account JSON for BigQuery reader access.
@@ -192,18 +192,19 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `EMB_BATCH_SIZE` / `EMB_MAX_CHARS` – Embedding throughput guards used by `etl.py`.
 
 ### Observability (FastAPI)
-- `SENTRY_DSN` – Optional: enable Sentry for backend exceptions.
-- `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` – Optional metadata.
-- `SENTRY_TRACES_SAMPLE_RATE` / `SENTRY_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
+- `GLITCHTIP_DSN` – Optional: enable GlitchTip for backend exceptions.
+- `GLITCHTIP_ENVIRONMENT` / `GLITCHTIP_RELEASE` – Optional metadata.
+- `GLITCHTIP_TRACES_SAMPLE_RATE` / `GLITCHTIP_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
 
-### Sentry Sourcemaps (Next.js)
-- Install when ready: `npm i -E @sentry/nextjs`
-- Configure CI with the following secrets for sourcemap uploads:
-  - `SENTRY_AUTH_TOKEN` (scopes: `project:releases`, `org:read`, `org:write`)
-  - `SENTRY_ORG` (e.g., `your-org`)
-  - `SENTRY_PROJECT` (e.g., `patent-scout-web`)
+### GlitchTip Sourcemaps (Next.js)
+- Install when ready: `npm i -E @sentry/nextjs` (GlitchTip speaks the Sentry protocol).
+- Configure CI/CD with the following secrets for sourcemap uploads:
+  - `GLITCHTIP_URL` (or `SENTRY_URL`) – e.g., `https://app.glitchtip.com`
+  - `GLITCHTIP_AUTH_TOKEN` (same scopes as the Sentry CLI)
+  - `GLITCHTIP_ORG` – your GlitchTip org slug
+  - `GLITCHTIP_PROJECT` – the project slug receiving frontend errors
 - Optionally, create `.sentryclirc` (see `.sentryclirc.example`) instead of env vars.
-- The build plugin is enabled automatically by `next.config.js` when `@sentry/nextjs` is present. Source maps are hidden from clients (`sentry.hideSourceMaps: true`) and uploaded to Sentry during production builds.
+- The build plugin is enabled automatically by `next.config.js` when `@sentry/nextjs` is present. Source maps are hidden from clients (`sentry.hideSourceMaps: true`) and uploaded to GlitchTip during production builds.
 
 ## Data Pipeline (`etl.py`)
 `etl.py` loads AI-focused US filings from Google’s public patent publication dataset, normalizes CPC codes, upserts metadata into Postgres, and generates OpenAI embeddings for both title+abstract (`...|ta`) and claims (`...|claims`). Runs are idempotent via the `ingest_log` table and hash-based deduplication. Usage example:
