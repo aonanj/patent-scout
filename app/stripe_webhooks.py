@@ -7,14 +7,13 @@ All handlers are idempotent - processing the same event multiple times is safe.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
-from dateutil.relativedelta import relativedelta
-
 import stripe
+from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException, Request
 from psycopg import AsyncConnection
 from psycopg.rows import dict_row
@@ -36,8 +35,8 @@ def _json_default(value: Any) -> Any:
     """JSON serializer for values not handled by default encoder."""
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc).isoformat()
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(UTC).isoformat()
     if isinstance(value, (Decimal, timedelta)):
         return str(value)
     return str(value)
@@ -48,9 +47,9 @@ def _to_utc_datetime(timestamp: Any) -> datetime | None:
     if timestamp in (None, ""):
         return None
     if isinstance(timestamp, datetime):
-        return timestamp.astimezone(timezone.utc)
+        return timestamp.astimezone(UTC)
     try:
-        return datetime.fromtimestamp(float(timestamp), tz=timezone.utc)
+        return datetime.fromtimestamp(float(timestamp), tz=UTC)
     except (TypeError, ValueError, OSError):
         return None
 
@@ -123,7 +122,7 @@ def _normalize_event_object(event_object: Any) -> dict[str, Any]:
 
     to_dict = getattr(event_object, "to_dict_recursive", None)
     if callable(to_dict):
-        return to_dict()
+        return cast(dict[str, Any], to_dict())
 
     try:
         return json.loads(json.dumps(event_object, default=_json_default))
@@ -297,7 +296,7 @@ async def log_event(
     conn: AsyncConnection,
     event_id: str,
     event_type: str,
-    event_data: dict[str, Any],
+    event_data: Any,
     subscription_id: str | None = None,
 ) -> None:
     """Log webhook event to subscription_event table.
@@ -306,7 +305,7 @@ async def log_event(
         conn: Database connection
         event_id: Stripe event ID
         event_type: Event type (e.g., 'customer.subscription.updated')
-        event_data: Full event data as JSON
+        event_data: Full event data object (dict or Stripe payload)
         subscription_id: UUID of related subscription record (if any)
     """
     # Ensure stable JSON payload for querying
@@ -380,7 +379,7 @@ async def upsert_subscription(
     current_period_start = (
         _to_utc_datetime(subscription_data.get("current_period_start"))
         or _to_utc_datetime(subscription_data.get("created"))
-        or datetime.now(timezone.utc)
+        or datetime.now(UTC)
     )
     current_period_end = _to_utc_datetime(subscription_data.get("current_period_end"))
     cancel_at_period_end = bool(subscription_data.get("cancel_at_period_end", False))
@@ -453,12 +452,10 @@ async def upsert_subscription(
             # Preserve tier_started_at if tier hasn't changed
             tier_started_at = existing["tier_started_at"]
             if tier_started_at and tier_started_at.tzinfo is None:
-                tier_started_at = tier_started_at.replace(tzinfo=timezone.utc)
+                tier_started_at = tier_started_at.replace(tzinfo=UTC)
 
-            if existing.get("tier") != tier:
-                tier_started_at = datetime.now(timezone.utc)
-            elif not tier_started_at:
-                tier_started_at = datetime.now(timezone.utc)
+            if existing.get("tier") != tier or not tier_started_at:
+                tier_started_at = datetime.now(UTC)
 
             await cur.execute(
                 """

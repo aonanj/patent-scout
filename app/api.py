@@ -526,3 +526,4 @@ async def stripe_webhook(request: Request, conn: Conn) -> dict[str, str]:
 @app.get("/sentry-debug")
 async def trigger_error():
     division_by_zero = 1 / 0
+    return {"result": division_by_zero}

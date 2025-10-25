@@ -55,9 +55,8 @@ async def get_conn() -> AsyncIterator[psycopg.AsyncConnection]:
     while attempt < 2:
         pool = init_pool()
         try:
-            async with pool.connection() as conn:
-                async with conn.transaction():
-                    yield conn
+            async with pool.connection() as conn, conn.transaction():
+                yield conn
             return
         except OperationalError as exc:
             attempt += 1

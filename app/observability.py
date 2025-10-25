@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-"""Optional observability hooks (Sentry, etc.) for FastAPI.
-
-Call init_sentry_if_configured() early at startup. If environment variables
-are not present or sentry-sdk is not installed, this becomes a no-op.
-"""
-
 import logging
 import os
+
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 
 from infrastructure.logger import get_logger
 
@@ -29,9 +27,6 @@ def init_sentry_if_configured() -> None:
         return
 
     try:
-        import sentry_sdk
-        from sentry_sdk.integrations.logging import LoggingIntegration
-        from sentry_sdk.integrations.starlette import StarletteIntegration
 
         traces = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0"))
         profiles = float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.0"))
