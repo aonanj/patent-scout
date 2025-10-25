@@ -39,8 +39,6 @@ def init_sentry_if_configured() -> None:
             release=release,
             traces_sample_rate=traces,
             profiles_sample_rate=profiles,
-            enable_logs=True,
-            send_default_pii=False,
             integrations=[
                 StarletteIntegration(),
                 LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),

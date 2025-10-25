@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@auth0/auth0-react": "^2.4.0",
+    "@sentry/nextjs": "^10.22.0",
     "@types/node": "^24.3.1",
     "graphology": "^0.25.4",
     "graphology-layout": "^0.6.1",
