@@ -126,7 +126,7 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}><sup>*</sup></a>
+              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas (<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>).
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
                Example patents and publications driving each signal are provided to give concrete context to the analysis. The table of examples can be exported as a PDF for offline reference and research.             
@@ -186,18 +186,19 @@ export default function HelpIndexPage() {
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Additional Resources</h2>
 
           <div style={{ display: "grid", gap: 16 }}>
-            <ResourceLink
-              title="Understanding CPC Codes"
-              description="CPC (Cooperative Patent Classification) codes categorize patents and applications by technology area. For reference, the USPTO generally assigns AI and machine learning subject matter under one of the following CPC section (letter)+class(number)+subclass(letter) classifications: A61B, B60W, G05D, G06N, G06V, and G10L. More specific AI/ML-related subject matter is generally assigned to group, as well, as indicating by a number appended to the subclass: G06F17, G06F18, G06F40, G06K9, G06T7. A further subgroup indicates subject matter at an even more granular level, which is indicated by a third number, preceded by a backslash. For AI/ML-related subject matter, this is most commonly encoutered in CPC classification G06F16/90."
-              href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html"
-              external={true}
-            />
 
             <Footnote
               id="footnote1"
               title="“Bridging” Patents and Publications"
               description="A “bridging” patent/publication is one in which the invention has one or more properties enabling multiple patent filings across different fields of application. Bridging patents have been shown to be especially commercially valuable, as they can enable new combinations of technologies and applications. See, e.g., J. Choi & J. Yoon, Measuring knowledge exploration distance at the patent level, 16 Journal of Infometrics 101286 (2002) (linked here). See also M. Moehrle & J. Frischkorn, Bridge strongly or focus – An analysis of bridging patents in four application fields of carbon fiber reinforcements, 15 Journal of Informetrics 101138 (2001)."
               href="https://ideas.repec.org/a/eee/infome/v16y2022i2s1751157722000384.html"
+              external={true}
+            />
+
+            <ResourceLink
+              title="Understanding CPC Codes"
+              description="CPC (Cooperative Patent Classification) codes categorize patents and applications by technology area. For reference, the USPTO generally assigns AI and machine learning subject matter under one of the following CPC section (letter)+class(number)+subclass(letter) classifications: A61B, B60W, G05D, G06N, G06V, and G10L. More specific AI/ML-related subject matter is generally assigned to group, as well, as indicating by a number appended to the subclass: G06F17, G06F18, G06F40, G06K9, G06T7. A further subgroup indicates subject matter at an even more granular level, which is indicated by a third number, preceded by a backslash. For AI/ML-related subject matter, this is most commonly encoutered in CPC classification G06F16/90."
+              href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html"
               external={true}
             />
 
@@ -275,7 +276,7 @@ function ResourceLink({ title, description, href, external }: { title: string; d
 function Footnote({ id, title, description, href, external }: { id: string; title: string; description: string; href: string; external: boolean }) {
   return (
     <div id={id} style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
-      <sup>*</sup><a
+      (*) <a
         href={href}
         className="hover:underline"
         target={external ? "_blank" : undefined}
