@@ -14,7 +14,7 @@ export default function LegalIndexPage() {
         {/* Header */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Legal Documentation</h1>
-          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
+          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             Welcome to Patent Scout's legal resource center. Below you'll find our complete legal framework governing your use of the Service.
           </p>
         </div>
@@ -22,15 +22,15 @@ export default function LegalIndexPage() {
         {/* Introduction */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Overview</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Patent Scout is committed to transparency, data protection, and legal compliance. Our legal framework consists of three core documents that work together to protect both your rights and ours:
           </p>
-          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Terms of Service</strong>: Governs your use of Patent Scout and defines the contractual relationship between you and Phaethon Order LLC;</li>
             <li><strong>Privacy Policy</strong>: Explains how we collect, use, protect, and share your personal information;</li>
             <li><strong>Data Processing Agreement</strong>: Defines data protection obligations for B2B customers where we process personal data on your behalf (required for GDPR/CCPA compliance).</li>
           </ul>
-          <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
+          <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             These documents are effective as of <strong>October 17, 2025</strong> and apply to all users of the Patent Scout service.
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function LegalIndexPage() {
               </a>
             </div>
             
-            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
               The Terms of Service constitute the legally binding agreement between you and Phaethon Order LLC for use of the Patent Scout service. This document covers:
             </p>
             
@@ -117,7 +117,7 @@ export default function LegalIndexPage() {
               </a>
             </div>
             
-            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
               Our Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use Patent Scout. This document covers:
             </p>
             
@@ -167,7 +167,7 @@ export default function LegalIndexPage() {
               </a>
             </div>
             
-            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
               The Data Processing Agreement defines our obligations as a data processor when handling personal data on behalf of B2B customers (data controllers). This document covers:
             </p>
             
@@ -322,7 +322,7 @@ function InfoSection({ title, content }: { title: string; content: React.ReactNo
   return (
     <div>
       <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>{title}</h3>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{content}</p>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{content}</p>
     </div>
   );
 }
@@ -331,7 +331,7 @@ function InfoSectionTwo({ title, content }: { title: string; content: React.Reac
   return (
     <div>
       <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>{title}</h3>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{content}</p>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{content}</p>
     </div>
   );
 }

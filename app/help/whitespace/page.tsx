@@ -39,7 +39,7 @@ export default function WhitespaceHelpPage() {
               Go to Whitespace →
             </a>
           </div>
-          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
+          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             The Whitespace Analysis page helps you identify strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. This guide covers all inputs, signals, graph interpretation, and advanced options.
           </p>
         </div>
@@ -47,10 +47,10 @@ export default function WhitespaceHelpPage() {
         {/* Overview */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Whitespace Analysis?</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            Whitespace analysis uses graph-based algorithms to reveal the patent landscape around a focus area defined by keywords and/or CPC codes. The system:
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
+            Whitespace analysis uses graph-based algorithms to reveal the AI/ML IP landscape around a focus area defined by keywords and/or CPC codes. The system:
           </p>
-          <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Identifies patents and publications matching the focus criteria;</li>
             <li>Computes cosine similarity between patents and publications using AI embeddings to build a K-nearest-neighbor graph;</li>
             <li>Applies Leiden clustering to group semantically similar patents and publications into communities;</li>
@@ -58,7 +58,7 @@ export default function WhitespaceHelpPage() {
             <li>Evaluates four signal types (convergence, emerging gaps, crowd-out, bridges) for each assignee based on graph topology and temporal patterns;</li>
             <li>Displays confidence-scored signals, an interactive graph visualization, and example patents and publications for each signal.</li>
           </ol>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
             The result is a comprehensive view of where competitors are investing, where gaps exist, and where strategic opportunities or risks lie.
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function WhitespaceHelpPage() {
         {/* Input Fields */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Input Fields</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The Whitespace page provides a focused set of inputs to define the analysis scope. All inputs are optional, but at least one focus criterion (keywords or CPC) is necessary to obtain results.
           </p>
 
@@ -109,7 +109,7 @@ export default function WhitespaceHelpPage() {
         {/* Advanced Options */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Advanced Options</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Click "Show advanced settings" to access tuning parameters that control graph construction, clustering, and signal scoring. These are intended for power users who want fine-grained control over the analysis.
           </p>
 
@@ -168,10 +168,10 @@ export default function WhitespaceHelpPage() {
         {/* Running Analysis */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Running the Analysis</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Click the "Identify signals" button to run the analysis. The button is disabled if you're not authenticated. The analysis typically takes 5–30 seconds depending on the sample size and complexity, but loading time may exceed 50-60 seconds for broad queries, high K values, complex signal patterns, etc.
           </p>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             During execution, the button text changes to "Identifying..." and the page displays a loading indicator. Once complete, the page populates with two main sections: Signals and Graph Context. Selecting examples for a signal will highlight those examples in the Graph Context and a table presenting information for each highlighted example will be displayed, with an option to export the table as a PDF.
           </p>
         </div>
@@ -179,8 +179,8 @@ export default function WhitespaceHelpPage() {
         {/* Understanding Signals */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Understanding Signals</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-            Signals are confidence-scored indicators of strategic patterns in the patent landscape. Each signal is computed per assignee and includes a status (none/weak/medium/strong), a confidence score (0.00–1.00), a rationale, and a list of example patent and publication numbers.
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
+            Signals are confidence-scored indicators of strategic patterns in the AI/ML IP landscape. Each signal is computed per assignee and includes a status (none/weak/medium/strong), a confidence score (0.00–1.00), a rationale, and a list of example patent and publication numbers.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Signal Types</h3>
@@ -227,24 +227,24 @@ export default function WhitespaceHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Signal Confidence Scores</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Each signal includes a confidence score (0.00–1.00) that quantifies the strength of evidence supporting the signal. The score is derived from:
           </p>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Number of patents and publications contributing to the signal;</li>
             <li>Magnitude of the metric being measured (e.g., distance change, density increase);</li>
             <li>Temporal consistency (signals are stronger if the pattern is sustained over time);</li>
             <li>Statistical significance thresholds defined in the signal evaluation logic.</li>
           </ul>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
             Scores above 0.60 are considered strong; 0.40–0.60 are medium; 0.20–0.40 are weak; below 0.20 are none/negligible.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Signal Status Colors</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Signals are color-coded based on their tone (opportunity vs. risk) and status (weak/medium/strong):
           </p>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Opportunity signals</strong> (emerging gap, bridge): Green backgrounds (light for weak, dark for strong);</li>
             <li><strong>Risk signals</strong> (convergence, crowd-out): Red/orange backgrounds (light for weak, dark for strong);</li>
             <li><strong>None status</strong>: Gray background, indicating insufficient evidence for the signal.</li>
@@ -254,7 +254,7 @@ export default function WhitespaceHelpPage() {
         {/* Page Layout */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Page Layout & Workflow</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The Whitespace page is organized into several collapsible sections. Here's how to navigate and use each one:
           </p>
 
@@ -271,7 +271,7 @@ export default function WhitespaceHelpPage() {
 
             <LayoutSection
               title="3. Graph Context Section"
-              description="Displays an interactive Sigma.js graph visualization of the patent landscape. Nodes represent patents and publications; edges connect semantically similar patents and publications. Node size indicates whitespace score (larger = more isolated); node color indicates Leiden cluster membership. Clicking a signal in the Signals section highlights relevant nodes in the graph with a blue outline."
+              description="Displays an interactive Sigma.js graph visualization of the AI/ML IP landscape. Nodes represent patents and publications; edges connect semantically similar patents and publications. Node size indicates whitespace score (larger = more isolated); node color indicates Leiden cluster membership. Clicking a signal in the Signals section highlights relevant nodes in the graph with a blue outline."
             />
 
             <LayoutSection
@@ -281,7 +281,7 @@ export default function WhitespaceHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Typical Workflow</h3>
-          <ol style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ol style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Enter focus keywords and/or CPC codes to define the analysis scope;</li>
             <li>Optionally adjust date range and advanced parameters;</li>
             <li>Click "Identify signals" to load results;</li>
@@ -297,12 +297,12 @@ export default function WhitespaceHelpPage() {
         {/* Graph Context Interpretation */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Graph Context & Interpretation</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The graph visualization is a core feature of the Whitespace page. It provides a visual representation of the AI/ML IP landscape, as represented by patent filings, with nodes positioned using either UMAP coordinates or force-directed layout (if "Compute layout" is enabled).
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>What the Graph Represents</h3>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Nodes</strong>: Each node represents a patent in the analysis sample. Hover over a node to see its title and patent/publication number (if tooltips are supported);</li>
             <li><strong>Edges</strong>: Edges connect patents and publications that are among each other's K-nearest neighbors in the embedding space. More edges indicate tighter semantic clustering;</li>
             <li><strong>Node Size</strong>: Larger nodes have higher whitespace scores, meaning they are more isolated or occupy less crowded areas of the landscape;</li>
@@ -331,10 +331,10 @@ export default function WhitespaceHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Interacting with the Graph</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             The graph is powered by Sigma.js and supports the following interactions:
           </p>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Pan</strong>: Click and drag the background to move the graph;</li>
             <li><strong>Zoom</strong>: Scroll or pinch to zoom in/out;</li>
             <li><strong>Hover</strong>: Hover over nodes to see tooltips with patent metadata (if enabled);</li>
@@ -345,7 +345,7 @@ export default function WhitespaceHelpPage() {
         {/* Highlighted Examples Table */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Highlighted Examples Table</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             When you click "View Examples (Recent)" or "View Examples (Related)" on a signal, the page displays a table of up to 8 example patents and publications. These are the patents and publications that contribute most strongly to the signal.
           </p>
 
@@ -372,15 +372,15 @@ export default function WhitespaceHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Exporting Examples</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Click the "Export PDF" button above the table to generate a formatted PDF report containing:
           </p>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Signal metadata (assignee, signal type, confidence, sort mode);</li>
             <li>Focus scope (keywords, CPC, date range);</li>
             <li>Full details for each example patent and publication (title, patent/pub no. (pub_id), assignee, date, abstract, and any signal-specific notes).</li>
           </ul>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
             The PDF is generated client-side using a minimal PDF builder and downloads immediately. File names are auto-generated based on assignee name and signal type (e.g., <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>Google_focus_shift_recent_examples.pdf</code>).
           </p>
         </div>
@@ -456,7 +456,7 @@ export default function WhitespaceHelpPage() {
         {/* Related Resources */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Related Resources</h2>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><a href="/help/search_trends" style={{ color: LINK_COLOR }}>Search & Trends Guide</a> – Learn how to use hybrid search and alerts</li>
             <li><a href="/help" style={{ color: LINK_COLOR }}>Help Home</a> – Return to the main help index</li>
             <li><a href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html" target="_blank" rel="noopener noreferrer" style={{ color: LINK_COLOR }}>USPTO CPC Reference</a> – Official CPC code definitions</li>
@@ -477,7 +477,7 @@ function InputDescription({ label, description, example, tips }: { label: string
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{label}</h4>
-      <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>
       <div style={{ marginTop: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Tips:</div>
@@ -496,7 +496,7 @@ function AdvancedOption({ param, defaultValue, description, guidance }: { param:
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{param}</h4>
         <span style={{ fontSize: 12, fontWeight: 600, color: "#627D98", background: "#e2e8f0", padding: "2px 8px", borderRadius: 4 }}>Default: {defaultValue}</span>
       </div>
-      <p style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: 0, fontSize: 13, fontStyle: "italic", color: "#627D98" }}><strong>Guidance:</strong> {guidance}</p>
     </div>
   );
@@ -506,7 +506,7 @@ function LayoutSection({ title, description }: { title: string; description: str
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{title}</h4>
-      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
 }
@@ -528,8 +528,8 @@ function SignalCard({ icon, type, tone, shortName, description, interpretation, 
           </span>
         </div>
       </div>
-      <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}><strong>What it means:</strong> {description}</p>
-      <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}><strong>Interpretation:</strong> {interpretation}</p>
+      <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>What it means:</strong> {description}</p>
+      <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>Interpretation:</strong> {interpretation}</p>
       <div style={{ padding: 12, background: "white", borderRadius: 8, border: `1px solid ${CARD_BORDER}` }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Example Rationale:</div>
         <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, fontStyle: "italic" }}>{exampleRationale}</p>
@@ -551,7 +551,7 @@ function SortMode({ mode, description }: { mode: string; description: string }) 
   return (
     <div style={{ padding: 12, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#eaf6ff" }}>
       <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: TEXT_COLOR }}>{mode}</h4>
-      <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
 }
@@ -569,7 +569,7 @@ function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#f0fdf4" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#166534" }}>{title}</h4>
-      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{tip}</p>
+      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{tip}</p>
     </div>
   );
 }
@@ -578,7 +578,7 @@ function Troubleshoot({ issue, solution }: { issue: string; solution: string }) 
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#fef3c7" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#92400e" }}>Issue: {issue}</h4>
-      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}><strong>Solution:</strong> {solution}</p>
+      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>Solution:</strong> {solution}</p>
     </div>
   );
 }

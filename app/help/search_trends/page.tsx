@@ -39,7 +39,7 @@ export default function SearchTrendsHelpPage() {
               Go to Search & Trends →
             </a>
           </div>
-          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
+          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             The Search & Trends page is the primary interface for discovering, filtering, and monitoring patent filings. This guide covers all inputs, outputs, and workflows to help you make the most of the search and alert features.
           </p>
         </div>
@@ -47,10 +47,10 @@ export default function SearchTrendsHelpPage() {
         {/* Overview */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Overview</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Search & Trends combines three core capabilities:
           </p>
-          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Hybrid Search</strong>: Find patents and publications using keyword matching, semantic similarity, or both combined;</li>
             <li><strong>Trend Visualization</strong>: Understand filing patterns over time, by technology classification, or by assignee;</li>
             <li><strong>Saved Alerts</strong>: Monitor ongoing activity by saving search criteria and receiving notifications when new patents and publications match.</li>
@@ -60,7 +60,7 @@ export default function SearchTrendsHelpPage() {
         {/* Search Interface */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Search Interface & Inputs</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The search interface provides multiple input fields to refine your patent search. All inputs are debounced (400ms delay) to prevent excessive API calls as you type.
           </p>
 
@@ -154,7 +154,7 @@ export default function SearchTrendsHelpPage() {
         {/* Search Results */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Search Results</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Search results are displayed in a paginated list (20 results per page) with detailed metadata for each patent.
           </p>
 
@@ -169,19 +169,19 @@ export default function SearchTrendsHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Pagination</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Use the Prev and Next buttons to navigate through pages. The current page and total page count are displayed between the buttons. Changing any filter resets pagination to page 1.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Export Options</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             When results are available, two export buttons appear:
           </p>
-          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Download CSV</strong>: Exports up to 1,000 results matching the current filters as a CSV file with columns for title, abstract, assignee, pub_id, pub_date, and CPC codes;</li>
             <li><strong>Download PDF</strong>: Generates an enriched PDF report (powered by ReportLab) with up to 1,000 results, including AI-generated summaries and metadata formatting.</li>
           </ul>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
             Both exports respect the current filter state, so you can refine your search before downloading.
           </p>
         </div>
@@ -189,7 +189,7 @@ export default function SearchTrendsHelpPage() {
         {/* Trend Visualization */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Trend Visualization</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The Trend chart visualizes patent filing patterns based on your current search filters. It updates automatically when filters change and respects all search inputs (keywords, semantic query, assignee, CPC, date range).
           </p>
 
@@ -210,10 +210,10 @@ export default function SearchTrendsHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Interpreting the Chart</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             The trend chart is interactive and updates in real time as you refine your search. Key points:
           </p>
-          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>The date range subtitle shows the effective From and To dates (either explicit or data set min/max);</li>
             <li>If no data is available for the current filters, the chart displays "No data";</li>
             <li>The chart automatically scales axes to fit the data range;</li>
@@ -224,7 +224,7 @@ export default function SearchTrendsHelpPage() {
         {/* Alerts Workflow */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Managing Alerts</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Alerts enable specific search criteria to be monitored over time. USPTO publishes patent and publication data on a weekly basis. Search criteria is checked against the newly published data, and new matches to your criteria are sent via email. This section explains how to create, manage, and use alerts.
           </p>
 
@@ -253,10 +253,10 @@ export default function SearchTrendsHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>Viewing and Managing Alerts</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Click the "Alerts" button in the top navigation bar to open the alerts modal. This modal displays all your saved alerts with the following information:
           </p>
-          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Alert Name</strong>: The custom name you assigned when creating the alert;</li>
             <li><strong>Filters</strong>: A summary of the search criteria (keywords, assignee, CPC, date range);</li>
             <li><strong>Semantic Query</strong>: If a semantic query was included, it's displayed here;</li>
@@ -282,17 +282,17 @@ export default function SearchTrendsHelpPage() {
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 16, fontWeight: 600, color: TEXT_COLOR }}>How Alerts Are Triggered</h3>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             The alerts system runs via an automated backend process, which is scheduled to run on Friday at 07:00 AM PT (14:00 UTC), allowing a buffer period for the USPTO to make bulk data available. During each run, the alerts system performs the following steps for each active alert:
           </p>
-          <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Fetches all active alerts from the database;</li>
             <li>For each alert, re-executes the saved search query on the most recent data;</li>
             <li>Compares the results to the last alert event timestamp to identify new matches to the search criteria since the last run;</li>
             <li>If new matches are found, sends a notification (via Mailgun) with the patent or publication details;</li>
             <li>Updates the alert event log with the current run timestamp.</li>
           </ol>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginTop: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
             This ensures email alerts are only triggered once when search criteria is met, and that the emails provide timely notifications of new matches on the alert search criteria.
           </p>
         </div>
@@ -300,7 +300,7 @@ export default function SearchTrendsHelpPage() {
         {/* UI/UX Flow Summary */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>UI/UX Flow Summary</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Example walkthrough of a Search & Trends session:
           </p>
 
@@ -402,7 +402,7 @@ export default function SearchTrendsHelpPage() {
         {/* Related Resources */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Related Resources</h2>
-          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><a href="/help/whitespace" style={{ color: LINK_COLOR }}>Whitespace Analysis Guide</a> – Learn how to identify strategic opportunities and risks</li>
             <li><a href="/help" style={{ color: LINK_COLOR }}>Help Home</a> – Return to the main help index</li>
             <li><a href="https://www.uspto.gov/web/patents/classification/cpc/html/cpc.html" target="_blank" rel="noopener noreferrer" style={{ color: LINK_COLOR }}>USPTO CPC Reference</a> – Official CPC code definitions</li>
@@ -423,7 +423,7 @@ function InputDescription({ label, description, example, tips }: { label: string
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{label}</h4>
-      <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>
       <div style={{ marginTop: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Tips:</div>
@@ -439,7 +439,7 @@ function ActionDescription({ button, description, when }: { button: string; desc
   return (
     <div>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{button}</h4>
-      <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: "8px 0 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>
         <strong>When to use:</strong> {when}
       </p>
@@ -460,7 +460,7 @@ function TrendOption({ mode, description }: { mode: string; description: string 
   return (
     <div>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{mode}</h4>
-      <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
 }
@@ -473,7 +473,7 @@ function WorkflowStep({ step, title, description }: { step: string; title: strin
       </div>
       <div style={{ flex: 1 }}>
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{title}</h4>
-        <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+        <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       </div>
     </div>
   );
@@ -483,7 +483,7 @@ function AlertAction({ action, description }: { action: string; description: str
   return (
     <div>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{action}</h4>
-      <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
 }
@@ -497,7 +497,7 @@ function FlowStep({ num, title, description }: { num: string; title: string; des
         </div>
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{title}</h4>
       </div>
-      <p style={{ margin: "10px 0 0 44px", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "10px 0 0 44px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
 }
@@ -506,7 +506,7 @@ function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#f0fdf4" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#166534" }}>{title}</h4>
-      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{tip}</p>
+      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{tip}</p>
     </div>
   );
 }
@@ -515,7 +515,7 @@ function Troubleshoot({ issue, solution }: { issue: string; solution: string }) 
   return (
     <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#fef3c7" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#92400e" }}>Issue: {issue}</h4>
-      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}><strong>Solution:</strong> {solution}</p>
+      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>Solution:</strong> {solution}</p>
     </div>
   );
 }

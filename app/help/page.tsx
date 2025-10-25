@@ -14,23 +14,29 @@ export default function HelpIndexPage() {
         {/* Header */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Help</h1>
-          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 0 }}>
-            Welcome to Patent Scout, a data and analytics platform for AI/ML IP. This help center will guide you through the features and workflows for AI/ML IP reference and research.
+          <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
+            Welcome to Patent Scout, a data and analytics platform for AI/ML IP. This help center will guide you through the features and workflows for AI/ML IP reference and research enabled by the Patent Scout platform.
           </p>
         </div>
 
         {/* Overview */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Patent Scout?</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is an advanced IP analytics platform specific to AI/ML. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML and the entities investing in this space. The platform is built on a relational database system, central to which is a corpus of 52,000+ AI/ML-related patents and publications dating back to 2023. Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry in the corpus corresponds to a patent or application with multiple associated embeddings. The multiple embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields. These dynamic capabilities allow Patent Scout to meet a wide range of requirements that accompany different business objectives. 
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 4 }}>
+            Patent Scout is an advanced IP analytics platform specific to AI/ML. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML and the entities investing in this space. The platform is built on a relational database system, central to which is a corpus of 53,000+ AI/ML-related patents and publications dating back to 2023. 
           </p>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 4 }}>
+            Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry in the corpus corresponds to a patent or application with multiple associated embeddings. The multiple embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields. These dynamic capabilities allow Patent Scout to meet a wide range of requirements that accompany different business objectives. 
+          </p>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
+            Metadata and context for each entry further include the assignee name. The Patent Scout platform normalizes each assignee name to ensure that the AI/ML IP assets held by different entities are accurately represented and easily searchable. As an example, one company is listed with ten different variations in assignee name across approximately 1,400 patents and applications in the Patent Scout database due to various misspellings, abbreviations, and other inconsistencies. Patent Scout normalizes these variations to ensure that all filings associated with the same entity are correctly grouped together under a single, consistent assignee name.
+          </p>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Patent Scout is designed with a streamlined user interface divided between two primary service pages:
           </p>
-          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
+          <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
-            <li><strong>Whitespace Analysis</strong>: Identify strategic opportunities and competitive risks through graph-based analysis of patent landscapes, with confidence-scored signals highlighting focus convergence, emerging gaps, crowd-out risks, and bridging opportunities.</li>
+            <li><strong>Whitespace Analysis</strong>: Identify strategic opportunities and competitive risks through graph-based analysis of AI/ML IP landscapes, with confidence-scored signals highlighting focus convergence, emerging gaps, crowd-out risks, and bridging opportunities.</li>
           </ul>
         </div>
 
@@ -66,8 +72,11 @@ export default function HelpIndexPage() {
               </a>
             </div>
 
-            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-              The Search & Trends page is the primary interface for discovering and monitoring patent filings. It combines powerful search capabilities with visual trend analytics to help you understand the patent landscape.
+            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 4 }}>
+              The Search & Trends page is the primary interface for discovering and monitoring patent filings. It combines powerful search capabilities with visual trend analytics to provide an easily comprehensible view of the AI/ML IP landscape. The intuitive interface allows users to construct complex queries using both keywords and semantic similarity, filter results by various metadata fields, and visualize filing trends over time, by CPC classification, or by assignee. 
+            </p>
+            <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
+              The Search & Trends page further includes the option to save a particular search configuration as an alert. The Patent Scout platform updates its database on a weekly basis, following the USPTO schedule for new patent and application publications. Saved searches are automatically run when new data becomes available, and alerts are configured to automatically notify users when new patents and publications match their search criteria.
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
@@ -80,7 +89,7 @@ export default function HelpIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Best For</strong>: Ongoing competitive monitoring, prior art searches, technology landscape analysis, and staying current with new patent filings in your domain.
+                <strong>Best For</strong>: Ongoing competitive monitoring, prior art searches, freedom-to-operate and clearance analysis, and staying current with AI/ML IP as it relates to specific technology areas. The graph is particularly useful for visualizing relationships between patents and publications, identifying areas in which companies have a concentrated focus, and spotting emerging trends in the AI/ML IP landscape.
               </p>
             </div>
           </div>
@@ -114,8 +123,11 @@ export default function HelpIndexPage() {
               </a>
             </div>
 
-            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 16 }}>
-              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, it identifies where competitors are converging, where gaps exist, and where bridge opportunities might lie.
+            <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 4 }}>
+              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. Example patents and publications driving each signal are provided to give concrete context to the analysis.
+            </p>
+            <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
+              In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas. A “bridging” patent/publication is one in which the invention has one or more properties enabling multiple patent filings across different fields of application. Bridging patents have been shown to be especially commercially valuable, as they can enable new combinations of technologies and applications. <i>See, e.g.</i>, J. Choi & J. Yoon, <i>Measuring knowledge exploration distance at the patent level</i>, 16 Journal of Infometrics 101286 (2002); M. Moehrle & J. Frischkorn, <i>Bridge strongly or focus – An analysis of bridging patents in four application fields of carbon fiber reinforcements</i>, 15 Journal of Informetrics 101138 (2001).
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
@@ -128,7 +140,7 @@ export default function HelpIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Best For</strong>: Strategic patent investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in your technology area.
+                <strong>Best For</strong>: Strategic IP investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
               </p>
             </div>
           </div>
@@ -191,11 +203,11 @@ export default function HelpIndexPage() {
         {/* Support */}
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Need Help?</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             If you have questions or encounter issues not covered in this documentation, please contact our support team:
           </p>
           <div style={{ marginTop: 16 }}>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, margin: 0 }}>
+            <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
               <strong>Email</strong>: <a href="mailto:support@phaethon.llc" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
               <strong>Subject Line</strong>: Patent Scout Support Request<br />
               <strong>Website</strong>: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" style={{ color: LINK_COLOR }}>https://phaethonorder.com</a>
@@ -228,7 +240,7 @@ function InfoSection({ title, content }: { title: string; content: React.ReactNo
   return (
     <div>
       <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>{title}</h3>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{content}</p>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{content}</p>
     </div>
   );
 }

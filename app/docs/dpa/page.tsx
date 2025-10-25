@@ -674,21 +674,21 @@ export default function DataProcessingAgreementPage() {
             
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Subject Matter of Processing</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 Provision of the Patent Scout service, including patent search, trend analysis, whitespace identification, alert delivery, data export, and customer support.
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Duration of Processing</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 For the term of the Terms of Service plus any retention periods required by applicable law (up to 7 years for financial records).
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Nature and Purpose of Processing</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 The Company Processes Personal Data to:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -706,7 +706,7 @@ export default function DataProcessingAgreementPage() {
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Types of Personal Data</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 The Company Processes the following categories of Personal Data:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -720,14 +720,14 @@ export default function DataProcessingAgreementPage() {
                 <li><strong>Communication Data</strong>: Support messages, feedback submissions;</li>
                 <li><strong>User-Generated Content</strong>: Saved searches, notes, annotations (if enabled).</li>
               </ul>
-              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR, fontWeight: 600 }}>
+              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, fontWeight: 600 }}>
                 Note: Publicly available patent data (titles, abstracts, claims, inventor names from government databases) is NOT considered Personal Data of Customer's Data Subjects.
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Categories of Data Subjects</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 Personal Data relates to the following Data Subjects:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -741,7 +741,7 @@ export default function DataProcessingAgreementPage() {
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Special Categories of Data</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 The Company does NOT Process special categories of Personal Data (e.g., racial or ethnic origin, political opinions, religious beliefs, health data, biometric data, genetic data) under this DPA.
               </p>
             </div>
@@ -750,7 +750,7 @@ export default function DataProcessingAgreementPage() {
           <div id="annex-b" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex B: Technical and Organizational Security Measures</h2>
             
-            <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+            <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
               The Company implements and maintains the following technical and organizational measures to protect Personal Data:
             </p>
 
@@ -900,7 +900,7 @@ export default function DataProcessingAgreementPage() {
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>13. Certifications and Compliance</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 The Company and/or its Sub-processors maintain the following certifications and comply with industry standards:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -913,7 +913,7 @@ export default function DataProcessingAgreementPage() {
               </ul>
             </div>
 
-            <p style={{ marginTop: 20, fontSize: 13, lineHeight: 1.7, color: TEXT_COLOR, fontStyle: "italic" }}>
+            <p style={{ marginTop: 20, fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, fontStyle: "italic" }}>
               Note: The Company reviews and updates these security measures regularly to address evolving threats and maintain compliance with Data Protection Laws. Specific implementations may vary based on risk assessments and technological advancements.
             </p>
           </div>
@@ -921,7 +921,7 @@ export default function DataProcessingAgreementPage() {
           <div id="annex-c" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex C: List of Authorized Sub-processors</h2>
             
-            <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+            <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
               The Company currently engages the following Authorized Sub-processors to Process Personal Data on behalf of Customer:
             </p>
 
@@ -997,13 +997,13 @@ export default function DataProcessingAgreementPage() {
             </div>
 
             <div style={{ marginTop: 24, padding: 16, background: "white", borderRadius: 6, border: "1px solid #e5e7eb" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Note on third-party API access</strong>: The Company sends patent and publication text (titles, abstracts, claims) to a third-party API for embedding generation to enable semantic search functionality. <strong>No Personal Data of Customer's Data Subjects is sent to the API.</strong> Patent data sent to the API consists of publicly available government records and does not contain user queries, account information, or other Personal Data.
               </p>
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "white", borderRadius: 6, border: "1px solid #e5e7eb" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Updates to Sub-processor List</strong>: This list may be updated from time to time in accordance with Section 6.3 of the DPA. Customer will receive 30 days' advance notice of any additions or changes. The current list is always available at this URL.
               </p>
             </div>
@@ -1016,13 +1016,13 @@ export default function DataProcessingAgreementPage() {
           <div id="annex-d" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex D: Standard Contractual Clauses</h2>
             
-            <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+            <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
               For transfers of Personal Data from the European Economic Area (EEA), United Kingdom, or Switzerland to the United States or other countries without an adequacy decision, the parties agree to be bound by the following Standard Contractual Clauses (SCCs):
             </p>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>1. EU Standard Contractual Clauses (SCCs)</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 The parties agree to comply with the Standard Contractual Clauses for the transfer of personal data to processors established in third countries adopted by the European Commission pursuant to:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -1030,34 +1030,34 @@ export default function DataProcessingAgreementPage() {
                 <li><strong>Module Two</strong> (Controller to Processor) applies to transfers where Customer is the data controller and Company is the data processor;</li>
                 <li>The SCCs are incorporated by reference and form an integral part of this DPA.</li>
               </ul>
-              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 <strong>Access to SCCs</strong>: The full text of the EU SCCs is available at: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj</a>
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>2. UK Standard Contractual Clauses</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 For transfers of Personal Data from the United Kingdom, the parties agree to comply with the UK's International Data Transfer Agreement (IDTA) or the UK Addendum to the EU SCCs, as applicable, issued by the UK Information Commissioner's Office.
               </p>
-              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 <strong>Access to UK IDTA/Addendum</strong>: <a href="https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/</a>
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>3. Swiss Standard Contractual Clauses</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 For transfers of Personal Data from Switzerland, the parties agree to comply with the Swiss Federal Data Protection and Information Commissioner's (FDPIC) approved standard contractual clauses or equivalent mechanisms as required by the Swiss Federal Act on Data Protection (FADP).
               </p>
-              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 <strong>Access to Swiss SCCs</strong>: <a href="https://www.edoeb.admin.ch/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.edoeb.admin.ch/</a>
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>4. Completing the SCCs</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 For the purposes of the Standard Contractual Clauses:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -1077,7 +1077,7 @@ export default function DataProcessingAgreementPage() {
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>5. Supplementary Measures</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 In accordance with the Schrems II decision (Case C-311/18) and subsequent guidance from the European Data Protection Board (EDPB), the Company implements the following supplementary measures to ensure adequate protection for transfers to the United States:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -1096,14 +1096,14 @@ export default function DataProcessingAgreementPage() {
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>6. Transfer Impact Assessment</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 Customer is responsible for conducting a Transfer Impact Assessment (TIA) to determine whether the safeguards provided by the SCCs and supplementary measures offer adequate protection for the specific data transfer. The Company will provide reasonable assistance and documentation to support Customer's TIA upon request.
               </p>
             </div>
 
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>7. Government Access Requests</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
                 The Company commits to:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, fontSize: 14, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
@@ -1116,7 +1116,7 @@ export default function DataProcessingAgreementPage() {
             </div>
 
             <div style={{ marginTop: 20, padding: 16, background: "white", borderRadius: 6, border: "1px solid #e5e7eb" }}>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: TEXT_COLOR, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Note</strong>: The Company has never received a National Security Letter, FISA order, or any other classified government request for Customer data as of the date of this DPA. This statement will be updated if circumstances change and disclosure is legally permissible.
               </p>
             </div>
@@ -1154,7 +1154,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section style={{ marginTop: 32 }}>
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>{title}</h2>
-      <div style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{children}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{children}</div>
     </section>
   );
 }
@@ -1163,7 +1163,7 @@ function Subsection({ title, children }: { title: string; children: React.ReactN
   return (
     <div style={{ marginTop: 20 }}>
       <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 12 }}>{title}</h3>
-      <div style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{children}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{children}</div>
     </div>
   );
 }

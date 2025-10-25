@@ -6,11 +6,11 @@
 The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific whitespace analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
 
 ## Feature Highlights
-- Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)).
+- Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)).
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
 - Whitespace analytics on focus keyword(s) and/or CPC(s) using igraph, UMAP, Leiden clustering, and signal scoring ordered by Assignee, and visually indicated through an interactive Sigma.js graph ([app/whitespace_api.py](app/whitespace_api.py), [app/whitespace_signals.py](app/whitespace_signals.py), [components/SigmaWhitespaceGraph.tsx](components/SigmaWhitespaceGraph.tsx), [app/whitespace/page.tsx](app/whitespace/page.tsx)).
 - Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
-- Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent coverage.
+- Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent and application coverage.
 - Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
 - Automated Mailgun/console alert notifications for saved queries packaged as standalone runner ([alerts_runner.py](alerts_runner.py)).
 - User-specific whitespace analysis with isolated graph computation and personalized signal detection.
@@ -226,7 +226,7 @@ python alerts_runner.py
 ## Additional Data Pipeline Scripts
 
 ### USPTO PEDS API Loader (`etl_uspto.py`)
-Alternative to BigQuery ingestion, loads patent data directly from the USPTO Patent Examination Data System API. Filters by CPC codes and AI keywords locally:
+Alternative to BigQuery ingestion, loads patent publication data directly from the USPTO Open Data Portal (ODP) API. Filters by CPC codes and AI keywords locally:
 ```bash
 python etl_uspto.py \
   --dsn "postgresql://user:pass@host/db?sslmode=require" \
@@ -236,7 +236,7 @@ python etl_uspto.py \
 ```
 
 ### USPTO Bulk XML Parser (`etl_xml_fulltext.py`)
-Parses USPTO bulk XML files (weekly patent grant feeds) to extract full-text abstracts and claims. Updates `patent_staging` table with parsed content:
+Parses USPTO bulk XML files (weekly patent grant and publication feeds) to extract full-text abstracts and claims. Updates `patent_staging` table with parsed content:
 ```bash
 python etl_xml_fulltext.py \
   --xml resources/ipa250220.xml \
@@ -262,9 +262,9 @@ python add_canon_name.py \
 ```
 
 ## Whitespace Analytics
-[app/whitespace_api.py](app/whitespace_api.py) builds user-specific patent graphs by selecting an embedding model (`WS_EMBEDDING_MODEL`), computing cosine KNN neighborhoods, applying Leiden community detection, and scoring whitespace intensity per assignee. Signal detection logic in [app/whitespace_signals.py](app/whitespace_signals.py) evaluates focus convergence, emerging gaps, crowd-out risk, and bridge opportunities based on patent clustering patterns and assignee behavior.
+[app/whitespace_api.py](app/whitespace_api.py) builds user-specific patent and publication graphs by selecting an embedding model (`WS_EMBEDDING_MODEL`), computing cosine KNN neighborhoods, applying Leiden community detection, and scoring whitespace intensity per assignee. Signal detection logic in [app/whitespace_signals.py](app/whitespace_signals.py) evaluates focus convergence, emerging gaps, crowd-out risk, and bridge opportunities based on patent and publication clustering patterns and assignee behavior.
 
-The `/whitespace/graph` endpoint accepts filters (keywords, CPCs, date ranges), neighbor counts, and layout configuration. The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) renders the response with Sigma.js and Force-Atlas2 layout, surfaces per-assignee signal cards, and displays detailed patent examples. User-specific whitespace tables ensure isolated analysis per authenticated user.
+The `/whitespace/graph` endpoint accepts filters (keywords, CPCs, date ranges), neighbor counts, and layout configuration. The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) renders the response with Sigma.js and Force-Atlas2 layout, surfaces per-assignee signal cards, and displays detailed patent and publication examples. User-specific whitespace tables ensure isolated analysis per authenticated user.
 
 ## Screenshots
 - Search & Trends UI – ![docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)

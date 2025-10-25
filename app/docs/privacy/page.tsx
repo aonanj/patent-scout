@@ -832,7 +832,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section style={{ marginTop: 32 }}>
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>{title}</h2>
-      <div style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{children}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{children}</div>
     </section>
   );
 }
@@ -841,7 +841,7 @@ function Subsection({ title, children }: { title: string; children: React.ReactN
   return (
     <div style={{ marginTop: 20 }}>
       <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 12 }}>{title}</h3>
-      <div style={{ fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>{children}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{children}</div>
     </div>
   );
 }

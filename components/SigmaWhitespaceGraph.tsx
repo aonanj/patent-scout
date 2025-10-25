@@ -495,7 +495,11 @@ export default function SigmaWhitespaceGraph({
       renderer.kill();
       rendererRef.current = null;
       graphRef.current = null;
-      container.removeChild(tooltip);
+      if (tooltip.parentNode === container) {
+        container.removeChild(tooltip);
+      } else {
+        tooltip.remove();
+      }
     };
   }, [data, clusterColor, sizeForNode, updateGraphHighlights]);
 
