@@ -261,13 +261,13 @@ function BillingContent() {
         <div className="mt-12 p-6 bg-white rounded-lg border border-slate-200">
           <h3 className="text-sm font-semibold mb-3" style={{ color: '#102A43' }}>Billing & Technical Support</h3>
           <p className="text-sm text-slate-600 mb-4">
-            For subscription, billing, and other technical issues, please contact {" "}
+            For subscription, billing, and other technical issues, please contact <strong>{" "}
             <a href="mailto:support@phaethon.llc" className="text-sky-600 hover:underline">
               support@phaethon.llc
-            </a>.
+            </a></strong>.
           </p>
           <p className="text-sm text-slate-600">
-            For urgent issues, we are also available via phone and text at (949) 328-0878.
+            For urgent issues, we are also available via phone and text at <strong>(949) 328-0878</strong>.
           </p>
           <p className="text-sm text-slate-600">
            Please include your account email in your message.
@@ -275,7 +275,7 @@ function BillingContent() {
           <p className="text-sm text-slate-600">
            Phone and text support require an active subscription. 
           </p>
-          <div className="flex gap-4" style={{ textAlign: "center", fontSize: "12px", justifyContent: "center"}}>
+          <div className="flex gap-4 mt-4" style={{ textAlign: "center", fontSize: "12px", justifyContent: "center"}}>
             <a>2025 © Phaethon Order LLC</a> | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
           </div>
         </div>

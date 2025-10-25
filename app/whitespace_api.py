@@ -300,12 +300,13 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
       e.pub_id,
       e.embedding,
       p.pub_date,
-      p.assignee_name,
+      COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name,
       p.title,
       p.abstract,
       ({focus_expr}) AS is_focus
     FROM patent_embeddings e
     JOIN patent p USING (pub_id)
+    LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id
     WHERE {' AND '.join(where)}
     ORDER BY is_focus DESC, p.pub_date DESC, e.pub_id
     """

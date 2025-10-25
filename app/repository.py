@@ -43,7 +43,8 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
     where: list[str] = ["1=1"]
 
     if f.assignee:
-        where.append("p.assignee_name ILIKE %s")
+        # Filter against canonical when available; fall back to raw assignee
+        where.append("COALESCE(can.canonical_assignee_name, p.assignee_name) ILIKE %s")
         args.append(f"%{f.assignee}%")
 
     if f.cpc:
@@ -127,13 +128,13 @@ async def export_rows(
         # Keyword-only path: use SQL with optional TS ranking.
         args: list[object] = []
         select_core = (
-            "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.priority_date, "
+            "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.priority_date, "
             "(SELECT string_agg(DISTINCT \n"
             "        (COALESCE(c->>'section','') || COALESCE(c->>'class','') || COALESCE(c->>'subclass','') || \n"
             "         COALESCE(c->>'group','') || COALESCE('/' || (c->>'subgroup'), '')), ', ')\n"
             "   FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c) AS cpc_str"
         )
-        from_clause = "FROM patent p"
+        from_clause = "FROM patent p LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
         where = [_filters_sql(filters, args)]
 
         if keywords:
@@ -175,7 +176,7 @@ async def export_rows(
     topk = max(limit, EXPORT_SEMANTIC_TOPK)
     args: list[object] = []
     select_core = (
-        "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.priority_date, "
+        "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.priority_date, "
         f"(e.embedding <=> %s{_VEC_CAST}) AS dist, "
         "(SELECT string_agg(DISTINCT \n"
         "        (COALESCE(c->>'section','') || COALESCE(c->>'class','') || COALESCE(c->>'subclass','') || \n"
@@ -183,7 +184,7 @@ async def export_rows(
         "   FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c) AS cpc_str"
     )
     args.append(list(query_vec))
-    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id"
+    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
     where = [_filters_sql(filters, args)]
     where.append("e.model LIKE '%%|ta'")
     if keywords:
@@ -240,9 +241,9 @@ async def search_hybrid(
     if query_vec is None:
         args: list[object] = []
         select_core = (
-            "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc"
+            "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.kind_code, p.cpc"
         )
-        from_clause = "FROM patent p"
+        from_clause = "FROM patent p LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
         joins: list[str] = []
         where = [_filters_sql(filters, args)]
 
@@ -281,12 +282,12 @@ async def search_hybrid(
     topk = SEMANTIC_TOPK
     args: list[object] = []
     select_core = (
-        "SELECT p.pub_id, p.title, p.abstract, p.assignee_name, p.pub_date, p.kind_code, p.cpc, "
+        "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.kind_code, p.cpc, "
         f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
     )
     args.append(list(query_vec))
 
-    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id"
+    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
     where = [_filters_sql(filters, args)]
     # keep model constraint if desired
     where.append("e.model LIKE '%%|ta'")
@@ -360,11 +361,11 @@ async def trend_volume(
         topk = SEMANTIC_TOPK
         args: list[object] = []
         select_core = (
-            "SELECT p.pub_id, p.pub_date, p.assignee_name, p.cpc, "
+            "SELECT p.pub_id, p.pub_date, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.cpc, "
             f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
         )
         args.append(list(query_vec))
-        from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id"
+        from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
         where_parts = [_filters_sql(filters, args)]
         where_parts.append("e.model LIKE '%%|ta'")
         if keywords:
@@ -416,7 +417,7 @@ async def trend_volume(
 
     # Non-vector path: keep SQL aggregation as before
     args: list[object] = []
-    from_clause = "FROM patent p"
+    from_clause = "FROM patent p LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
     joins: list[str] = []
     where_clauses = [_filters_sql(filters, args)]
 
@@ -430,7 +431,7 @@ async def trend_volume(
         bucket_sql = "( (cpc_agg->>'section') || COALESCE(cpc_agg->>'class', '') )"
         from_clause += ", LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) cpc_agg"
     elif group_by == "assignee":
-        bucket_sql = "p.assignee_name"
+        bucket_sql = "COALESCE(can.canonical_assignee_name, p.assignee_name)"
     else:
         raise ValueError("invalid group_by")
 
@@ -455,20 +456,21 @@ async def get_patent_detail(
 ) -> PatentDetail | None:
     """Fetch one patent record by publication number."""
     sql = """
-    SELECT pub_id,
-           application_number,
-           kind_code,
-           pub_date,
-           filing_date,
-           title,
-           abstract,
-           claims_text,
-           assignee_name,
-           inventor_name,
-           cpc
-    FROM patent
-    WHERE pub_id = %s
-    LIMIT 1;
+        SELECT p.pub_id,
+               p.application_number,
+               p.kind_code,
+               p.pub_date,
+               p.filing_date,
+               p.title,
+               p.abstract,
+               p.claims_text,
+               COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name,
+               p.inventor_name,
+               p.cpc
+        FROM patent p
+        LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id
+        WHERE p.pub_id = %s
+        LIMIT 1;
     """
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(sql, [pub_id])
