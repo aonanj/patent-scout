@@ -200,7 +200,7 @@ export default function WhitespaceHelpPage() {
               type="Neighbor Linking Potential Near Focus Area"
               tone="opportunity"
               shortName="bridge"
-              description="Identifies patents and publications that act as bridges between the focus area and other technology clusters. These are high-degree nodes (hubs) that connect otherwise disconnected communities, suggesting cross-domain innovation opportunities. (A “bridging” patent/publication is one in which the invention has one or more properties enabling patent filings across different fields of application.)"
+              description="Identifies patents and publications that act as bridges between the focus area and other technology clusters. These are high-degree nodes (hubs) that connect otherwise disconnected communities, suggesting cross-domain innovation opportunities. (A “bridging” patent/publication is one in which the invention is directed to one technology area but the scope of protection can be broadened to cover other areas.)"
               interpretation="A strong bridge signal highlights patents and publications that could serve as foundational IP for multi-domain applications. These are valuable for portfolio breadth and licensing opportunities."
               exampleRationale="NVIDIA has 5 patents with high betweenness centrality (i.e., how essential a node is for connecting different parts of the graph) (avg 0.62) linking 'AI training' and 'edge inference'. These patents bridge two major technology areas and could enable hybrid solutions."
             />

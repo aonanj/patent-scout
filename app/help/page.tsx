@@ -126,7 +126,7 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas (<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>).
+              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
                Example patents and publications driving each signal are provided to give concrete context to the analysis. The table of examples can be exported as a PDF for offline reference and research.             
@@ -190,7 +190,7 @@ export default function HelpIndexPage() {
             <Footnote
               id="footnote1"
               title="“Bridging” Patents and Publications"
-              description="A “bridging” patent/publication is one in which the invention has one or more properties enabling multiple patent filings across different fields of application. Bridging patents have been shown to be especially commercially valuable, as they can enable new combinations of technologies and applications. See, e.g., J. Choi & J. Yoon, Measuring knowledge exploration distance at the patent level, 16 Journal of Infometrics 101286 (2002) (linked here). See also M. Moehrle & J. Frischkorn, Bridge strongly or focus – An analysis of bridging patents in four application fields of carbon fiber reinforcements, 15 Journal of Informetrics 101138 (2001)."
+              description="A “bridging” patent/publication is one in which the invention is directed to one technology area but the scope of protection can be broadened to cover other areas. Example: a patent claiming an improvement to internal combustion engines in automobiles, and the improvement can also be used in aviation, marine, and other internal combustion engines applications. Bridging patents have been shown to be especially commercially valuable. See, e.g., Choi & Yoon, Measuring Knowledge Exploration Distance at the Patent Level, 16 J. Informetr. 101286 (2002) (linked here). See also Moehrle & Frischkorn, Bridge Strongly or Focus — An Analysis of Bridging Patents [...], 15 J. Informetr. 101138 (2001)."
               href="https://ideas.repec.org/a/eee/infome/v16y2022i2s1751157722000384.html"
               external={true}
             />
@@ -264,9 +264,9 @@ function ResourceLink({ title, description, href, external }: { title: string; d
         className="hover:underline"
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        style={{ fontSize: 15, fontWeight: 600, color: LINK_COLOR, textDecoration: "none" }}
+        style={{ fontSize: 15, fontWeight: 600, color: LINK_COLOR }}
       >
-        {title} {external && "↗"}
+        {title} {external && " ⎘"}
       </a>
       <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#627D98" }}>{description}</p>
     </div>
@@ -276,13 +276,13 @@ function ResourceLink({ title, description, href, external }: { title: string; d
 function Footnote({ id, title, description, href, external }: { id: string; title: string; description: string; href: string; external: boolean }) {
   return (
     <div id={id} style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
-      (*) <a
+      * <a
         href={href}
         className="hover:underline"
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        style={{ fontSize: 15, fontWeight: 600, color: LINK_COLOR, textDecoration: "none" }}
-      >{title} {external && "↗"}</a>
+        style={{ fontSize: 15, fontWeight: 600, color: LINK_COLOR }}
+      >{title} {external && " ⎘"}</a>
       <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#627D98" }}>{description}</p>
     </div>
   );

@@ -28,6 +28,21 @@ SEARCH_EXPR = (
     "setweight(to_tsvector('english', coalesce(p.claims_text,'')),'C')"
 )
 
+CANONICAL_ASSIGNEE_LATERAL = """
+LEFT JOIN LATERAL (
+    SELECT
+        string_agg(name, ', ' ORDER BY position, name) AS canonical_assignee_name
+    FROM (
+        SELECT DISTINCT
+            can2.canonical_assignee_name AS name,
+            COALESCE(pa.position, 32767) AS position
+        FROM patent_assignee pa
+        JOIN canonical_assignee_name can2 ON can2.id = pa.canonical_id
+        WHERE pa.pub_id = p.pub_id
+    ) ordered
+) can ON TRUE
+""".strip()
+
 
 def _dtint(s: int | str | None) -> int | None:
     if s is None:
@@ -134,7 +149,7 @@ async def export_rows(
             "         COALESCE(c->>'group','') || COALESCE('/' || (c->>'subgroup'), '')), ', ')\n"
             "   FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c) AS cpc_str"
         )
-        from_clause = "FROM patent p LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
+        from_clause = f"FROM patent p {CANONICAL_ASSIGNEE_LATERAL}"
         where = [_filters_sql(filters, args)]
 
         if keywords:
@@ -184,7 +199,9 @@ async def export_rows(
         "   FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c) AS cpc_str"
     )
     args.append(list(query_vec))
-    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
+    from_clause = (
+        f"FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id {CANONICAL_ASSIGNEE_LATERAL}"
+    )
     where = [_filters_sql(filters, args)]
     where.append("e.model LIKE '%%|ta'")
     if keywords:
@@ -243,7 +260,7 @@ async def search_hybrid(
         select_core = (
             "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.kind_code, p.cpc"
         )
-        from_clause = "FROM patent p LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
+        from_clause = f"FROM patent p {CANONICAL_ASSIGNEE_LATERAL}"
         joins: list[str] = []
         where = [_filters_sql(filters, args)]
 
@@ -287,7 +304,9 @@ async def search_hybrid(
     )
     args.append(list(query_vec))
 
-    from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
+    from_clause = (
+        f"FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id {CANONICAL_ASSIGNEE_LATERAL}"
+    )
     where = [_filters_sql(filters, args)]
     # keep model constraint if desired
     where.append("e.model LIKE '%%|ta'")
@@ -365,7 +384,9 @@ async def trend_volume(
             f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
         )
         args.append(list(query_vec))
-        from_clause = "FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
+        from_clause = (
+            f"FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id {CANONICAL_ASSIGNEE_LATERAL}"
+        )
         where_parts = [_filters_sql(filters, args)]
         where_parts.append("e.model LIKE '%%|ta'")
         if keywords:
@@ -417,7 +438,7 @@ async def trend_volume(
 
     # Non-vector path: keep SQL aggregation as before
     args: list[object] = []
-    from_clause = "FROM patent p LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id"
+    from_clause = f"FROM patent p {CANONICAL_ASSIGNEE_LATERAL}"
     joins: list[str] = []
     where_clauses = [_filters_sql(filters, args)]
 
@@ -455,7 +476,7 @@ async def get_patent_detail(
     conn: psycopg.AsyncConnection, pub_id: str
 ) -> PatentDetail | None:
     """Fetch one patent record by publication number."""
-    sql = """
+    sql = f"""
         SELECT p.pub_id,
                p.application_number,
                p.kind_code,
@@ -468,7 +489,7 @@ async def get_patent_detail(
                p.inventor_name,
                p.cpc
         FROM patent p
-        LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id
+        {CANONICAL_ASSIGNEE_LATERAL}
         WHERE p.pub_id = %s
         LIMIT 1;
     """

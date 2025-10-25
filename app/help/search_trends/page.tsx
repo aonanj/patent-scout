@@ -61,7 +61,7 @@ export default function SearchTrendsHelpPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Search Interface & Inputs</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-            The search interface provides multiple input fields to refine your patent search. All inputs are debounced (400ms delay) to prevent excessive API calls as you type.
+            The search interface provides multiple input fields to refine your patent search. Inputs no longer auto-submit; make your edits and click <strong>Apply</strong> to run the search so the trend graph and table stay perfectly in sync.
           </p>
 
           <div style={{ display: "grid", gap: 20 }}>
@@ -133,14 +133,14 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <ActionDescription
               button="Apply"
-              description="Manually trigger a search and trend fetch with the current filter state. The search automatically runs when debounced inputs settle, but this button forces an immediate refresh."
-              when="Use when you want to force an immediate update or re-fetch after changing non-debounced inputs like date pickers."
+              description="Runs the search and trend fetch with the current filter state. Searches are only executed when you click Apply, ensuring both the Trend graph and Results table update together."
+              when="Use every time you make changes to semantic text, keywords, assignee, CPC, or date filters. This is now the only way to execute a search."
             />
 
             <ActionDescription
               button="Reset"
-              description="Clears all search inputs (semantic query, keywords, assignee, CPC, date range) and resets the page to 1. Does not automatically re-run the search; click Apply or wait for debounce to fetch new results."
-              when="Use when starting a fresh search from scratch or clearing previous filters."
+              description="Clears all search inputs (semantic query, keywords, assignee, CPC, date range) and prepares for a fresh query. After resetting, click Apply to fetch results with the cleared filters."
+              when="Use when starting a fresh search from scratch or clearing previous filters; remember to apply afterward."
             />
 
             <ActionDescription
@@ -313,7 +313,7 @@ export default function SearchTrendsHelpPage() {
             <FlowStep
               num="2"
               title="Enter Search Criteria"
-              description="Fill in one or more of the input fields (semantic query, keywords, assignee, CPC, date range). All inputs are debounced, so the search will trigger automatically after input is paused."
+              description="Fill in one or more of the input fields (semantic query, keywords, assignee, CPC, date range). Inputs no longer auto-run searches; changes take effect only after you click Apply."
             />
             <FlowStep
               num="3"
@@ -323,7 +323,7 @@ export default function SearchTrendsHelpPage() {
             <FlowStep
               num="4"
               title="Analyze Trends"
-              description="The Trend chart updates automatically to reflect your filters. Use the 'Group by' dropdown to switch between Month, CPC, and Assignee views. Observe filing patterns, spikes, or dominant players."
+              description="After clicking Apply, the Trend chart reflects your current filters. Use the 'Group by' dropdown to switch between Month, CPC, and Assignee views. Observe filing patterns, spikes, or dominant players."
             />
             <FlowStep
               num="5"
@@ -338,7 +338,7 @@ export default function SearchTrendsHelpPage() {
             <FlowStep
               num="7"
               title="Refine or Reset"
-              description="Click 'Reset' to clear all filters and start a new search, or refine your inputs and click 'Apply' to re-run the search immediately."
+              description="Click 'Reset' to clear all filters (no search runs until you hit Apply again), or refine your inputs and click 'Apply' to re-run the search."
             />
           </div>
         </div>

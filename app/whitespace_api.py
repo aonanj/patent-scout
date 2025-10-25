@@ -24,7 +24,7 @@ from sklearn.neighbors import NearestNeighbors
 from infrastructure.logger import get_logger
 
 from .auth import get_current_user
-from .repository import SEARCH_EXPR
+from .repository import CANONICAL_ASSIGNEE_LATERAL, SEARCH_EXPR
 from .subscription_middleware import SubscriptionRequiredError
 from .whitespace_signals import (
     SignalComputation,
@@ -306,7 +306,7 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
       ({focus_expr}) AS is_focus
     FROM patent_embeddings e
     JOIN patent p USING (pub_id)
-    LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id
+    {CANONICAL_ASSIGNEE_LATERAL}
     WHERE {' AND '.join(where)}
     ORDER BY is_focus DESC, p.pub_date DESC, e.pub_id
     """

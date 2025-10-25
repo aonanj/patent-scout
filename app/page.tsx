@@ -15,15 +15,6 @@ type SearchHit = {
 
 type TrendPoint = { label: string; count: number };
 
-function useDebounced<T>(value: T, delay = 400) {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return v;
-}
-
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
@@ -92,6 +83,12 @@ export default function Page() {
   const [trendGroupBy, setTrendGroupBy] = useState<"month" | "cpc" | "assignee">("month");
   const [page, setPage] = useState(1);
   const pageSize = 20;
+  const [appliedQ, setAppliedQ] = useState("");
+  const [appliedSemantic, setAppliedSemantic] = useState("");
+  const [appliedAssignee, setAppliedAssignee] = useState("");
+  const [appliedCpc, setAppliedCpc] = useState("");
+  const [appliedDateFrom, setAppliedDateFrom] = useState("");
+  const [appliedDateTo, setAppliedDateTo] = useState("");
 
   // data
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -106,19 +103,13 @@ export default function Page() {
 
   // Sigma component handles its own container; no external ref needed.
 
-  // Debounce all free-text inputs to prevent API spam and race conditions
-  const qDebounced = useDebounced(q);
-  const semanticDebounced = useDebounced(semantic);
-  const assigneeDebounced = useDebounced(assignee);
-  const cpcDebounced = useDebounced(cpc);
-
   const [dateBounds, setDateBounds] = useState<{ min: string; max: string} | null>(null);
   const [downloading, setDownloading] = useState<null | "csv" | "pdf">(null);
 
   // Save current query as an alert in saved_query table via API route
   const saveAsAlert = useCallback(async () => {
     try {
-      const defaultName = qDebounced || assigneeDebounced || cpcDebounced || "My Alert";
+      const defaultName = appliedQ || appliedAssignee || appliedCpc || "My Alert";
       const name = window.prompt("Alert name", defaultName);
       if (!name) return;
 
@@ -130,13 +121,13 @@ export default function Page() {
       const payload = {
         name,
         filters: {
-          keywords: qDebounced || null,
-          assignee: assigneeDebounced || null,
-          cpc: cpcDebounced || null,
-          date_from: dateFrom || null,
-          date_to: dateTo || null,
+          keywords: appliedQ || null,
+          assignee: appliedAssignee || null,
+          cpc: appliedCpc || null,
+          date_from: appliedDateFrom || null,
+          date_to: appliedDateTo || null,
         },
-        semantic_query: semanticDebounced || null, 
+        semantic_query: appliedSemantic || null,
         schedule_cron: null,
         is_active: true,
       };
@@ -161,7 +152,7 @@ export default function Page() {
     } finally {
       setSaving(false);
     }
-  }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, getAccessTokenSilently]);
+  }, [appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo, getAccessTokenSilently]);
 
 
   const fetchSearch = useCallback(async () => {
@@ -172,13 +163,13 @@ export default function Page() {
       const dateToInt = (d: string) => d ? parseInt(d.replace(/-/g, ""), 10) : undefined;
 
       const payload = {
-        keywords: qDebounced || undefined,
-        semantic_query: semanticDebounced || undefined,
+        keywords: appliedQ || undefined,
+        semantic_query: appliedSemantic || undefined,
         filters: {
-          assignee: assigneeDebounced || undefined,
-          cpc: cpcDebounced || undefined,
-          date_from: dateToInt(dateFrom),
-          date_to: dateToInt(dateTo),
+          assignee: appliedAssignee || undefined,
+          cpc: appliedCpc || undefined,
+          date_from: dateToInt(appliedDateFrom),
+          date_to: dateToInt(appliedDateTo),
         },
         limit: pageSize,
         offset: (page - 1) * pageSize,
@@ -204,7 +195,7 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }, [getAccessTokenSilently, page, pageSize, qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
+  }, [getAccessTokenSilently, page, pageSize, appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo]);
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
@@ -214,12 +205,12 @@ export default function Page() {
       const dateToInt = (d: string) => (d ? parseInt(d.replace(/-/g, ""), 10) : undefined);
 
       const p = new URLSearchParams();
-      if (qDebounced) p.set("q", qDebounced);
-      if (semanticDebounced) p.set("semantic_query", semanticDebounced);
-      if (assigneeDebounced) p.set("assignee", assigneeDebounced);
-      if (cpcDebounced) p.set("cpc", cpcDebounced);
-      if (dateFrom) p.set("date_from", dateToInt(dateFrom)!.toString());
-      if (dateTo) p.set("date_to", dateToInt(dateTo)!.toString());
+      if (appliedQ) p.set("q", appliedQ);
+      if (appliedSemantic) p.set("semantic_query", appliedSemantic);
+      if (appliedAssignee) p.set("assignee", appliedAssignee);
+      if (appliedCpc) p.set("cpc", appliedCpc);
+      if (appliedDateFrom) p.set("date_from", dateToInt(appliedDateFrom)!.toString());
+      if (appliedDateTo) p.set("date_to", dateToInt(appliedDateTo)!.toString());
       p.set("group_by", trendGroupBy);
 
       const res = await fetch(`/api/trend/volume?${p.toString()}`, {
@@ -272,15 +263,11 @@ export default function Page() {
     } finally {
       setTrendLoading(false);
     }
-  }, [getAccessTokenSilently, qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo, trendGroupBy]);
+  }, [getAccessTokenSilently, appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo, trendGroupBy]);
 
   // whitespace analysis moved to /whitespace page
 
   // NOTE: rendering is now handled by SigmaWhitespaceGraph component below.
-
-  useEffect(() => {
-    setPage(1);
-  }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -314,8 +301,8 @@ export default function Page() {
     fetchDateBounds();
   }, [getAccessTokenSilently, isAuthenticated, isLoading]);
 
-  const displayedDateFrom = dateFrom || (dateBounds?.min ?? '');
-  const displayedDateTo = dateTo || (dateBounds?.max ?? '');
+  const displayedDateFrom = appliedDateFrom || (dateBounds?.min ?? '');
+  const displayedDateTo = appliedDateTo || (dateBounds?.max ?? '');
 
   const totalPages = useMemo(() => {
     if (total === null) return null;
@@ -350,15 +337,15 @@ export default function Page() {
     const dateToInt = (d: string) => (d ? parseInt(d.replace(/-/g, ""), 10) : undefined);
     const p = new URLSearchParams();
     p.set("format", fmt);
-    if (qDebounced) p.set("q", qDebounced);
-    if (semanticDebounced) p.set("semantic_query", semanticDebounced);
-    if (assigneeDebounced) p.set("assignee", assigneeDebounced);
-    if (cpcDebounced) p.set("cpc", cpcDebounced);
-    if (dateFrom) p.set("date_from", String(dateToInt(dateFrom)));
-    if (dateTo) p.set("date_to", String(dateToInt(dateTo)));
+    if (appliedQ) p.set("q", appliedQ);
+    if (appliedSemantic) p.set("semantic_query", appliedSemantic);
+    if (appliedAssignee) p.set("assignee", appliedAssignee);
+    if (appliedCpc) p.set("cpc", appliedCpc);
+    if (appliedDateFrom) p.set("date_from", String(dateToInt(appliedDateFrom)));
+    if (appliedDateTo) p.set("date_to", String(dateToInt(appliedDateTo)));
     p.set("limit", "1000");
     return `/api/export?${p.toString()}`;
-  }, [qDebounced, semanticDebounced, assigneeDebounced, cpcDebounced, dateFrom, dateTo]);
+  }, [appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo]);
 
   const triggerDownload = useCallback(async (fmt: "csv" | "pdf") => {
     try {
@@ -385,6 +372,25 @@ export default function Page() {
       setDownloading(null);
     }
   }, [buildExportUrl, getAccessTokenSilently]);
+
+  const handleApply = useCallback(() => {
+    setAppliedQ(q);
+    setAppliedSemantic(semantic);
+    setAppliedAssignee(assignee);
+    setAppliedCpc(cpc);
+    setAppliedDateFrom(dateFrom);
+    setAppliedDateTo(dateTo);
+    setPage(1);
+  }, [q, semantic, assignee, cpc, dateFrom, dateTo]);
+
+  const handleReset = useCallback(() => {
+    setQ("");
+    setSemantic("");
+    setAssignee("");
+    setCpc("");
+    setDateFrom("");
+    setDateTo("");
+  }, []);
 
   return (
     <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh" }}>
@@ -482,29 +488,11 @@ export default function Page() {
                 />
               </div>
 
-              <button
-                onClick={() => {
-                  setPage(1);
-                  fetchSearch();
-                  fetchTrend();
-                }}
-                style={primaryBtn}
-              >
+              <button onClick={handleApply} style={primaryBtn}>
                 Apply
               </button>
 
-              <button
-                onClick={() => {
-                  setQ("");
-                  setSemantic("");
-                  setAssignee("");
-                  setCpc("");
-                  setDateFrom("");
-                  setDateTo("");
-                  setPage(1);
-                }}
-                style={ghostBtn}
-              >
+              <button onClick={handleReset} style={ghostBtn}>
                 Reset
               </button>
 
