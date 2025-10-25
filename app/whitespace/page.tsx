@@ -452,6 +452,7 @@ export default function WhitespacePage() {
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
   const [lastExamplesContext, setLastExamplesContext] = useState<ExamplesContext | null>(null);
 
+  const requestIdRef = useRef(0);
   const selectedSignal = activeKey?.type ?? null;
 
   const runWhitespaceAnalysis = useCallback(async () => {
@@ -460,6 +461,8 @@ export default function WhitespacePage() {
     setHighlightedNodes([]);
     setActiveKey(null);
     setLastExamplesContext(null);
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     try {
       const token = await getAccessTokenSilently();
       const payload = {
@@ -493,12 +496,18 @@ export default function WhitespacePage() {
         throw new Error(errorData.detail || `HTTP ${res.status}`);
       }
       const data = (await res.json()) as WhitespaceResponse;
-      setResult(data);
+      if (requestId === requestIdRef.current) {
+        setResult(data);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Whitespace analysis failed";
-      setError(message);
+      if (requestId === requestIdRef.current) {
+        setError(message);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [
     alpha,
@@ -514,6 +523,29 @@ export default function WhitespacePage() {
     neighbors,
     resolution,
   ]);
+
+  const handleReset = useCallback(() => {
+    requestIdRef.current += 1;
+    setFocusKeywords("");
+    setFocusCpcLike("");
+    setDateFrom("");
+    setDateTo("");
+    setNeighbors(15);
+    setResolution(0.5);
+    setAlpha(0.8);
+    setBeta(0.5);
+    setLimit(1000);
+    setLayout(true);
+    setDebugMode(false);
+    setAdvancedOpen(false);
+    setLoading(false);
+    setError(null);
+    setResult(null);
+    setOpenAssignees({});
+    setActiveKey(null);
+    setHighlightedNodes([]);
+    setLastExamplesContext(null);
+  }, []);
 
   const handleToggleSignal = useCallback((assignee: string, signal: SignalInfo) => {
     setHighlightedNodes([]);
@@ -850,6 +882,13 @@ export default function WhitespacePage() {
                 disabled={loading || !isAuthenticated}
               >
                 {loading ? "Identifying..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                style={ghostBtn}
+              >
+                Reset
               </button>
             </Row>
             <div>

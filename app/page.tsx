@@ -390,6 +390,13 @@ export default function Page() {
     setCpc("");
     setDateFrom("");
     setDateTo("");
+    setAppliedQ("");
+    setAppliedSemantic("");
+    setAppliedAssignee("");
+    setAppliedCpc("");
+    setAppliedDateFrom("");
+    setAppliedDateTo("");
+    setPage(1);
   }, []);
 
   return (
