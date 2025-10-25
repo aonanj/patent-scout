@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from .auth import ensure_auth0_configured, get_current_user
 from .db import get_conn, init_pool
 from .embed import embed as embed_text
+from .observability import init_sentry_if_configured
 from .payment_api import router as payment_router
 from .repository import export_rows, get_patent_detail, search_hybrid, trend_volume
 from .schemas import (
@@ -58,6 +59,8 @@ else:  # pragma: no cover - optional dependency missing
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # Initialize observability first so startup errors get captured
+    init_sentry_if_configured()
     ensure_auth0_configured()
     ensure_stripe_configured()
     # Initialize pool at startup for early failure if misconfigured.
@@ -518,3 +521,8 @@ async def stripe_webhook(request: Request, conn: Conn) -> dict[str, str]:
     await process_webhook_event(conn, event)
 
     return {"status": "success"}
+
+# ----------------------------- Sentry Integration -----------------------------
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0

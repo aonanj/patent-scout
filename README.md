@@ -181,12 +181,20 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `NEXT_PUBLIC_AUTH0_CLIENT_ID`
 - `NEXT_PUBLIC_AUTH0_AUDIENCE`
 - `BACKEND_URL` – Origin of the FastAPI service consumed by proxy routes.
+- `NEXT_PUBLIC_SENTRY_DSN` – Optional: browser Sentry DSN to capture client errors.
+- `NEXT_PUBLIC_SENTRY_ENVIRONMENT` / `NEXT_PUBLIC_SENTRY_RELEASE` – Optional metadata.
+- `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` / `NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
 
 ### ETL & Alerts
 - `GOOGLE_APPLICATION_CREDENTIALS` – Service account JSON for BigQuery reader access.
 - `AI_CPC_REGEX` – Optional override of CPC filter regex applied in the ETL.
 - `MAILGUN_DOMAIN` / `MAILGUN_API_KEY` / `MAILGUN_FROM_NAME` / `MAILGUN_FROM_EMAIL` / `MAILGUN_BASE_URL` – Alert delivery configuration (falls back to console logging when unset).
 - `EMB_BATCH_SIZE` / `EMB_MAX_CHARS` – Embedding throughput guards used by `etl.py`.
+
+### Observability (FastAPI)
+- `SENTRY_DSN` – Optional: enable Sentry for backend exceptions.
+- `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` – Optional metadata.
+- `SENTRY_TRACES_SAMPLE_RATE` / `SENTRY_PROFILES_SAMPLE_RATE` – Optional performance sampling (0–1).
 
 ## Data Pipeline (`etl.py`)
 `etl.py` loads AI-focused US filings from Google’s public patent publication dataset, normalizes CPC codes, upserts metadata into Postgres, and generates OpenAI embeddings for both title+abstract (`...|ta`) and claims (`...|claims`). Runs are idempotent via the `ingest_log` table and hash-based deduplication. Usage example:
