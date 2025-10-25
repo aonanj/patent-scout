@@ -16,7 +16,7 @@ export default function SentryInit() {
     if (!dsn) return;
 
     // Prevent double init on hot reloads
-    if ((window as any).__sentry_inited) return;
+    if ((window as any).__sentry_inited || (window as any).Sentry) return;
 
     const script = document.createElement("script");
     script.src = "https://browser.sentry-cdn.com/7.120.0/bundle.tracing.min.js";
@@ -55,4 +55,3 @@ export default function SentryInit() {
 
   return null;
 }
-

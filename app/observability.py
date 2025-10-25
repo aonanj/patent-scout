@@ -11,6 +11,7 @@ import os
 
 from infrastructure.logger import get_logger
 
+logger = get_logger()
 
 def init_sentry_if_configured() -> None:
     """Initialize Sentry only when SENTRY_DSN is provided.
@@ -24,6 +25,7 @@ def init_sentry_if_configured() -> None:
     """
     dsn = os.getenv("SENTRY_DSN")
     if not dsn:
+        logger.error("SENTRY_DSN not set; skipping Sentry initialization")
         return
 
     try:
@@ -42,12 +44,14 @@ def init_sentry_if_configured() -> None:
             release=release,
             traces_sample_rate=traces,
             profiles_sample_rate=profiles,
+            enable_logs=True,
+            send_default_pii=True,
             integrations=[
                 StarletteIntegration(),
                 LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
             ],
         )
-        get_logger().info("✓ Sentry initialized for FastAPI (env=%s)", environment)
+        logger.info("✓ Sentry initialized for FastAPI (env=%s)", environment)
     except Exception as exc:  # pragma: no cover - defensive
-        get_logger().error("Failed to initialize Sentry: %s", exc)
+        logger.error("Failed to initialize Sentry: %s", exc)
 
