@@ -185,7 +185,7 @@ function BillingContent() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#e2e8f0] flex items-center justify-center">
+      <div className="min-h-screen bg-[#eaf6ff] flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
           <p className="mt-4 text-sm text-slate-600">Loading...</p>
@@ -214,7 +214,7 @@ function BillingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e2e8f0]">
+    <div className="min-h-screen bg-[#eaf6ff]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -278,7 +278,7 @@ function BillingContent() {
 export default function BillingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#e2e8f0] flex items-center justify-center">
+      <div className="min-h-screen bg-[#eaf6ff] flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
           <p className="mt-4 text-sm text-slate-600">Loading...</p>

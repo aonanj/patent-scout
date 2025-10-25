@@ -68,7 +68,7 @@ const SIGNAL_TONE_LABELS: Record<SignalTone, string> = {
 
 type StatusStyle = { background: string; color: string };
 
-const DEFAULT_STATUS_STYLE: StatusStyle = { background: "#e2e8f0", color: "#475569" };
+const DEFAULT_STATUS_STYLE: StatusStyle = { background: "#eaf6ff", color: "#475569" };
 
 const STATUS_STYLE_PRESETS: Record<SignalTone, Record<SignalStatus, StatusStyle>> = {
   opportunity: {
