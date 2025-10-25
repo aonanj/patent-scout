@@ -259,15 +259,18 @@ function BillingContent() {
 
         {/* Footer Info */}
         <div className="mt-12 p-6 bg-white rounded-lg border border-slate-200">
-          <h3 className="text-sm font-semibold mb-3" style={{ color: '#102A43' }}>Need help?</h3>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: '#102A43' }}>Billing & Technical Support</h3>
           <p className="text-sm text-slate-600 mb-4">
-            Have questions about your subscription or billing? Contact us at{" "}
+            For subscription, billing, and other technical issues, please contact {" "}
             <a href="mailto:support@phaethon.llc" className="text-sky-600 hover:underline">
               support@phaethon.llc
             </a>.
           </p>
+          <p className="text-sm text-slate-600 mb-4">
+            For urgent issues, we are also available via phone and text at (949) 328-0878. Please include your account email in your message. Phone and text support require an active subscription. 
+          </p>
           <div className="flex gap-4" style={{ textAlign: "center", fontSize: "12px", justifyContent: "center"}}>
-            2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
+            <a>2025 © Phaethon Order LLC</a> | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
           </div>
         </div>
       </div>

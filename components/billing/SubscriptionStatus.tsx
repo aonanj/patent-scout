@@ -88,13 +88,13 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Plan */}
           <div>
-            <div className="text-sm text-slate-500 mb-1" style={{ textDecoration: "underline" }}>Plan</div>
+            <div className="text-sm text-slate-500 mb-1 font-medium" style={{ textDecoration: "underline" }}>Plan</div>
             <div className="text-lg font-semibold" style={{ color: '#102A43' }}>{tierDisplay}</div>
           </div>
 
           {/* Status */}
           <div>
-            <div className="text-sm text-slate-500 mb-1" style={{ textDecoration: "underline" }}>Status</div>
+            <div className="text-sm text-slate-500 mb-1 font-medium" style={{ textDecoration: "underline" }}>Status</div>
             <div className="flex items-center gap-2">
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -119,7 +119,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
           {/* Renewal Date */}
           {renewalDate && (
             <div>
-              <div className="text-sm text-slate-500 mb-1" style={{ textDecoration: "underline" }}>
+              <div className="text-sm text-slate-500 mb-1 font-medium" style={{ textDecoration: "underline" }}>
                 {subscription.status === "canceled" ? "Access Until" : "Renews On"}
               </div>
               <div className="text-lg font-semibold" style={{ color: '#102A43' }}>{renewalDate}</div>
@@ -254,7 +254,7 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
         {/* Manage Subscription Button */}
         <button
           onClick={onManage}
-          className="w-full px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors"
+          className="w-1/3 px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors hover:underline"
         >
           Manage Subscription
         </button>
