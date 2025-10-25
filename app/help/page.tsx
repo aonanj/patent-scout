@@ -190,7 +190,7 @@ export default function HelpIndexPage() {
             <Footnote
               id="footnote1"
               title="“Bridging” Patents and Publications"
-              description="A “bridging” patent/publication is one in which the invention is directed to one technology area but the scope of protection can be broadened to cover other areas. Example: a patent claiming an improvement to internal combustion engines in automobiles, and the improvement can also be used in aviation, marine, and other internal combustion engines applications. Bridging patents have been shown to be especially commercially valuable. See, e.g., Choi & Yoon, Measuring Knowledge Exploration Distance at the Patent Level, 16 J. Informetr. 101286 (2002) (linked here). See also Moehrle & Frischkorn, Bridge Strongly or Focus — An Analysis of Bridging Patents [...], 15 J. Informetr. 101138 (2001)."
+              description="A “bridging” patent/publication is one in which the invention is directed to one technology area but the scope of protection can be broadened to cover other areas. Example: a patent claiming an improvement to internal combustion engines in automobiles, and the improvement can also be used in aviation, marine, and other internal combustion engine applications. Bridging patents have been shown to be especially commercially valuable. See, e.g., Choi & Yoon, Measuring Knowledge Exploration Distance at the Patent Level, 16 J. Informetr. 101286 (2002) (linked here). See also Moehrle & Frischkorn, Bridge Strongly or Focus — An Analysis of Bridging Patents [...], 15 J. Informetr. 101138 (2001)."
               href="https://ideas.repec.org/a/eee/infome/v16y2022i2s1751157722000384.html"
               external={true}
             />
@@ -266,7 +266,7 @@ function ResourceLink({ title, description, href, external }: { title: string; d
         rel={external ? "noopener noreferrer" : undefined}
         style={{ fontSize: 15, fontWeight: 600, color: LINK_COLOR }}
       >
-        {title} {external && " ⎘"}
+        {title} {external && "↗︎"}
       </a>
       <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#627D98" }}>{description}</p>
     </div>
@@ -282,7 +282,7 @@ function Footnote({ id, title, description, href, external }: { id: string; titl
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
         style={{ fontSize: 15, fontWeight: 600, color: LINK_COLOR }}
-      >{title} {external && " ⎘"}</a>
+      >{title} {external && "↗︎"}</a>
       <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "#627D98" }}>{description}</p>
     </div>
   );

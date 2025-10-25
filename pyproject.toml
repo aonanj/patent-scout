@@ -1,38 +1,38 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=80.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "patent-scout-api"
 version = "0.1.0"
 description = "Patent Scout FastAPI search service"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 authors = [{name = "Phaethon Order"}]
 dependencies = [
-"fastapi>=0.115",
-"uvicorn[standard]>=0.30",
-"psycopg[binary,pool]>=3.2",
-"pydantic>=2.8",
-"httpx>=0.27",
-"python-dotenv>=1.1",
-"psycopg2-binary>=2.9",
-"google-cloud-bigquery>=3.25",
-"tqdm>=4.67",
-"tenacity>=8.2",
-"openai>=1.107",
+"fastapi>=0.120",
+"uvicorn[standard]>=0.38",
+"psycopg[binary,pool]>=3.2.11",
+"pydantic>=2.12",
+"httpx>=0.28",
+"python-dotenv>=1.1.1",
+"google-cloud-bigquery>=3.38",
+"tqdm>=4.67.1",
+"tenacity>=9.1.2",
+"openai>=2.6.1",
 "asyncpg>=0.30",
-"aiosmtplib>=4.0",
-"stripe>=12.0",
+"aiosmtplib>=5.0",
+"stripe>=13.0",
 ]
 
 [project.optional-dependencies]
 test = [
-"pytest>=8.2",
-"pytest-asyncio>=0.23",
+"pytest>=8.4.2",
+"pytest-asyncio>=1.2",
 ]
 
 [tool.pytest.ini_options]
 addopts = "-q"
+testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.ruff]

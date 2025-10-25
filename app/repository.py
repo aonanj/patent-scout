@@ -295,41 +295,36 @@ async def search_hybrid(
         items = [PatentHit(**row) for row in rows]
         return total, items
 
-    # Vector (semantic) path: rank-only cosine distance with post-filtering
-    topk = SEMANTIC_TOPK
-    args: list[object] = []
+    # Vector (semantic) path: rank by cosine distance while honoring requested pagination
     select_core = (
         "SELECT p.pub_id, p.title, p.abstract, COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name, p.pub_date, p.kind_code, p.cpc, "
         f"(e.embedding <=> %s{_VEC_CAST}) AS dist"
     )
-    args.append(list(query_vec))
-
     from_clause = (
         f"FROM patent p JOIN patent_embeddings e ON p.pub_id = e.pub_id {CANONICAL_ASSIGNEE_LATERAL}"
     )
-    where = [_filters_sql(filters, args)]
-    # keep model constraint if desired
-    where.append("e.model LIKE '%%|ta'")
 
+    filter_args: list[object] = []
+    where_clauses = [_filters_sql(filters, filter_args)]
+    where_clauses.append("e.model LIKE '%%|ta'")
     if keywords:
-        where.append(f"({SEARCH_EXPR}) @@ {tsq}")
-        args.append(keywords)
+        where_clauses.append(f"({SEARCH_EXPR}) @@ {tsq}")
+        filter_args.append(keywords)
 
-    base_query = f"{from_clause} WHERE {' AND '.join(where)}"
-    sql = f"{select_core} {base_query} ORDER BY dist ASC LIMIT {topk}"
+    where_sql = " AND ".join(where_clauses)
+
+    count_query = f"SELECT COUNT(DISTINCT p.pub_id) {from_clause} WHERE {where_sql}"
+    paged_query = f"{select_core} {from_clause} WHERE {where_sql} ORDER BY dist ASC LIMIT %s OFFSET %s"
 
     async with conn.cursor(row_factory=dict_row) as cur:
-        await cur.execute(_sql.SQL(sql), args)  # type: ignore
-        rows: list[dict[str, Any]] = await cur.fetchall()
+        await cur.execute(_sql.SQL(count_query), filter_args.copy())  # type: ignore
+        total_row = await cur.fetchone()
+        total = total_row["count"] if total_row else 0
 
-    # Post-filter: drop rows after a jump > threshold, no extra cap besides topk
-    kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
+        select_args = [list(query_vec), *filter_args, limit, offset]
+        await cur.execute(_sql.SQL(paged_query), select_args)  # type: ignore
+        rows = await cur.fetchall()
 
-    total = len(kept)
-    # Apply offset/limit after post-filter
-    page = kept[offset : offset + limit]
-
-    # Map to PatentHit; expose distance as score for transparency
     items = [
         PatentHit(
             pub_id=r["pub_id"],
@@ -340,7 +335,7 @@ async def search_hybrid(
             kind_code=r.get("kind_code"),
             score=r.get("dist"),
         )
-        for r in page
+        for r in rows
     ]
     return total, items
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any, cast
 
 import pytest
 
@@ -41,7 +42,7 @@ def test_export_rows_keyword_path() -> None:
             }
         ]
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = cast(Any, FakeAsyncConnection([cursor]))
 
     rows = asyncio.run(
         repository.export_rows(
@@ -82,7 +83,7 @@ def test_export_rows_vector_path_limits_results() -> None:
             },
         ]
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = cast(Any, FakeAsyncConnection([cursor]))
 
     rows = asyncio.run(
         repository.export_rows(
@@ -113,7 +114,7 @@ def test_search_hybrid_keyword_path() -> None:
             }
         ]
     )
-    conn = FakeAsyncConnection([count_cursor, results_cursor])
+    conn = cast(Any, FakeAsyncConnection([count_cursor, results_cursor]))
 
     total, items = asyncio.run(
         repository.search_hybrid(
@@ -132,6 +133,7 @@ def test_search_hybrid_keyword_path() -> None:
 
 def test_search_hybrid_vector_path() -> None:
     cursor = FakeAsyncCursor(
+        fetchone={"count": 2},
         fetchall=[
             {
                 "pub_id": "US500",
@@ -155,7 +157,7 @@ def test_search_hybrid_vector_path() -> None:
             },
         ]
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = cast(Any, FakeAsyncConnection([cursor]))
 
     total, items = asyncio.run(
         repository.search_hybrid(
@@ -169,7 +171,11 @@ def test_search_hybrid_vector_path() -> None:
     )
 
     assert total == 2
-    assert items[0].score <= items[1].score
+    score0 = items[0].score
+    score1 = items[1].score
+    assert score0 is not None
+    assert score1 is not None
+    assert score0 <= score1
 
 
 def test_trend_volume_keyword_path() -> None:
@@ -179,7 +185,7 @@ def test_trend_volume_keyword_path() -> None:
             {"bucket": "2024-02", "count": 1},
         ]
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = cast(Any, FakeAsyncConnection([cursor]))
 
     rows = asyncio.run(
         repository.trend_volume(
@@ -219,7 +225,7 @@ def test_trend_volume_vector_path_groups_by_assignee() -> None:
             },
         ]
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = cast(Any, FakeAsyncConnection([cursor]))
 
     rows = asyncio.run(
         repository.trend_volume(
@@ -250,7 +256,7 @@ def test_get_patent_detail_returns_model() -> None:
             "cpc": [],
         }
     )
-    conn = FakeAsyncConnection([cursor])
+    conn = cast(Any, FakeAsyncConnection([cursor]))
 
     detail = asyncio.run(repository.get_patent_detail(conn, "US999"))
     assert isinstance(detail, PatentDetail)

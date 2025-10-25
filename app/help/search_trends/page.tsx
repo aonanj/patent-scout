@@ -178,7 +178,7 @@ export default function SearchTrendsHelpPage() {
             When results are available, two export buttons appear:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Download CSV</strong>: Exports up to 1,000 results matching the current filters as a CSV file with columns for title, abstract, assignee, pub_id, pub_date, and CPC codes;</li>
+            <li><strong>Download CSV</strong>: Exports up to 1,000 results matching the current filters as a CSV file with columns for title, abstract, assignee, patent/pub no., grant/pub date, and CPC codes;</li>
             <li><strong>Download PDF</strong>: Generates an enriched PDF report (powered by ReportLab) with up to 1,000 results, including AI-generated summaries and metadata formatting.</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
@@ -197,7 +197,7 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 12 }}>
             <TrendOption
               mode="Month"
-              description="Displays patent/publication count over time, grouped by month. The chart is a line graph with time on the x-axis and count on the y-axis. Indicative of filing spikes, seasonal patterns, or growth trends."
+              description="Displays patent/publication count over time, grouped by month. The chart is a line graph with time on the x-axis and count on the y-axis. Indicative of filing spikes, focus patterns, or growth trends."
             />
             <TrendOption
               mode="CPC (Section + Class)"
@@ -205,7 +205,7 @@ export default function SearchTrendsHelpPage() {
             />
             <TrendOption
               mode="Assignee"
-              description="Groups patents and publications by assignee name. Displays the top 15 assignees by count as a horizontal bar chart. Indicative of most relevant entities in a technology space and their movements in different directions (i.e., competitive landscape analysis)."
+              description="Groups patents and publications by assignee name. Displays the top 15 assignees by count as a horizontal bar chart. Indicative of most relevant entities in a technology space and their movements in different directions (e.g., competitive landscape analysis)."
             />
           </div>
 
@@ -232,23 +232,23 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 12 }}>
             <WorkflowStep
               step="1"
-              title="Configure Your Search"
-              description="Use the search interface to define the filters you want to monitor. This can include semantic queries, keywords, assignee filters, CPC codes, and date ranges. Run the search to verify it returns the results you expect."
+              title="Configure Search Parameters"
+              description="Use the search interface to define the query and/or filters of interest. This can include semantic queries, keywords, assignee filters, CPC codes, and/or date ranges. Run the search to verify it returns relevant results."
             />
             <WorkflowStep
               step="2"
               title="Click 'Save as Alert'"
-              description="Once you're satisfied with the search configuration, click the 'Save as Alert' button. You must be authenticated to save alerts."
+              description="With the search parameters of interest still configured, click the 'Save as Alert' button."
             />
             <WorkflowStep
               step="3"
-              title="Name Your Alert"
-              description="A prompt will appear asking you to name the alert. The default name is derived from your search inputs (e.g., the first keyword or assignee), but you can customize it to something meaningful like 'Google AI Patents' or 'Autonomous Driving CPCs'."
+              title="Label the Alert"
+              description="An input field will be displayed, prompting for an alert label. Alert labels must be unique. Descriptive names are recommended, but search parameters will be indicated in the alert details so comprehensive labeling is not necessary." 
             />
             <WorkflowStep
               step="4"
               title="Confirm Save"
-              description="Click OK in the prompt. The alert is saved to the database with is_active=true, meaning it will be checked during the next alerts run. A success message appears briefly confirming the save."
+              description="Click OK in the prompt. The alert is saved to the database with is_active=true, meaning it will be checked during the next weekly alerts run. A success message appears briefly confirming the save."
             />
           </div>
 
