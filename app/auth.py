@@ -2,9 +2,14 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 
+import httpx
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+
+from infrastructure.logger import get_logger
+
+logger = get_logger()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -77,7 +82,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         settings = get_auth0_settings()
         jwks_url = f"{settings.domain}/.well-known/jwks.json"
         jwks_client = jwt.PyJWKClient(jwks_url)
-        
+
         try:
             signing_key = jwks_client.get_signing_key_from_jwt(token)
         except jwt.exceptions.PyJWKClientError as e:
@@ -92,6 +97,39 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             audience=settings.audience,
             issuer=settings.issuer,
         )
+
+        # If email is not in the access token payload, fetch it from Auth0's /userinfo endpoint
+        # This is necessary because Auth0 access tokens don't include profile info by default
+        if "email" not in payload:
+            try:
+                logger.info(f"Email not in token for user {payload.get('sub')}, fetching from /userinfo")
+                async with httpx.AsyncClient() as client:
+                    userinfo_url = f"{settings.domain}/userinfo"
+                    response = await client.get(
+                        userinfo_url,
+                        headers={"Authorization": f"Bearer {token}"}
+                    )
+                    response.raise_for_status()
+                    userinfo = response.json()
+
+                    # Add email and other profile info to the payload
+                    if "email" in userinfo:
+                        payload["email"] = userinfo["email"]
+                    if "name" in userinfo:
+                        payload["name"] = userinfo["name"]
+                    if "nickname" in userinfo:
+                        payload["nickname"] = userinfo["nickname"]
+                    if "given_name" in userinfo:
+                        payload["given_name"] = userinfo["given_name"]
+
+                    logger.info(f"Successfully fetched user info for {payload.get('sub')}")
+            except httpx.HTTPError as e:
+                logger.error(f"Failed to fetch user info from Auth0: {e}")
+                # Don't fail the request, but log the error
+                # The downstream code will handle missing email appropriately
+            except Exception as e:
+                logger.error(f"Unexpected error fetching user info: {e}")
+
         return payload
 
     except jwt.ExpiredSignatureError as e:
