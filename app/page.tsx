@@ -45,6 +45,42 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+const [isHovered, setIsHovered] = useState(false);
+
+const primaryBtn: React.CSSProperties = {
+  height: 36,
+  padding: "0 12px",
+  borderRadius: 8,
+  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+  background: isHovered ? "#39506b" : "#0ea5e9",
+  color: "white",
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const ghostBtn: React.CSSProperties = {
+  height: 36,
+  padding: "0 12px",
+  borderRadius: 8,
+  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+  background: isHovered ? "#a3bbd4" : "#bcccdc",
+  color: "#102a43",
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const secondaryBtn: React.CSSProperties = {
+  height: 36,
+  padding: "0 10px",
+  borderRadius: 8,
+  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+  background: isHovered ? "#a3bbd4" : "#bcccdc",
+  color: "#102a43",
+  cursor: "pointer",
+  fontSize: 12,
+};
+
+
 // Styles for the new login overlay
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
@@ -871,42 +907,6 @@ const resultItem: React.CSSProperties = {
   padding: 12,
   background: "white",
 };
-
-const [isHovered, setIsHovered] = useState(false);
-
-const primaryBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-  background: isHovered ? "#39506b" : "#0ea5e9",
-  color: "white",
-  cursor: "pointer",
-  fontWeight: 600,
-};
-
-const ghostBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-  background: isHovered ? "#a3bbd4" : "#bcccdc",
-  color: "#102a43",
-  cursor: "pointer",
-  fontWeight: 600,
-};
-
-const secondaryBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 10px",
-  borderRadius: 8,
-  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-  background: isHovered ? "#a3bbd4" : "#bcccdc",
-  color: "#102a43",
-  cursor: "pointer",
-  fontSize: 12,
-};
-
 const dangerBtn: React.CSSProperties = {
   height: 28,
   padding: "0 10px",
