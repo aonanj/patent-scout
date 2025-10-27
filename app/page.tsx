@@ -664,10 +664,20 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
 
   // Format YYYY-MM to "Month Year"
   const formatMonthYear = (dateStr: string): string => {
-    const [year, month] = dateStr.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-    const monthName = date.toLocaleString('en-US', { month: 'long' });
-    return `${monthName} ${year}`;
+    try {
+      if (!dateStr || typeof dateStr !== 'string') return dateStr || '';
+      const parts = dateStr.split('-');
+      if (parts.length < 2) return dateStr;
+      const [year, month] = parts;
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      if (isNaN(yearNum) || isNaN(monthNum)) return dateStr;
+      const date = new Date(yearNum, monthNum - 1, 1);
+      const monthName = date.toLocaleString('en-US', { month: 'long' });
+      return `${monthName} ${year}`;
+    } catch (e) {
+      return dateStr;
+    }
   };
 
   if (groupBy === "month") {
@@ -755,7 +765,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
             </>
           )}
         </svg>
-        {hoveredPoint && (
+        {hoveredPoint && groupBy === "month" && (
           <div
             style={{
               position: "absolute",
