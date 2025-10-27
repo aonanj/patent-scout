@@ -154,6 +154,64 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonStyle: React.CSSProperties = {
+    height: 38,
+    padding: "0 16px",
+    borderRadius: 10,
+    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+    background: isHovered ? "#39506b" : "#0284c7",
+    color: "#ffffff",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 600,
+    fontSize: 13,
+    opacity: disabled ? 0.6 : 1,
+    ...style,
+  };
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={buttonStyle}
+      title={title}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
+function GhostButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonStyle: React.CSSProperties = {
+    height: 38,
+    padding: "0 16px",
+    borderRadius: 10,
+    border: isHovered ? "2px solid #5FA8D2" : "1px solid #e2e8f0",
+    background: isHovered ? "#f1f5f9" : "#ffffff",
+    color: "#0f172a",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 600,
+    fontSize: 13,
+    opacity: disabled ? 0.6 : 1,
+    ...style,
+  };
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={buttonStyle}
+      title={title}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
 const inputStyle: React.CSSProperties = {
   height: 38,
   border: "1px solid #e2e8f0",
@@ -161,30 +219,6 @@ const inputStyle: React.CSSProperties = {
   padding: "0 12px",
   outline: "none",
   minWidth: 220,
-  fontSize: 13,
-};
-
-const primaryBtn: React.CSSProperties = {
-  height: 38,
-  padding: "0 16px",
-  borderRadius: 10,
-  border: "1px solid #0ea5e9",
-  background: "#0284c7",
-  color: "#ffffff",
-  cursor: "pointer",
-  fontWeight: 600,
-  fontSize: 13,
-};
-
-const ghostBtn: React.CSSProperties = {
-  height: 38,
-  padding: "0 16px",
-  borderRadius: 10,
-  border: "1px solid #e2e8f0",
-  background: "#ffffff",
-  color: "#0f172a",
-  cursor: "pointer",
-  fontWeight: 600,
   fontSize: 13,
 };
 
@@ -830,7 +864,7 @@ export default function WhitespacePage() {
             <span style={{ fontSize: 12, color: "#64748b"}}>Signal identification for risks and opportunities in AI/ML IP</span>
           </div>
           {!isLoading && !isAuthenticated && (
-            <button onClick={() => loginWithRedirect()} style={ghostBtn}>Log in</button>
+            <GhostButton onClick={() => loginWithRedirect()}>Log in</GhostButton>
           )}
         </div>
 
@@ -881,20 +915,17 @@ export default function WhitespacePage() {
                   style={inputStyle}
                 />
               </div>
-              <button
+              <PrimaryButton
                 onClick={runWhitespaceAnalysis}
-                style={primaryBtn}
                 disabled={loading || !isAuthenticated}
               >
                 {loading ? "Identifying..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
-              </button>
-              <button
-                type="button"
+              </PrimaryButton>
+              <GhostButton
                 onClick={handleReset}
-                style={ghostBtn}
               >
                 Reset
-              </button>
+              </GhostButton>
             </Row>
             <div>
               <button
@@ -1004,7 +1035,7 @@ export default function WhitespacePage() {
                     <div style={{ fontSize: 12, color: "#64748b" }}>{scopeSummary(result)}</div>
                   </div>
                   {highlightedNodes.length > 0 && (
-                    <button onClick={handleClearExamples} style={{ ...ghostBtn, height: 32 }}>Clear highlights</button>
+                    <GhostButton onClick={handleClearExamples} style={{ height: 32 }}>Clear highlights</GhostButton>
                   )}
                 </div>
 

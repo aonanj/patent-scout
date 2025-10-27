@@ -553,7 +553,7 @@ export default function Page() {
                   id="cpc"
                   value={cpc}
                   onChange={(e) => setCpc(e.target.value)}
-                  placeholder="e.g., G06N, G06F 17/00"
+                  placeholder="e.g., G06N, G06F17/00, ..."
                   style={inputStyle}
                 />
               </div>
@@ -594,7 +594,7 @@ export default function Page() {
               </GhostButton>
 
               <SecondaryButton onClick={saveAsAlert} disabled={saving || !isAuthenticated} title="Save current filters as an alert">
-                {saving ? "Saving…" : "Save as Alert"}
+                {saving ? "Saving…" : "Save Alert"}
               </SecondaryButton>
               {saveMsg && (
                 <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>

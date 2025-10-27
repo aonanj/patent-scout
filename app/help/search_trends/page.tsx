@@ -103,10 +103,10 @@ export default function SearchTrendsHelpPage() {
             <InputDescription
               label="CPC (Cooperative Patent Classification)"
               description="Filter by CPC code to narrow results to specific technology areas. Supports hierarchical matching."
-              example='Example: "G06N" (AI/neural networks), "G06F 17/00" (specific subclass)'
+              example='Example: "G06N" (Computing arrangements based on specific computational models), "G06F17/00" (Digital computing or data processing equipment or methods, specially adapted for specific functions)'
               tips={[
                 "Use broader codes (e.g., 'G06N') for wider results",
-                "Use specific codes (e.g., 'G06F 17/16') for narrow results",
+                "Use specific codes (e.g., 'G06F17/00') for narrow results",
                 "Supports partial matching at any level of the hierarchy",
                 "See the USPTO CPC reference for code definitions"
               ]}
@@ -115,10 +115,10 @@ export default function SearchTrendsHelpPage() {
             <InputDescription
               label="Date Range (From / To)"
               description="Filter patents and publications by grant/publication date. Both fields are optional. The default range spans the entire patent and publication data set (2023–present)."
-              example="Example: From 2024-01-01, To 2024-12-31"
+              example="Example: From 01-31-2024, To 12-31-2024"
               tips={[
                 "Dates are based on earliest publication date for applications, grant date for patents",
-                "Both fields accept YYYY-MM-DD format via the date picker",
+                "Both fields accept MM-DD-YYYY format via the date picker",
                 "Leaving fields blank uses Patent Scout's min/max dates",
                 "Date range is displayed in the Trend chart subtitle"
               ]}
@@ -134,19 +134,16 @@ export default function SearchTrendsHelpPage() {
             <ActionDescription
               button="Apply"
               description="Runs the search and trend fetch with the current filter state. Searches are only executed when you click Apply, ensuring both the Trend graph and Results table update together."
-              when="Use every time you make changes to semantic text, keywords, assignee, CPC, or date filters. This is now the only way to execute a search."
             />
 
             <ActionDescription
               button="Reset"
               description="Clears all search inputs (semantic query, keywords, assignee, CPC, date range) and prepares for a fresh query. After resetting, click Apply to fetch results with the cleared filters."
-              when="Use when starting a fresh search from scratch or clearing previous filters; remember to apply afterward."
             />
 
             <ActionDescription
-              button="Save as Alert"
-              description="Saves the current search configuration (all filters and semantic query) as a named alert. When new patents or publications matching these criteria are ingested, you'll automatically receive a notification."
-              when="Use when you want to monitor a specific technology area, competitor, or search scope over time."
+              button="Save Alert"
+              description="Saves the current search configuration (all filters and semantic query) as a named alert. Email notifications are automatically sent when new patents or publications matching these search criteria are added."
             />
           </div>
         </div>
@@ -237,8 +234,8 @@ export default function SearchTrendsHelpPage() {
             />
             <WorkflowStep
               step="2"
-              title="Click 'Save as Alert'"
-              description="With the search parameters of interest still configured, click the 'Save as Alert' button."
+              title="Click 'Save Alert'"
+              description="With the search parameters of interest still configured, click the 'Save Alert' button."
             />
             <WorkflowStep
               step="3"
@@ -332,8 +329,8 @@ export default function SearchTrendsHelpPage() {
             />
             <FlowStep
               num="6"
-              title="Save as Alert (Optional)"
-              description="If this is a search you want to monitor over time, click 'Save as Alert', name the alert, and confirm. The automated backend process will then check the whether the search criteria match any new filings during the next scheduled alerts run, not an email notification will be triggered if necessary."
+              title="Save Alert (Optional)"
+              description="If this is a search you want to monitor over time, click 'Save Alert', name the alert, and confirm. The automated backend process will then check the whether the search criteria match any new filings during the next scheduled alerts run, not an email notification will be triggered if necessary."
             />
             <FlowStep
               num="7"
@@ -435,14 +432,11 @@ function InputDescription({ label, description, example, tips }: { label: string
   );
 }
 
-function ActionDescription({ button, description, when }: { button: string; description: string; when: string }) {
+function ActionDescription({ button, description }: { button: string; description: string }) {
   return (
     <div>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{button}</h4>
       <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
-      <p style={{ margin: "8px 0 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>
-        <strong>When to use:</strong> {when}
-      </p>
     </div>
   );
 }

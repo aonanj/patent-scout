@@ -478,6 +478,7 @@ async def trend_volume(
         bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
 
         # For month grouping, also fetch the top assignee per month
+        # Note: This query uses where_clauses twice (in both CTEs), so we need to duplicate args
         sql = f"""
         WITH month_counts AS (
             SELECT {bucket_sql} AS bucket, COUNT(DISTINCT p.pub_id) AS count
@@ -505,6 +506,8 @@ async def trend_volume(
         LEFT JOIN assignee_counts ac ON mc.bucket = ac.bucket AND ac.rn = 1
         ORDER BY mc.count DESC
         """
+        # Duplicate args since the query uses where_clauses twice
+        args = args + args
     elif group_by == "cpc":
         bucket_sql = "( (cpc_agg->>'section') || COALESCE(cpc_agg->>'class', '') )"
         from_clause += ", LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) cpc_agg"
