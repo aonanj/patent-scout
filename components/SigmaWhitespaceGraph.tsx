@@ -145,6 +145,62 @@ export default function SigmaWhitespaceGraph({
     return map;
   }, [data]);
 
+  const clusterMetadata = useMemo(() => {
+    const clusters = new Map<number, {
+      color: string;
+      nodeCount: number;
+      topAssignee: string;
+      assigneeCounts: Map<string, number>;
+    }>();
+
+    (data?.nodes ?? []).forEach((node) => {
+      const clusterId = node.cluster_id;
+      if (!clusters.has(clusterId)) {
+        clusters.set(clusterId, {
+          color: clusterColor.get(clusterId) || colorForCluster(clusterId),
+          nodeCount: 0,
+          topAssignee: "",
+          assigneeCounts: new Map(),
+        });
+      }
+
+      const cluster = clusters.get(clusterId)!;
+      cluster.nodeCount++;
+
+      const assignee = node.assignee || "Unknown assignee";
+      cluster.assigneeCounts.set(assignee, (cluster.assigneeCounts.get(assignee) || 0) + 1);
+    });
+
+    // Determine top assignee for each cluster
+    clusters.forEach((cluster) => {
+      let maxCount = 0;
+      let topAssignee = "Mixed assignees";
+
+      cluster.assigneeCounts.forEach((count, assignee) => {
+        if (count > maxCount) {
+          maxCount = count;
+          topAssignee = assignee;
+        }
+      });
+
+      // If the top assignee doesn't dominate (>40%), show "Mixed assignees"
+      if (maxCount / cluster.nodeCount < 0.4) {
+        topAssignee = "Mixed assignees";
+      }
+
+      cluster.topAssignee = topAssignee;
+    });
+
+    // Sort clusters by node count (descending) and return as array
+    return Array.from(clusters.entries())
+      .sort((a, b) => b[1].nodeCount - a[1].nodeCount)
+      .map(([id, metadata]) => ({
+        id,
+        color: metadata.color,
+        label: `${metadata.topAssignee} (${metadata.nodeCount} ${metadata.nodeCount === 1 ? 'filing' : 'filings'})`,
+      }));
+  }, [data, clusterColor]);
+
   const sizeForNode = useCallback((node: WsNode) => {
     const rel = normalizeRelevance(node.relevance);
     return 4 + 10 * rel;
@@ -586,9 +642,80 @@ export default function SigmaWhitespaceGraph({
 
   const hasHighlights = highlightedNodeIds && highlightedNodeIds.length > 0;
 
+  const legend = clusterMetadata.length > 0 ? (
+    <div
+      style={{
+        position: "absolute",
+        bottom: 12,
+        left: 12,
+        maxWidth: 280,
+        maxHeight: height - 120,
+        overflowY: "auto",
+        background: "#ffffff",
+        border: "1px solid #e2e8f0",
+        borderRadius: 12,
+        padding: 12,
+        boxShadow: "0 8px 24px rgba(15,23,42,0.12)",
+        fontSize: 12,
+        color: "#0f172a",
+        zIndex: 10,
+      }}
+    >
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, color: "#0f172a" }}>
+        Clusters
+      </div>
+      <div style={{ display: "grid", gap: 6 }}>
+        {clusterMetadata.slice(0, 10).map((cluster) => (
+          <div
+            key={cluster.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "4px 6px",
+              borderRadius: 6,
+              background: "#f8fafc",
+            }}
+          >
+            <div
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: "50%",
+                background: cluster.color,
+                flexShrink: 0,
+                border: "2px solid #ffffff",
+                boxShadow: "0 1px 3px rgba(15,23,42,0.15)",
+              }}
+            />
+            <div
+              style={{
+                fontSize: 11,
+                color: "#475569",
+                lineHeight: 1.3,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={cluster.label}
+            >
+              {cluster.label}
+            </div>
+          </div>
+        ))}
+        {clusterMetadata.length > 10 && (
+          <div style={{ fontSize: 10, color: "#94a3b8", fontStyle: "italic", marginTop: 4 }}>
+            +{clusterMetadata.length - 10} more clusters
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div style={{ height, position: "relative", background: "#eaf6ff", borderRadius: 12, overflow: "hidden" }}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+      {legend}
       {hasHighlights && (
         <button
           onClick={zoomToHighlighted}

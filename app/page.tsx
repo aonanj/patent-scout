@@ -248,15 +248,15 @@ export default function Page() {
           agg.set(bucket, (agg.get(bucket) || 0) + (Number(r.count) || 0));
         }
         const sorted = Array.from(agg.entries())
-          .map(([label, count]) => ({ label, count }))
+          .map(([label, count]) => ({ label, count, top_assignee: null }))
           .sort((a, b) => b.count - a.count);
         const top = sorted.slice(0, 10);
         const restSum = sorted.slice(10).reduce((acc, x) => acc + x.count, 0);
-        const finalPoints = restSum > 0 ? [...top, { label: "Other", count: restSum }] : top;
+        const finalPoints = restSum > 0 ? [...top, { label: "Other", count: restSum, top_assignee: null }] : top;
         setTrend(finalPoints);
       } else {
         const itemsAll = raw.map((r) => ({ key: getKey(r), count: Number(r.count) || 0 }));
-        const known = itemsAll.filter((i) => i.key).map((i) => ({ label: i.key as string, count: i.count }));
+        const known = itemsAll.filter((i) => i.key).map((i) => ({ label: i.key as string, count: i.count, top_assignee: null }));
         const sorted = known.filter((p) => p.count > 0).sort((a, b) => b.count - a.count);
         const top = sorted.slice(0, 15);
         setTrend(top);
@@ -656,6 +656,11 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   const width = 900;
   const w = width - padding.left - padding.right;
   const h = height - padding.top - padding.bottom;
+
+  // Clear tooltip when switching groupBy modes
+  useEffect(() => {
+    setHoveredPoint(null);
+  }, [groupBy]);
 
   // Format YYYY-MM to "Month Year"
   const formatMonthYear = (dateStr: string): string => {
