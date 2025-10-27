@@ -27,6 +27,7 @@ Note:
     canonical_assignee_name(id uuid pk, canonical_assignee_name text unique)
     assignee_alias(id uuid pk, assignee_alias text unique, canonical_id uuid fk)
     patent(..., assignee_name text, canonical_assignee_name_id uuid, assignee_alias_id uuid)
+    patent_assignee(pub_id text fk, alias_id uuid fk, canonical_id uuid fk, position smallint)
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ import argparse
 import os
 import re
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 import psycopg
@@ -129,13 +130,29 @@ class PatentRow:
     assignee_name: str
 
 
+@dataclass(frozen=True)
+class PatentUpdate:
+    pub_id: str
+    canonical_id: str
+    alias_id: str
+
+
 SELECT_BATCH_SQL = """
-SELECT pub_id, assignee_name
-FROM patent
-WHERE assignee_name IS NOT NULL
-  AND (%(only_missing)s = FALSE OR canonical_assignee_name_id IS NULL OR assignee_alias_id IS NULL)
-  AND pub_id > %(after_pub_id)s
-ORDER BY pub_id
+SELECT p.pub_id, p.assignee_name
+FROM patent p
+WHERE p.assignee_name IS NOT NULL
+  AND (
+        %(only_missing)s = FALSE
+        OR p.canonical_assignee_name_id IS NULL
+        OR p.assignee_alias_id IS NULL
+        OR NOT EXISTS (
+            SELECT 1
+            FROM patent_assignee pa
+            WHERE pa.pub_id = p.pub_id
+        )
+      )
+  AND p.pub_id > %(after_pub_id)s
+ORDER BY p.pub_id
 LIMIT %(batch_size)s;
 """
 
@@ -218,29 +235,41 @@ def upsert_aliases(conn: PgConn, pairs: Iterable[tuple[str, str]]) -> dict[str, 
     return out
 
 
-def update_patents(conn: PgConn, updates: list[tuple[str, str, str]]) -> int:
-    """Bulk update patents: set canonical_assignee_name_id, assignee_alias_id by pub_id.
-
-    updates: list of (canonical_id, alias_id, pub_id)
-    Returns number of updated rows (best effort).
-    """
+def update_patents(conn: PgConn, updates: Sequence[PatentUpdate]) -> int:
+    """Bulk update patents: set canonical_assignee_name_id, assignee_alias_id by pub_id."""
     if not updates:
         return 0
     sql = (
         "UPDATE patent SET canonical_assignee_name_id = %s, assignee_alias_id = %s "
         "WHERE pub_id = %s"
     )
+    params = [(u.canonical_id, u.alias_id, u.pub_id) for u in updates]
     with conn.cursor() as cur:
-        cur.executemany(sql, updates)
+        cur.executemany(sql, params)
         # rowcount on executemany may be total updated rows or -1 depending on driver
         rc = cur.rowcount if getattr(cur, "rowcount", -1) is not None else -1
     return rc if rc is not None else 0
+
+
+def insert_patent_assignees(conn: PgConn, updates: Sequence[PatentUpdate]) -> None:
+    """Insert patent-assignee relationships for any newly canonicalized rows."""
+    if not updates:
+        return
+    sql = """
+        INSERT INTO patent_assignee (pub_id, alias_id, canonical_id, position)
+        VALUES (%s, %s, %s, 1)
+        ON CONFLICT (pub_id, alias_id) DO NOTHING
+    """
+    params = [(u.pub_id, u.alias_id, u.canonical_id) for u in updates]
+    with conn.cursor() as cur:
+        cur.executemany(sql, params)
 
 
 def run(dsn: str, batch_size: int = 1000, limit: int | None = None, only_missing: bool = True) -> None:
     pool = ConnectionPool[PgConn](dsn, min_size=1, max_size=4)
     processed = 0
     total_updates = 0
+    total_assignee_rows = 0
     last_pub_id = ""
     try:
         while True:
@@ -275,7 +304,7 @@ def run(dsn: str, batch_size: int = 1000, limit: int | None = None, only_missing
                 alias_ids = upsert_aliases(conn, alias_pairs)
 
                 # Prepare patent updates
-                updates: list[tuple[str, str, str]] = []
+                updates: list[PatentUpdate] = []
                 for row in batch:
                     canon = canon_by_alias.get(row.assignee_name)
                     if not canon:
@@ -283,22 +312,33 @@ def run(dsn: str, batch_size: int = 1000, limit: int | None = None, only_missing
                     canon_id = canon_ids.get(canon)
                     alias_id = alias_ids.get(row.assignee_name)
                     if canon_id and alias_id:
-                        updates.append((canon_id, alias_id, row.pub_id))
+                        updates.append(
+                            PatentUpdate(
+                                pub_id=row.pub_id,
+                                canonical_id=canon_id,
+                                alias_id=alias_id,
+                            )
+                        )
 
                 updated = update_patents(conn, updates)
+                insert_patent_assignees(conn, updates)
                 conn.commit()
 
                 processed += len(batch)
                 total_updates += len(updates)
+                total_assignee_rows += len(updates)
                 last_pub_id = batch[-1].pub_id
 
                 logger.info(
-                    "Batch processed: patents=%d, updates=%d, last_pub_id=%s",
-                    len(batch), len(updates), last_pub_id,
+                    "Batch processed: patents=%d, updates=%d, patent_assignee_rows=%d, last_pub_id=%s",
+                    len(batch), len(updates), len(updates), last_pub_id,
                 )
 
         logger.info(
-            "Done. processed=%d, patent_updates=%d", processed, total_updates
+            "Done. processed=%d, patent_updates=%d, patent_assignee_rows=%d",
+            processed,
+            total_updates,
+            total_assignee_rows,
         )
     finally:
         try:
