@@ -45,40 +45,90 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
-const [isHovered, setIsHovered] = useState(false);
+function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonStyle: React.CSSProperties = {
+    height: 36,
+    padding: "0 12px",
+    borderRadius: 8,
+    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+    background: isHovered ? "#39506b" : "#0ea5e9",
+    color: "white",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 600,
+    opacity: disabled ? 0.6 : 1,
+    ...style,
+  };
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={buttonStyle}
+      title={title}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
 
-const primaryBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-  background: isHovered ? "#39506b" : "#0ea5e9",
-  color: "white",
-  cursor: "pointer",
-  fontWeight: 600,
-};
+function GhostButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonStyle: React.CSSProperties = {
+    height: 36,
+    padding: "0 12px",
+    borderRadius: 8,
+    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+    background: isHovered ? "#a3bbd4" : "#bcccdc",
+    color: "#102a43",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 600,
+    opacity: disabled ? 0.6 : 1,
+    ...style,
+  };
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={buttonStyle}
+      title={title}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
 
-const ghostBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 12px",
-  borderRadius: 8,
-  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-  background: isHovered ? "#a3bbd4" : "#bcccdc",
-  color: "#102a43",
-  cursor: "pointer",
-  fontWeight: 600,
-};
+function SecondaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonStyle: React.CSSProperties = {
+    height: 36,
+    padding: "0 10px",
+    borderRadius: 8,
+    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+    background: isHovered ? "#a3bbd4" : "#bcccdc",
+    color: "#102a43",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontSize: 12,
+    opacity: disabled ? 0.6 : 1,
+    ...style,
+  };
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={buttonStyle}
+      title={title}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
 
-const secondaryBtn: React.CSSProperties = {
-  height: 36,
-  padding: "0 10px",
-  borderRadius: 8,
-  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-  background: isHovered ? "#a3bbd4" : "#bcccdc",
-  color: "#102a43",
-  cursor: "pointer",
-  fontSize: 12,
-};
 
 
 // Styles for the new login overlay
@@ -449,12 +499,12 @@ export default function Page() {
             <h2 style={{ marginTop: 0, fontSize: 20, fontWeight: 600 }}>Patent Scout</h2>
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 400 }}>presented by Phaethon Order LLC</h3>
             <p style={{ color: '#475569', marginBottom: 24 }}>Please log in or sign up to continue.</p>
-            <button 
-              onClick={() => loginWithRedirect()} 
-              style={{ ...primaryBtn, padding: '0 24px', height: 44, fontSize: 16 }}
+            <PrimaryButton
+              onClick={() => loginWithRedirect()}
+              style={{ padding: '0 24px', height: 44, fontSize: 16 }}
             >
               Log In / Sign Up
-            </button>
+            </PrimaryButton>
           </div>
         </div>
       )}
@@ -535,17 +585,17 @@ export default function Page() {
                 />
               </div>
 
-              <button onClick={handleApply} style={primaryBtn} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+              <PrimaryButton onClick={handleApply}>
                 Apply
-              </button>
+              </PrimaryButton>
 
-              <button onClick={handleReset} style={ghostBtn} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+              <GhostButton onClick={handleReset}>
                 Reset
-              </button>
+              </GhostButton>
 
-              <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+              <SecondaryButton onClick={saveAsAlert} disabled={saving || !isAuthenticated} title="Save current filters as an alert">
                 {saving ? "Saving…" : "Save as Alert"}
-              </button>
+              </SecondaryButton>
               {saveMsg && (
                 <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>
               )}
@@ -600,12 +650,12 @@ export default function Page() {
             )}
             {!isFetchingData && total !== null && total > 0 && (
               <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
-                <button onClick={() => triggerDownload('csv')} disabled={downloading !== null} style={secondaryBtn} title="Download top 1000 as CSV">
+                <SecondaryButton onClick={() => triggerDownload('csv')} disabled={downloading !== null} title="Download top 1000 as CSV">
                   {downloading === 'csv' ? 'Generating…' : 'Download CSV'}
-                </button>
-                <button onClick={() => triggerDownload('pdf')} disabled={downloading !== null} style={secondaryBtn} title="Download top 1000 as PDF">
+                </SecondaryButton>
+                <SecondaryButton onClick={() => triggerDownload('pdf')} disabled={downloading !== null} title="Download top 1000 as PDF">
                   {downloading === 'pdf' ? 'Generating…' : 'Download PDF'}
-                </button>
+                </SecondaryButton>
               </div>
             )}
           </Row>
@@ -653,27 +703,25 @@ export default function Page() {
           )}
 
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button
+            <SecondaryButton
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              style={secondaryBtn}
             >
               Prev
-            </button>
+            </SecondaryButton>
             <div style={{ fontSize: 12, alignSelf: "center" }}>
               Page {page}
               {totalPages ? ` / ${totalPages}` : ""}
             </div>
-            <button
+            <SecondaryButton
               onClick={() => {
                 if (totalPages && page >= totalPages) return;
                 setPage((p) => p + 1);
               }}
               disabled={!!totalPages && page >= totalPages}
-              style={secondaryBtn}
             >
               Next
-            </button>
+            </SecondaryButton>
           </div>
         </Card>
       </div>
