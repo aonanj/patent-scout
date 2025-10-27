@@ -80,10 +80,10 @@ function GhostButton({ onClick, children, disabled, style, title }: { onClick?: 
     padding: "0 12px",
     borderRadius: 8,
     border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#a3bbd4" : "#bcccdc",
-    color: "#102a43",
+    background: isHovered ? "#bcccdc" : "#d9e1eb",
+    color: "#39506b",
     cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 600,
+    fontWeight: 500,
     opacity: disabled ? 0.6 : 1,
     ...style,
   };
@@ -108,8 +108,8 @@ function SecondaryButton({ onClick, children, disabled, style, title }: { onClic
     padding: "0 10px",
     borderRadius: 8,
     border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#a3bbd4" : "#bcccdc",
-    color: "#102a43",
+    background: isHovered ? "#bcccdc" : "#d9e1eb",
+    color: "#39506b",
     cursor: disabled ? "not-allowed" : "pointer",
     fontSize: 12,
     opacity: disabled ? 0.6 : 1,
@@ -651,10 +651,10 @@ export default function Page() {
             {!isFetchingData && total !== null && total > 0 && (
               <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
                 <SecondaryButton onClick={() => triggerDownload('csv')} disabled={downloading !== null} title="Download top 1000 as CSV">
-                  {downloading === 'csv' ? 'Generating…' : 'Download CSV'}
+                  {downloading === 'csv' ? 'Generating…' : 'Export CSV'}
                 </SecondaryButton>
                 <SecondaryButton onClick={() => triggerDownload('pdf')} disabled={downloading !== null} title="Download top 1000 as PDF">
-                  {downloading === 'pdf' ? 'Generating…' : 'Download PDF'}
+                  {downloading === 'pdf' ? 'Generating…' : 'Export PDF'}
                 </SecondaryButton>
               </div>
             )}

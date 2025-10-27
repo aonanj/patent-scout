@@ -159,14 +159,14 @@ export default function NavBar() {
         <div className="flex-1" />
 
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Search & Trends</Link>
-          <Link href="/whitespace" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Whitespace</Link>
+          <Link href="/" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Search & Trends</Link>
+          <Link href="/whitespace" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Whitespace</Link>
         </div>
 
         <div className="hidden md:flex items-center pl-1 ml-1">
           <button
             onClick={openAlerts}
-            className="px-3 py-1.5 text-sm font-semibold border-0 rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]"
+            className="px-3 py-1.5 text-sm font-semibold border-0 rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]"
             disabled={isLoading}
             title={isAuthenticated ? "View and manage your alerts" : "Log in to manage alerts"}
           >
@@ -175,7 +175,7 @@ export default function NavBar() {
         </div>
 
         <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
-          <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Help</Link>
+          <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Help</Link>
         </div>
         <div className="hidden md:flex items-center gap-1 pl-1 ml-1">
           {isLoading ? (
@@ -189,11 +189,11 @@ export default function NavBar() {
                 </div>
               </div>
               <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
-                <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#BCCCDC] hover:underline text-[#3A506B]">Billing</Link>
+                <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Billing</Link>
               </div>
               <button
                 onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
-                className="h-8 px-3 text-sm font-semibold rounded-md border border-slate-200 bg-white hover:bg-[#BCCCDC] hover:underline text-blue-800"
+                className="h-8 px-3 text-sm font-semibold rounded-md border border-slate-200 bg-white hover:bg-[#d9e1eb] hover:underline text-blue-800"
               >
                 Log out
               </button>

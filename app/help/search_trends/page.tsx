@@ -175,11 +175,11 @@ export default function SearchTrendsHelpPage() {
             When results are available, two export buttons appear:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Download CSV</strong>: Exports up to 1,000 results matching the current filters as a CSV file with columns for title, abstract, assignee, patent/pub no., grant/pub date, and CPC codes;</li>
-            <li><strong>Download PDF</strong>: Generates an enriched PDF report (powered by ReportLab) with up to 1,000 results, including AI-generated summaries and metadata formatting.</li>
+            <li><strong>Export CSV</strong>: Exports up to 1,000 results matching the current filters as a CSV file with columns for title, abstract, assignee, patent/pub no., grant/pub date, and CPC codes;</li>
+            <li><strong>Export PDF</strong>: Generates an enriched PDF report (powered by ReportLab) with up to 1,000 results, including AI-generated summaries and metadata formatting.</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
-            Both exports respect the current filter state, so you can refine your search before downloading.
+            Both exports respect the current filter state, so you can refine your search before exporting.
           </p>
         </div>
 
@@ -325,7 +325,7 @@ export default function SearchTrendsHelpPage() {
             <FlowStep
               num="5"
               title="Export Data"
-              description="To save search results for later research and review, options to export the data set are provided for CSV and PDF. Preferred format is selected by clicking the corresponding button: 'Download CSV' or 'Download PDF'. Results exporting supports up to 1,000 results matching the current semantic search, keyword(s), and other filters."
+              description="To save search results for later research and review, options to export the data set are provided for CSV and PDF. Preferred format is selected by clicking the corresponding button: 'Export CSV' or 'Export PDF'. Results exporting supports up to 1,000 results matching the current semantic search, keyword(s), and other filters."
             />
             <FlowStep
               num="6"
