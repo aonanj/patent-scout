@@ -47,6 +47,7 @@ class TrendRequest(BaseModel):
 class TrendPoint(BaseModel):
     bucket: str
     count: int
+    top_assignee: str | None = None
 
 
 class TrendResponse(BaseModel):

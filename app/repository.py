@@ -356,7 +356,7 @@ async def trend_volume(
     filters: SearchFilters,
     keywords: str | None = None,
     query_vec: Iterable[float] | None = None,
-) -> list[tuple[str, int]]:
+) -> list[tuple[str, int, str | None]]:
     """Aggregate counts by month, CPC, or assignee.
 
     For semantic search (query_vec provided):
@@ -364,6 +364,9 @@ async def trend_volume(
     - Post-filter in code with jump > 0.05
     - Perform aggregation in code over the kept set
     Otherwise, fall back to SQL aggregation with keyword/metadata filters.
+
+    Returns list of tuples: (bucket, count, top_assignee)
+    where top_assignee is only populated for group_by="month"
     """
 
     # Helper to compute bucket in Python
@@ -406,12 +409,21 @@ async def trend_volume(
 
         # Aggregate in Python based on group_by
         counts: dict[str, int] = {}
+        assignees_by_month: dict[str, dict[str, int]] = {}  # month -> {assignee -> count}
+
         if group_by == "month":
             for r in kept:
                 b = month_bucket(r.get("pub_date"))
                 if not b:
                     continue
                 counts[b] = counts.get(b, 0) + 1
+
+                # Track assignee counts per month
+                assignee = r.get("assignee_name")
+                if assignee:
+                    if b not in assignees_by_month:
+                        assignees_by_month[b] = {}
+                    assignees_by_month[b][assignee] = assignees_by_month[b].get(assignee, 0) + 1
         elif group_by == "assignee":
             for r in kept:
                 b = r.get("assignee_name")
@@ -438,7 +450,19 @@ async def trend_volume(
             raise ValueError("invalid group_by")
 
         # Return sorted by count desc
-        return sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+        if group_by == "month":
+            # Include top assignee for each month
+            result = []
+            for bucket, count in counts.items():
+                top_assignee = None
+                if bucket in assignees_by_month and assignees_by_month[bucket]:
+                    # Find assignee with highest count for this month
+                    top_assignee = max(assignees_by_month[bucket].items(), key=lambda x: x[1])[0]
+                result.append((bucket, count, top_assignee))
+            return sorted(result, key=lambda kv: kv[1], reverse=True)
+        else:
+            # For other group_by types, top_assignee is None
+            return sorted([(b, c, None) for b, c in counts.items()], key=lambda kv: kv[1], reverse=True)
 
     # Non-vector path: keep SQL aggregation as before
     args: list[object] = []
@@ -452,28 +476,69 @@ async def trend_volume(
 
     if group_by == "month":
         bucket_sql = "to_char(to_date(p.pub_date::text,'YYYYMMDD'), 'YYYY-MM')"
+
+        # For month grouping, also fetch the top assignee per month
+        sql = f"""
+        WITH month_counts AS (
+            SELECT {bucket_sql} AS bucket, COUNT(DISTINCT p.pub_id) AS count
+            {from_clause}
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)} AND {bucket_sql} IS NOT NULL
+            GROUP BY bucket
+        ),
+        assignee_counts AS (
+            SELECT
+                {bucket_sql} AS bucket,
+                COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee,
+                COUNT(DISTINCT p.pub_id) AS assignee_count,
+                ROW_NUMBER() OVER (PARTITION BY {bucket_sql} ORDER BY COUNT(DISTINCT p.pub_id) DESC) AS rn
+            {from_clause}
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)} AND {bucket_sql} IS NOT NULL
+            GROUP BY {bucket_sql}, COALESCE(can.canonical_assignee_name, p.assignee_name)
+        )
+        SELECT
+            mc.bucket,
+            mc.count,
+            ac.assignee AS top_assignee
+        FROM month_counts mc
+        LEFT JOIN assignee_counts ac ON mc.bucket = ac.bucket AND ac.rn = 1
+        ORDER BY mc.count DESC
+        """
     elif group_by == "cpc":
         bucket_sql = "( (cpc_agg->>'section') || COALESCE(cpc_agg->>'class', '') )"
         from_clause += ", LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) cpc_agg"
+
+        sql = f"""
+            SELECT {bucket_sql} AS bucket, COUNT(DISTINCT p.pub_id) AS count
+            {from_clause}
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)} AND {bucket_sql} IS NOT NULL
+            GROUP BY bucket
+            ORDER BY count DESC
+        """
     elif group_by == "assignee":
         bucket_sql = "COALESCE(can.canonical_assignee_name, p.assignee_name)"
+
+        sql = f"""
+            SELECT {bucket_sql} AS bucket, COUNT(DISTINCT p.pub_id) AS count
+            {from_clause}
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)} AND {bucket_sql} IS NOT NULL
+            GROUP BY bucket
+            ORDER BY count DESC
+        """
     else:
         raise ValueError("invalid group_by")
-
-    sql = f"""
-        SELECT {bucket_sql} AS bucket, COUNT(DISTINCT p.pub_id) AS count
-        {from_clause}
-        {' '.join(joins)}
-        WHERE {' AND '.join(where_clauses)} AND {bucket_sql} IS NOT NULL
-        GROUP BY bucket
-        ORDER BY count DESC
-    """
 
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(_sql.SQL(sql), args)  # type: ignore
         rows = await cur.fetchall()
 
-    return [(r["bucket"], r["count"]) for r in rows]
+    if group_by == "month":
+        return [(r["bucket"], r["count"], r.get("top_assignee")) for r in rows]
+    else:
+        return [(r["bucket"], r["count"], None) for r in rows]
 
 
 async def get_patent_detail(

@@ -13,7 +13,7 @@ type SearchHit = {
   cpc_codes?: string | string[];
 };
 
-type TrendPoint = { label: string; count: number };
+type TrendPoint = { label: string; count: number; top_assignee?: string | null };
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -232,7 +232,11 @@ export default function Page() {
 
       if (trendGroupBy === "month") {
         const points = raw
-          .map((r) => ({ label: getKey(r), count: Number(r.count) || 0 }))
+          .map((r) => ({
+            label: getKey(r),
+            count: Number(r.count) || 0,
+            top_assignee: r.top_assignee ?? null,
+          }))
           .filter((r) => !!r.label)
           .sort((a, b) => a.label.localeCompare(b.label));
         setTrend(points);
@@ -647,10 +651,19 @@ export default function Page() {
 }
 
 function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; groupBy: "month" | "cpc" | "assignee"; height?: number }) {
+  const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; data: TrendPoint } | null>(null);
   const padding = { left: 60, right: 28, top: 28, bottom: 28 };
   const width = 900;
   const w = width - padding.left - padding.right;
   const h = height - padding.top - padding.bottom;
+
+  // Format YYYY-MM to "Month Year"
+  const formatMonthYear = (dateStr: string): string => {
+    const [year, month] = dateStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const monthName = date.toLocaleString('en-US', { month: 'long' });
+    return `${monthName} ${year}`;
+  };
 
   if (groupBy === "month") {
     const parsed = useMemo(() => {
@@ -659,6 +672,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
           x: new Date((d.label?.length === 7 ? d.label + "-01" : d.label)).getTime(),
           y: Number(d.count) || 0,
           label: d.label,
+          top_assignee: d.top_assignee,
         }))
         .filter((d) => !Number.isNaN(d.x))
         .sort((a, b) => a.x - b.x);
@@ -687,36 +701,86 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
     );
 
     return (
-      <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend (time)">
-        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#e5e7eb" />
-        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="#e5e7eb" />
-        {yVals.map((v, idx) => {
-          const y = scaleY(v);
-          return (
-            <g key={idx}>
-              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#f1f5f9" />
-              <text x={padding.left - 8} y={y + 4} fontSize="10" fill="#64748b" textAnchor="end">{v}</text>
-            </g>
-          );
-        })}
-        <path d={path} fill="none" stroke="#0ea5e9" strokeWidth="2" />
-        {parsed.map((d, i) => (
-          <circle key={i} cx={scaleX(d.x)} cy={scaleY(d.y)} r="2.5" fill="#0ea5e9" />
-        ))}
-        {parsed.length > 0 && (
-          <>
-            <text x={padding.left} y={height - 6} fontSize="10" fill="#64748b">
-              {fmtShortDate(parsed[0].x)}
-            </text>
-            <text x={padding.left + w / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#64748b">
-              {fmtShortDate(parsed[Math.floor(parsed.length / 2)].x)}
-            </text>
-            <text x={width - padding.right} y={height - 6} fontSize="10" textAnchor="end" fill="#64748b">
-              {fmtShortDate(parsed[parsed.length - 1].x)}
-            </text>
-          </>
+      <div style={{ position: "relative" }}>
+        <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Trend (time)">
+          <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#e5e7eb" />
+          <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="#e5e7eb" />
+          {yVals.map((v, idx) => {
+            const y = scaleY(v);
+            return (
+              <g key={idx}>
+                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#f1f5f9" />
+                <text x={padding.left - 8} y={y + 4} fontSize="10" fill="#64748b" textAnchor="end">{v}</text>
+              </g>
+            );
+          })}
+          <path d={path} fill="none" stroke="#0ea5e9" strokeWidth="2" />
+          {parsed.map((d, i) => (
+            <circle
+              key={i}
+              cx={scaleX(d.x)}
+              cy={scaleY(d.y)}
+              r="5"
+              fill={hoveredPoint?.data.label === d.label ? "#0284c7" : "#0ea5e9"}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                if (rect) {
+                  setHoveredPoint({
+                    x: scaleX(d.x) * (rect.width / width),
+                    y: scaleY(d.y) * (rect.height / height),
+                    data: { label: d.label, count: d.y, top_assignee: d.top_assignee },
+                  });
+                }
+              }}
+              onMouseLeave={() => setHoveredPoint(null)}
+            />
+          ))}
+          {parsed.length > 0 && (
+            <>
+              <text x={padding.left} y={height - 6} fontSize="10" fill="#64748b">
+                {fmtShortDate(parsed[0].x)}
+              </text>
+              <text x={padding.left + w / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#64748b">
+                {fmtShortDate(parsed[Math.floor(parsed.length / 2)].x)}
+              </text>
+              <text x={width - padding.right} y={height - 6} fontSize="10" textAnchor="end" fill="#64748b">
+                {fmtShortDate(parsed[parsed.length - 1].x)}
+              </text>
+            </>
+          )}
+        </svg>
+        {hoveredPoint && (
+          <div
+            style={{
+              position: "absolute",
+              left: hoveredPoint.x + 10,
+              top: hoveredPoint.y - 60,
+              background: "rgba(0, 0, 0, 0.85)",
+              color: "white",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              pointerEvents: "none",
+              zIndex: 1000,
+              minWidth: "150px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            }}
+          >
+            <div style={{ fontWeight: "600", marginBottom: "4px" }}>
+              {formatMonthYear(hoveredPoint.data.label)}
+            </div>
+            <div style={{ marginBottom: "2px" }}>
+              Entries: {hoveredPoint.data.count}
+            </div>
+            {hoveredPoint.data.top_assignee && (
+              <div style={{ fontSize: "11px", color: "#d1d5db", marginTop: "4px" }}>
+                Top Assignee: {hoveredPoint.data.top_assignee}
+              </div>
+            )}
+          </div>
         )}
-      </svg>
+      </div>
     );
   }
 

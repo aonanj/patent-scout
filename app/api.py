@@ -340,7 +340,10 @@ async def get_trend(
         keywords=q,
         query_vec=qv,
     )
-    points: list[TrendPoint] = [TrendPoint(bucket=str(b), count=int(c)) for b, c in rows]
+    points: list[TrendPoint] = [
+        TrendPoint(bucket=str(b), count=int(c), top_assignee=top_a)
+        for b, c, top_a in rows
+    ]
     return TrendResponse(points=points)
 
 
