@@ -616,6 +616,16 @@ export default function SigmaWhitespaceGraph({
       {selectedAttrs?.tooltip && (
         <div style={{ color: "#475569", lineHeight: 1.5 }}>{selectedAttrs.tooltip}</div>
       )}
+      {selectedNode && (() => {
+        const nodeData = data?.nodes?.find(n => n.id === selectedNode);
+        const rawScore = nodeData?.whitespace_score ?? null;
+        const score = typeof rawScore === 'number' && Number.isFinite(rawScore) ? rawScore.toFixed(3) : '--';
+        return (
+          <div style={{ color: "#475569", fontSize: 12 }}>
+            <strong>Score:</strong> {score}
+          </div>
+        );
+      })()}
       <div>
         <a
           href={`https://patents.google.com/patent/${encodeURIComponent(formatGooglePatentId(selectedNode))}`}

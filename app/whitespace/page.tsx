@@ -685,6 +685,7 @@ export default function WhitespacePage() {
       const assigneeDisplay = node?.assignee && node.assignee.trim().length > 0 ? node.assignee : "Unknown";
       const tooltip = node?.tooltip ? node.tooltip : "";
       const pubDate = meta?.pubDateLabel ?? null;
+      const whitespaceScore = meta?.whitespaceScore ?? null;
       return {
         id,
         title,
@@ -694,6 +695,7 @@ export default function WhitespacePage() {
         tooltip,
         abstract: node?.abstract ?? null,
         linkId: formatGooglePatentId(id),
+        whitespaceScore,
       };
     });
   }, [graphNodeLookup, highlightedNodes, nodeMetaLookup]);
@@ -740,7 +742,10 @@ export default function WhitespacePage() {
     highlightedRows.forEach((row, index) => {
       lines.push("----------------------------------------");
       lines.push(`${index + 1}. ${row.title}`);
-      lines.push(`   Patent/Pub No: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate}`);
+      const scoreDisplay = typeof row.whitespaceScore === 'number' && Number.isFinite(row.whitespaceScore)
+        ? row.whitespaceScore.toFixed(3)
+        : "--";
+      lines.push(`   Patent/Pub No: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate} | Score: ${scoreDisplay}`);
       if (row.tooltip) {
         const cleanTooltip = row.tooltip.replace(/\s+/g, " ").trim();
         if (cleanTooltip) {
@@ -1304,6 +1309,7 @@ export default function WhitespacePage() {
                             <th style={thStyle}>Patent/Pub No</th>
                             <th style={thStyle}>Assignee</th>
                             <th style={thStyle}>Publication Date</th>
+                            <th style={thStyle}>Score</th>
                             <th style={thStyle}>Abstract</th>
                           </tr>
                         </thead>
@@ -1311,6 +1317,9 @@ export default function WhitespacePage() {
                           {highlightedRows.map((row, index) => {
                             const abstractPreview = row.abstract
                               ? truncate(row.abstract.replace(/\s+/g, " "), 280)
+                              : "--";
+                            const scoreDisplay = typeof row.whitespaceScore === 'number' && Number.isFinite(row.whitespaceScore)
+                              ? row.whitespaceScore.toFixed(3)
                               : "--";
                             return (
                               <tr key={row.id}>
@@ -1330,6 +1339,7 @@ export default function WhitespacePage() {
                                 </td>
                                 <td style={tdStyle}>{row.assignee}</td>
                                 <td style={tdStyle}>{row.pubDate}</td>
+                                <td style={tdStyle}>{scoreDisplay}</td>
                                 <td style={tdStyle}>{abstractPreview}</td>
                               </tr>
                             );
