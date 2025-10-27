@@ -74,7 +74,7 @@ def test_post_search_semantic_invokes_embed(monkeypatch: pytest.MonkeyPatch, fak
 def test_trend_volume_endpoint(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     async def fake_trend(conn, **kwargs):
         assert kwargs["group_by"] == "month"
-        return [("2024-01", 5), ("2024-02", 2)]
+        return [("2024-01", 5, "Google LLC"), ("2024-02", 2, "Microsoft")]
 
     monkeypatch.setattr(api_module, "trend_volume", fake_trend)
     client = _make_client(monkeypatch, FakeAsyncConnection([make_subscription_cursor()]), fake_user)
@@ -83,7 +83,7 @@ def test_trend_volume_endpoint(monkeypatch: pytest.MonkeyPatch, fake_user: dict[
         resp = client.get("/trend/volume", params={"group_by": "month"})
         assert resp.status_code == 200
         data = resp.json()
-        assert data["points"][0] == {"bucket": "2024-01", "count": 5}
+        assert data["points"][0] == {"bucket": "2024-01", "count": 5, "top_assignee": "Google LLC"}
     finally:
         _cleanup_client(client)
 

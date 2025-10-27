@@ -681,34 +681,38 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   };
 
   if (groupBy === "month") {
-    const parsed = useMemo(() => {
-      return data
-        .map((d) => ({
-          x: new Date((d.label?.length === 7 ? d.label + "-01" : d.label)).getTime(),
+    const parsed = data
+      .map((d) => {
+        const isoLabel = d.label?.length === 7 ? `${d.label}-01` : d.label;
+        const timestamp = isoLabel ? new Date(isoLabel).getTime() : NaN;
+        return {
+          x: timestamp,
           y: Number(d.count) || 0,
           label: d.label,
           top_assignee: d.top_assignee,
-        }))
-        .filter((d) => !Number.isNaN(d.x))
-        .sort((a, b) => a.x - b.x);
-    }, [data]);
+        };
+      })
+      .filter((d) => !Number.isNaN(d.x))
+      .sort((a, b) => a.x - b.x);
 
-    const [minX, maxX, minY, maxY] = useMemo(() => {
-      if (parsed.length === 0) return [0, 0, 0, 0];
-      const xs = parsed.map((d) => d.x);
-      const ys = parsed.map((d) => d.y);
-      return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-    }, [parsed]);
+    const xs = parsed.map((d) => d.x);
+    const ys = parsed.map((d) => d.y);
+    const minX = xs.length ? Math.min(...xs) : 0;
+    const maxX = xs.length ? Math.max(...xs) : 0;
+    const minY = ys.length ? Math.min(...ys) : 0;
+    const maxY = ys.length ? Math.max(...ys) : 0;
+    const xRange = Math.max(1, maxX - minX);
+    const yRange = Math.max(1, maxY - minY);
 
-    const scaleX = (x: number) => padding.left + ((x - minX) / Math.max(1, maxX - minX)) * w;
-    const scaleY = (y: number) => padding.top + h - ((y - minY) / Math.max(1, maxY - minY)) * h;
+    const scaleX = (x: number) => padding.left + ((x - minX) / xRange) * w;
+    const scaleY = (y: number) => padding.top + h - ((y - minY) / yRange) * h;
 
-    const path = useMemo(() => {
-      if (parsed.length === 0) return "";
-      return parsed
-        .map((d, i) => `${i === 0 ? "M" : "L"} ${scaleX(d.x)} ${scaleY(d.y)}`)
-        .join(" ");
-    }, [parsed, scaleX, scaleY]);
+    const path =
+      parsed.length === 0
+        ? ""
+        : parsed
+            .map((d, i) => `${i === 0 ? "M" : "L"} ${scaleX(d.x)} ${scaleY(d.y)}`)
+            .join(" ");
 
     const yTicks = 4;
     const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>

@@ -181,8 +181,8 @@ def test_search_hybrid_vector_path() -> None:
 def test_trend_volume_keyword_path() -> None:
     cursor = FakeAsyncCursor(
         fetchall=[
-            {"bucket": "2024-01", "count": 3},
-            {"bucket": "2024-02", "count": 1},
+            {"bucket": "2024-01", "count": 3, "top_assignee": "Google LLC"},
+            {"bucket": "2024-02", "count": 1, "top_assignee": "Microsoft"},
         ]
     )
     conn = cast(Any, FakeAsyncConnection([cursor]))
@@ -196,7 +196,7 @@ def test_trend_volume_keyword_path() -> None:
         )
     )
 
-    assert rows[0] == ("2024-01", 3)
+    assert rows[0] == ("2024-01", 3, "Google LLC")
 
 
 def test_trend_volume_vector_path_groups_by_assignee() -> None:
@@ -236,8 +236,8 @@ def test_trend_volume_vector_path_groups_by_assignee() -> None:
         )
     )
 
-    assert rows[0] == ("OpenAI", 2)
-    assert rows[1] == ("DeepMind", 1)
+    assert rows[0] == ("OpenAI", 2, None)
+    assert rows[1] == ("DeepMind", 1, None)
 
 
 def test_get_patent_detail_returns_model() -> None:
