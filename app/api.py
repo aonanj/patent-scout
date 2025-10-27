@@ -36,6 +36,7 @@ from .schemas import (
     SearchFilters,
     SearchRequest,
     SearchResponse,
+    SearchSortOption,
     TrendPoint,
     TrendResponse,
 )
@@ -134,6 +135,7 @@ async def post_search(req: SearchRequest, conn: Conn, user: ActiveSubscription) 
         limit=max(1, min(req.limit, 200)),
         offset=max(0, req.offset),
         filters=req.filters,
+        sort_by=req.sort_by,
     )
     return SearchResponse(total=total, items=items)
 
@@ -388,6 +390,7 @@ async def export(
     date_to: int | None = Query(None),
     semantic_query: str | None = Query(None),
     limit: int = Query(1000, ge=1, le=1000),
+    sort: SearchSortOption = Query("pub_date_desc"),
 ):
 
     owner_id = user.get("sub")
@@ -415,6 +418,7 @@ async def export(
         query_vec=qv,
         filters=filters,
         limit=limit,
+        sort_by=sort,
     )
 
     filename = "patent_scout_export"

@@ -32,6 +32,7 @@ def _cleanup_client(client: TestClient) -> None:
 
 def test_post_search_keyword(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     async def fake_search(conn, **kwargs):
+        assert kwargs["sort_by"] == "pub_date_desc"
         return 1, [PatentHit(pub_id="US1", title="Result")]
 
     monkeypatch.setattr(api_module, "search_hybrid", fake_search)
@@ -57,6 +58,7 @@ def test_post_search_semantic_invokes_embed(monkeypatch: pytest.MonkeyPatch, fak
 
     async def fake_search(conn, **kwargs):
         assert kwargs["query_vec"] == [0.1, 0.2]
+        assert kwargs["sort_by"] == "pub_date_desc"
         return 1, [PatentHit(pub_id="US1", title="Semantic")]
 
     monkeypatch.setattr(api_module, "embed_text", fake_embed)
@@ -118,6 +120,7 @@ def test_patent_date_range(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_export_csv(monkeypatch: pytest.MonkeyPatch, fake_user: dict[str, str]) -> None:
     async def fake_export(conn, **kwargs):
+        assert kwargs["sort_by"] == "pub_date_desc"
         return [
             {
                 "pub_id": "US1",

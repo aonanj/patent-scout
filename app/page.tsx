@@ -15,6 +15,8 @@ type SearchHit = {
 
 type TrendPoint = { label: string; count: number; top_assignee?: string | null };
 
+type SortOption = "pub_date_desc" | "assignee_asc";
+
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
@@ -186,6 +188,7 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("pub_date_desc");
 
   // Sigma component handles its own container; no external ref needed.
 
@@ -259,6 +262,7 @@ export default function Page() {
         },
         limit: pageSize,
         offset: (page - 1) * pageSize,
+        sort_by: sortBy,
       };
 
       const res = await fetch(`/api/search`, {
@@ -281,7 +285,7 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }, [getAccessTokenSilently, page, pageSize, appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo]);
+  }, [getAccessTokenSilently, page, pageSize, appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo, sortBy]);
 
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
@@ -434,8 +438,9 @@ export default function Page() {
     if (appliedDateFrom) p.set("date_from", String(dateToInt(appliedDateFrom)));
     if (appliedDateTo) p.set("date_to", String(dateToInt(appliedDateTo)));
     p.set("limit", "1000");
+    p.set("sort", sortBy);
     return `/api/export?${p.toString()}`;
-  }, [appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo]);
+  }, [appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo, sortBy]);
 
   const triggerDownload = useCallback(async (fmt: "csv" | "pdf") => {
     try {
@@ -486,6 +491,7 @@ export default function Page() {
     setAppliedCpc("");
     setAppliedDateFrom("");
     setAppliedDateTo("");
+    setSortBy("pub_date_desc");
     setPage(1);
   }, []);
 
@@ -643,21 +649,39 @@ export default function Page() {
         <Card>
           <Row>
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Results</h2>
-            {!isFetchingData && total !== null && (
-              <span style={{ marginLeft: "auto", fontSize: 12, color: "#334155" }}>
-                {total.toLocaleString()} total
-              </span>
-            )}
-            {!isFetchingData && total !== null && total > 0 && (
-              <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
-                <SecondaryButton onClick={() => triggerDownload('csv')} disabled={downloading !== null} title="Download top 1000 as CSV">
-                  {downloading === 'csv' ? 'Generating…' : 'Export CSV'}
-                </SecondaryButton>
-                <SecondaryButton onClick={() => triggerDownload('pdf')} disabled={downloading !== null} title="Download top 1000 as PDF">
-                  {downloading === 'pdf' ? 'Generating…' : 'Export PDF'}
-                </SecondaryButton>
+            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              {!isFetchingData && total !== null && (
+                <span style={{ fontSize: 12, color: "#334155" }}>
+                  {total.toLocaleString()} total
+                </span>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Label htmlFor="results_sort">Sort</Label>
+                <select
+                  id="results_sort"
+                  value={sortBy}
+                  onChange={(e) => {
+                    const next = e.target.value as SortOption;
+                    setSortBy(next);
+                    setPage(1);
+                  }}
+                  style={{ height: 28, border: "1px solid #e5e7eb", borderRadius: 6, padding: "0 8px" }}
+                >
+                  <option value="pub_date_desc">Most Recent</option>
+                  <option value="assignee_asc">Assignee (A→Z)</option>
+                </select>
               </div>
-            )}
+              {!isFetchingData && total !== null && total > 0 && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <SecondaryButton onClick={() => triggerDownload('csv')} disabled={downloading !== null} title="Download top 1000 as CSV">
+                    {downloading === 'csv' ? 'Generating…' : 'Export CSV'}
+                  </SecondaryButton>
+                  <SecondaryButton onClick={() => triggerDownload('pdf')} disabled={downloading !== null} title="Download top 1000 as PDF">
+                    {downloading === 'pdf' ? 'Generating…' : 'Export PDF'}
+                  </SecondaryButton>
+                </div>
+              )}
+            </div>
           </Row>
 
           {error && (

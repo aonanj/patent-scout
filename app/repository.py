@@ -9,7 +9,7 @@ import psycopg
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
 
-from .schemas import PatentDetail, PatentHit, SearchFilters
+from .schemas import PatentDetail, PatentHit, SearchFilters, SearchSortOption
 
 _VEC_CAST: Final[str] = (
     "::halfvec" if os.environ.get("VECTOR_TYPE", "vector").lower().startswith("half") else "::vector"
@@ -43,6 +43,8 @@ LEFT JOIN LATERAL (
 ) can ON TRUE
 """.strip()
 
+ASSIGNEE_SORT_EXPR: Final[str] = "COALESCE(can.canonical_assignee_name, p.assignee_name)"
+
 
 def _dtint(s: int | str | None) -> int | None:
     if s is None:
@@ -59,7 +61,7 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
 
     if f.assignee:
         # Filter against canonical when available; fall back to raw assignee
-        where.append("COALESCE(can.canonical_assignee_name, p.assignee_name) ILIKE %s")
+        where.append(f"{ASSIGNEE_SORT_EXPR} ILIKE %s")
         args.append(f"%{f.assignee}%")
 
     if f.cpc:
@@ -84,8 +86,24 @@ def _filters_sql(f: SearchFilters, args: list[object]) -> str:
         where.append("p.pub_date < %s")
         args.append(_dtint(f.date_to))
 
-
     return " AND ".join(where)
+
+
+def _assignee_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
+    """Sort key mirroring the SQL ORDER BY for canonical assignee ascending."""
+    name_raw = row.get("assignee_name") or ""
+    name = name_raw.strip()
+    name_priority = 0 if name else 1  # push empties to the end
+    comp_name = name.casefold()
+    pub_date_val = row.get("pub_date")
+    if isinstance(pub_date_val, int):
+        date_sort = -pub_date_val
+    elif isinstance(pub_date_val, str) and pub_date_val.isdigit():
+        date_sort = -int(pub_date_val)
+    else:
+        date_sort = -1
+    pub_id = row.get("pub_id") or ""
+    return (name_priority, comp_name, date_sort, pub_id)
 
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
@@ -129,6 +147,7 @@ async def export_rows(
     query_vec: Iterable[float] | None,
     filters: SearchFilters,
     limit: int = EXPORT_MAX_ROWS,
+    sort_by: SearchSortOption = "pub_date_desc",
 ) -> list[dict[str, Any]]:
     """Return up to `limit` rows for export with flattened CPC.
 
@@ -157,7 +176,9 @@ async def export_rows(
             args.append(keywords)
 
         base_query = f"{from_clause} WHERE {' AND '.join(where)}"
-        if keywords:
+        if sort_by == "assignee_asc":
+            order_by = f"ORDER BY {ASSIGNEE_SORT_EXPR} ASC NULLS LAST, p.pub_date DESC, p.pub_id ASC"
+        elif keywords:
             # order by text search rank when keywords present
             order_by = (f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC")
             args.append(keywords)
@@ -215,6 +236,8 @@ async def export_rows(
         rows: list[dict[str, Any]] = await cur.fetchall()
 
     kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
+    if sort_by == "assignee_asc":
+        kept = sorted(kept, key=_assignee_sort_key)
     kept = kept[:limit]
     out: list[dict[str, Any]] = []
     for r in kept:
@@ -239,6 +262,7 @@ async def search_hybrid(
     limit: int,
     offset: int,
     filters: SearchFilters,
+    sort_by: SearchSortOption = "pub_date_desc",
 ) -> tuple[int, list[PatentHit]]:
     """Keyword and/or vector search.
 
@@ -276,7 +300,9 @@ async def search_hybrid(
             total_row = await cur.fetchone()
             total = total_row["count"] if total_row else 0
 
-        if keywords:
+        if sort_by == "assignee_asc":
+            order_by = f"ORDER BY {ASSIGNEE_SORT_EXPR} ASC NULLS LAST, p.pub_date DESC, p.pub_id ASC"
+        elif keywords:
             # add keyword again for ordering
             args.append(keywords)
             order_by = (
@@ -326,6 +352,8 @@ async def search_hybrid(
 
     # Apply adaptive filtering to remove irrelevant results based on distance jumps
     kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
+    if sort_by == "assignee_asc":
+        kept = sorted(kept, key=_assignee_sort_key)
 
     # Calculate total based on filtered results
     total = len(kept)

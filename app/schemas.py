@@ -12,12 +12,16 @@ class SearchFilters(BaseModel):
     date_to: int | None = None # YYYYMMDD
 
 
+SearchSortOption = Literal["pub_date_desc", "assignee_asc"]
+
+
 class SearchRequest(BaseModel):
     keywords: str | None = None
     semantic_query: str | None = None
     limit: int = 50
     offset: int = 0
     filters: SearchFilters = Field(default_factory=SearchFilters)
+    sort_by: SearchSortOption = "pub_date_desc"
 
 
 class PatentHit(BaseModel):

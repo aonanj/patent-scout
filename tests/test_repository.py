@@ -99,6 +99,47 @@ def test_export_rows_vector_path_limits_results() -> None:
     assert rows[0]["pub_id"] == "US001"
 
 
+def test_export_rows_vector_sort_by_assignee() -> None:
+    cursor = FakeAsyncCursor(
+        fetchall=[
+            {
+                "pub_id": "US100",
+                "title": "Later Alpha",
+                "abstract": "Semantic",
+                "assignee_name": "Zeta Corp",
+                "pub_date": 20240102,
+                "priority_date": 20230102,
+                "cpc_str": "G06F",
+                "dist": 0.02,
+            },
+            {
+                "pub_id": "US099",
+                "title": "Earlier",
+                "abstract": "Semantic",
+                "assignee_name": "Alpha Labs",
+                "pub_date": 20240101,
+                "priority_date": 20230101,
+                "cpc_str": "G06N",
+                "dist": 0.01,
+            },
+        ]
+    )
+    conn = cast(Any, FakeAsyncConnection([cursor]))
+
+    rows = asyncio.run(
+        repository.export_rows(
+            conn,
+            keywords=None,
+            query_vec=[0.1, 0.2, 0.3],
+            filters=SearchFilters(),
+            limit=5,
+            sort_by="assignee_asc",
+        )
+    )
+
+    assert [r["assignee_name"] for r in rows] == ["Alpha Labs", "Zeta Corp"]
+
+
 def test_search_hybrid_keyword_path() -> None:
     count_cursor = FakeAsyncCursor(fetchone={"count": 2})
     results_cursor = FakeAsyncCursor(
@@ -176,6 +217,49 @@ def test_search_hybrid_vector_path() -> None:
     assert score0 is not None
     assert score1 is not None
     assert score0 <= score1
+
+
+def test_search_hybrid_vector_sort_by_assignee() -> None:
+    cursor = FakeAsyncCursor(
+        fetchall=[
+            {
+                "pub_id": "US700",
+                "title": "Semantic Hit",
+                "abstract": "embedding",
+                "assignee_name": "Zeta LLC",
+                "pub_date": 20240105,
+                "kind_code": "A1",
+                "cpc": [],
+                "dist": 0.04,
+            },
+            {
+                "pub_id": "US701",
+                "title": "Second Hit",
+                "abstract": "embedding",
+                "assignee_name": "Alpha LLC",
+                "pub_date": 20240104,
+                "kind_code": "A1",
+                "cpc": [],
+                "dist": 0.05,
+            },
+        ]
+    )
+    conn = cast(Any, FakeAsyncConnection([cursor]))
+
+    total, items = asyncio.run(
+        repository.search_hybrid(
+            conn,
+            keywords=None,
+            query_vec=[0.1, 0.2],
+            limit=10,
+            offset=0,
+            filters=SearchFilters(),
+            sort_by="assignee_asc",
+        )
+    )
+
+    assert total == 2
+    assert [item.assignee_name for item in items] == ["Alpha LLC", "Zeta LLC"]
 
 
 def test_trend_volume_keyword_path() -> None:

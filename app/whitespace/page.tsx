@@ -194,7 +194,7 @@ function GhostButton({ onClick, children, disabled, style, title }: { onClick?: 
     color: "#39506b",
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 400,
-    fontSize: 11,
+    fontSize: 12,
     opacity: disabled ? 0.6 : 1,
     ...style,
   };
