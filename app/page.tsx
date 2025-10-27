@@ -553,7 +553,6 @@ export default function Page() {
         <Card>
           <Row>
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Results</h2>
-            {isFetchingData && <span style={{ fontSize: 12, color: "#64748b" }}>Loading…</span>}
             {!isFetchingData && total !== null && (
               <span style={{ marginLeft: "auto", fontSize: 12, color: "#334155" }}>
                 {total.toLocaleString()} total

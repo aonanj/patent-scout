@@ -201,7 +201,7 @@ export default function SearchTrendsHelpPage() {
             />
             <TrendOption
               mode="CPC (Section + Class)"
-              description="Groups patents and publications by their CPC section and class (e.g., 'G06N', 'H04L'). Displays the top 10 CPC codes by count, with an 'Other' category aggregating the rest. Rendered as a horizontal bar chart. Indicative of the technological areas dominating the search results."
+              description="Groups patents and publications by their CPC section and class (e.g., 'G06N', 'H04L'). Displays the top 10 CPC codes by count, with an 'Other' category aggregating the rest. Rendered as a horizontal bar chart. Indicative of the technological areas dominating the search results. (Note: patents and publications generally have multiple CPC codes, so counts may exceed total results.)"
             />
             <TrendOption
               mode="Assignee"
@@ -354,19 +354,19 @@ export default function SearchTrendsHelpPage() {
             />
             <BestPractice
               title="Use Broad CPC Codes for Exploration"
-              tip="To broadly explore technology areas, a CPC code (e.g., 'G06N' for Computing and Calculating; Counting) can be specified as a search criteria. The results can be further refined, e.g., by reference to the trend chart."
+              tip="To broadly explore technology areas, a CPC code (e.g., 'G06N' for Computing and Calculating; Counting) can be specified as a search criteria. The results can be further refined, e.g., by reference to the trend chart. CPC codes are hierarchical, so broader codes capture more patents and publications, while specific codes narrow the focus. (Note: patents and publications generally have multiple CPC codes, so counts may exceed total results.)"
             />
             <BestPractice
               title="Monitor Competitors with Assignee Filters"
-              tip="Create alerts for specific assignees (e.g., 'Google', 'Microsoft') to stay informed about their latest patents and applications. Combine with CPC and/or keyword filters to focus on relevant technologies."
+              tip="Create alerts for specific assignees (e.g., 'Google', 'Microsoft') to stay informed about their latest patents and applications. Combine with CPC and/or keyword filters to focus on technology areas of interest."
             />
             <BestPractice
               title="Review Trend Charts For Exporting"
-              tip="Trend Chart can provide a quick and convenient visual reference in a variety of contexts. For example, momentums, new products and services, shifts in technology focus, increases/decreases in R&D investment and allocation, etc. can be easily identified by tuning semantic and keyword searching and other filters to values consistent with a trend of interest. Accordingly, Trend Chart provides a visual verification before exporting a results set."
+              tip="Trend Chart can provide a quick and convenient visual reference in a variety of contexts. For example, momentums, new products and services, shifts in technology focus, increases/decreases in R&D investment and allocation, etc. can be easily identified by tuning semantic and keyword searching and other filters to values consistent with a trend of interest. Accordingly, Trend Chart can provide a visual verification before exporting a results set."
             />
             <BestPractice
               title="Alerts Allow Automatic Monitoring, Not One-Time Searches"
-              tip="Alerts provide a mechanism for continuous passive monitoring, avoiding the need for repetitive searches after each USPTO patent issue and application publication date."
+              tip="Alerts provide a mechanism for continuous passive monitoring, avoiding the need for repetitive searches after each USPTO patent grant and application publication date."
             />
           </div>
         </div>
@@ -378,11 +378,11 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 16 }}>
             <Troubleshoot
               issue="No results found"
-              solution="Try broadening your search by removing filters or using a more general semantic query. Verify that your date range covers does not fall outside the searchable database(2023–present). Check that CPC codes are valid and assignee names are spelled correctly."
+              solution="Try broadening the search by removing filters or using a more general semantic query. Verify that the specified date range does not fall outside the searchable database (2023–present). Check that CPC codes are valid and assignee names are spelled correctly."
             />
             <Troubleshoot
               issue="Trend chart shows 'No data'"
-              solution="Usually caused by filters that are too narrow for any matches. If results are returned with no semantic search, keywords, or other filters applied, try incrementally narrowing your focus."
+              solution="Usually caused by filters that are too narrow for any matches. If results are returned with no semantic search, keywords, or other filters applied, try resetting and incrementally narrowing the search focus."
             />
             <Troubleshoot
               issue="Alert save fails"
