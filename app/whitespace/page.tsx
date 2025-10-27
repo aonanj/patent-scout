@@ -186,15 +186,14 @@ function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?
 function GhostButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
   const [isHovered, setIsHovered] = useState(false);
   const buttonStyle: React.CSSProperties = {
-    height: 38,
-    padding: "0 16px",
-    borderRadius: 10,
-    border: isHovered ? "2px solid #5FA8D2" : "1px solid #e2e8f0",
-    background: isHovered ? "#f1f5f9" : "#ffffff",
-    color: "#0f172a",
+    height: 36,
+    padding: "0 12px",
+    borderRadius: 8,
+    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+    background: isHovered ? "#bcccdc" : "#d9e1eb",
+    color: "#39506b",
     cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 600,
-    fontSize: 13,
+    fontWeight: 500,
     opacity: disabled ? 0.6 : 1,
     ...style,
   };
