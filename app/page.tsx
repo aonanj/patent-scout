@@ -499,15 +499,15 @@ export default function Page() {
                 />
               </div>
 
-              <button onClick={handleApply} style={primaryBtn}>
+              <button onClick={handleApply} style={primaryBtn} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
                 Apply
               </button>
 
-              <button onClick={handleReset} style={ghostBtn}>
+              <button onClick={handleReset} style={ghostBtn} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
                 Reset
               </button>
 
-              <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert">
+              <button onClick={saveAsAlert} disabled={saving || !isAuthenticated} style={secondaryBtn} title="Save current filters as an alert" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
                 {saving ? "Saving…" : "Save as Alert"}
               </button>
               {saveMsg && (
@@ -872,12 +872,14 @@ const resultItem: React.CSSProperties = {
   background: "white",
 };
 
+const [isHovered, setIsHovered] = useState(false);
+
 const primaryBtn: React.CSSProperties = {
   height: 36,
   padding: "0 12px",
   borderRadius: 8,
-  border: "1px solid #0284c7",
-  background: "#0ea5e9",
+  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+  background: isHovered ? "#39506b" : "#0ea5e9",
   color: "white",
   cursor: "pointer",
   fontWeight: 600,
@@ -887,9 +889,9 @@ const ghostBtn: React.CSSProperties = {
   height: 36,
   padding: "0 12px",
   borderRadius: 8,
-  border: "1px solid #e5e7eb",
-  background: "white",
-  color: "#0f172a",
+  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+  background: isHovered ? "#a3bbd4" : "#bcccdc",
+  color: "#102a43",
   cursor: "pointer",
   fontWeight: 600,
 };
@@ -898,8 +900,9 @@ const secondaryBtn: React.CSSProperties = {
   height: 36,
   padding: "0 10px",
   borderRadius: 8,
-  border: "1px solid #e5e7eb",
-  background: "white",
+  border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
+  background: isHovered ? "#a3bbd4" : "#bcccdc",
+  color: "#102a43",
   cursor: "pointer",
   fontSize: 12,
 };

@@ -1,0 +1,34 @@
+{
+  "q": null,
+  "filters": [
+    {
+      "name": "applicationNumberText",
+      "value": [
+        "<application number, without 'US' prefix>"
+      ]
+    },
+    {
+      "name": "applicationMetaData.applicationTypeLabelName",
+      "value": [
+        "Utility"
+      ]
+    },
+    {
+      "name": "applicationMetaData.publicationCategoryBag",
+      "value": [
+        "Pre-Grant Publications - PGPub",
+        "Granted/Issued"
+      ]
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 100
+  },
+  "sort": [
+    {
+      "field": "applicationMetaData.earliestPublicationDate",
+      "order": "Desc"
+    }
+  ]
+}
