@@ -48,6 +48,60 @@ const SIGNAL_LABELS: Record<SignalKind, string> = {
   bridge: "Bridge Opportunity",
 };
 
+const CLUSTER_KEYWORD_SAMPLE_SIZE = 25;
+const CLUSTER_TERM_MIN_COUNT = 3;
+const CLUSTER_TERM_MAX_COUNT = 5;
+const CLUSTER_TERM_MIN_LENGTH = 5;
+const CLUSTER_TERM_STOPWORDS = new Set<string>([
+  "system",
+  "systems",
+  "method",
+  "methods",
+  "device",
+  "devices",
+  "apparatus",
+  "process",
+  "processes",
+  "module",
+  "modules",
+  "unit",
+  "units",
+  "network",
+  "networks",
+  "users",
+  "user",
+  "plurality",
+  "information",
+  "control",
+  "controls",
+  "analysis",
+  "analyzing",
+  "sensor",
+  "sensors",
+  "electric",
+  "electrical",
+  "component",
+  "components",
+  "circuit",
+  "circuitry",
+  "program",
+  "programs",
+  "computer",
+  "computers",
+  "application",
+  "applications",
+  "dataset",
+  "datasets",
+  "equipment",
+]);
+
+type ClusterLegendEntry = {
+  id: number;
+  color: string;
+  label: string;
+  tooltip: string;
+};
+
 function hslToHex(h: number, s: number, l: number): string {
   const clamp = (v: number) => Math.max(0, Math.min(1, v));
   s = clamp(s);
@@ -145,60 +199,123 @@ export default function SigmaWhitespaceGraph({
     return map;
   }, [data]);
 
-  const clusterMetadata = useMemo(() => {
-    const clusters = new Map<number, {
-      color: string;
-      nodeCount: number;
-      topAssignee: string;
-      assigneeCounts: Map<string, number>;
-    }>();
+  const clusterMetadata = useMemo<ClusterLegendEntry[]>(() => {
+    const nodes = data?.nodes ?? [];
+    if (nodes.length === 0) return [];
 
-    (data?.nodes ?? []).forEach((node) => {
+    const clusterBuckets = new Map<number, { color: string; nodes: WsNode[] }>();
+
+    nodes.forEach((node) => {
       const clusterId = node.cluster_id;
-      if (!clusters.has(clusterId)) {
-        clusters.set(clusterId, {
+      if (!clusterBuckets.has(clusterId)) {
+        clusterBuckets.set(clusterId, {
           color: clusterColor.get(clusterId) || colorForCluster(clusterId),
-          nodeCount: 0,
-          topAssignee: "",
-          assigneeCounts: new Map(),
+          nodes: [],
         });
       }
-
-      const cluster = clusters.get(clusterId)!;
-      cluster.nodeCount++;
-
-      const assignee = node.assignee || "Unknown assignee";
-      cluster.assigneeCounts.set(assignee, (cluster.assigneeCounts.get(assignee) || 0) + 1);
+      clusterBuckets.get(clusterId)!.nodes.push(node);
     });
 
-    // Determine top assignee for each cluster
-    clusters.forEach((cluster) => {
-      let maxCount = 0;
-      let topAssignee = "Mixed assignees";
+    const tokenize = (text: string | null | undefined): string[] => {
+      if (!text) return [];
+      const matches = text.match(/[A-Za-z0-9]+/g);
+      if (!matches) return [];
+      return matches
+        .map((token) => token.toLowerCase())
+        .filter(
+          (token) =>
+            token.length >= CLUSTER_TERM_MIN_LENGTH && !CLUSTER_TERM_STOPWORDS.has(token),
+        );
+    };
 
-      cluster.assigneeCounts.forEach((count, assignee) => {
-        if (count > maxCount) {
-          maxCount = count;
-          topAssignee = assignee;
-        }
+    const keywordsForCluster = (clusterNodes: WsNode[]): string[] => {
+      if (clusterNodes.length === 0) return [];
+
+      const sorted = [...clusterNodes].sort((a, b) => {
+        const bRel = normalizeRelevance(b.relevance);
+        const aRel = normalizeRelevance(a.relevance);
+        if (bRel !== aRel) return bRel - aRel;
+
+        const bWhitespace =
+          typeof b.whitespace_score === "number" && Number.isFinite(b.whitespace_score)
+            ? b.whitespace_score
+            : 0;
+        const aWhitespace =
+          typeof a.whitespace_score === "number" && Number.isFinite(a.whitespace_score)
+            ? a.whitespace_score
+            : 0;
+        if (bWhitespace !== aWhitespace) return bWhitespace - aWhitespace;
+
+        const aDensity =
+          typeof a.local_density === "number" && Number.isFinite(a.local_density)
+            ? a.local_density
+            : Number.POSITIVE_INFINITY;
+        const bDensity =
+          typeof b.local_density === "number" && Number.isFinite(b.local_density)
+            ? b.local_density
+            : Number.POSITIVE_INFINITY;
+        if (aDensity !== bDensity) return aDensity - bDensity;
+
+        return a.id.localeCompare(b.id);
       });
 
-      // If the top assignee doesn't dominate (>40%), show "Mixed assignees"
-      if (maxCount / cluster.nodeCount < 0.4) {
-        topAssignee = "Mixed assignees";
+      const sample = sorted.slice(
+        0,
+        Math.min(CLUSTER_KEYWORD_SAMPLE_SIZE, sorted.length),
+      );
+
+      const counts = new Map<string, number>();
+      sample.forEach((node) => {
+        const perNodeTokens = new Set<string>();
+        [node.title, node.abstract].forEach((text) => {
+          tokenize(text).forEach((token) => perNodeTokens.add(token));
+        });
+        perNodeTokens.forEach((token) => {
+          counts.set(token, (counts.get(token) ?? 0) + 1);
+        });
+      });
+
+      if (counts.size === 0) {
+        return [];
       }
 
-      cluster.topAssignee = topAssignee;
-    });
+      const ordered = Array.from(counts.entries())
+        .sort((a, b) => {
+          if (b[1] !== a[1]) return b[1] - a[1];
+          return a[0].localeCompare(b[0]);
+        })
+        .map(([term]) => term);
 
-    // Sort clusters by node count (descending) and return as array
-    return Array.from(clusters.entries())
-      .sort((a, b) => b[1].nodeCount - a[1].nodeCount)
-      .map(([id, metadata]) => ({
-        id,
-        color: metadata.color,
-        label: `${metadata.topAssignee} (${metadata.nodeCount} ${metadata.nodeCount === 1 ? 'filing' : 'filings'})`,
-      }));
+      const desiredCount = Math.max(
+        CLUSTER_TERM_MIN_COUNT,
+        Math.min(CLUSTER_TERM_MAX_COUNT, ordered.length),
+      );
+      return ordered.slice(0, desiredCount);
+    };
+
+    const formatTerm = (term: string) =>
+      term.length === 0 ? term : term[0].toUpperCase() + term.slice(1);
+
+    return Array.from(clusterBuckets.entries())
+      .sort((a, b) => b[1].nodes.length - a[1].nodes.length)
+      .map(([id, info]) => {
+        const nodeCount = info.nodes.length;
+        const keywords = keywordsForCluster(info.nodes);
+        const formattedKeywords = keywords.map(formatTerm).join(", ");
+        const filingsText = `${nodeCount} ${nodeCount === 1 ? "filing" : "filings"}`;
+        const labelPrefix = formattedKeywords ? `e.g., ${formattedKeywords}` : `Cluster ${id}`;
+        const label = `${labelPrefix} (${filingsText})`;
+        const tooltip = formattedKeywords
+          ? `Cluster ${id} • ${labelPrefix}`
+          : `Cluster ${id}`;
+
+        return {
+          id,
+          color: info.color,
+          label,
+          tooltip,
+        };
+      });
   }, [data, clusterColor]);
 
   const sizeForNode = useCallback((node: WsNode) => {
@@ -707,7 +824,7 @@ export default function SigmaWhitespaceGraph({
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
-              title={cluster.label}
+              title={cluster.tooltip}
             >
               {cluster.label}
             </div>

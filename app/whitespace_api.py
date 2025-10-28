@@ -370,7 +370,7 @@ def _match_canonical_assignees(
             FROM assignee_alias alias
             JOIN canonical_assignee_name can ON can.id = alias.canonical_id
             WHERE alias.assignee_alias ILIKE ANY(%s)
-            ORDER BY char_length(can.canonical_assignee_name)
+            ORDER BY can.canonical_assignee_name
             LIMIT %s
             """,
             (patterns, max(limit * 5, limit)),
