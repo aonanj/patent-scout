@@ -82,7 +82,7 @@ export default function HelpIndexPage() {
 
             <div style={{ display: "grid", gap: 12 }}>
               <DetailItem icon="⬩" title="Hybrid Search" text="Combine keyword and semantic queries to find relevant patents and publications using both exact matches and AI-powered similarity" />
-              <DetailItem icon="⬩" title="Advanced Filters" text="Narrow results by assignee, CPC code, publication date range, and more" />
+              <DetailItem icon="⬩" title="Advanced Filters" text="Narrow results by assignee, CPC code, grant/publication date range, and more" />
               <DetailItem icon="⬩" title="Trend Visualization" text="Visualize patent filing trends by month, CPC classification, or assignee to spot patterns and emerging areas" />
               <DetailItem icon="⬩" title="Export Capabilities" text="Download search results as CSV or enriched PDF reports for offline analysis" />
               <DetailItem icon="⬩" title="Saved Alerts" text="Save your search criteria and receive notifications when new patents and publications match your filters" />

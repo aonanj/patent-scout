@@ -251,8 +251,8 @@ def should_keep_existing(existing_pub_date: int | None, new_pub_date: int | None
     Determine if existing entry should be kept over new entry.
 
     Args:
-        existing_pub_date: Publication date of existing entry.
-        new_pub_date: Publication date of new entry.
+        existing_pub_date: Grant/Publication date of existing entry.
+        new_pub_date: Grant/Publication date of new entry.
 
     Returns:
         True if existing should be kept, False if new should be kept.

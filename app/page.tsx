@@ -525,7 +525,7 @@ export default function Page() {
                   id="semantic"
                   value={semantic}
                   onChange={(e) => setSemantic(e.target.value)}
-                  placeholder="Describe relevant AI tech"
+                  placeholder="Natural language description of technology"
                   style={{ ...inputStyle, minWidth: 380, width: 420, maxWidth: 500 }}
                 />
               </div>
@@ -535,7 +535,7 @@ export default function Page() {
                   id="q"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Keywords in title/abstract/claims"
+                  placeholder="Title/abstract/claims keywords"
                   style={inputStyle}
                 />
               </div>

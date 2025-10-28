@@ -276,7 +276,7 @@ export default function WhitespaceHelpPage() {
 
             <LayoutSection
               title="4. Highlighted Examples Section (conditional)"
-              description="Appears only when you click 'View Examples (Recent)' or 'View Examples (Related)' on a signal. Displays a table of up to eight example patents and publications sorted by publication date (recent) or whitespace relevance (related). Includes title, patent or publication number ('pub_id') (linked to Google Patents), assignee, date, and abstract. An 'Export PDF' button lets you download the examples as a formatted report."
+              description="Appears only when you click 'View Examples (Recent)' or 'View Examples (Related)' on a signal. Displays a table of up to eight example patents and publications sorted by grant/publication date (recent) or whitespace relevance (related). Includes title, patent or publication number ('pub_id') (linked to Google Patents), assignee, date, and abstract. An 'Export PDF' button lets you download the examples as a formatted report."
             />
           </div>
 

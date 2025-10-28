@@ -15,9 +15,10 @@ type SubscriptionInfo = {
 type SubscriptionStatusProps = {
   subscription: SubscriptionInfo;
   onManage: () => void;
+  accountEmail?: string | null;
 };
 
-export default function SubscriptionStatus({ subscription, onManage }: SubscriptionStatusProps) {
+export default function SubscriptionStatus({ subscription, onManage, accountEmail }: SubscriptionStatusProps) {
   const tierDisplay = useMemo(() => {
     if (subscription.tier === "beta_tester") return "Beta Tester";
     if (subscription.tier === "user") return "User";
@@ -86,10 +87,12 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
       {/* Content */}
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Plan */}
+          {/* Account */}
           <div>
-            <div className="text-sm text-slate-500 mb-1 font-semibold" style={{ textDecoration: "underline" }}>Plan</div>
-            <div className="text-lg font-semibold" style={{ color: '#102A43' }}>{tierDisplay}</div>
+            <div className="text-sm text-slate-500 mb-1 font-semibold" style={{ textDecoration: "underline" }}>Account</div>
+            <div className="text-lg font-semibold break-words" style={{ color: '#102A43' }}>
+              {accountEmail || "Unknown"}
+            </div>
           </div>
 
           {/* Status */}
@@ -114,6 +117,12 @@ export default function SubscriptionStatus({ subscription, onManage }: Subscript
                 {statusDisplay}
               </span>
             </div>
+          </div>
+
+          {/* Plan */}
+          <div>
+            <div className="text-sm text-slate-500 mb-1 font-semibold" style={{ textDecoration: "underline" }}>Plan</div>
+            <div className="text-lg font-semibold" style={{ color: '#102A43' }}>{tierDisplay}</div>
           </div>
 
           {/* Renewal Date */}

@@ -248,6 +248,7 @@ function BillingContent() {
             <SubscriptionStatus
               subscription={subscription}
               onManage={handleManageSubscription}
+              accountEmail={user?.email || null}
             />
           </div>
         ) : (

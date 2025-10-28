@@ -880,8 +880,8 @@ export default function WhitespacePage() {
   const primaryInputId = isAssigneeMode ? "ws-assignee-query" : "ws-focus-keywords";
   const primaryInputLabel = isAssigneeMode ? "Assignee" : "Focus Keywords";
   const primaryPlaceholder = isAssigneeMode
-    ? "e.g., Alphabet, General Motors"
-    : "e.g., LIDAR, perception, autonomous driving";
+    ? "e.g., Samsung Electronics, Nvidia"
+    : "e.g., autonomous vehicles, medical imaging";
 
   return (
     <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh" }}>
@@ -1397,7 +1397,7 @@ export default function WhitespacePage() {
                             <th style={thStyle}>Title</th>
                             <th style={thStyle}>Patent/Pub No</th>
                             <th style={thStyle}>Assignee</th>
-                            <th style={thStyle}>Publication Date</th>
+                            <th style={thStyle}>Grant/Pub Date</th>
                             <th style={thStyle}>Score</th>
                             <th style={thStyle}>Abstract</th>
                           </tr>
