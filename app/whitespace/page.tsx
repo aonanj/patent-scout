@@ -1123,22 +1123,6 @@ export default function WhitespacePage() {
                           <span style={{ fontSize: 12 }}>{arrow}</span>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                             <span>{assignee.assignee}</span>
-                            {assignee.group_kind === "cluster" && (
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 600,
-                                  color: "#1f2937",
-                                  background: "#dbeafe",
-                                  borderRadius: 999,
-                                  padding: "2px 8px",
-                                  textTransform: "uppercase",
-                                  letterSpacing: 0.4,
-                                }}
-                              >
-                                Cluster {typeof assignee.cluster_id === "number" ? assignee.cluster_id : "•"}
-                              </span>
-                            )}
                           </div>
                         </button>
                         {isOpen && (

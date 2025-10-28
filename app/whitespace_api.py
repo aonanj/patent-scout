@@ -1207,8 +1207,6 @@ def build_group_signals(
             trimmed_terms = label_terms[:CLUSTER_LABEL_MAX_TERMS]
             formatted_terms = _format_label_terms(trimmed_terms) if trimmed_terms else ""
             label_text = f"Cluster {node.cluster_id}"
-            if formatted_terms:
-                label_text = f"{label_text} • {formatted_terms}"
             if key not in group_meta:
                 group_meta[key] = {
                     "label": label_text,

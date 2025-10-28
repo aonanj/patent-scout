@@ -2,6 +2,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { fetchWithRetry } from "../../_lib/fetch-with-retry";
+
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   const headers = new Headers();
@@ -14,10 +16,12 @@ export async function GET(req: NextRequest) {
   const url = `${process.env.BACKEND_URL}/trend/volume${searchParams}`;
 
   try {
-    const r = await fetch(url, { 
-      headers: headers,
-      cache: "no-store" 
-    });
+    const r = await fetchWithRetry(() =>
+      fetch(url, { 
+        headers: headers,
+        cache: "no-store" 
+      })
+    );
     const t = await r.text();
 
     return new NextResponse(t, {

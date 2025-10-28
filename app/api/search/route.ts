@@ -1,6 +1,8 @@
 // app/api/search/route.ts
 import { NextRequest } from "next/server";
 
+import { fetchWithRetry } from "../_lib/fetch-with-retry";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -16,12 +18,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Send to FastAPI backend with the new headers
-    const resp = await fetch(`${process.env.BACKEND_URL}/search`, {
-      method: "POST",
-      headers: headers, // Use the prepared headers
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
+    const payload = JSON.stringify(body);
+    const resp = await fetchWithRetry(() =>
+      fetch(`${process.env.BACKEND_URL}/search`, {
+        method: "POST",
+        headers: headers, // Use the prepared headers
+        body: payload,
+        cache: "no-store",
+      })
+    );
 
     const text = await resp.text();
     return new Response(text, {

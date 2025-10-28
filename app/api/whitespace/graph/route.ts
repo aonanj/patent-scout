@@ -1,6 +1,8 @@
 // app/api/whitespace/graph/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
+import { fetchWithRetry } from "../../_lib/fetch-with-retry";
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   const headers = new Headers();
@@ -13,12 +15,15 @@ export async function POST(req: NextRequest) {
   const url = `${process.env.BACKEND_URL}/whitespace/graph`;
 
   try {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(body),
-      cache: "no-store"
-    });
+    const payload = JSON.stringify(body);
+    const r = await fetchWithRetry(() =>
+      fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: payload,
+        cache: "no-store"
+      })
+    );
     const t = await r.text();
 
     return new NextResponse(t, {
