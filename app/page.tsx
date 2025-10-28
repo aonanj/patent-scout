@@ -502,8 +502,8 @@ export default function Page() {
       {!isLoading && !isAuthenticated && (
         <div style={overlayStyle}>
           <div style={overlayContentStyle}>
-            <h2 style={{ marginTop: 0, fontSize: 20, fontWeight: 600 }}>Patent Scout</h2>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500 }}>Data and analytics platform for AI IP.  2025 © Phaethon Order LLC</h3>
+            <h2 style={{ marginTop: 0, fontSize: 20, fontWeight: 600 }}>Patent Scout™</h2>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>Data and analytics platform for AI/ML IP.  2025 © Phaethon Order LLC</h3>
             <p style={{ color: '#475569', marginBottom: 24 }}>Please log in or sign up to continue.</p>
             <PrimaryButton
               onClick={() => loginWithRedirect()}
