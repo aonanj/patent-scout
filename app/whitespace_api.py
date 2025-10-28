@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
+import time
 import uuid
-import math
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -29,6 +30,7 @@ from infrastructure.logger import get_logger
 
 from .auth import get_current_user
 from .repository import CANONICAL_ASSIGNEE_LATERAL, SEARCH_EXPR
+from .db_errors import is_recoverable_operational_error
 from .subscription_middleware import SubscriptionRequiredError
 from .whitespace_signals import (
     SignalComputation,
@@ -281,6 +283,21 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
 # --- DB pool ---
 _DB_URL = os.getenv("DATABASE_URL")
 _pool: ConnectionPool | None = None
+_MAX_DB_RETRIES = 5
+
+
+def _reset_pool(bad_pool: ConnectionPool | None) -> None:
+    global _pool
+    if bad_pool is None:
+        return
+    try:
+        bad_pool.close()
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.exception("Error closing whitespace pool after failure: %s", exc)
+    finally:
+        _pool = None
+
+
 def get_pool() -> ConnectionPool:
     global _pool
     if _pool is None:
@@ -1020,21 +1037,49 @@ def _persist_background(
     scores: np.ndarray,
     user_id: str,
 ) -> None:
-    try:
-        with pool.connection() as conn:
-            _persist_sync(
-                conn,
-                list(pub_ids),
-                model,
-                dist,
-                idx,
-                labels,
-                dens,
-                scores,
-                user_id,
+    attempts = 0
+    last_error: psycopg.OperationalError | None = None
+    current_pool = pool
+
+    while attempts < _MAX_DB_RETRIES:
+        try:
+            with current_pool.connection() as conn:
+                _persist_sync(
+                    conn,
+                    list(pub_ids),
+                    model,
+                    dist,
+                    idx,
+                    labels,
+                    dens,
+                    scores,
+                    user_id,
+                )
+            return
+        except psycopg.OperationalError as exc:
+            if not is_recoverable_operational_error(exc):
+                logger.exception("Failed to persist whitespace metrics")
+                return
+            attempts += 1
+            last_error = exc
+            logger.warning(
+                "Recoverable database error while persisting whitespace metrics (attempt %s/%s): %s",
+                attempts,
+                _MAX_DB_RETRIES,
+                exc,
             )
-    except Exception:
-        logger.exception("Failed to persist whitespace metrics")
+            _reset_pool(current_pool)
+            current_pool = get_pool()
+            time.sleep(min(0.1 * attempts, 1.0))
+        except Exception:
+            logger.exception("Failed to persist whitespace metrics")
+            return
+
+    logger.error(
+        "Failed to persist whitespace metrics after %s attempts: %s",
+        _MAX_DB_RETRIES,
+        last_error,
+    )
 
 
 # --- Endpoints ---
@@ -1413,22 +1458,52 @@ def get_whitespace_graph(
     matched_canonical_ids: list[uuid.UUID] | None = None
     matched_labels: list[str] = []
     matched_debug: list[tuple[str, float]] = []
+    attempts = 0
+    last_error: psycopg.OperationalError | None = None
+    current_pool = pool
 
-    with pool.connection() as conn:
+    while attempts < _MAX_DB_RETRIES:
         try:
-            _ensure_active_subscription(conn, user_id)
-            model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
-            if req.search_mode == "assignee":
-                group_mode = "cluster"
-                matched_canonical_ids, matched_labels, matched_debug = _match_canonical_assignees(
-                    conn, req.assignee_query or ""
-                )
-                if not matched_canonical_ids:
-                    raise HTTPException(
-                        status_code=404,
-                        detail="No canonical assignee matches found above the similarity threshold.",
+            with current_pool.connection() as conn:
+                _ensure_active_subscription(conn, user_id)
+                model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
+                if req.search_mode == "assignee":
+                    group_mode = "cluster"
+                    matched_canonical_ids, matched_labels, matched_debug = _match_canonical_assignees(
+                        conn, req.assignee_query or ""
                     )
-            X, meta = load_embeddings(conn, model, req, matched_canonical_ids)
+                    if not matched_canonical_ids:
+                        raise HTTPException(
+                            status_code=404,
+                            detail="No canonical assignee matches found above the similarity threshold.",
+                        )
+                X, meta = load_embeddings(conn, model, req, matched_canonical_ids)
+                focus_mask = np.array([m.is_focus for m in meta], dtype=bool)
+                pub_ids = [m.pub_id for m in meta]
+                point_count = len(pub_ids)
+
+                if point_count < 2:
+                    raise HTTPException(status_code=400, detail="Not enough embeddings to build whitespace graph.")
+                if req.neighbors >= point_count:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"neighbors must be less than the number of embeddings ({point_count})",
+                    )
+                if req.layout_neighbors >= point_count:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"layout_neighbors must be less than the number of embeddings ({point_count})",
+                    )
+
+                dist, idx = build_knn(X, req.neighbors)
+                labels = cluster_labels(dist, idx, req.resolution)
+                dens = local_density(dist)
+                mom = neighbor_momentum(conn, pub_ids, labels)
+                scores, proximity, distance, focus_vector = compute_whitespace_metrics(
+                    X, labels, dens, focus_mask, req.alpha, req.beta, mom
+                )
+            pool = current_pool
+            break
         except psycopg.errors.UndefinedTable as exc:
             logger.error("Whitespace schema missing; run database migrations before serving traffic.")
             raise HTTPException(
@@ -1441,29 +1516,31 @@ def get_whitespace_graph(
                 status_code=500,
                 detail="Database role is missing privileges required for whitespace queries.",
             ) from exc
-        focus_mask = np.array([m.is_focus for m in meta], dtype=bool)
-        pub_ids = [m.pub_id for m in meta]
-        point_count = len(pub_ids)
-
-        if point_count < 2:
-            raise HTTPException(status_code=400, detail="Not enough embeddings to build whitespace graph.")
-        if req.neighbors >= point_count:
-            raise HTTPException(
-                status_code=400,
-                detail=f"neighbors must be less than the number of embeddings ({point_count})",
+        except psycopg.OperationalError as exc:
+            if not is_recoverable_operational_error(exc):
+                raise
+            attempts += 1
+            last_error = exc
+            logger.warning(
+                "Recoverable database error while building whitespace graph (attempt %s/%s): %s",
+                attempts,
+                _MAX_DB_RETRIES,
+                exc,
             )
-        if req.layout_neighbors >= point_count:
-            raise HTTPException(
-                status_code=400,
-                detail=f"layout_neighbors must be less than the number of embeddings ({point_count})",
-            )
-
-        dist, idx = build_knn(X, req.neighbors)
-        labels = cluster_labels(dist, idx, req.resolution)
-        dens = local_density(dist)
-        mom = neighbor_momentum(conn, pub_ids, labels)
-        scores, proximity, distance, focus_vector = compute_whitespace_metrics(
-            X, labels, dens, focus_mask, req.alpha, req.beta, mom
+            _reset_pool(current_pool)
+            current_pool = get_pool()
+            time.sleep(min(0.1 * attempts, 1.0))
+        except Exception:
+            raise
+    else:
+        assert last_error is not None
+        logger.error(
+            "Exhausted retries while building whitespace graph due to database errors: %s",
+            last_error,
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Temporary database connectivity issue. Please retry your request.",
         )
 
     # layout

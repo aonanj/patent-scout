@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 
 import psycopg
@@ -7,10 +8,13 @@ from psycopg_pool import AsyncConnectionPool
 from infrastructure.logger import get_logger
 
 from .config import get_settings
+from .db_errors import is_recoverable_operational_error
 
 logger = get_logger()
 
 _pool: AsyncConnectionPool | None = None
+_MAX_RETRIES = 5
+_BASE_BACKOFF = 0.1
 
 
 def init_pool() -> AsyncConnectionPool:
@@ -44,15 +48,20 @@ async def _reset_pool(bad_pool: AsyncConnectionPool | None) -> None:
         _pool = None
 
 
+async def reset_pool() -> None:
+    """Explicitly reset the cached pool."""
+    await _reset_pool(_pool)
+
+
 async def get_conn() -> AsyncIterator[psycopg.AsyncConnection]:
     """Yield an async connection from the pool with a transaction.
 
-    Handles closed/invalid pooled connections by recreating the pool once.
+    Handles dropped SSL connections by recreating the pool with backoff.
     """
     attempt = 0
     last_error: OperationalError | None = None
 
-    while attempt < 2:
+    while attempt < _MAX_RETRIES:
         pool = init_pool()
         try:
             async with pool.connection() as conn, conn.transaction():
@@ -61,14 +70,20 @@ async def get_conn() -> AsyncIterator[psycopg.AsyncConnection]:
         except OperationalError as exc:
             attempt += 1
             last_error = exc
+            if not is_recoverable_operational_error(exc):
+                raise
             logger.warning(
-                "Database connection error (attempt %s/2): %s", attempt, exc
+                "Recoverable database connection error (attempt %s/%s): %s",
+                attempt,
+                _MAX_RETRIES,
+                exc,
             )
             await _reset_pool(pool)
+            await asyncio.sleep(min(_BASE_BACKOFF * attempt, 1.0))
         except Exception:
             # Propagate non-connection errors immediately
             raise
 
-    # Only reached if both attempts failed with OperationalError
+    # Only reached if all attempts failed with a recoverable OperationalError
     assert last_error is not None
     raise last_error

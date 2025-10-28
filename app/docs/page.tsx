@@ -15,7 +15,7 @@ export default function LegalIndexPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Legal Documentation</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            Welcome to Patent Scout's legal resource center. Below you'll find our complete legal framework governing your use of the Service.
+            Welcome to Patent Scout's legal resource center. Access and use of the Patent Scout Platform is governed by our Terms of Service. The resources provided here are freely accessible without a subscription. By subscribing to Patent Scout and using the Platform, you are agreeing to the Terms and accepting our Privacy Policy. We reserve the right to update these documents at our discretion without direct notification to users. Please review them periodically to stay informed of any changes.
           </p>
         </div>
 
@@ -23,11 +23,11 @@ export default function LegalIndexPage() {
         <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Overview</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is committed to transparency, data protection, and legal compliance. Our legal framework consists of three core documents that work together to protect both your rights and ours:
+            Patent Scout is committed to transparency, data protection, and legal compliance. Login credentials and financial information (e.g., payment details for subscriptions) are handled through trusted third-party providers (i.e., Auth0 for authentication, Stripe for payment processing). Patent Scout does not store any user information beyond the minimum necessary to provide the service. The user information we do store is protected under our Privacy Policy, and will not be sold or otherwise shared with any third parties for advertising or marketing purposes. Please refer to the following key legal documents for further information:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Terms of Service</strong>: Governs your use of Patent Scout and defines the contractual relationship between you and Phaethon Order LLC;</li>
-            <li><strong>Privacy Policy</strong>: Explains how we collect, use, protect, and share your personal information;</li>
+            <li><strong>Terms of Service</strong>: Governs use of the Patent Scout platform; outlines our duties and responsibilities; defines acceptable scope of use on the platform.</li>
+            <li><strong>Privacy Policy</strong>: Explains how we collect, use, protect, and disseminate user information; outlines how to request a copy of your data and delete your data from our systems.</li>
             <li><strong>Data Processing Agreement</strong>: Defines data protection obligations for B2B customers where we process personal data on your behalf (required for GDPR/CCPA compliance).</li>
           </ul>
           <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
@@ -68,7 +68,7 @@ export default function LegalIndexPage() {
             </div>
             
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-              The Terms of Service constitute the legally binding agreement between you and Phaethon Order LLC for use of the Patent Scout service. This document covers:
+              The Terms of Service constitute a legally binding agreement between you and Phaethon Order LLC for use of the Patent Scout service. This document covers:
             </p>
             
             <div style={{ display: "grid", gap: 12 }}>
@@ -83,7 +83,7 @@ export default function LegalIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Who Should Read This</strong>: All users of Patent Scout, whether individual researchers, corporate teams, or enterprise customers. By using the Service, you agree to these Terms.
+                <strong>Applicable To</strong>: All users of Patent Scout, without express or implied exception. A "user" is anyone accessing and navigating the Patent Scout platform, or the owner of any automated or agentic system that accesses and navigates the platform. Accessing and navigating the platform constitutes acceptance of these Terms.
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function LegalIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Who Should Read This</strong>: All users, especially those concerned about data privacy, GDPR/CCPA compliance, or located in the EEA, UK, Switzerland, California, or other jurisdictions with privacy laws.
+                <strong>Applicable To:</strong>: All users. Our Privacy Policy includes various sections that are specific to certain jurisdictions, including sections for GDPR/CCPA compliance and sections for users located in the EEA, UK, Switzerland, California, and other jurisdictions with privacy laws. Your rights under our Privacy Policy are contingent upon your location when accessing and using the platform. Use of a VPN or similar technology to obscure your location constitutes waiver of any privacy rights specific to your actual jurisdiction and agreement to be treated under the laws and regulations of the state of Wyoming, United States.
               </p>
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function LegalIndexPage() {
             
             <InfoSection 
               title="✧ Updates and Changes"
-              content="We may update these documents from time to time to reflect changes in our practices, legal requirements, or service features. We will notify you of material changes via email or in-app notification at least 30 days in advance."
+              content="We may update these documents from time to time to reflect changes in our practices, legal requirements, or service features. We reserve the right to update these documents at any time without prior notice."
             />
             
             <InfoSection 
