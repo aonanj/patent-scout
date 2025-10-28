@@ -52,48 +52,109 @@ const CLUSTER_KEYWORD_SAMPLE_SIZE = 25;
 const CLUSTER_TERM_MIN_COUNT = 3;
 const CLUSTER_TERM_MAX_COUNT = 5;
 const CLUSTER_TERM_MIN_LENGTH = 5;
+const CLUSTER_COMMON_TERM_RATIO = 0.7;
 const CLUSTER_TERM_STOPWORDS = new Set<string>([
-  "system",
-  "systems",
-  "method",
-  "methods",
-  "device",
-  "devices",
-  "apparatus",
-  "process",
-  "processes",
-  "module",
-  "modules",
-  "unit",
-  "units",
-  "network",
-  "networks",
-  "users",
-  "user",
-  "plurality",
-  "information",
-  "control",
-  "controls",
+  "algorithm",
+  "algorithms",
   "analysis",
   "analyzing",
-  "sensor",
-  "sensors",
-  "electric",
-  "electrical",
-  "component",
-  "components",
-  "circuit",
-  "circuitry",
-  "program",
-  "programs",
-  "computer",
-  "computers",
   "application",
   "applications",
+  "apparatus",
+  "apparatuses",
+  "associated",
+  "association",
+  "associations",
+  "based",
+  "between",
+  "calculate",
+  "calculated",
+  "calculates",
+  "calculating",
+  "calculation",
+  "calculations",
+  "circuit",
+  "circuitry",
+  "components",
+  "component",
+  "compute",
+  "computed",
+  "computer",
+  "computers",
+  "computes",
+  "computing",
+  "control",
+  "controlled",
+  "controller",
+  "controllers",
+  "controls",
+  "comprise",
+  "comprises",
+  "comprising",
+  "data",
   "dataset",
   "datasets",
+  "devices",
+  "device",
+  "determine",
+  "determined",
+  "determines",
+  "determining",
+  "electric",
+  "electrical",
   "equipment",
+  "example",
+  "examples",
+  "information",
+  "learning",
+  "machine",
+  "machines",
+  "method",
+  "methods",
+  "models",
+  "model",
+  "module",
+  "modules",
+  "network",
+  "networks",
+  "plurality",
+  "process",
+  "processes",
+  "processing",
+  "program",
+  "programs",
+  "sensor",
+  "sensors",
+  "system",
+  "systems",
+  "technology",
+  "thereof",
+  "unit",
+  "units",
+  "usage",
+  "using",
+  "user",
+  "users",
+  "wherein",
 ]);
+const CLUSTER_TERM_STEM_STOPWORDS = [
+  "algorith",
+  "artific",
+  "associ",
+  "calcul",
+  "cluster",
+  "comput",
+  "configur",
+  "determin",
+  "includ",
+  "intellig",
+  "machin",
+  "model",
+  "operat",
+  "relat",
+  "technolog",
+  "utiliz",
+];
 
 type ClusterLegendEntry = {
   id: number;
@@ -101,6 +162,12 @@ type ClusterLegendEntry = {
   label: string;
   tooltip: string;
 };
+
+function isStopwordToken(token: string): boolean {
+  if (token.length < CLUSTER_TERM_MIN_LENGTH) return true;
+  if (CLUSTER_TERM_STOPWORDS.has(token)) return true;
+  return CLUSTER_TERM_STEM_STOPWORDS.some((stem) => token.startsWith(stem));
+}
 
 function hslToHex(h: number, s: number, l: number): string {
   const clamp = (v: number) => Math.max(0, Math.min(1, v));
@@ -204,7 +271,6 @@ export default function SigmaWhitespaceGraph({
     if (nodes.length === 0) return [];
 
     const clusterBuckets = new Map<number, { color: string; nodes: WsNode[] }>();
-
     nodes.forEach((node) => {
       const clusterId = node.cluster_id;
       if (!clusterBuckets.has(clusterId)) {
@@ -222,16 +288,16 @@ export default function SigmaWhitespaceGraph({
       if (!matches) return [];
       return matches
         .map((token) => token.toLowerCase())
-        .filter(
-          (token) =>
-            token.length >= CLUSTER_TERM_MIN_LENGTH && !CLUSTER_TERM_STOPWORDS.has(token),
-        );
+        .filter((token) => !isStopwordToken(token));
     };
 
-    const keywordsForCluster = (clusterNodes: WsNode[]): string[] => {
-      if (clusterNodes.length === 0) return [];
+    const computeTokenCounts = (clusterNodes: WsNode[]): Map<string, number> => {
+      const counts = new Map<string, number>();
+      if (clusterNodes.length === 0) {
+        return counts;
+      }
 
-      const sorted = [...clusterNodes].sort((a, b) => {
+      const sortedNodes = [...clusterNodes].sort((a, b) => {
         const bRel = normalizeRelevance(b.relevance);
         const aRel = normalizeRelevance(a.relevance);
         if (bRel !== aRel) return bRel - aRel;
@@ -259,12 +325,11 @@ export default function SigmaWhitespaceGraph({
         return a.id.localeCompare(b.id);
       });
 
-      const sample = sorted.slice(
+      const sample = sortedNodes.slice(
         0,
-        Math.min(CLUSTER_KEYWORD_SAMPLE_SIZE, sorted.length),
+        Math.min(CLUSTER_KEYWORD_SAMPLE_SIZE, sortedNodes.length),
       );
 
-      const counts = new Map<string, number>();
       sample.forEach((node) => {
         const perNodeTokens = new Set<string>();
         [node.title, node.abstract].forEach((text) => {
@@ -275,17 +340,46 @@ export default function SigmaWhitespaceGraph({
         });
       });
 
-      if (counts.size === 0) {
-        return [];
-      }
+      return counts;
+    };
 
+    const clusterEntries = Array.from(clusterBuckets.entries()).map(([id, info]) => ({
+      id,
+      color: info.color,
+      nodes: info.nodes,
+      counts: computeTokenCounts(info.nodes),
+    }));
+
+    if (clusterEntries.length === 0) return [];
+
+    const tokenCoverage = new Map<string, number>();
+    clusterEntries.forEach(({ counts }) => {
+      counts.forEach((_, token) => {
+        tokenCoverage.set(token, (tokenCoverage.get(token) ?? 0) + 1);
+      });
+    });
+
+    const clusterCount = clusterEntries.length;
+    const coverageThreshold =
+      clusterCount <= 2
+        ? clusterCount
+        : Math.max(2, Math.ceil(clusterCount * CLUSTER_COMMON_TERM_RATIO));
+
+    const universalTokens = new Set<string>();
+    tokenCoverage.forEach((occurrences, token) => {
+      if (occurrences >= coverageThreshold) {
+        universalTokens.add(token);
+      }
+    });
+
+    const toKeywords = (counts: Map<string, number>): string[] => {
       const ordered = Array.from(counts.entries())
+        .filter(([token]) => !universalTokens.has(token))
         .sort((a, b) => {
           if (b[1] !== a[1]) return b[1] - a[1];
           return a[0].localeCompare(b[0]);
         })
         .map(([term]) => term);
-
       const desiredCount = Math.max(
         CLUSTER_TERM_MIN_COUNT,
         Math.min(CLUSTER_TERM_MAX_COUNT, ordered.length),
@@ -296,11 +390,11 @@ export default function SigmaWhitespaceGraph({
     const formatTerm = (term: string) =>
       term.length === 0 ? term : term[0].toUpperCase() + term.slice(1);
 
-    return Array.from(clusterBuckets.entries())
-      .sort((a, b) => b[1].nodes.length - a[1].nodes.length)
-      .map(([id, info]) => {
-        const nodeCount = info.nodes.length;
-        const keywords = keywordsForCluster(info.nodes);
+    return clusterEntries
+      .sort((a, b) => b.nodes.length - a.nodes.length)
+      .map(({ id, color, nodes: clusterNodes, counts }) => {
+        const nodeCount = clusterNodes.length;
+        const keywords = toKeywords(counts);
         const formattedKeywords = keywords.map(formatTerm).join(", ");
         const filingsText = `${nodeCount} ${nodeCount === 1 ? "filing" : "filings"}`;
         const labelPrefix = formattedKeywords ? `e.g., ${formattedKeywords}` : `Cluster ${id}`;
@@ -311,7 +405,7 @@ export default function SigmaWhitespaceGraph({
 
         return {
           id,
-          color: info.color,
+          color,
           label,
           tooltip,
         };

@@ -5,6 +5,7 @@ import json
 import os
 import re
 import uuid
+import math
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -110,6 +111,8 @@ _ASSIGNEE_SUFFIXES: list[str] = sorted(
 CLUSTER_TERM_SAMPLE_SIZE = 20
 CLUSTER_LABEL_MIN_TERMS = 3
 CLUSTER_LABEL_MAX_TERMS = 8
+CLUSTER_LABEL_MIN_LENGTH = 5
+CLUSTER_LABEL_COMMON_TERM_RATIO = 0.7
 CLUSTER_LABEL_STOPWORDS: set[str] = {
     "the",
     "and",
@@ -169,7 +172,111 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "user",
     "users",
     "plurality",
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "may",
+    "can",
+    "could",
+    "would",
+    "should",
+    "shall",
+    "will",
+    "within",
+    "wherein",
+    "thereof",
+    "herein",
+    "configured",
+    "configuring",
+    "configure",
+    "includes",
+    "include",
+    "including",
+    "included",
+    "based",
+    "using",
+    "used",
+    "associated",
+    "association",
+    "associations",
+    "comprise",
+    "comprises",
+    "comprising",
+    "composed",
+    "relate",
+    "related",
+    "relates",
+    "relating",
+    "provide",
+    "provides",
+    "providing",
+    "provided",
+    "via",
+    "into",
+    "onto",
+    "across",
+    "among",
+    "amongst",
+    "toward",
+    "towards",
+    "between",
+    "therein",
+    "therefrom",
+    "thereafter",
+    "therewith",
+    "hereafter",
+    "allows",
+    "allow",
+    "allowing",
+    "permit",
+    "permits",
+    "permitting",
+    "enable",
+    "enables",
+    "enabling",
+    "enabled",
+    "cause",
+    "causes",
+    "causing",
+    "caused",
+    "based",
 }
+CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
+    "algorithm",
+    "algorith",
+    "associ",
+    "artific",
+    "calcul",
+    "comput",
+    "configur",
+    "determin",
+    "includ",
+    "intellig",
+    "machin",
+    "model",
+    "process",
+    "relat",
+    "technolog",
+    "utiliz",
+    "employ",
+)
 
 # --- DB pool ---
 _DB_URL = os.getenv("DATABASE_URL")
@@ -270,9 +377,13 @@ def _tokenize_cluster_terms(text: str | None) -> Iterable[str]:
     if not text:
         return []
     for token in re.findall(r"[A-Za-z0-9]+", text.lower()):
-        if len(token) < 3:
+        if len(token) < CLUSTER_LABEL_MIN_LENGTH:
             continue
         if token in CLUSTER_LABEL_STOPWORDS:
+            continue
+        if any(token.startswith(stem) for stem in CLUSTER_LABEL_STEM_STOPWORDS):
+            continue
+        if token.isdigit():
             continue
         yield token
 
@@ -282,6 +393,7 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
     for node in node_data:
         clusters[node.cluster_id].append(node)
     cluster_terms: dict[int, list[str]] = {}
+    cluster_token_counts: dict[int, Counter[str]] = {}
     for cluster_id, nodes in clusters.items():
         sorted_nodes = sorted(
             nodes,
@@ -293,21 +405,36 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
                 counter[token] += 1
             for token in _tokenize_cluster_terms(node.abstract):
                 counter[token] += 1
-        if not counter:
-            continue
+        if counter:
+            cluster_token_counts[cluster_id] = counter
+
+    if not cluster_token_counts:
+        return cluster_terms
+
+    coverage: Counter[str] = Counter()
+    for counter in cluster_token_counts.values():
+        for token in counter.keys():
+            coverage[token] += 1
+
+    cluster_count = len(cluster_token_counts)
+    if cluster_count <= 2:
+        threshold = cluster_count
+    else:
+        threshold = max(2, math.ceil(cluster_count * CLUSTER_LABEL_COMMON_TERM_RATIO))
+
+    universal_tokens: set[str] = {token for token, count in coverage.items() if count >= threshold}
+
+    for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
+            if term in universal_tokens:
+                continue
             if term not in ordered_terms:
                 ordered_terms.append(term)
             if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
                 break
-        if len(ordered_terms) < CLUSTER_LABEL_MIN_TERMS:
-            for term, _ in counter.most_common(CLUSTER_LABEL_MIN_TERMS):
-                if term not in ordered_terms:
-                    ordered_terms.append(term)
-                if len(ordered_terms) >= CLUSTER_LABEL_MIN_TERMS:
-                    break
         cluster_terms[cluster_id] = ordered_terms
+
     return cluster_terms
 
 
