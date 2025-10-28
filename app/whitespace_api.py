@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import uuid
 from collections import Counter, defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from difflib import SequenceMatcher
 from typing import Annotated, Any, Literal
 
 import igraph as ig
@@ -48,6 +51,125 @@ logger = get_logger()
 MAX_GRAPH_LIMIT = 2000
 MAX_GRAPH_NEIGHBORS = 50
 MAX_GRAPH_LAYOUT_NEIGHBORS = 50
+
+SearchMode = Literal["keywords", "assignee"]
+GroupKind = Literal["assignee", "cluster"]
+
+ASSIGNEE_FUZZY_THRESHOLD = 0.80
+ASSIGNEE_MATCH_LIMIT = 12
+_ASSIGNEE_RAW_SUFFIXES = [
+    "INC",
+    "LLC",
+    "CORP",
+    "LTD",
+    "CORPORATION",
+    "INCORPORATED",
+    "INCORP",
+    "COMPANY",
+    "LIMITED",
+    "GMBH",
+    "ASS",
+    "PTY",
+    "MFF",
+    "SYS",
+    "MAN",
+    "L Y",
+    "L P",
+    "LY",
+    "LP",
+    "OY",
+    "NV",
+    "SAS",
+    "CO",
+    "BV",
+    "AG",
+    "A G",
+    "A B",
+    "O Y",
+    "N V",
+    "S E",
+    "N A",
+    "MANF",
+    "INST",
+    "B V",
+    "INT",
+    "IND",
+    "KK",
+    "SE",
+    "AB",
+    "INTL",
+    "INDST",
+    "NA",
+]
+_ASSIGNEE_SUFFIXES: list[str] = sorted(
+    list(dict.fromkeys(s.strip().upper() for s in _ASSIGNEE_RAW_SUFFIXES if s.strip())),
+    key=len,
+    reverse=True,
+)
+
+CLUSTER_TERM_SAMPLE_SIZE = 20
+CLUSTER_LABEL_MIN_TERMS = 3
+CLUSTER_LABEL_MAX_TERMS = 8
+CLUSTER_LABEL_STOPWORDS: set[str] = {
+    "the",
+    "and",
+    "for",
+    "with",
+    "from",
+    "into",
+    "that",
+    "this",
+    "those",
+    "these",
+    "their",
+    "there",
+    "where",
+    "when",
+    "which",
+    "about",
+    "using",
+    "based",
+    "system",
+    "systems",
+    "method",
+    "methods",
+    "device",
+    "devices",
+    "apparatus",
+    "apparatuses",
+    "process",
+    "processes",
+    "module",
+    "modules",
+    "unit",
+    "units",
+    "network",
+    "networks",
+    "data",
+    "information",
+    "control",
+    "controlled",
+    "controls",
+    "application",
+    "applications",
+    "computer",
+    "computers",
+    "program",
+    "programs",
+    "sensor",
+    "sensors",
+    "analysis",
+    "analyzing",
+    "electric",
+    "electrical",
+    "component",
+    "components",
+    "circuit",
+    "circuitry",
+    "user",
+    "users",
+    "plurality",
+}
 
 # --- DB pool ---
 _DB_URL = os.getenv("DATABASE_URL")
@@ -91,6 +213,194 @@ class NodeDatum:
     momentum: float
     is_focus: bool
     title: str | None
+    abstract: str | None
+
+
+def _remove_punct_and_collapse(value: str) -> str:
+    cleaned = re.sub(r"[^0-9A-Za-z]+", " ", value)
+    return " ".join(cleaned.split()).upper()
+
+
+def _canonicalize_assignee_for_lookup(name: str) -> str:
+    if not name:
+        return ""
+    tokens = _remove_punct_and_collapse(name).split()
+    if not tokens:
+        return ""
+    changed = True
+    while changed and tokens:
+        changed = False
+        tail = " ".join(tokens[-2:]) if len(tokens) >= 2 else tokens[-1]
+        for suffix in _ASSIGNEE_SUFFIXES:
+            if " " in suffix:
+                parts = suffix.split()
+                n = len(parts)
+                if n <= len(tokens) and " ".join(tokens[-n:]) == suffix:
+                    tokens = tokens[:-n]
+                    changed = True
+                    break
+            else:
+                if tokens and tokens[-1] == suffix:
+                    tokens = tokens[:-1]
+                    changed = True
+                    break
+    return " ".join(tokens).strip()
+
+
+def _assignee_search_patterns(raw: str, canonical: str) -> list[str]:
+    patterns: list[str] = []
+    trimmed = raw.strip()
+    if trimmed:
+        patterns.append(f"%{trimmed}%")
+    for token in canonical.split():
+        if len(token) >= 3:
+            patterns.append(f"%{token}%")
+    if canonical and canonical not in {p.strip("%") for p in patterns}:
+        patterns.append(f"%{canonical}%")
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for pattern in patterns:
+        if pattern not in seen:
+            ordered.append(pattern)
+            seen.add(pattern)
+    return ordered[:24]
+
+
+def _tokenize_cluster_terms(text: str | None) -> Iterable[str]:
+    if not text:
+        return []
+    for token in re.findall(r"[A-Za-z0-9]+", text.lower()):
+        if len(token) < 3:
+            continue
+        if token in CLUSTER_LABEL_STOPWORDS:
+            continue
+        yield token
+
+
+def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[str]]:
+    clusters: dict[int, list[NodeDatum]] = defaultdict(list)
+    for node in node_data:
+        clusters[node.cluster_id].append(node)
+    cluster_terms: dict[int, list[str]] = {}
+    for cluster_id, nodes in clusters.items():
+        sorted_nodes = sorted(
+            nodes,
+            key=lambda n: (-(n.score if n.score is not None else 0.0), n.pub_id),
+        )[:CLUSTER_TERM_SAMPLE_SIZE]
+        counter: Counter[str] = Counter()
+        for node in sorted_nodes:
+            for token in _tokenize_cluster_terms(node.title):
+                counter[token] += 1
+            for token in _tokenize_cluster_terms(node.abstract):
+                counter[token] += 1
+        if not counter:
+            continue
+        ordered_terms: list[str] = []
+        for term, _ in counter.most_common():
+            if term not in ordered_terms:
+                ordered_terms.append(term)
+            if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
+                break
+        if len(ordered_terms) < CLUSTER_LABEL_MIN_TERMS:
+            for term, _ in counter.most_common(CLUSTER_LABEL_MIN_TERMS):
+                if term not in ordered_terms:
+                    ordered_terms.append(term)
+                if len(ordered_terms) >= CLUSTER_LABEL_MIN_TERMS:
+                    break
+        cluster_terms[cluster_id] = ordered_terms
+    return cluster_terms
+
+
+def _format_label_terms(terms: Sequence[str]) -> str:
+    formatted = [" ".join(t.split()).title() for t in terms if t]
+    return ", ".join(formatted)
+
+
+def _match_canonical_assignees(
+    conn: psycopg.Connection,
+    query: str,
+    *,
+    threshold: float = ASSIGNEE_FUZZY_THRESHOLD,
+    limit: int = ASSIGNEE_MATCH_LIMIT,
+) -> tuple[list[uuid.UUID], list[str], list[tuple[str, float]]]:
+    canonical = _canonicalize_assignee_for_lookup(query)
+    if not canonical:
+        return [], [], []
+    patterns = _assignee_search_patterns(query, canonical)
+    if not patterns:
+        return [], [], []
+
+    candidates: dict[str, tuple[str, float]] = {}
+
+    def _score(name: str) -> float:
+        canonical_candidate = _canonicalize_assignee_for_lookup(name)
+        if not canonical_candidate:
+            return 0.0
+        ratio_primary = SequenceMatcher(None, canonical, canonical_candidate).ratio()
+        ratio_compact = SequenceMatcher(
+            None,
+            canonical.replace(" ", ""),
+            canonical_candidate.replace(" ", ""),
+        ).ratio()
+        return max(ratio_primary, ratio_compact)
+
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT id, canonical_assignee_name AS label
+            FROM canonical_assignee_name
+            WHERE canonical_assignee_name ILIKE ANY(%s)
+            ORDER BY char_length(canonical_assignee_name)
+            LIMIT %s
+            """,
+            (patterns, max(limit * 5, limit)),
+        )
+        for row in cur:
+            cid = str(row["id"])
+            label = str(row["label"])
+            score = _score(label)
+            prev = candidates.get(cid)
+            if prev is None or score > prev[1]:
+                candidates[cid] = (label, score)
+
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT DISTINCT can.id, can.canonical_assignee_name AS label
+            FROM assignee_alias alias
+            JOIN canonical_assignee_name can ON can.id = alias.canonical_id
+            WHERE alias.assignee_alias ILIKE ANY(%s)
+            ORDER BY char_length(can.canonical_assignee_name)
+            LIMIT %s
+            """,
+            (patterns, max(limit * 5, limit)),
+        )
+        for row in cur:
+            cid = str(row["id"])
+            label = str(row["label"])
+            score = _score(label)
+            prev = candidates.get(cid)
+            if prev is None or score > prev[1]:
+                candidates[cid] = (label, score)
+
+    scored = [
+        (cid, label, score)
+        for cid, (label, score) in candidates.items()
+        if score >= threshold
+    ]
+    scored.sort(key=lambda item: (-item[2], len(item[1]), item[1]))
+
+    matched_ids: list[uuid.UUID] = []
+    matched_labels: list[str] = []
+    matched_debug: list[tuple[str, float]] = []
+    for cid, label, score in scored[:limit]:
+        try:
+            matched_ids.append(uuid.UUID(cid))
+            matched_labels.append(label)
+            matched_debug.append((label, score))
+        except ValueError:
+            continue
+    return matched_ids, matched_labels, matched_debug
 
 
 SIGNAL_LABELS: dict[SignalKind, str] = {
@@ -164,6 +474,14 @@ class GraphRequest(BaseModel):
     )
     focus_keywords: list[str] = []
     focus_cpc_like: list[str] = []
+    search_mode: SearchMode = Field(
+        "keywords",
+        description="Toggle between keyword-driven scope and assignee-driven scope.",
+    )
+    assignee_query: str | None = Field(
+        None,
+        description="Raw assignee text when search_mode='assignee'.",
+    )
     layout: bool = True          # compute 2D layout for graph response
     layout_min_dist: float = 0.1 # UMAP param
     layout_neighbors: int = Field(
@@ -185,6 +503,9 @@ def _validate_graph_params(req: GraphRequest) -> None:
         violations.append(
             f"layout_neighbors must be between 2 and {MAX_GRAPH_LAYOUT_NEIGHBORS}"
         )
+    if req.search_mode == "assignee":
+        if not req.assignee_query or not req.assignee_query.strip():
+            violations.append("assignee_query is required when search_mode='assignee'")
     if violations:
         raise HTTPException(status_code=400, detail=violations)
 
@@ -231,6 +552,9 @@ class AssigneeSignals(BaseModel):
     signals: list[SignalPayload]
     summary: str | None = None
     debug: dict[str, Any] | None = None
+    cluster_id: int | None = None
+    group_kind: GroupKind = "assignee"
+    label_terms: list[str] | None = None
 
 
 class WhitespaceResponse(BaseModel):
@@ -238,6 +562,8 @@ class WhitespaceResponse(BaseModel):
     assignees: list[AssigneeSignals]
     graph: GraphContext | None = None
     debug: dict[str, Any] | None = None
+    group_mode: GroupKind = "assignee"
+    matched_assignees: list[str] | None = None
 
 # --- Utilities ---
 def _to_int_date(s: str | None) -> int | None:
@@ -257,7 +583,12 @@ def _from_int_date(value: int | None) -> date | None:
     except ValueError:
         return None
 
-def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> tuple[np.ndarray, list[EmbeddingMeta]]:
+def load_embeddings(
+    conn: psycopg.Connection,
+    model: str,
+    req: GraphRequest,
+    canonical_assignee_ids: Sequence[uuid.UUID] | None = None,
+) -> tuple[np.ndarray, list[EmbeddingMeta]]:
     where = ["e.model = %s"]
     base_params: list[Any] = [model]
     df = _to_int_date(req.date_from)
@@ -268,6 +599,18 @@ def load_embeddings(conn: psycopg.Connection, model: str, req: GraphRequest) -> 
     if dt is not None:
         where.append("p.pub_date < %s")
         base_params.append(dt)
+    if canonical_assignee_ids:
+        where.append(
+            """
+            EXISTS (
+              SELECT 1
+              FROM patent_assignee pa
+              WHERE pa.pub_id = p.pub_id
+                AND pa.canonical_id = ANY(%s)
+            )
+            """
+        )
+        base_params.append(list(canonical_assignee_ids))
     # Build a focus expression to bias sampling toward focus hits
     focus_conds: list[str] = []
     if req.focus_keywords:
@@ -654,6 +997,7 @@ def _build_node_data(
                 momentum=float(momentum[cid]) if cid < len(momentum) else 0.0,
                 is_focus=bool(m.is_focus),
                 title=m.title,
+                abstract=m.abstract,
             )
         )
     return nodes
@@ -697,18 +1041,23 @@ def _compute_bridge_inputs(
     return openness, inter_weight, mom_left, mom_right, bridge_nodes
 
 
-def build_assignee_signals(
+def build_group_signals(
     req: GraphRequest,
     node_data: list[NodeDatum],
     labels: np.ndarray,
     idx_matrix: np.ndarray,
     dist_matrix: np.ndarray,
     momentum: np.ndarray,
+    *,
+    scope_text: str,
+    group_mode: GroupKind,
+    cluster_label_map: dict[int, list[str]] | None = None,
 ) -> tuple[list[AssigneeSignals], dict[str, set[SignalKind]], dict[str, float], dict[str, str]]:
-    """Aggregate node-level metrics into signal payloads per assignee."""
+    """Aggregate node-level metrics into signal payloads per grouping unit."""
     if not node_data:
         return [], {}, {}, {}
 
+    cluster_label_map = cluster_label_map or {}
     cohort_scores = np.array([n.score for n in node_data], dtype=float)
     density_values = np.array([n.density for n in node_data], dtype=float)
     if cohort_scores.size == 0:
@@ -721,38 +1070,83 @@ def build_assignee_signals(
     low_ws_threshold = float(np.quantile(cohort_scores, 0.40))
     high_density_threshold = float(np.quantile(density_values, 0.75))
 
-    data_by_assignee: dict[str, list[NodeDatum]] = defaultdict(list)
+    data_by_group: dict[str, list[NodeDatum]] = defaultdict(list)
+    group_meta: dict[str, dict[str, Any]] = {}
+
     for node in node_data:
-        data_by_assignee[node.assignee].append(node)
+        if group_mode == "cluster":
+            key = f"cluster:{node.cluster_id}"
+            label_terms = cluster_label_map.get(node.cluster_id, [])
+            trimmed_terms = label_terms[:CLUSTER_LABEL_MAX_TERMS]
+            formatted_terms = _format_label_terms(trimmed_terms) if trimmed_terms else ""
+            label_text = f"Cluster {node.cluster_id}"
+            if formatted_terms:
+                label_text = f"{label_text} • {formatted_terms}"
+            if key not in group_meta:
+                group_meta[key] = {
+                    "label": label_text,
+                    "cluster_id": node.cluster_id,
+                    "terms": list(trimmed_terms),
+                    "formatted_terms": formatted_terms,
+                }
+        else:
+            key = node.assignee
+            if key not in group_meta:
+                group_meta[key] = {
+                    "label": node.assignee,
+                    "cluster_id": None,
+                    "terms": None,
+                    "formatted_terms": None,
+                }
+        data_by_group[key].append(node)
 
-    ordered_assignees = sorted(
-        data_by_assignee.keys(),
-        key=lambda a: (-len(data_by_assignee[a]), a.lower()),
-    )
-    ordered_assignees = ordered_assignees[:5]
+    def _sort_key(group_key: str) -> tuple[int, str]:
+        label_text = group_meta[group_key]["label"] or ""
+        return (-len(data_by_group[group_key]), label_text.lower())
 
-    assignee_payloads: list[AssigneeSignals] = []
+    ordered_groups = sorted(data_by_group.keys(), key=_sort_key)
+    group_limit = 6 if group_mode == "cluster" else 5
+    ordered_groups = ordered_groups[:group_limit]
+
+    group_payloads: list[AssigneeSignals] = []
     node_signals: dict[str, set[SignalKind]] = defaultdict(set)
     node_relevance: dict[str, float] = defaultdict(float)
     node_tooltips: dict[str, str] = {}
-    scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
 
-    for assignee in ordered_assignees:
-        nodes = sorted(data_by_assignee[assignee], key=lambda n: (n.pub_date or date.min, n.pub_id))
+    for group_key in ordered_groups:
+        nodes = sorted(data_by_group[group_key], key=lambda n: (n.pub_date or date.min, n.pub_id))
         start_date, end_date = _window_bounds(req, nodes)
+        meta_info = group_meta[group_key]
+        group_label = meta_info["label"]
+        cluster_id = meta_info["cluster_id"]
+        label_terms = meta_info["terms"]
+        formatted_terms = meta_info["formatted_terms"]
+        summary_text: str | None = None
+        if group_mode == "cluster" and formatted_terms:
+            summary_text = f"Top terms: {formatted_terms}"
+
         if not start_date or not end_date:
-            # No meaningful history; populate empty signals.
-            focus_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
-            emerging_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
-            crowd_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
-            bridge_result = SignalComputation(False, 0.0, "Not enough history for this assignee.", {"samples": 0.0})
+            focus_result = SignalComputation(False, 0.0, "Not enough history for this scope.", {"samples": 0.0})
+            emerging_result = SignalComputation(False, 0.0, "Not enough history for this scope.", {"samples": 0.0})
+            crowd_result = SignalComputation(False, 0.0, "Not enough history for this scope.", {"samples": 0.0})
+            bridge_result = SignalComputation(False, 0.0, "Not enough history for this scope.", {"samples": 0.0})
             signal_payloads: list[SignalPayload] = [
                 SignalPayload(type="emerging_gap", status=emerging_result.status(), confidence=0.0, why=emerging_result.message, node_ids=[]),
                 SignalPayload(type="bridge", status=bridge_result.status(), confidence=0.0, why=bridge_result.message, node_ids=[]),
                 SignalPayload(type="crowd_out", status=crowd_result.status(), confidence=0.0, why=crowd_result.message, node_ids=[]),
                 SignalPayload(type="focus_shift", status=focus_result.status(), confidence=0.0, why=focus_result.message, node_ids=[]),
             ]
-            assignee_payloads.append(AssigneeSignals(assignee=assignee, k=scope_text, signals=signal_payloads))
+            group_payloads.append(
+                AssigneeSignals(
+                    assignee=group_label,
+                    k=scope_text,
+                    signals=signal_payloads,
+                    summary=summary_text,
+                    cluster_id=cluster_id,
+                    group_kind=group_mode,
+                    label_terms=list(label_terms) if label_terms else None,
+                )
+            )
             continue
 
         window_nodes = [n for n in nodes if n.pub_date and start_date <= n.pub_date <= end_date]
@@ -792,9 +1186,9 @@ def build_assignee_signals(
         emerging_result = signal_emerging_gap(whitespace_series, cohort_scores_list, neighbor_momentum)
         crowd_result = signal_crowd_out(whitespace_series, density_series)
 
-        assignee_indices = [n.index for n in nodes]
+        group_indices = [n.index for n in nodes]
         openness, inter_weight, mom_left, mom_right, bridge_node_indices = _compute_bridge_inputs(
-            assignee_indices, labels, idx_matrix, dist_matrix, momentum
+            group_indices, labels, idx_matrix, dist_matrix, momentum
         )
         bridge_result = signal_bridge(openness, inter_weight, mom_left, mom_right)
 
@@ -840,9 +1234,9 @@ def build_assignee_signals(
             _payload("focus_shift", focus_result, focus_node_ids),
         ]
 
-        assignee_debug: dict[str, Any] | None = None
+        group_debug: dict[str, Any] | None = None
         if req.debug:
-            assignee_debug = {
+            group_debug = {
                 "window_start": start_date.isoformat(),
                 "window_end": end_date.isoformat(),
                 "dist_series": dist_series,
@@ -861,16 +1255,20 @@ def build_assignee_signals(
                     "momentum_right": mom_right,
                 },
             }
-        assignee_payloads.append(
+        group_payloads.append(
             AssigneeSignals(
-                assignee=assignee,
+                assignee=group_label,
                 k=scope_text,
                 signals=signal_payloads,
-                debug=assignee_debug,
+                summary=summary_text,
+                debug=group_debug,
+                cluster_id=cluster_id,
+                group_kind=group_mode,
+                label_terms=list(label_terms) if label_terms else None,
             )
         )
 
-    return assignee_payloads, node_signals, node_relevance, node_tooltips
+    return group_payloads, node_signals, node_relevance, node_tooltips
 
 @router.post("/graph", response_model=WhitespaceResponse)
 def get_whitespace_graph(
@@ -886,11 +1284,26 @@ def get_whitespace_graph(
     if not user_id:
         raise HTTPException(status_code=401, detail="User ID not found in authentication token")
 
+    group_mode: GroupKind = "assignee"
+    matched_canonical_ids: list[uuid.UUID] | None = None
+    matched_labels: list[str] = []
+    matched_debug: list[tuple[str, float]] = []
+
     with pool.connection() as conn:
         try:
             _ensure_active_subscription(conn, user_id)
             model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
-            X, meta = load_embeddings(conn, model, req)
+            if req.search_mode == "assignee":
+                group_mode = "cluster"
+                matched_canonical_ids, matched_labels, matched_debug = _match_canonical_assignees(
+                    conn, req.assignee_query or ""
+                )
+                if not matched_canonical_ids:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="No canonical assignee matches found above the similarity threshold.",
+                    )
+            X, meta = load_embeddings(conn, model, req, matched_canonical_ids)
         except psycopg.errors.UndefinedTable as exc:
             logger.error("Whitespace schema missing; run database migrations before serving traffic.")
             raise HTTPException(
@@ -946,22 +1359,48 @@ def get_whitespace_graph(
         XY = (Xc @ Vt[:2].T).astype(np.float32)
 
     node_data = _build_node_data(meta, labels, scores, dens, proximity, distance, mom)
-    assignee_payloads, node_signal_map, node_relevance_map, node_tooltips = build_assignee_signals(
-        req, node_data, labels, idx, dist, mom
+    cluster_term_map = _compute_cluster_term_map(node_data) if group_mode == "cluster" else {}
+
+    if group_mode == "cluster":
+        if matched_labels:
+            display_labels = matched_labels[:6]
+            scope_text = f"Matched assignees: {', '.join(display_labels)}"
+            remaining = len(matched_labels) - len(display_labels)
+            if remaining > 0:
+                scope_text += f" (+{remaining} more)"
+        else:
+            scope_text = f"Assignee scope: {req.assignee_query or 'Selected scope'}"
+    else:
+        scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
+
+    group_payloads, node_signal_map, node_relevance_map, node_tooltips = build_group_signals(
+        req,
+        node_data,
+        labels,
+        idx,
+        dist,
+        mom,
+        scope_text=scope_text,
+        group_mode=group_mode,
+        cluster_label_map=cluster_term_map,
     )
 
-    scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
-    if not assignee_payloads and node_data:
+    if not group_payloads and node_data:
         empty_signals = [
             SignalPayload(type=kind, status="none", confidence=0.0, why="No signal detected for this scope.", node_ids=[])
             for kind in SIGNAL_ORDER
         ]
-        assignee_payloads = [
+        fallback_label = (
+            node_data[0].assignee if group_mode == "assignee" else f"Cluster {node_data[0].cluster_id}"
+        )
+        group_payloads = [
             AssigneeSignals(
-                assignee=node_data[0].assignee,
+                assignee=fallback_label,
                 k=scope_text,
                 signals=empty_signals,
                 debug=None,
+                cluster_id=node_data[0].cluster_id if group_mode == "cluster" else None,
+                group_kind=group_mode,
             )
         ]
 
@@ -1026,9 +1465,17 @@ def get_whitespace_graph(
         }
 
     graph_context = GraphContext(nodes=nodes, edges=edges)
+    if req.debug and matched_debug:
+        debug_payload = debug_payload or {}
+        debug_payload["matched_assignees"] = [
+            {"name": name, "score": score} for name, score in matched_debug
+        ]
+
     return WhitespaceResponse(
         k=scope_text,
-        assignees=assignee_payloads,
+        assignees=group_payloads,
         graph=graph_context,
         debug=debug_payload,
+        group_mode=group_mode,
+        matched_assignees=matched_labels or None,
     )

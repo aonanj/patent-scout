@@ -24,6 +24,9 @@ type AssigneeSignals = {
   signals: SignalInfo[];
   summary?: string | null;
   debug?: Record<string, unknown> | null;
+  cluster_id?: number | null;
+  group_kind?: "assignee" | "cluster";
+  label_terms?: string[] | null;
 };
 
 type WhitespaceResponse = {
@@ -31,6 +34,8 @@ type WhitespaceResponse = {
   assignees: AssigneeSignals[];
   graph: WsGraph | null;
   debug?: Record<string, unknown> | null;
+  group_mode?: "assignee" | "cluster";
+  matched_assignees?: string[] | null;
 };
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
@@ -457,7 +462,11 @@ function formatStatus(status: SignalStatus, confidence: number): string {
 
 function scopeSummary(resp: WhitespaceResponse | null): string {
   if (!resp) return "Focus scope";
-  return resp.k || "Focus scope";
+  const base = resp.k || "Focus scope";
+  if (resp.group_mode === "cluster") {
+    return `${base} · Grouped by cluster`;
+  }
+  return base;
 }
 
 export default function WhitespacePage() {
@@ -466,6 +475,8 @@ export default function WhitespacePage() {
 
   const [focusKeywords, setFocusKeywords] = useState("");
   const [focusCpcLike, setFocusCpcLike] = useState("");
+  const [searchMode, setSearchMode] = useState<"keywords" | "assignee">("keywords");
+  const [assigneeQuery, setAssigneeQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [neighbors, setNeighbors] = useState(15);
@@ -499,6 +510,14 @@ export default function WhitespacePage() {
     requestIdRef.current = requestId;
     try {
       const token = await getAccessTokenSilently();
+      const keywordList =
+        searchMode === "keywords" && focusKeywords
+          ? focusKeywords.split(",").map((s) => s.trim()).filter(Boolean)
+          : [];
+      const cpcList = focusCpcLike
+        ? focusCpcLike.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+
       const payload = {
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
@@ -509,12 +528,10 @@ export default function WhitespacePage() {
         limit,
         layout,
         debug: debugMode,
-        focus_keywords: focusKeywords
-          ? focusKeywords.split(",").map((s) => s.trim()).filter(Boolean)
-          : [],
-        focus_cpc_like: focusCpcLike
-          ? focusCpcLike.split(",").map((s) => s.trim()).filter(Boolean)
-          : [],
+        focus_keywords: keywordList,
+        focus_cpc_like: cpcList,
+        search_mode: searchMode,
+        assignee_query: searchMode === "assignee" ? assigneeQuery : null,
       };
 
       const res = await fetch(`/api/whitespace/graph`, {
@@ -551,6 +568,8 @@ export default function WhitespacePage() {
     debugMode,
     focusCpcLike,
     focusKeywords,
+    assigneeQuery,
+    searchMode,
     getAccessTokenSilently,
     layout,
     limit,
@@ -562,6 +581,8 @@ export default function WhitespacePage() {
     requestIdRef.current += 1;
     setFocusKeywords("");
     setFocusCpcLike("");
+    setAssigneeQuery("");
+    setSearchMode("keywords");
     setDateFrom("");
     setDateTo("");
     setNeighbors(15);
@@ -855,6 +876,13 @@ export default function WhitespacePage() {
     }
   }, []);
 
+  const isAssigneeMode = searchMode === "assignee";
+  const primaryInputId = isAssigneeMode ? "ws-assignee-query" : "ws-focus-keywords";
+  const primaryInputLabel = isAssigneeMode ? "Assignee" : "Focus Keywords";
+  const primaryPlaceholder = isAssigneeMode
+    ? "e.g., Alphabet, General Motors"
+    : "e.g., LIDAR, perception, autonomous driving";
+
   return (
     <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gap: 18 }}>
@@ -872,12 +900,30 @@ export default function WhitespacePage() {
           <div style={{ display: "grid", gap: 16 }}>
             <Row gap={16} align="flex-end">
               <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-focus-keywords">Focus Keywords</Label>
+                <Label htmlFor="ws-search-mode">Search Mode</Label>
+                <select
+                  id="ws-search-mode"
+                  value={searchMode}
+                  onChange={(e) => setSearchMode(e.target.value as "keywords" | "assignee")}
+                  style={{ ...inputStyle, height: 38 }}
+                >
+                  <option value="keywords">Focus Keywords</option>
+                  <option value="assignee">Assignee</option>
+                </select>
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor={primaryInputId}>{primaryInputLabel}</Label>
                 <input
-                  id="ws-focus-keywords"
-                  value={focusKeywords}
-                  onChange={(e) => setFocusKeywords(e.target.value)}
-                  placeholder="e.g., LIDAR, perception, autonomous driving"
+                  id={primaryInputId}
+                  value={isAssigneeMode ? assigneeQuery : focusKeywords}
+                  onChange={(e) => {
+                    if (isAssigneeMode) {
+                      setAssigneeQuery(e.target.value);
+                    } else {
+                      setFocusKeywords(e.target.value);
+                    }
+                  }}
+                  placeholder={primaryPlaceholder}
                   style={inputStyle}
                 />
               </div>
@@ -917,7 +963,7 @@ export default function WhitespacePage() {
               </div>
               <PrimaryButton
                 onClick={runWhitespaceAnalysis}
-                disabled={loading || !isAuthenticated}
+                disabled={loading || !isAuthenticated || (isAssigneeMode && assigneeQuery.trim().length === 0)}
               >
                 {loading ? "Identifying..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
               </PrimaryButton>
@@ -1033,6 +1079,16 @@ export default function WhitespacePage() {
                   <div>
                     <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Signals</h2>
                     <div style={{ fontSize: 12, color: "#64748b" }}>{scopeSummary(result)}</div>
+                    {result.group_mode === "cluster" && result.matched_assignees && result.matched_assignees.length > 0 && (
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
+                        Matched canonical names: {result.matched_assignees.join(", ")}
+                      </div>
+                    )}
+                    {result.group_mode === "cluster" && (
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                        Groups reflect similar technology clusters.
+                      </div>
+                    )}
                   </div>
                   {highlightedNodes.length > 0 && (
                     <GhostButton onClick={handleClearExamples} style={{ height: 32 }}>Clear highlights</GhostButton>
@@ -1065,7 +1121,25 @@ export default function WhitespacePage() {
                           }}
                         >
                           <span style={{ fontSize: 12 }}>{arrow}</span>
-                          <span>{assignee.assignee}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <span>{assignee.assignee}</span>
+                            {assignee.group_kind === "cluster" && (
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  color: "#1f2937",
+                                  background: "#dbeafe",
+                                  borderRadius: 999,
+                                  padding: "2px 8px",
+                                  textTransform: "uppercase",
+                                  letterSpacing: 0.4,
+                                }}
+                              >
+                                Cluster {typeof assignee.cluster_id === "number" ? assignee.cluster_id : "•"}
+                              </span>
+                            )}
+                          </div>
                         </button>
                         {isOpen && (
                           <div style={{ display: "grid", gap: 12 }}>
