@@ -582,20 +582,22 @@ export default function Page() {
             </Row>
 
             <Row>
-              <PrimaryButton onClick={handleApply}>
-                Apply
-              </PrimaryButton>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <PrimaryButton onClick={handleApply}>
+                  Apply
+                </PrimaryButton>
 
-              <GhostButton onClick={handleReset}>
-                Reset
-              </GhostButton>
+                <GhostButton onClick={handleReset}>
+                  Reset
+                </GhostButton>
 
-              <SecondaryButton onClick={saveAsAlert} disabled={saving || !isAuthenticated} title="Save current filters as an alert">
-                {saving ? "Saving…" : "Save Alert"}
-              </SecondaryButton>
-              {saveMsg && (
-                <span style={{ fontSize: 12, color: "#047857", alignSelf: "center" }}>{saveMsg}</span>
-              )}
+                <SecondaryButton onClick={saveAsAlert} disabled={saving || !isAuthenticated} title="Save current filters as an alert">
+                  {saving ? "Saving…" : "Save Alert"}
+                </SecondaryButton>
+                {saveMsg && (
+                  <span style={{ fontSize: 12, color: "#047857" }}>{saveMsg}</span>
+                )}
+              </div>
             </Row>
           </div>
         </Card>
@@ -639,13 +641,15 @@ export default function Page() {
 
         <Card>
           <Row>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'semibold'}}>RESULTS</h2>
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'semibold'}}>RESULTS</h2>
               {!isFetchingData && total !== null && (
                 <span style={{ fontSize: 12, color: "#334155" }}>
                   {total.toLocaleString()} total
                 </span>
               )}
+            </div>
+            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Label htmlFor="results_sort">Sort</Label>
                 <select
@@ -743,7 +747,7 @@ export default function Page() {
 
       {/* Footer */}
       <footer style={footerStyle}>
-        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#39506B] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#39506B] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#39506B] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-blue-600 hover:underline hover:text-amber-400">Legal</a>
+        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Legal</a>
       </footer>
     </div>
   );
@@ -1023,7 +1027,7 @@ const footerStyle: React.CSSProperties = {
   WebkitBackdropFilter: "blur(12px)",
   color: "#1f2937",
   textAlign: "center",
-  fontSize: 12,
+  fontSize: 12.5,
   fontWeight: 500,
 };
 
