@@ -1,18 +1,66 @@
 // app/help/whitespace/page.tsx
 "use client";
 
-const TEXT_COLOR = "#102A43";
+import type { CSSProperties } from "react";
+
+const TEXT_COLOR = "#0f172a";
 const LINK_COLOR = "#5FA8D2";
-const CARD_BG = "white";
-const CARD_BORDER = "#e5e7eb";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
+
+const linkButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 28px",
+  borderRadius: 999,
+  background: "linear-gradient(135deg, #38bdf8 0%, #6366f1 100%)",
+  color: "#ffffff",
+  fontWeight: 600,
+  fontSize: 14,
+  border: "1px solid rgba(99, 102, 241, 0.45)",
+  boxShadow: "0 18px 36px rgba(99, 102, 241, 0.42)",
+  textDecoration: "none",
+  transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
+};
 
 export default function WhitespaceHelpPage() {
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
 
         {/* Header */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div>
               <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Whitespace Analysis Guide</h1>
@@ -22,19 +70,8 @@ export default function WhitespaceHelpPage() {
             </div>
             <a
               href="/whitespace"
-              style={{
-                display: "inline-block",
-                padding: "10px 24px",
-                background: LINK_COLOR,
-                color: "white",
-                borderRadius: 6,
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: 14,
-                transition: "background 0.2s"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = "#3A506B"}
-              onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+              className="btn-modern"
+              style={linkButtonStyle}
             >
               Go to Whitespace →
             </a>
@@ -45,7 +82,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Overview */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Whitespace Analysis?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Whitespace analysis uses graph-based algorithms to reveal the AI/ML IP landscape around a focus area defined by keywords and/or CPC codes. The system:
@@ -64,7 +101,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Input Fields */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Input Fields</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The Whitespace page provides a focused set of inputs to define the analysis scope. All inputs are optional, but at least one focus criterion (keywords or CPC) is necessary to obtain results.
@@ -107,7 +144,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Advanced Options */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Advanced Options</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Click "Show advanced settings" to access tuning parameters that control graph construction, clustering, and signal scoring. These are intended for power users who want fine-grained control over the analysis.
@@ -166,7 +203,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Running Analysis */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Running the Analysis</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Click the "Identify signals" button to run the analysis. The button is disabled if you're not authenticated. The analysis typically takes 5–30 seconds depending on the sample size and complexity, but loading time may exceed 50-60 seconds for broad queries, high K values, complex signal patterns, etc.
@@ -177,7 +214,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Understanding Signals */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Understanding Signals</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Signals are confidence-scored indicators of strategic patterns in the AI/ML IP landscape. Each signal is computed per assignee and includes a status (none/weak/medium/strong), a confidence score (0.00–1.00), a rationale, and a list of example patent and publication numbers.
@@ -252,7 +289,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Page Layout */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Page Layout & Workflow</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The Whitespace page is organized into several collapsible sections. Here's how to navigate and use each one:
@@ -295,7 +332,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Graph Context Interpretation */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Graph Context & Interpretation</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The graph visualization is a core feature of the Whitespace page. It provides a visual representation of the AI/ML IP landscape, as represented by patent filings, with nodes positioned using either UMAP coordinates or force-directed layout (if "Compute layout" is enabled).
@@ -343,7 +380,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Highlighted Examples Table */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Highlighted Examples Table</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             When you click "View Examples (Recent)" or "View Examples (Related)" on a signal, the page displays a table of up to 8 example patents and publications. These are the patents and publications that contribute most strongly to the signal.
@@ -386,7 +423,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Best Practices */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Best Practices</h2>
 
           <div style={{ display: "grid", gap: 16 }}>
@@ -422,7 +459,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Troubleshooting */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Troubleshooting</h2>
 
           <div style={{ display: "grid", gap: 16 }}>
@@ -454,7 +491,7 @@ export default function WhitespaceHelpPage() {
         </div>
 
         {/* Related Resources */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Related Resources</h2>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><a href="/help/search_trends" style={{ color: LINK_COLOR }}>Search & Trends Guide</a> – Learn how to use hybrid search and alerts</li>
@@ -491,7 +528,7 @@ function InputDescription({ label, description, example, tips }: { label: string
 
 function AdvancedOption({ param, defaultValue, description, guidance }: { param: string; defaultValue: string; description: string; guidance: string }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#eaf6ff" }}>
+    <div className="glass-card" style={{ padding: 18, borderRadius: 16, background: "rgba(59, 130, 246, 0.12)", border: "1px solid rgba(99, 102, 241, 0.25)", boxShadow: "0 14px 28px rgba(59, 130, 246, 0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{param}</h4>
         <span style={{ fontSize: 12, fontWeight: 600, color: "#627D98", background: "#e2e8f0", padding: "2px 8px", borderRadius: 4 }}>Default: {defaultValue}</span>
@@ -504,7 +541,7 @@ function AdvancedOption({ param, defaultValue, description, guidance }: { param:
 
 function LayoutSection({ title, description }: { title: string; description: string }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
+    <div className="glass-card" style={{ padding: 18, borderRadius: 16 }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{title}</h4>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
@@ -549,7 +586,7 @@ function GraphInterpretation({ pattern, meaning }: { pattern: string; meaning: s
 
 function SortMode({ mode, description }: { mode: string; description: string }) {
   return (
-    <div style={{ padding: 12, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#eaf6ff" }}>
+    <div className="glass-card" style={{ padding: 16, borderRadius: 16, background: "rgba(59, 130, 246, 0.12)", border: "1px solid rgba(99, 102, 241, 0.25)", boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: TEXT_COLOR }}>{mode}</h4>
       <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>

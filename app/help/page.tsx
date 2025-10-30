@@ -1,18 +1,66 @@
 // app/help/page.tsx
 "use client";
 
-const TEXT_COLOR = "#102A43";
+import type { CSSProperties } from "react";
+
+const TEXT_COLOR = "#0f172a";
 const LINK_COLOR = "#5FA8D2";
-const CARD_BG = "white";
-const CARD_BORDER = "#e5e7eb";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
+
+const linkButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 28px",
+  borderRadius: 999,
+  background: "linear-gradient(135deg, #38bdf8 0%, #6366f1 100%)",
+  color: "#ffffff",
+  fontWeight: 600,
+  fontSize: 14,
+  border: "1px solid rgba(99, 102, 241, 0.45)",
+  boxShadow: "0 18px 36px rgba(99, 102, 241, 0.42)",
+  textDecoration: "none",
+  transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
+};
 
 export default function HelpIndexPage() {
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
 
         {/* Header */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Help</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             Welcome to Patent Scout, an advanced data and analytics platform directed to artificial intelligence (AI) and machine learning (ML) intellectual property (IP). This help center includes documentation describing the platform's various features and terminology, as well as guides to the user interfaces and workflows on the platform.
@@ -20,7 +68,7 @@ export default function HelpIndexPage() {
         </div>
 
         {/* Overview */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Introduction to the Patent Scout Platform</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
             Patent Scout is an IP platform specific to AI/ML data and analytics. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML innovations and investments and the entities active in this space. The platform is built on a relational database system that includes 56,000+ AI/ML-related patents and publications dating back to 2023.
@@ -44,7 +92,15 @@ export default function HelpIndexPage() {
         <div style={{ display: "grid", gap: 24 }}>
 
           {/* Search & Trends Card */}
-          <div style={{ background: CARD_BG, border: `2px solid ${LINK_COLOR}`, borderRadius: 12, padding: 32, boxShadow: "0 2px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}>
+          <div
+            className="glass-card"
+            style={{
+              ...cardBaseStyle,
+              border: "1.5px solid rgba(99, 102, 241, 0.75)",
+              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Search & Trends</h3>
@@ -54,20 +110,8 @@ export default function HelpIndexPage() {
               </div>
               <a
                 href="/help/search_trends"
-                className="hover:underline"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 24px",
-                  background: LINK_COLOR,
-                  color: "white",
-                  borderRadius: 6,
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  transition: "background 0.2s"
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = "#3A506B"}
-                onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+                className="btn-modern"
+                style={linkButtonStyle}
               >
                 View Guide →
               </a>
@@ -88,7 +132,18 @@ export default function HelpIndexPage() {
               <DetailItem icon="⬩" title="Saved Alerts" text="Save your search criteria and receive notifications when new patents and publications match your filters" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div
+              style={{
+                marginTop: 20,
+                padding: 18,
+                background: "rgba(59, 130, 246, 0.12)",
+                borderRadius: 14,
+                border: "1px solid rgba(99, 102, 241, 0.25)",
+                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+              }}
+            >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Example Use Cases</strong>: Ongoing competitive monitoring, prior art searches, freedom-to-operate and clearance analysis, and staying current with AI/ML IP as it relates to specific technology areas. Graphs provide visual guides on trends across the AI/ML IP landscape.
               </p>
@@ -96,7 +151,15 @@ export default function HelpIndexPage() {
           </div>
 
           {/* Whitespace Analysis Card */}
-          <div style={{ background: CARD_BG, border: `2px solid ${LINK_COLOR}`, borderRadius: 12, padding: 32, boxShadow: "0 2px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}>
+          <div
+            className="glass-card"
+            style={{
+              ...cardBaseStyle,
+              border: "1.5px solid rgba(99, 102, 241, 0.75)",
+              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Whitespace Analysis</h3>
@@ -106,20 +169,8 @@ export default function HelpIndexPage() {
               </div>
               <a
                 href="/help/whitespace"
-                className="hover:underline"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 24px",
-                  background: LINK_COLOR,
-                  color: "white",
-                  borderRadius: 6,
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  transition: "background 0.2s"
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = "#3A506B"}
-                onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+                className="btn-modern"
+                style={linkButtonStyle}
               >
                 View Guide →
               </a>
@@ -140,7 +191,18 @@ export default function HelpIndexPage() {
               <DetailItem icon="⬩" title="Advanced Tuning" text="Adjust neighbor count, clustering resolution, and scoring weights to refine analysis" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div
+              style={{
+                marginTop: 20,
+                padding: 18,
+                background: "rgba(59, 130, 246, 0.12)",
+                borderRadius: 14,
+                border: "1px solid rgba(99, 102, 241, 0.25)",
+                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+              }}
+            >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Example Use Cases</strong>: Strategic IP investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
               </p>
@@ -150,7 +212,7 @@ export default function HelpIndexPage() {
         </div>
 
         {/* Quick Start */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Quick Start Guide</h2>
 
           <div style={{ display: "grid", gap: 20 }}>
@@ -182,7 +244,7 @@ export default function HelpIndexPage() {
         </div>
 
         {/* Additional Resources */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Additional Resources</h2>
 
           <div style={{ display: "grid", gap: 16 }}>
@@ -212,7 +274,7 @@ export default function HelpIndexPage() {
         </div>
 
         {/* Support */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Need Help?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             If you have questions or encounter issues not covered in this documentation, please contact our support team:

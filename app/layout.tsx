@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`${appSans.className} min-h-screen bg-white text-gray-900`}>
+      <body className={`${appSans.className} app-shell min-h-screen text-gray-900`}>
         {/* Client-side observability hooks */}
         <GlitchtipInit />
         <Providers>

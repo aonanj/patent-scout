@@ -73,7 +73,7 @@ const SIGNAL_TONE_LABELS: Record<SignalTone, string> = {
 
 type StatusStyle = { background: string; color: string };
 
-const DEFAULT_STATUS_STYLE: StatusStyle = { background: "#eaf6ff", color: "#475569" };
+const DEFAULT_STATUS_STYLE: StatusStyle = { background: "rgba(148, 163, 184, 0.18)", color: "#1f2937" };
 
 const STATUS_STYLE_PRESETS: Record<SignalTone, Record<SignalStatus, StatusStyle>> = {
   opportunity: {
@@ -143,15 +143,14 @@ function Row({
   );
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div
+      className="glass-card"
       style={{
-        background: "#ffffff",
-        border: "1px solid #e2e8f0",
-        borderRadius: 12,
-        padding: 18,
-        boxShadow: "0 4px 12px rgba(15,23,42,0.05)",
+        padding: 22,
+        borderRadius: 20,
+        ...style,
       }}
     >
       {children}
@@ -159,29 +158,32 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+const buttonBaseStyle: React.CSSProperties = {
+  height: 40,
+  padding: "0 20px",
+  borderRadius: 999,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  fontSize: 13,
+  fontWeight: 600,
+  letterSpacing: "0.01em",
+  transition: "all 0.18s ease",
+};
+
 function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const buttonStyle: React.CSSProperties = {
-    height: 38,
-    padding: "0 16px",
-    borderRadius: 10,
-    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#39506b" : "#0284c7",
-    color: "#ffffff",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 600,
-    fontSize: 13,
-    opacity: disabled ? 0.6 : 1,
-    ...style,
-  };
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      style={buttonStyle}
       title={title}
-      onMouseEnter={() => !disabled && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="btn-modern"
+      style={{
+        ...buttonBaseStyle,
+        ...style,
+      }}
     >
       {children}
     </button>
@@ -189,28 +191,19 @@ function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?
 }
 
 function GhostButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const buttonStyle: React.CSSProperties = {
-    height: 36,
-    padding: "0 12px",
-    borderRadius: 8,
-    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#bcccdc" : "#d9e1eb",
-    color: "#39506b",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 400,
-    fontSize: 12,
-    opacity: disabled ? 0.6 : 1,
-    ...style,
-  };
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      style={buttonStyle}
       title={title}
-      onMouseEnter={() => !disabled && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="btn-outline"
+      style={{
+        ...buttonBaseStyle,
+        height: 38,
+        fontWeight: 500,
+        ...style,
+      }}
     >
       {children}
     </button>
@@ -219,56 +212,106 @@ function GhostButton({ onClick, children, disabled, style, title }: { onClick?: 
 
 const inputStyle: React.CSSProperties = {
   height: 38,
-  border: "1px solid #e2e8f0",
-  borderRadius: 10,
-  padding: "0 12px",
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
   outline: "none",
   minWidth: 220,
   fontSize: 13,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#0f172a",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+
+const pageWrapperStyle: React.CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+};
+
+const pageSurfaceStyle: React.CSSProperties = {
+  maxWidth: 1240,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 20,
+  padding: 28,
+  borderRadius: 28,
+};
+
+const footerStyle: React.CSSProperties = {
+  alignSelf: "center",
+  padding: "16px 24px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.22)",
+  border: "1px solid rgba(255, 255, 255, 0.35)",
+  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  color: "#1f2937",
+  textAlign: "center",
+  fontSize: 12,
+  fontWeight: 500,
 };
 
 const exampleBtn: React.CSSProperties = {
-  border: "1px solid #0f172a",
-  background: "#0f172a",
+  border: "none",
+  background: "linear-gradient(135deg, #fb923c 0%, #f97316 40%, #ec4899 100%)",
   color: "#ffffff",
-  borderRadius: 8,
-  padding: "6px 12px",
-  fontSize: 12,
-  fontWeight: 600,
-};
-
-const exportBtn: React.CSSProperties = {
-  border: "1px solid #0f172a",
-  background: "#ffffff",
-  color: "#0f172a",
-  borderRadius: 8,
+  borderRadius: 999,
   padding: "6px 14px",
   fontSize: 12,
   fontWeight: 600,
   cursor: "pointer",
+  boxShadow: "0 14px 28px rgba(249, 115, 22, 0.32)",
+  transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease",
+};
+
+const exportBtn: React.CSSProperties = {
+  border: "1px solid rgba(99, 102, 241, 0.45)",
+  background: "rgba(255, 255, 255, 0.28)",
+  color: "#1f2937",
+  borderRadius: 999,
+  padding: "6px 16px",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
   whiteSpace: "nowrap",
+  boxShadow: "0 12px 24px rgba(99, 102, 241, 0.25)",
+  transition: "transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
 };
 
 const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 12,
+  background: "rgba(255, 255, 255, 0.78)",
+  borderRadius: 16,
+  overflow: "hidden",
+  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.22)",
 };
 
 const thStyle: React.CSSProperties = {
   textAlign: "left",
-  padding: "8px 10px",
-  borderBottom: "1px solid #e5e7eb",
-  color: "#334155",
-  background: "#eaf6ff",
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(148, 163, 184, 0.3)",
+  color: "#0f172a",
+  background: "rgba(148, 163, 184, 0.22)",
   position: "sticky",
   top: 0,
   zIndex: 1,
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "8px 10px",
-  borderTop: "1px solid #f1f5f9",
+  padding: "10px 12px",
+  borderTop: "1px solid rgba(148, 163, 184, 0.2)",
   verticalAlign: "top",
 };
 
@@ -884,8 +927,8 @@ export default function WhitespacePage() {
     : "e.g., autonomous vehicles, medical imaging";
 
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gap: 18 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={{ ...pageSurfaceStyle, gap: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ margin: 4, fontSize: 20, fontWeight: 700, color: "#102A43"}}>Whitespace Signals </span>
@@ -1146,15 +1189,18 @@ export default function WhitespacePage() {
                                       display: "flex",
                                       justifyContent: "space-between",
                                       alignItems: "center",
-                                      border: "1px solid #e2e8f0",
-                                      borderRadius: 12,
-                                      padding: "10px 14px",
-                                      background: "#ffffff",
+                                      border: isActive ? "1px solid rgba(99, 102, 241, 0.55)" : "1px solid rgba(255, 255, 255, 0.35)",
+                                      borderRadius: 16,
+                                      padding: "14px 18px",
+                                      background: isActive ? "rgba(99, 102, 241, 0.18)" : "rgba(255, 255, 255, 0.22)",
                                       cursor: "pointer",
-                                      boxShadow: isActive ? "0 4px 12px rgba(15,23,42,0.08)" : "none",
-                                      transition: "box-shadow 0.2s ease",
+                                      boxShadow: isActive ? "0 22px 44px rgba(99, 102, 241, 0.32)" : "0 16px 36px rgba(15, 23, 42, 0.2)",
+                                      transition: "box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease",
+                                      transform: isActive ? "translateY(-2px)" : "translateY(0)",
+                                      backdropFilter: "blur(14px)",
+                                      WebkitBackdropFilter: "blur(14px)",
                                     }}
-                                  >
+                                >
                                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
                                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                         <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
@@ -1226,8 +1272,8 @@ export default function WhitespacePage() {
                                           onClick={() => handleViewExamples(assignee.assignee, signal, "related")}
                                           style={{
                                             ...exampleBtn,
-                                            background: "#1e293b",
-                                            borderColor: "#1e293b",
+                                            background: "linear-gradient(135deg, #38bdf8 0%, #6366f1 100%)",
+                                            boxShadow: "0 16px 32px rgba(59, 130, 246, 0.28)",
                                             cursor: hasExamples ? "pointer" : "not-allowed",
                                             opacity: hasExamples ? 1 : 0.5,
                                           }}
@@ -1301,19 +1347,31 @@ export default function WhitespacePage() {
                         fontSize: 12,
                         fontWeight: 600,
                         color: "#0f172a",
-                        border: "1px solid #0284c7",
-                        outline: "2px solid rgba(2,132,199,0.35)",
-                        outlineOffset: 2,
+                        border: "1px solid rgba(59, 130, 246, 0.5)",
                         borderRadius: 999,
-                        padding: "6px 14px",
-                        background: "#e0f2fe",
+                        padding: "6px 16px",
+                        background: "rgba(59, 130, 246, 0.18)",
+                        boxShadow: "0 12px 24px rgba(59, 130, 246, 0.25)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
                       }}
                     >
                       Hightlight {SIGNAL_LABELS[selectedSignal]}
                     </span>
                   )}
                 </div>
-                <div style={{ height: 520, border: "1px solid #e2e8f0", borderRadius: 12, background: "#ffffff" }}>
+                <div
+                  style={{
+                    height: 520,
+                    border: "1px solid rgba(255, 255, 255, 0.4)",
+                    borderRadius: 18,
+                    background: "rgba(15, 23, 42, 0.28)",
+                    boxShadow: "0 28px 56px rgba(15, 23, 42, 0.32)",
+                    backdropFilter: "blur(18px)",
+                    WebkitBackdropFilter: "blur(18px)",
+                    overflow: "hidden",
+                  }}
+                >
                   <SigmaWhitespaceGraph
                     data={result.graph}
                     height={520}
@@ -1388,7 +1446,17 @@ export default function WhitespacePage() {
                     <span><strong>From:</strong> {dateFrom || "--"}</span>
                     <span><strong>To:</strong> {dateTo || "--"}</span>
                   </div>
-                  <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
+                  <div
+                    style={{
+                      border: "1px solid rgba(255, 255, 255, 0.35)",
+                      borderRadius: 18,
+                      overflow: "hidden",
+                      background: "rgba(255, 255, 255, 0.16)",
+                      boxShadow: "0 20px 40px rgba(15, 23, 42, 0.28)",
+                      backdropFilter: "blur(16px)",
+                      WebkitBackdropFilter: "blur(16px)",
+                    }}
+                  >
                     <div style={{ maxHeight: 360, overflow: "auto" }}>
                       <table style={tableStyle}>
                         <thead>
@@ -1461,7 +1529,7 @@ export default function WhitespacePage() {
           </>
         )}
 
-        <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
+        <footer style={footerStyle}>
           2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
         </footer>
       </div>

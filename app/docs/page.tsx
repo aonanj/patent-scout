@@ -1,18 +1,66 @@
 // app/legal/page.tsx
 "use client";
 
-const TEXT_COLOR = "#102A43";
+import type { CSSProperties } from "react";
+
+const TEXT_COLOR = "#0f172a";
 const LINK_COLOR = "#5FA8D2";
-const CARD_BG = "white";
-const CARD_BORDER = "#e5e7eb";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
+
+const linkButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 28px",
+  borderRadius: 999,
+  background: "linear-gradient(135deg, #38bdf8 0%, #6366f1 100%)",
+  color: "#ffffff",
+  fontWeight: 600,
+  fontSize: 14,
+  border: "1px solid rgba(99, 102, 241, 0.45)",
+  boxShadow: "0 18px 36px rgba(99, 102, 241, 0.42)",
+  textDecoration: "none",
+  transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
+};
 
 export default function LegalIndexPage() {
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
         
         {/* Header */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Legal Documentation</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             Welcome to Patent Scout's legal resource center. Access and use of the Patent Scout Platform is governed by our Terms of Service. The resources provided here are freely accessible without a subscription. By subscribing to Patent Scout and using the Platform, you are agreeing to the Terms and accepting our Privacy Policy. We reserve the right to update these documents at our discretion without direct notification to users. Please review them periodically to stay informed of any changes.
@@ -20,7 +68,7 @@ export default function LegalIndexPage() {
         </div>
 
         {/* Introduction */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Overview</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Patent Scout is committed to transparency, data protection, and legal compliance. Login credentials and financial information (e.g., payment details for subscriptions) are handled through trusted third-party providers (i.e., Auth0 for authentication, Stripe for payment processing). Patent Scout does not store any user information beyond the minimum necessary to provide the service. The user information we do store is protected under our Privacy Policy, and will not be sold or otherwise shared with any third parties for advertising or marketing purposes. Please refer to the following key legal documents for further information:
@@ -39,7 +87,15 @@ export default function LegalIndexPage() {
         <div style={{ display: "grid", gap: 24 }}>
           
           {/* Terms of Service Card */}
-          <div style={{ background: CARD_BG, border: `2px solid ${LINK_COLOR}`, borderRadius: 12, padding: 32, boxShadow: "0 2px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}>
+          <div
+            className="glass-card"
+            style={{
+              ...cardBaseStyle,
+              border: "1.5px solid rgba(99, 102, 241, 0.75)",
+              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Terms of Service</h3>
@@ -47,21 +103,10 @@ export default function LegalIndexPage() {
                   <strong>Last Updated</strong>: October 17, 2025
                 </p>
               </div>
-              <a 
-                href="/docs/tos" 
-                style={{ 
-                  display: "inline-block",
-                  padding: "10px 24px", 
-                  background: LINK_COLOR, 
-                  color: "white", 
-                  borderRadius: 6, 
-                  textDecoration: "none", 
-                  fontWeight: 600,
-                  fontSize: 14,
-                  transition: "background 0.2s"
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = "#4A90B5"}
-                onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+              <a
+                href="/docs/tos"
+                className="btn-modern"
+                style={linkButtonStyle}
               >
                 Read Document →
               </a>
@@ -81,7 +126,18 @@ export default function LegalIndexPage() {
               <DetailItem icon="➣" title="Liability & Disputes" text="Limitation of liability, indemnification, and arbitration" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div
+              style={{
+                marginTop: 20,
+                padding: 18,
+                background: "rgba(59, 130, 246, 0.12)",
+                borderRadius: 14,
+                border: "1px solid rgba(99, 102, 241, 0.25)",
+                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+              }}
+            >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Applicable To</strong>: All users of Patent Scout, without express or implied exception. A "user" is anyone accessing and navigating the Patent Scout platform, or the owner of any automated or agentic system that accesses and navigates the platform. Accessing and navigating the platform constitutes acceptance of these Terms.
               </p>
@@ -89,7 +145,15 @@ export default function LegalIndexPage() {
           </div>
 
           {/* Privacy Policy Card */}
-          <div style={{ background: CARD_BG, border: `2px solid ${LINK_COLOR}`, borderRadius: 12, padding: 32, boxShadow: "0 2px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}>
+          <div
+            className="glass-card"
+            style={{
+              ...cardBaseStyle,
+              border: "1.5px solid rgba(99, 102, 241, 0.75)",
+              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Privacy Policy</h3>
@@ -97,21 +161,10 @@ export default function LegalIndexPage() {
                   <strong>Last Updated</strong>: October 17, 2025
                 </p>
               </div>
-              <a 
-                href="/docs/privacy" 
-                style={{ 
-                  display: "inline-block",
-                  padding: "10px 24px", 
-                  background: LINK_COLOR, 
-                  color: "white", 
-                  borderRadius: 6, 
-                  textDecoration: "none", 
-                  fontWeight: 600,
-                  fontSize: 14,
-                  transition: "background 0.2s"
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = "#4A90B5"}
-                onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+              <a
+                href="/docs/privacy"
+                className="btn-modern"
+                style={linkButtonStyle}
               >
                 Read Document →
               </a>
@@ -131,7 +184,18 @@ export default function LegalIndexPage() {
               <DetailItem icon="➣" title="Your Privacy Rights" text="Access, correction, deletion, portability, and opt-out rights (GDPR/CCPA)" />
             </div>
 
-            <div style={{ marginTop: 20, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div
+              style={{
+                marginTop: 20,
+                padding: 18,
+                background: "rgba(59, 130, 246, 0.12)",
+                borderRadius: 14,
+                border: "1px solid rgba(99, 102, 241, 0.25)",
+                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+              }}
+            >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Applicable To:</strong>: All users. Our Privacy Policy includes various sections that are specific to certain jurisdictions, including sections for GDPR/CCPA compliance and sections for users located in the EEA, UK, Switzerland, California, and other jurisdictions with privacy laws. Your rights under our Privacy Policy are contingent upon your location when accessing and using the platform. Use of a VPN or similar technology to obscure your location constitutes waiver of any privacy rights specific to your actual jurisdiction and agreement to be treated under the laws and regulations of the state of Wyoming, United States.
               </p>
@@ -139,7 +203,15 @@ export default function LegalIndexPage() {
           </div>
 
           {/* Data Processing Agreement Card */}
-          <div style={{ background: CARD_BG, border: `2px solid ${LINK_COLOR}`, borderRadius: 12, padding: 32, boxShadow: "0 2px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}>
+          <div
+            className="glass-card"
+            style={{
+              ...cardBaseStyle,
+              border: "1.5px solid rgba(99, 102, 241, 0.75)",
+              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Data Processing Agreement (DPA)</h3>
@@ -147,21 +219,10 @@ export default function LegalIndexPage() {
                   <strong>Last Updated</strong>: October 17, 2025
                 </p>
               </div>
-              <a 
-                href="/docs/dpa" 
-                style={{ 
-                  display: "inline-block",
-                  padding: "10px 24px", 
-                  background: LINK_COLOR, 
-                  color: "white", 
-                  borderRadius: 6, 
-                  textDecoration: "none", 
-                  fontWeight: 600,
-                  fontSize: 14,
-                  transition: "background 0.2s"
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = "#4A90B5"}
-                onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+              <a
+                href="/docs/dpa"
+                className="btn-modern"
+                style={linkButtonStyle}
               >
                 Read Document →
               </a>
@@ -188,7 +249,18 @@ export default function LegalIndexPage() {
               </p>
             </div>
 
-            <div style={{ marginTop: 16, padding: 16, background: "#eaf6ff", borderRadius: 6, border: "1px solid #e5e7eb" }}>
+            <div
+              style={{
+                marginTop: 16,
+                padding: 18,
+                background: "rgba(59, 130, 246, 0.12)",
+                borderRadius: 14,
+                border: "1px solid rgba(99, 102, 241, 0.25)",
+                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+              }}
+            >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
                 <strong>Note</strong>: Individual users who are not processing personal data on behalf of an organization typically do not need to review the DPA. The Privacy Policy and Terms of Service are sufficient for individual use cases.
               </p>
@@ -198,7 +270,7 @@ export default function LegalIndexPage() {
         </div>
 
         {/* Additional Information */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Important Information</h2>
           
           <div style={{ display: "grid", gap: 20 }}>
@@ -246,12 +318,19 @@ export default function LegalIndexPage() {
         </div>
 
         {/* Quick Reference */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Quick Reference Guide</h2>
           
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #e5e7eb", background: "#eaf6ff" }}>
+              <tr
+                style={{
+                  borderBottom: "1px solid rgba(148, 163, 184, 0.3)",
+                  background: "rgba(148, 163, 184, 0.18)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                }}
+              >
                 <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Documentation to...</th>
                 <th style={{ padding: 12, textAlign: "left", fontWeight: 600 }}>Located at...</th>
               </tr>

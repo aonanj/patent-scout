@@ -4,3 +4,85 @@
 
 /* optional tweaks */
 html, body { height: 100%; }
+
+body.app-shell {
+  background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.65), rgba(15, 23, 42, 0.85) 45%, #0f172a 75%, #0b1224 100%);
+  background-attachment: fixed;
+  color: #0f172a;
+}
+
+.glass-surface {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 24px 45px rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.btn-modern {
+  background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0 20px;
+  font-weight: 600;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-modern:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px rgba(99, 102, 241, 0.4);
+  filter: brightness(1.05);
+}
+
+.btn-modern:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-weight: 600;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-outline:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.22);
+}
+
+.btn-outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}

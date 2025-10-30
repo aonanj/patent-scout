@@ -31,15 +31,14 @@ function Row({ children, gap = 12 }: { children: React.ReactNode; gap?: number }
   );
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div
+      className="glass-card"
       style={{
-        background: "white",
-        border: "1px solid #e5e7eb",
-        borderRadius: 10,
-        padding: 16,
-        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+        padding: 20,
+        borderRadius: 20,
+        ...style,
       }}
     >
       {children}
@@ -47,28 +46,32 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+const buttonBaseStyle: React.CSSProperties = {
+  height: 40,
+  padding: "0 20px",
+  borderRadius: 999,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  fontSize: 13,
+  fontWeight: 600,
+  letterSpacing: "0.01em",
+  transition: "all 0.18s ease",
+};
+
 function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const buttonStyle: React.CSSProperties = {
-    height: 36,
-    padding: "0 12px",
-    borderRadius: 8,
-    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#39506b" : "#0ea5e9",
-    color: "white",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 600,
-    opacity: disabled ? 0.6 : 1,
-    ...style,
-  };
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      style={buttonStyle}
       title={title}
-      onMouseEnter={() => !disabled && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="btn-modern"
+      style={{
+        ...buttonBaseStyle,
+        ...style,
+      }}
     >
       {children}
     </button>
@@ -76,27 +79,19 @@ function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?
 }
 
 function GhostButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const buttonStyle: React.CSSProperties = {
-    height: 36,
-    padding: "0 12px",
-    borderRadius: 8,
-    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#bcccdc" : "#d9e1eb",
-    color: "#39506b",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 500,
-    opacity: disabled ? 0.6 : 1,
-    ...style,
-  };
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      style={buttonStyle}
       title={title}
-      onMouseEnter={() => !disabled && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="btn-outline"
+      style={{
+        ...buttonBaseStyle,
+        height: 38,
+        fontWeight: 500,
+        ...style,
+      }}
     >
       {children}
     </button>
@@ -104,27 +99,21 @@ function GhostButton({ onClick, children, disabled, style, title }: { onClick?: 
 }
 
 function SecondaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const buttonStyle: React.CSSProperties = {
-    height: 36,
-    padding: "0 10px",
-    borderRadius: 8,
-    border: isHovered ? "2px solid #5FA8D2" : "1px solid #0ea5e9",
-    background: isHovered ? "#bcccdc" : "#d9e1eb",
-    color: "#39506b",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontSize: 12,
-    opacity: disabled ? 0.6 : 1,
-    ...style,
-  };
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      style={buttonStyle}
       title={title}
-      onMouseEnter={() => !disabled && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="btn-outline"
+      style={{
+        ...buttonBaseStyle,
+        height: 34,
+        fontSize: 12,
+        fontWeight: 600,
+        padding: "0 16px",
+        ...style,
+      }}
     >
       {children}
     </button>
@@ -148,13 +137,16 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const overlayContentStyle: React.CSSProperties = {
-  background: 'white',
-  padding: '40px',
-  borderRadius: '12px',
-  textAlign: 'center',
-  boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
-  maxWidth: '400px',
-  width: '90%',
+  background: "rgba(255, 255, 255, 0.85)",
+  padding: "40px",
+  borderRadius: 20,
+  textAlign: "center",
+  boxShadow: "0 24px 40px rgba(15, 23, 42, 0.28)",
+  border: "1px solid rgba(255, 255, 255, 0.45)",
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+  maxWidth: 420,
+  width: "90%",
 };
 
 export default function Page() {
@@ -496,8 +488,8 @@ export default function Page() {
   }, []);
 
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh" }}>
-      
+    <div style={pageWrapperStyle}>
+
       {/* Login Overlay */}
       {!isLoading && !isAuthenticated && (
         <div style={overlayStyle}>
@@ -515,7 +507,7 @@ export default function Page() {
         </div>
       )}
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 16 }}>
+      <div className="glass-surface" style={pageSurfaceStyle}>
         <Card>
           <div style={{ display: "grid", gap: 12 }}>
             <Row>
@@ -751,7 +743,7 @@ export default function Page() {
       </div>
 
       {/* Footer */}
-      <footer style={{ marginTop: 24, textAlign: "center", color: "#64748b", fontSize: 12, fontWeight: 500 }}>
+      <footer style={footerStyle}>
         2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
       </footer>
     </div>
@@ -883,15 +875,18 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
               position: "absolute",
               left: hoveredPoint.x + 10,
               top: hoveredPoint.y - 60,
-              background: "rgba(0, 0, 0, 0.85)",
-              color: "white",
+              background: "rgba(255, 255, 255, 0.9)",
+              color: "#0f172a",
               padding: "8px 12px",
-              borderRadius: "6px",
+              borderRadius: "12px",
               fontSize: "12px",
               pointerEvents: "none",
               zIndex: 1000,
               minWidth: "150px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              boxShadow: "0 14px 28px rgba(15, 23, 42, 0.25)",
+              border: "1px solid rgba(255, 255, 255, 0.5)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
             }}
           >
             <div style={{ fontWeight: "600", marginBottom: "4px" }}>
@@ -901,7 +896,7 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
               Entries: {hoveredPoint.data.count}
             </div>
             {hoveredPoint.data.top_assignee && (
-              <div style={{ fontSize: "11px", color: "#d1d5db", marginTop: "4px" }}>
+              <div style={{ fontSize: "11px", color: "#1e293b", marginTop: "4px" }}>
                 Top Assignee: {hoveredPoint.data.top_assignee}
               </div>
             )}
@@ -964,51 +959,101 @@ function TrendChart({ data, groupBy, height = 180 }: { data: TrendPoint[]; group
   );
 }
 
+const pageWrapperStyle: React.CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+};
+
+const pageSurfaceStyle: React.CSSProperties = {
+  maxWidth: 1240,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 20,
+  padding: 28,
+  borderRadius: 28,
+};
+
 const inputStyle: React.CSSProperties = {
-  height: 36,
-  border: "1px solid #e5e7eb",
-  borderRadius: 8,
-  padding: "0 10px",
+  height: 38,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
   outline: "none",
   minWidth: 220,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#0f172a",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
 };
 
 const resultItem: React.CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: 8,
-  padding: 12,
-  background: "white",
+  padding: 16,
+  borderRadius: 16,
+  border: "1px solid rgba(255, 255, 255, 0.45)",
+  background: "rgba(255, 255, 255, 0.75)",
+  boxShadow: "0 16px 32px rgba(15, 23, 42, 0.18)",
 };
+
 const dangerBtn: React.CSSProperties = {
-  height: 28,
-  padding: "0 10px",
-  borderRadius: 6,
-  border: "1px solid #ef4444",
-  background: "#fff1f2",
-  color: "#b91c1c",
+  height: 32,
+  padding: "0 14px",
+  borderRadius: 999,
+  border: "1px solid rgba(248, 113, 113, 0.7)",
+  background: "linear-gradient(135deg, rgba(254, 202, 202, 0.85) 0%, rgba(248, 113, 113, 0.85) 100%)",
+  color: "#7f1d1d",
   cursor: "pointer",
+  fontWeight: 600,
+  boxShadow: "0 12px 24px rgba(248, 113, 113, 0.3)",
+  transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease",
+};
+
+const footerStyle: React.CSSProperties = {
+  alignSelf: "center",
+  padding: "16px 24px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.22)",
+  border: "1px solid rgba(255, 255, 255, 0.35)",
+  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  color: "#1f2937",
+  textAlign: "center",
+  fontSize: 12,
+  fontWeight: 500,
 };
 
 const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 12,
+  background: "rgba(255, 255, 255, 0.75)",
+  borderRadius: 14,
+  overflow: "hidden",
+  boxShadow: "0 14px 32px rgba(15, 23, 42, 0.18)",
 };
 
 const thStyle: React.CSSProperties = {
   textAlign: "left",
-  padding: "8px 10px",
-  borderBottom: "1px solid #e5e7eb",
-  color: "#334155",
-  background: "#eaf6ff",
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(148, 163, 184, 0.3)",
+  color: "#0f172a",
+  background: "rgba(148, 163, 184, 0.2)",
   position: "sticky",
   top: 0,
   zIndex: 1,
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "8px 10px",
-  borderTop: "1px solid #f1f5f9",
+  padding: "10px 12px",
+  borderTop: "1px solid rgba(148, 163, 184, 0.18)",
   verticalAlign: "top",
 };
 
