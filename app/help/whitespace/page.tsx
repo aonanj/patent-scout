@@ -528,7 +528,7 @@ function InputDescription({ label, description, example, tips }: { label: string
 
 function AdvancedOption({ param, defaultValue, description, guidance }: { param: string; defaultValue: string; description: string; guidance: string }) {
   return (
-    <div className="glass-card" style={{ padding: 18, borderRadius: 16, background: "rgba(59, 130, 246, 0.12)", border: "1px solid rgba(99, 102, 241, 0.25)", boxShadow: "0 14px 28px rgba(59, 130, 246, 0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+    <div className="glass-card" style={{ padding: 18, borderRadius: 16, background: "rgba(14, 84, 196, 0.12)", border: "1px solid rgba(99, 102, 241, 0.25)", boxShadow: "0 14px 28px rgba(14, 84, 196, 0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{param}</h4>
         <span style={{ fontSize: 12, fontWeight: 600, color: "#627D98", background: "#e2e8f0", padding: "2px 8px", borderRadius: 4 }}>Default: {defaultValue}</span>
@@ -586,7 +586,7 @@ function GraphInterpretation({ pattern, meaning }: { pattern: string; meaning: s
 
 function SortMode({ mode, description }: { mode: string; description: string }) {
   return (
-    <div className="glass-card" style={{ padding: 16, borderRadius: 16, background: "rgba(59, 130, 246, 0.12)", border: "1px solid rgba(99, 102, 241, 0.25)", boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+    <div className="glass-card" style={{ padding: 16, borderRadius: 16, background: "rgba(14, 84, 196, 0.12)", border: "1px solid rgba(99, 102, 241, 0.25)", boxShadow: "0 14px 26px rgba(14, 84, 196, 0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: TEXT_COLOR }}>{mode}</h4>
       <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>

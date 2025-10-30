@@ -130,10 +130,10 @@ export default function LegalIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(59, 130, 246, 0.12)",
+                background: "rgba(14, 84, 196, 0.12)",
                 borderRadius: 14,
                 border: "1px solid rgba(99, 102, 241, 0.25)",
-                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                boxShadow: "0 14px 26px rgba(14, 84, 196, 0.18)",
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
@@ -188,10 +188,10 @@ export default function LegalIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(59, 130, 246, 0.12)",
+                background: "rgba(14, 84, 196, 0.12)",
                 borderRadius: 14,
                 border: "1px solid rgba(99, 102, 241, 0.25)",
-                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                boxShadow: "0 14px 26px rgba(14, 84, 196, 0.18)",
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
@@ -253,10 +253,10 @@ export default function LegalIndexPage() {
               style={{
                 marginTop: 16,
                 padding: 18,
-                background: "rgba(59, 130, 246, 0.12)",
+                background: "rgba(14, 84, 196, 0.12)",
                 borderRadius: 14,
                 border: "1px solid rgba(99, 102, 241, 0.25)",
-                boxShadow: "0 14px 26px rgba(59, 130, 246, 0.18)",
+                boxShadow: "0 14px 26px rgba(14, 84, 196, 0.18)",
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
