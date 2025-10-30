@@ -294,8 +294,8 @@ const footerStyle: React.CSSProperties = {
 
 const exampleBtn: React.CSSProperties = {
   border: "none",
-  background: "linear-gradient(135deg, #bfdbfe 0%, #818cf8 100%)",
-  color: "#102A43",
+  background: "linear-gradient(135deg, #5FA8E2 0%, #102A43 100%)",
+  color: "#ffffff",
   borderRadius: 999,
   padding: "6px 14px",
   fontSize: 12,
@@ -1318,7 +1318,7 @@ export default function WhitespacePage() {
                                           }}
                                           disabled={!hasExamples}
                                         >
-                                          View Examples (Recent)
+                                          Recent Examples
                                         </button>
                                         <button
                                           onClick={() => handleViewExamples(assignee.assignee, signal, "related")}
@@ -1329,7 +1329,7 @@ export default function WhitespacePage() {
                                           }}
                                           disabled={!hasExamples}
                                         >
-                                          View Examples (Related)
+                                          Related Examples
                                         </button>
                                         {!hasExamples && (
                                           <span style={{ fontSize: 12, color: "#94a3b8" }}>
