@@ -216,7 +216,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 12,
   padding: "0 14px",
   outline: "none",
-  minWidth: 220,
+  minWidth: 240,
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
@@ -232,7 +232,7 @@ const menuStyle: React.CSSProperties = {
   borderRadius: 12,
   padding: "0 14px",
   outline: "none",
-  minWidth: 150,
+  minWidth: 180,
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
@@ -248,7 +248,7 @@ const numberStyle: React.CSSProperties = {
   borderRadius: 12,
   padding: "0 14px",
   outline: "none",
-  minWidth: 100,
+  minWidth: 75,
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
@@ -965,7 +965,7 @@ export default function WhitespacePage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ margin: 4, fontSize: 20, fontWeight: 700, color: "#102A43"}}>Whitespace Signals </span>
-            <span style={{ fontSize: 12, color: "#64748b"}}>Signal identification for risks and opportunities in AI/ML IP</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#636363"}}>Signal identification for risks and opportunities in AI/ML IP</span>
           </div>
           {!isLoading && !isAuthenticated && (
             <GhostButton onClick={() => loginWithRedirect()}>Log in</GhostButton>
