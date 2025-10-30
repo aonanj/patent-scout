@@ -5,10 +5,14 @@
 /* optional tweaks */
 html, body { height: 100%; }
 
+body {
+  color: #102a43;
+}
+
 body.app-shell {
-  background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.65), rgba(15, 23, 42, 0.85) 45%, #0f172a 75%, #0b1224 100%);
+  background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.65), rgba(15, 23, 42, 0.85) 45%, #102A43 75%, #0b1224 100%);
   background-attachment: fixed;
-  color: #0f172a;
+  color: #102a43;
 }
 
 .glass-surface {
@@ -62,7 +66,7 @@ body.app-shell {
 .btn-outline {
   background: rgba(255, 255, 255, 0.3);
   border: 1px solid rgba(148, 163, 184, 0.55);
-  color: #0f172a;
+  color: #102A43;
   border-radius: 999px;
   padding: 0 18px;
   font-weight: 600;

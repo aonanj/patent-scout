@@ -3,7 +3,7 @@
 
 import type { CSSProperties } from "react";
 
-const TEXT_COLOR = "#0f172a";
+const TEXT_COLOR = "#102A43";
 const LINK_COLOR = "#5FA8D2";
 const CARD_BG = "rgba(255, 255, 255, 0.8)";
 const CARD_BORDER = "rgba(255, 255, 255, 0.45)";

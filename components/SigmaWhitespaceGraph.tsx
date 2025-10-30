@@ -573,7 +573,7 @@ export default function SigmaWhitespaceGraph({
       zIndex: "20",
       display: "none",
       maxWidth: "320px",
-      color: "#0f172a",
+      color: "#102A43",
     };
     Object.assign(tooltip.style, tooltipStyle);
     container.appendChild(tooltip);
@@ -785,7 +785,7 @@ export default function SigmaWhitespaceGraph({
         padding: 14,
         boxShadow: "0 12px 40px rgba(15,23,42,0.15)",
         fontSize: 12,
-        color: "#0f172a",
+        color: "#102A43",
         display: "grid",
         gap: 10,
       }}
@@ -847,8 +847,8 @@ export default function SigmaWhitespaceGraph({
             alignItems: "center",
             gap: 6,
             fontSize: 12,
-            color: "#0f172a",
-            border: "1px solid #0f172a",
+            color: "#102A43",
+            border: "1px solid #102A43",
             borderRadius: 8,
             padding: "6px 10px",
             textDecoration: "none",
@@ -878,11 +878,11 @@ export default function SigmaWhitespaceGraph({
         padding: 12,
         boxShadow: "0 8px 24px rgba(15,23,42,0.12)",
         fontSize: 12,
-        color: "#0f172a",
+        color: "#102A43",
         zIndex: 10,
       }}
     >
-      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, color: "#0f172a" }}>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, color: "#102A43" }}>
         Clusters
       </div>
       <div style={{ display: "grid", gap: 6 }}>
@@ -950,7 +950,7 @@ export default function SigmaWhitespaceGraph({
             padding: "8px 14px",
             fontSize: 12,
             fontWeight: 600,
-            color: "#0f172a",
+            color: "#102A43",
             cursor: "pointer",
             boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
             display: "flex",

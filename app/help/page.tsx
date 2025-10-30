@@ -3,7 +3,7 @@
 
 import type { CSSProperties } from "react";
 
-const TEXT_COLOR = "#0f172a";
+const TEXT_COLOR = "#102A43";
 const LINK_COLOR = "#5FA8D2";
 const CARD_BG = "rgba(255, 255, 255, 0.8)";
 const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
@@ -118,7 +118,7 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Search & Trends page is the primary interface for discovering and monitoring granted patent and published application. It combines powerful search capabilities with visual trend analytics to provide an easily comprehensible view of the AI/ML IP landscape. The intuitive interface allows users to construct complex queries using both keywords and semantic similarity, filter results by various metadata fields, and visualize filing trends over time, by CPC classification, or by assignee. 
+              The Search & Trends page is the primary interface for discovering and monitoring granted patents and published applications. It combines powerful search capabilities with visual trend analytics to provide an easily comprehensible view of the AI/ML IP landscape. The intuitive interface allows users to construct complex queries using both keywords and semantic similarity, filter results by various metadata fields, and visualize filing trends over time, by CPC classification, or by assignee. 
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
               The Search & Trends page further includes the option to save a particular search configuration as an alert. Patent Scout updates its database on a weekly basis, following the USPTO schedule. Saved searches are automatically run when new data becomes available, and users are notified of new matches.

@@ -220,7 +220,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
-  color: "#0f172a",
+  color: "#102A43",
   transition: "box-shadow 0.2s ease, border-color 0.2s ease",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)",
@@ -236,7 +236,7 @@ const menuStyle: React.CSSProperties = {
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
-  color: "#0f172a",
+  color: "#102A43",
   transition: "box-shadow 0.2s ease, border-color 0.2s ease",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)",
@@ -252,7 +252,7 @@ const numberStyle: React.CSSProperties = {
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
-  color: "#0f172a",
+  color: "#102A43",
   transition: "box-shadow 0.2s ease, border-color 0.2s ease",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)",
@@ -295,7 +295,7 @@ const footerStyle: React.CSSProperties = {
 const exampleBtn: React.CSSProperties = {
   border: "none",
   background: "linear-gradient(135deg, #bfdbfe 0%, #818cf8 100%)",
-  color: "#0f172a",
+  color: "#102A43",
   borderRadius: 999,
   padding: "6px 14px",
   fontSize: 12,
@@ -333,7 +333,7 @@ const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "10px 12px",
   borderBottom: "1px solid rgba(148, 163, 184, 0.3)",
-  color: "#0f172a",
+  color: "#102A43",
   background: "rgba(148, 163, 184, 0.22)",
   position: "sticky",
   top: 0,
@@ -1211,7 +1211,7 @@ export default function WhitespacePage() {
                             cursor: "pointer",
                             fontSize: 14,
                             fontWeight: 700,
-                            color: "#0f172a",
+                            color: "#102A43",
                             textAlign: "left",
                           }}
                         >
@@ -1255,7 +1255,7 @@ export default function WhitespacePage() {
                                 >
                                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
                                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+                                        <span style={{ fontSize: 13, fontWeight: 600, color: "#102A43" }}>
                                           {SIGNAL_ICONS[signal.type]} {SIGNAL_LABELS[signal.type]}
                                         </span>
                                         <span
@@ -1340,7 +1340,7 @@ export default function WhitespacePage() {
                                       {debugMode && signal.debug && (
                                         <pre
                                           style={{
-                                            background: "#0f172a",
+                                            background: "#102A43",
                                             color: "#e2e8f0",
                                             fontSize: 11,
                                             padding: 12,
@@ -1359,7 +1359,7 @@ export default function WhitespacePage() {
                             {debugMode && assignee.debug && (
                               <pre
                                 style={{
-                                  background: "#0f172a",
+                                  background: "#102A43",
                                   color: "#e2e8f0",
                                   fontSize: 11,
                                   padding: 12,
@@ -1396,7 +1396,7 @@ export default function WhitespacePage() {
                         gap: 6,
                         fontSize: 12,
                         fontWeight: 600,
-                        color: "#0f172a",
+                        color: "#102A43",
                         border: "1px solid rgba(59, 130, 246, 0.5)",
                         borderRadius: 999,
                         padding: "6px 16px",
@@ -1530,9 +1530,9 @@ export default function WhitespacePage() {
                               : "--";
                             return (
                               <tr key={row.id}>
-                                <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{index + 1}</td>
+                                <td style={{ ...tdStyle, fontWeight: 600, color: "#102A43" }}>{index + 1}</td>
                                 <td style={tdStyle}>
-                                  <div style={{ fontWeight: 600, color: "#0f172a" }}>{row.title}</div>
+                                  <div style={{ fontWeight: 600, color: "#102A43" }}>{row.title}</div>
                                 </td>
                                 <td style={tdStyle}>
                                   <a
@@ -1564,7 +1564,7 @@ export default function WhitespacePage() {
                 <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Debug payload</div>
                 <pre
                   style={{
-                    background: "#0f172a",
+                    background: "#102A43",
                     color: "#e2e8f0",
                     fontSize: 11,
                     padding: 12,
