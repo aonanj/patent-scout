@@ -555,9 +555,6 @@ export default function Page() {
                   style={inputStyle}
                 />
               </div>
-            </Row>
-
-            <Row>
               <div style={{ display: "grid", gap: 6 }}>
                 <Label htmlFor="date_from">From</Label>
                 <input
@@ -582,7 +579,9 @@ export default function Page() {
                   style={inputStyle}
                 />
               </div>
+            </Row>
 
+            <Row>
               <PrimaryButton onClick={handleApply}>
                 Apply
               </PrimaryButton>
@@ -604,7 +603,7 @@ export default function Page() {
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <h2 style={{ margin: 0, fontSize: 16 }}>
-              <span style={{ fontWeight: 'bold', textDecoration: 'underline' }}>Trend</span>
+              <span style={{ margin: 0, fontSize: 16, fontWeight: 'semibold'}}>TREND</span>
               {displayedDateFrom && displayedDateTo && (
                 <span style={{ fontWeight: 'normal', fontSize: 14, color: '#475569', marginLeft: 8 }}>
                   (From: {displayedDateFrom}, To: {displayedDateTo})
@@ -640,7 +639,7 @@ export default function Page() {
 
         <Card>
           <Row>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textDecoration: 'underline' }}>Results</h2>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'semibold'}}>RESULTS</h2>
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               {!isFetchingData && total !== null && (
                 <span style={{ fontSize: 12, color: "#334155" }}>
@@ -744,7 +743,7 @@ export default function Page() {
 
       {/* Footer */}
       <footer style={footerStyle}>
-        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
+        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#39506B] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#39506B] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#39506B] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-blue-600 hover:underline hover:text-amber-400">Legal</a>
       </footer>
     </div>
   );
