@@ -25,9 +25,17 @@ function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNo
   );
 }
 
-function Row({ children, gap = 12 }: { children: React.ReactNode; gap?: number }) {
+function Row({
+  children,
+  gap = 12,
+  align = "flex-end",
+}: {
+  children: React.ReactNode;
+  gap?: number;
+  align?: React.CSSProperties["alignItems"];
+}) {
   return (
-    <div style={{ display: "flex", gap, alignItems: "end", flexWrap: "wrap" }}>{children}</div>
+    <div style={{ display: "flex", gap, alignItems: align, flexWrap: "wrap" }}>{children}</div>
   );
 }
 
@@ -640,7 +648,7 @@ export default function Page() {
         {/* Whitespace Analysis moved to its own page at /whitespace */}
 
         <Card>
-          <Row>
+          <Row align="center">
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'semibold'}}>RESULTS</h2>
               {!isFetchingData && total !== null && (
@@ -1029,6 +1037,7 @@ const footerStyle: React.CSSProperties = {
   textAlign: "center",
   fontSize: 12.5,
   fontWeight: 500,
+  gap: 4
 };
 
 const tableStyle: React.CSSProperties = {
