@@ -963,7 +963,7 @@ export default function WhitespacePage() {
     <div style={pageWrapperStyle}>
       <div className="glass-surface" style={{ ...pageSurfaceStyle, gap: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
             <span style={{ margin: 4, fontSize: 20, fontWeight: 700, color: "#102A43"}}>Whitespace Signals </span>
             <span style={{ fontSize: 13, fontWeight: 500, color: "#636363"}}>Signal identification for risks and opportunities in AI/ML IP</span>
           </div>
