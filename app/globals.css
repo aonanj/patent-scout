@@ -10,7 +10,7 @@ body {
 }
 
 body.app-shell {
-  background: radial-gradient(circle at 20% 20%, rgba(14, 84, 196, 0.65), rgba(15, 23, 42, 0.85) 45%, #102A43 75%, #0b1224 100%);
+  background: radial-gradient(circle at 20% 20%, rgba(107, 174, 219, 0.65), rgba(15, 23, 42, 0.85) 45%, #102A43 75%, #0b1224 100%);
   background-attachment: fixed;
   color: #102a43;
 }
@@ -35,12 +35,12 @@ body.app-shell {
 
 .btn-modern {
   background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  border: 1px solid rgba(107, 174, 219, 0.35);
   color: #ffffff;
   border-radius: 999px;
   padding: 0 20px;
   font-weight: 600;
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 12px 24px rgba(107, 174, 219, 0.35);
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   display: inline-flex;
   align-items: center;
@@ -53,7 +53,7 @@ body.app-shell {
 .btn-modern:hover:not(:disabled) {
   /* transform: translateY(-1px); */
   scale: 1.05;
-  box-shadow: 0 18px 32px rgba(99, 102, 241, 0.65);
+  box-shadow: 0 18px 32px rgba(107, 174, 219, 0.65);
   filter: brightness(1.5);
 }
 

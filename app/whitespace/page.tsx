@@ -301,12 +301,12 @@ const exampleBtn: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 10px 24px rgba(99, 102, 241, 0.18)",
+  boxShadow: "0 10px 24px rgba(107, 174, 219, 0.18)",
   transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease",
 };
 
 const exportBtn: React.CSSProperties = {
-  border: "1px solid rgba(99, 102, 241, 0.45)",
+  border: "1px solid rgba(107, 174, 219, 0.45)",
   background: "rgba(255, 255, 255, 0.28)",
   color: "#1f2937",
   borderRadius: 999,
@@ -315,7 +315,7 @@ const exportBtn: React.CSSProperties = {
   fontWeight: 600,
   cursor: "pointer",
   whiteSpace: "nowrap",
-  boxShadow: "0 12px 24px rgba(99, 102, 241, 0.25)",
+  boxShadow: "0 12px 24px rgba(107, 174, 219, 0.25)",
   transition: "transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
 };
 
@@ -1397,11 +1397,11 @@ export default function WhitespacePage() {
                         fontSize: 12,
                         fontWeight: 600,
                         color: "#102A43",
-                        border: "1px solid rgba(14, 84, 196, 0.5)",
+                        border: "1px solid rgba(107, 174, 219, 0.5)",
                         borderRadius: 999,
                         padding: "6px 16px",
-                        background: "rgba(14, 84, 196, 0.18)",
-                        boxShadow: "0 12px 24px rgba(14, 84, 196, 0.25)",
+                        background: "rgba(107, 174, 219, 0.18)",
+                        boxShadow: "0 12px 24px rgba(107, 174, 219, 0.25)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
                       }}

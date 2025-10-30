@@ -48,8 +48,8 @@ const linkButtonStyle: CSSProperties = {
   color: "#ffffff",
   fontWeight: 600,
   fontSize: 14,
-  border: "1px solid rgba(99, 102, 241, 0.45)",
-  boxShadow: "0 18px 36px rgba(99, 102, 241, 0.42)",
+  border: "1px solid rgba(107, 174, 219, 0.45)",
+  boxShadow: "0 18px 36px rgba(107, 174, 219, 0.42)",
   textDecoration: "none",
   transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
 };
@@ -96,8 +96,8 @@ export default function HelpIndexPage() {
             className="glass-card"
             style={{
               ...cardBaseStyle,
-              border: "1.5px solid rgba(99, 102, 241, 0.75)",
-              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              border: "1.5px solid rgba(107, 174, 219, 0.75)",
+              boxShadow: "0 30px 60px rgba(107, 174, 219, 0.32)",
               transition: "transform 0.2s ease, box-shadow 0.2s ease",
             }}
           >
@@ -136,10 +136,10 @@ export default function HelpIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(14, 84, 196, 0.12)",
+                background: "rgba(107, 174, 219, 0.12)",
                 borderRadius: 14,
                 border: "1px solid rgba(155, 199, 255, 0.35)",
-                boxShadow: "0 14px 26px rgba(14, 84, 196, 0.18)",
+                boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
@@ -155,8 +155,8 @@ export default function HelpIndexPage() {
             className="glass-card"
             style={{
               ...cardBaseStyle,
-              border: "1.5px solid rgba(99, 102, 241, 0.75)",
-              boxShadow: "0 30px 60px rgba(99, 102, 241, 0.32)",
+              border: "1.5px solid rgba(107, 174, 219, 0.75)",
+              boxShadow: "0 30px 60px rgba(107, 174, 219, 0.32)",
               transition: "transform 0.2s ease, box-shadow 0.2s ease",
             }}
           >
@@ -195,10 +195,10 @@ export default function HelpIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(14, 84, 196, 0.12)",
+                background: "rgba(107, 174, 219, 0.12)",
                 borderRadius: 14,
-                border: "1px solid rgba(99, 102, 241, 0.25)",
-                boxShadow: "0 14px 26px rgba(14, 84, 196, 0.18)",
+                border: "1px solid rgba(107, 174, 219, 0.25)",
+                boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
