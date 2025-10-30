@@ -406,10 +406,9 @@ export default function SearchTrendsHelpPage() {
             <li><a href="/docs" style={{ color: LINK_COLOR }}>Legal Documentation</a> – Terms of Service, Privacy Policy, DPA</li>
           </ul>
         </div>
-
         {/* Footer */}
-        <footer style={{ marginTop: 24, textAlign: "center", color: TEXT_COLOR, fontSize: 12, fontWeight: 500 }}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" style={{ color: LINK_COLOR }}>support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" style={{ color: LINK_COLOR }}>phaethonorder.com</a>
+        <footer style={footerStyle}>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Legal</a>
         </footer>
       </div>
     </div>
@@ -513,3 +512,19 @@ function Troubleshoot({ issue, solution }: { issue: string; solution: string }) 
     </div>
   );
 }
+
+const footerStyle: React.CSSProperties = {
+  alignSelf: "center",
+  padding: "16px 24px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.22)",
+  border: "1px solid rgba(255, 255, 255, 0.35)",
+  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  color: "#1f2937",
+  textAlign: "center",
+  fontSize: 13,
+  fontWeight: 500,
+  gap: 4
+};

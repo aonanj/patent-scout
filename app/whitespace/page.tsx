@@ -226,6 +226,38 @@ const inputStyle: React.CSSProperties = {
   WebkitBackdropFilter: "blur(8px)",
 };
 
+const menuStyle: React.CSSProperties = {
+  height: 38,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
+  outline: "none",
+  minWidth: 150,
+  fontSize: 13,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#0f172a",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+
+const numberStyle: React.CSSProperties = {
+  height: 38,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
+  outline: "none",
+  minWidth: 100,
+  fontSize: 13,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#0f172a",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+
 const pageWrapperStyle: React.CSSProperties = {
   padding: "48px 24px 64px",
   minHeight: "100vh",
@@ -255,20 +287,21 @@ const footerStyle: React.CSSProperties = {
   WebkitBackdropFilter: "blur(12px)",
   color: "#1f2937",
   textAlign: "center",
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: 500,
+  gap: 4
 };
 
 const exampleBtn: React.CSSProperties = {
   border: "none",
-  background: "linear-gradient(135deg, #fb923c 0%, #f97316 40%, #ec4899 100%)",
-  color: "#ffffff",
+  background: "linear-gradient(135deg, #bfdbfe 0%, #818cf8 100%)",
+  color: "#0f172a",
   borderRadius: 999,
   padding: "6px 14px",
   fontSize: 12,
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 14px 28px rgba(249, 115, 22, 0.32)",
+  boxShadow: "0 10px 24px rgba(99, 102, 241, 0.18)",
   transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease",
 };
 
@@ -942,79 +975,98 @@ export default function WhitespacePage() {
         <Card>
           <div style={{ display: "grid", gap: 16 }}>
             <Row gap={16} align="flex-end">
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-search-mode">Search Mode</Label>
-                <select
-                  id="ws-search-mode"
-                  value={searchMode}
-                  onChange={(e) => setSearchMode(e.target.value as "keywords" | "assignee")}
-                  style={{ ...inputStyle, height: 38 }}
-                >
-                  <option value="keywords">Focus Keywords</option>
-                  <option value="assignee">Assignee</option>
-                </select>
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor={primaryInputId}>{primaryInputLabel}</Label>
-                <input
-                  id={primaryInputId}
-                  value={isAssigneeMode ? assigneeQuery : focusKeywords}
-                  onChange={(e) => {
-                    if (isAssigneeMode) {
-                      setAssigneeQuery(e.target.value);
-                    } else {
-                      setFocusKeywords(e.target.value);
-                    }
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 16,
+                  alignItems: "flex-end",
+                  flex: 1,
+                }}
+              >
+                <div style={{ display: "grid", gap: 6 }}>
+                  <Label htmlFor="ws-search-mode">Search Mode</Label>
+                  <select
+                    id="ws-search-mode"
+                    value={searchMode}
+                    onChange={(e) => setSearchMode(e.target.value as "keywords" | "assignee")}
+                    style={{ ...menuStyle, height: 38 }}
+                  >
+                    <option value="keywords">Focus Keywords</option>
+                    <option value="assignee">Assignee</option>
+                  </select>
+                </div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <Label htmlFor={primaryInputId}>{primaryInputLabel}</Label>
+                  <input
+                    id={primaryInputId}
+                    value={isAssigneeMode ? assigneeQuery : focusKeywords}
+                    onChange={(e) => {
+                      if (isAssigneeMode) {
+                        setAssigneeQuery(e.target.value);
+                      } else {
+                        setFocusKeywords(e.target.value);
+                      }
+                    }}
+                    placeholder={primaryPlaceholder}
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <Label htmlFor="ws-focus-cpc">Focus CPC (LIKE)</Label>
+                  <input
+                    id="ws-focus-cpc"
+                    value={focusCpcLike}
+                    onChange={(e) => setFocusCpcLike(e.target.value)}
+                    placeholder="e.g., G06N%, H04L%"
+                    style={inputStyle}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    alignItems: "flex-end",
                   }}
-                  placeholder={primaryPlaceholder}
-                  style={inputStyle}
-                />
+                >
+                  <div style={{ display: "grid", gap: 6 }}>
+                    <Label htmlFor="ws-date-from">From</Label>
+                    <input
+                      id="ws-date-from"
+                      type="date"
+                      min="2022-01-01"
+                      max={dateTo || today}
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      style={{ ...menuStyle, minWidth: 160 }}
+                    />
+                  </div>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    <Label htmlFor="ws-date-to">To</Label>
+                    <input
+                      id="ws-date-to"
+                      type="date"
+                      min={dateFrom || "2022-01-02"}
+                      max={today}
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      style={{ ...menuStyle, minWidth: 160 }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-focus-cpc">Focus CPC (LIKE)</Label>
-                <input
-                  id="ws-focus-cpc"
-                  value={focusCpcLike}
-                  onChange={(e) => setFocusCpcLike(e.target.value)}
-                  placeholder="e.g., G06N%, H04L%"
-                  style={inputStyle}
-                />
+              <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+                <PrimaryButton
+                  onClick={runWhitespaceAnalysis}
+                  disabled={loading || !isAuthenticated || (isAssigneeMode && assigneeQuery.trim().length === 0)}
+                >
+                  {loading ? "Identifying..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
+                </PrimaryButton>
+                <GhostButton onClick={handleReset}>
+                  Reset
+                </GhostButton>
               </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-date-from">From</Label>
-                <input
-                  id="ws-date-from"
-                  type="date"
-                  min="2022-01-01"
-                  max={dateTo || today}
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ display: "grid", gap: 6 }}>
-                <Label htmlFor="ws-date-to">To</Label>
-                <input
-                  id="ws-date-to"
-                  type="date"
-                  min={dateFrom || "2022-01-02"}
-                  max={today}
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <PrimaryButton
-                onClick={runWhitespaceAnalysis}
-                disabled={loading || !isAuthenticated || (isAssigneeMode && assigneeQuery.trim().length === 0)}
-              >
-                {loading ? "Identifying..." : !isAuthenticated ? "Log in to run" : "Identify signals"}
-              </PrimaryButton>
-              <GhostButton
-                onClick={handleReset}
-              >
-                Reset
-              </GhostButton>
             </Row>
             <div>
               <button
@@ -1041,7 +1093,7 @@ export default function WhitespacePage() {
                         type="number"
                         value={limit}
                         onChange={(e) => setLimit(Number(e.target.value))}
-                        style={inputStyle}
+                        style={numberStyle}
                       />
                     </div>
                     <div style={{ display: "grid", gap: 6 }}>
@@ -1051,7 +1103,7 @@ export default function WhitespacePage() {
                         type="number"
                         value={neighbors}
                         onChange={(e) => setNeighbors(Number(e.target.value))}
-                        style={inputStyle}
+                        style={numberStyle}
                       />
                     </div>
                     <div style={{ display: "grid", gap: 6 }}>
@@ -1062,7 +1114,7 @@ export default function WhitespacePage() {
                         step="0.1"
                         value={resolution}
                         onChange={(e) => setResolution(Number(e.target.value))}
-                        style={inputStyle}
+                        style={numberStyle}
                       />
                     </div>
                     <div style={{ display: "grid", gap: 6 }}>
@@ -1073,7 +1125,7 @@ export default function WhitespacePage() {
                         step="0.1"
                         value={alpha}
                         onChange={(e) => setAlpha(Number(e.target.value))}
-                        style={inputStyle}
+                        style={numberStyle}
                       />
                     </div>
                     <div style={{ display: "grid", gap: 6 }}>
@@ -1084,10 +1136,10 @@ export default function WhitespacePage() {
                         step="0.1"
                         value={beta}
                         onChange={(e) => setBeta(Number(e.target.value))}
-                        style={inputStyle}
+                        style={numberStyle}
                       />
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                       <input
                         id="ws-layout"
                         type="checkbox"
@@ -1096,7 +1148,7 @@ export default function WhitespacePage() {
                       />
                       <Label htmlFor="ws-layout">Compute layout</Label>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                       <input
                         id="ws-debug"
                         type="checkbox"
@@ -1120,7 +1172,7 @@ export default function WhitespacePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Signals</h2>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>SIGNALS</h2>
                     <div style={{ fontSize: 12, color: "#64748b" }}>{scopeSummary(result)}</div>
                     {result.group_mode === "cluster" && result.matched_assignees && result.matched_assignees.length > 0 && (
                       <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
@@ -1189,12 +1241,12 @@ export default function WhitespacePage() {
                                       display: "flex",
                                       justifyContent: "space-between",
                                       alignItems: "center",
-                                      border: isActive ? "1px solid rgba(99, 102, 241, 0.55)" : "1px solid rgba(255, 255, 255, 0.35)",
+                                      border: isActive ? "1.5px solid rgba(95, 168, 210, 0.65)" : "1px solid rgba(255, 255, 255, 0.35)",
                                       borderRadius: 16,
                                       padding: "14px 18px",
-                                      background: isActive ? "rgba(99, 102, 241, 0.18)" : "rgba(255, 255, 255, 0.22)",
+                                      background: "rgba(255, 255, 255, 0.22)",
                                       cursor: "pointer",
-                                      boxShadow: isActive ? "0 22px 44px rgba(99, 102, 241, 0.32)" : "0 16px 36px rgba(15, 23, 42, 0.2)",
+                                      boxShadow: "0 16px 36px rgba(15, 23, 42, 0.2)",
                                       transition: "box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease",
                                       transform: isActive ? "translateY(-2px)" : "translateY(0)",
                                       backdropFilter: "blur(14px)",
@@ -1272,8 +1324,6 @@ export default function WhitespacePage() {
                                           onClick={() => handleViewExamples(assignee.assignee, signal, "related")}
                                           style={{
                                             ...exampleBtn,
-                                            background: "linear-gradient(135deg, #38bdf8 0%, #6366f1 100%)",
-                                            boxShadow: "0 16px 32px rgba(59, 130, 246, 0.28)",
                                             cursor: hasExamples ? "pointer" : "not-allowed",
                                             opacity: hasExamples ? 1 : 0.5,
                                           }}
@@ -1333,7 +1383,7 @@ export default function WhitespacePage() {
               <div style={{ display: "grid", gap: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Graph Context</h2>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>GRAPH CONTEXT</h2>
                     <div style={{ fontSize: 12, color: "#64748b", maxWidth: 420 }}>
                       Graph is a visual guide to illustrate signals indicated by patent filings. Nodes correspond to patent filings: size indicates signal relevance; color (cluster) indicates semantically similar patent filings; edges connect the most similar patent filings.
                     </div>
@@ -1406,8 +1456,8 @@ export default function WhitespacePage() {
                       <h2
                         style={{
                           margin: 0,
-                          fontSize: 18,
-                          fontWeight: 700,
+                          fontSize: 16,
+                          fontWeight: 600,
                           wordBreak: "break-word",
                         }}
                       >
@@ -1489,7 +1539,7 @@ export default function WhitespacePage() {
                                     href={`https://patents.google.com/patent/${encodeURIComponent(row.linkId)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}
+                                    style={{ color: "#2563eb", textDecoration: "none", fontWeight: 500 }}
                                   >
                                     {row.pubId}
                                   </a>
@@ -1529,8 +1579,9 @@ export default function WhitespacePage() {
           </>
         )}
 
+        {/* Footer */}
         <footer style={footerStyle}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Legal</a>
         </footer>
       </div>
     </div>

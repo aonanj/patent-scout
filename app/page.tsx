@@ -1035,7 +1035,7 @@ const footerStyle: React.CSSProperties = {
   WebkitBackdropFilter: "blur(12px)",
   color: "#1f2937",
   textAlign: "center",
-  fontSize: 12.5,
+  fontSize: 13,
   fontWeight: 500,
   gap: 4
 };
