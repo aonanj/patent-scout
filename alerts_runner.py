@@ -66,12 +66,12 @@ except Exception:
 
 DB_URL = os.getenv("DATABASE_URL")
 
-MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN")
+MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
 MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
 MAILGUN_FROM_NAME = os.getenv("MAILGUN_FROM_NAME", "Patent Scout Alerts")
 MAILGUN_FROM_EMAIL = os.getenv(
     "MAILGUN_FROM_EMAIL",
-    f"alerts@{MAILGUN_DOMAIN}" if MAILGUN_DOMAIN else "alerts@example.com"
+    f"alerts@{MAILGUN_DOMAIN}" if MAILGUN_DOMAIN else "alerts@patentscout.com"
 )
 MAILGUN_BASE_URL = os.getenv("MAILGUN_BASE_URL", "https://api.mailgun.net/v3")
 

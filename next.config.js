@@ -4,17 +4,7 @@
  */
 
 /** @type {import('next').NextConfig} */
-const baseConfig = {
-  experimental: {
-    // Enable instrumentation hook (app/instrumentation.ts)
-    instrumentationHook: true,
-  },
-  sentry: {
-    // Ensure source maps are removed from the client bundle and only uploaded to GlitchTip
-    hideSourceMaps: true,
-    widenClientFileUpload: true,
-  },
-};
+const baseConfig = {};
 
 const glitchtipUrl = process.env.GLITCHTIP_URL || process.env.SENTRY_URL;
 const glitchtipOrg =
@@ -30,21 +20,19 @@ try {
   // Only wrap when the package is available
   // eslint-disable-next-line import/no-extraneous-dependencies, global-require
   const { withSentryConfig } = require("@sentry/nextjs");
-  const sentryWebpackPluginOptions = {
+  const sentryOptions = {
     org: glitchtipOrg,
     project: glitchtipProject,
     authToken: glitchtipAuthToken,
-    url: glitchtipUrl,
+    sentryUrl: glitchtipUrl,
+    // Delete source maps after upload so they do not ship with the client bundle
+    sourcemaps: {
+      deleteSourcemapsAfterUpload: true,
+    },
     // Only print logs for uploading source maps in CI
     silent: !process.env.CI,
-    // Upload a larger set of source maps for prettier stack traces (increases build time)
-    widenClientFileUpload: true,
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
-    // Enables automatic instrumentation of Vercel Cron Monitors
-    automaticVercelMonitors: true,
   };
-  module.exports = withSentryConfig(baseConfig, sentryWebpackPluginOptions);
+  module.exports = withSentryConfig(baseConfig, sentryOptions);
 } catch (err) {
   // @sentry/nextjs not installed; use base config
   module.exports = baseConfig;
