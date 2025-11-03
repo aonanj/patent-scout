@@ -876,7 +876,7 @@ export default function WhitespacePage() {
       const scoreDisplay = typeof row.whitespaceScore === 'number' && Number.isFinite(row.whitespaceScore)
         ? row.whitespaceScore.toFixed(3)
         : "--";
-      lines.push(`   Patent/Pub No: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate} | Distance Score: ${scoreDisplay}`);
+      lines.push(`   Patent/Pub No: ${row.pubId} | Assignee: ${row.assignee} | Date: ${row.pubDate} | Whitespace Score: ${scoreDisplay}`);
       if (row.tooltip) {
         const cleanTooltip = row.tooltip.replace(/\s+/g, " ").trim();
         if (cleanTooltip) {

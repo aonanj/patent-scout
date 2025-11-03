@@ -833,7 +833,7 @@ export default function SigmaWhitespaceGraph({
         const score = typeof rawScore === 'number' && Number.isFinite(rawScore) ? rawScore.toFixed(3) : '--';
         return (
           <div style={{ color: "#475569", fontSize: 12 }}>
-            <strong>Distance Score:</strong> {score}
+            <strong>Whitespace Score:</strong> {score}
           </div>
         );
       })()}

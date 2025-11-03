@@ -29,8 +29,8 @@ from sklearn.neighbors import NearestNeighbors
 from infrastructure.logger import get_logger
 
 from .auth import get_current_user
-from .repository import CANONICAL_ASSIGNEE_LATERAL, SEARCH_EXPR
 from .db_errors import is_recoverable_operational_error
+from .repository import CANONICAL_ASSIGNEE_LATERAL, SEARCH_EXPR
 from .subscription_middleware import SubscriptionRequiredError
 from .whitespace_signals import (
     SignalComputation,
@@ -212,8 +212,6 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "include",
     "including",
     "included",
-    "based",
-    "using",
     "used",
     "associated",
     "association",
@@ -231,7 +229,6 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "providing",
     "provided",
     "via",
-    "into",
     "onto",
     "across",
     "among",
@@ -257,8 +254,7 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "cause",
     "causes",
     "causing",
-    "caused",
-    "based",
+    "caused"
 }
 CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "algorithm",

@@ -274,7 +274,7 @@ export default function WhitespaceHelpPage() {
             <li>Statistical significance thresholds defined in the signal evaluation logic.</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
-            Scores above 0.60 are considered strong; 0.40–0.60 are medium; 0.20–0.40 are weak; below 0.20 are none/negligible.
+            Confidence scores above 0.60 are considered strong; 0.40–0.60 are medium; 0.20–0.40 are weak; below 0.20 are none/negligible.
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Signal Status Colors</h3>
@@ -292,7 +292,7 @@ export default function WhitespaceHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Page Layout & Workflow</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-            The Whitespace page is organized into several collapsible sections. Here's how to navigate and use each one:
+            The Whitespace page is organized into several collapsible sections. Navigation of each section is described below:
           </p>
 
           <div style={{ display: "grid", gap: 16 }}>
@@ -335,14 +335,15 @@ export default function WhitespaceHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Graph Context & Interpretation</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-            The graph visualization is a core feature of the Whitespace page. It provides a visual representation of the AI/ML IP landscape, as represented by patent filings, with nodes positioned using either UMAP coordinates or force-directed layout (if "Compute layout" is enabled).
+            The graph visualization is a core feature of the Whitespace page. It provides a visual representation of the AI/ML IP landscape, as represented by granted patents and published applications, with nodes positioned using either UMAP coordinates or force-directed layout (if "Compute layout" is enabled).
           </p>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>What the Graph Represents</h3>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Nodes</strong>: Each node represents a patent in the analysis sample. Hover over a node to see its title and patent/publication number (if tooltips are supported);</li>
+            <li><strong>Nodes</strong>: Each node represents a patent or publication in the analysis sample. Hover over a node to see its title and patent/publication number (if tooltips are supported);</li>
             <li><strong>Edges</strong>: Edges connect patents and publications that are among each other's K-nearest neighbors in the embedding space. More edges indicate tighter semantic clustering;</li>
             <li><strong>Node Size</strong>: Larger nodes have higher whitespace scores, meaning they are more isolated or occupy less crowded areas of the landscape;</li>
+            <li><strong>Whitespace Score (Distance Score)</strong>: Quantified value corresponding to node size. Shown in the node detail sidebar when you click a filing. Function of distance to focus input(s), local neighborhood density, and cluster momentum (via the ⍺ and β weights) to quantify how exposed a patent or publication is. Higher values mark patents and publications that sit close to focus input(s) while remaining in sparse and/or fast-moving regions of the graph; lower values either correspond to direct hits on focus input(s) (score is forced to zero to avoid drowning out others that reveal gaps or exposures) or to patents and publications that are farther away, sit in dense neighborhoods, or belong to slow-moving clusters;</li>
             <li><strong>Node Color</strong>: Colors correspond to Leiden cluster membership. Patents and publications in the same cluster are semantically similar and likely cover related technologies;</li>
             <li><strong>Highlighted Nodes</strong>: When you view examples for a signal, the corresponding nodes are highlighted with a blue outline and slightly increased size. This helps you locate the patents and publications contributing to the signal.</li>
           </ul>
