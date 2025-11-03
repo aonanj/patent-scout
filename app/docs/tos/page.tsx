@@ -187,7 +187,8 @@ export default function TermsOfServicePage() {
                 <li>Internal business research and analysis;</li>
                 <li>AI/ML IP landscape monitoring;</li>
                 <li>Competitive intelligence gathering;</li>
-                <li>R&D planning and whitespace identification.</li>
+                <li>R&D planning and whitespace identification;</li>
+                <li>Academic and research purposes.</li>
               </ul>
             </Subsection>
 
@@ -211,9 +212,9 @@ export default function TermsOfServicePage() {
 
             <Subsection title="5.3 Automated or Agentic Access Prohibited">
               <p>
-                The use of any automated, agentic, scripted, or programmatic means, including but not limited to scrapers, bots, spiders, or similar tools, to access and/or interact with the Service is strictly prohibited. All access must be manual and initiated by a human user through authorized interfaces provided by the Company.
+                The use of any automated, agentic, scripted, or programmatic means, including but not limited to scrapers, bots, spiders, or similar tools, to access and/or interact with the Service is strictly prohibited. All access and interaction with the Service must be manual and initiated by a human user through authorized interfaces provided by the Company.
               </p>
-              <p>
+              <p style={{ marginTop: 8 }}>
                 Any violation of this prohibition may result in immediate suspension or termination of your account and forfeiture of any fees or payments already remitted. We reserve the right to suspend any account We reasonably suspect of violating this restriction while We investigate the suspected conduct. No reimbursements, credits, or extensions will be provided for the duration of any suspension pending the outcome of Our investigation.
               </p>
             </Subsection>
