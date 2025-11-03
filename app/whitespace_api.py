@@ -20,6 +20,7 @@ import numpy as np
 import psycopg
 import umap
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from numpy.typing import NDArray
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
@@ -925,28 +926,75 @@ def neighbor_momentum(conn: psycopg.Connection, pub_ids: list[str], labels: np.n
 
 
 def compute_whitespace_metrics(
-    X: np.ndarray,
-    labels: np.ndarray,
-    dens: np.ndarray,
-    focus_mask: np.ndarray,
+    X: NDArray[np.float32],
+    labels: NDArray[np.int32],
+    dens: NDArray[np.float32],
+    focus_mask: NDArray[np.bool_],
     alpha: float,
     beta: float,
-    momentum: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    if focus_mask.any():
+    momentum: NDArray[np.float32],
+) -> NDArray[np.float32]:
+    """
+    Composite whitespace score with *inverted* momentum (higher momentum reduces whitespace).
+
+    Args:
+        X: [N, D] embeddings.
+        labels: [N] cluster id for each item, -1 if noise.
+        dens: [N] unnormalized local density per item.
+        focus_mask: [N] True for items in focus set.
+        alpha: >=0 spatial decay.
+        beta: in [0,1], strength of momentum penalty.
+        momentum: [K] per-cluster momentum in [0,1], K >= max(labels)+1.
+
+    Returns:
+        score: [N] whitespace score, >= 0, with focus items zeroed.
+    """
+    N = X.shape[0]
+    assert dens.shape == (N,)
+    assert focus_mask.shape == (N,)
+    assert 0 <= beta <= 1, "beta must be in [0,1]"
+
+    # Focus vector
+    if np.any(focus_mask):
         F = X[focus_mask].mean(axis=0)
+        alpha_eff = alpha
     else:
         F = X.mean(axis=0)
-        alpha *= 0.5
-    d = np.linalg.norm(X - F[None, :], axis=1)
-    proximity = np.exp(-alpha * d).astype(np.float32)
+        alpha_eff = alpha * 0.5  # conservative when no explicit focus
+
+    # Proximity
+    d = np.linalg.norm(X - F, axis=1)
+    proximity = np.exp(-alpha_eff * d, dtype=np.float32)
+
+    # Sparsity = 1 - normalized density
     dmin, dmax = float(dens.min()), float(dens.max())
-    densn = (dens - dmin) / (dmax - dmin + 1e-9)
-    sparse = (1.0 - densn).astype(np.float32)
-    mom = momentum.take(labels.astype(np.int32), mode="clip")
-    score = proximity * sparse * (1.0 + beta * mom)
+    denom = (dmax - dmin) if dmax > dmin else 1.0
+    dens_n = (dens - dmin) / denom
+    sparsity = 1.0 - dens_n
+    sparsity = np.clip(sparsity, 0.0, 1.0)
+
+    # Momentum penalty per item from its cluster
+    mom = np.zeros(N, dtype=np.float32)
+    valid = labels >= 0
+    if np.any(valid):
+        # Ensure momentum vector large enough; missing clusters -> 0
+        max_lbl = int(labels[valid].max())
+        K = momentum.shape[0]
+        if max_lbl >= K:
+            # Extend with zeros for unseen momentum ids
+            momentum = np.pad(momentum, (0, max_lbl - K + 1))
+        mom[valid] = momentum[labels[valid]]
+
+    # Enforce expected ranges
+    mom = np.clip(mom, 0.0, 1.0)
+    penalty = 1.0 - beta * mom      # invert: high momentum reduces score
+    penalty = np.clip(penalty, 0.0, 1.0)
+
+    # Final score
+    score = proximity * sparsity * penalty
     score[focus_mask] = 0.0
-    return score.astype(np.float32), proximity, d.astype(np.float32), F.astype(np.float32)
+    return score.astype(np.float32)
+
 
 def _persist_sync(
     conn: psycopg.Connection,
