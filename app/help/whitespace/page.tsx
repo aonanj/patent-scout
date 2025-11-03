@@ -182,8 +182,8 @@ export default function WhitespaceHelpPage() {
             <AdvancedOption
               param="Beta (momentum weight)"
               defaultValue="0.5"
-              description="Weight for temporal momentum in whitespace scoring. Higher values emphasize recent filing velocity; lower values reduce its influence."
-              guidance="0.5 balances recency and structural position. Increase to 0.7–0.9 for strong recency bias; decrease to 0.2–0.3 for static analyses."
+              description="Weight for temporal momentum in whitespace scoring. Higher values increase the penalty applied to clusters that are experiencing recent filing spikes; lower values soften this penalty."
+              guidance="0.5 balances spatial sparsity with a moderate momentum penalty. Increase to 0.7–0.9 to aggressively discount hot, fast-filing clusters; decrease to 0.2–0.3 if you want momentum to have minimal effect."
             />
 
             <AdvancedOption
@@ -227,9 +227,9 @@ export default function WhitespaceHelpPage() {
               type="Focus Area With Neighbor Underdevelopment"
               tone="opportunity"
               shortName="emerging_gap"
-              description="Identifies areas within the focus scope where the assignee has strong presence but neighboring technologies are underdeveloped. This indicates a potential whitespace opportunity where no one (including the assignee) has yet invested heavily."
-              interpretation="A strong emerging gap signal highlights areas where you could file foundational patents and publications with limited competition. This is a strategic opportunity for first-mover advantage."
-              exampleRationale="Microsoft has 8 patents in the focus area with low local density (avg 0.18). Neighboring patents and publications are sparse, suggesting an underdeveloped niche within 'neural network inference optimization'."
+              description="Identifies areas within the focus scope where the assignee has strong presence but neighboring technologies remain underdeveloped. Momentum is treated as a negative factor, so the score is biased higher when adjacent clusters (e.g., technology areas) do not show increasing numbers of patents and publications."
+              interpretation="A strong emerging gap signal highlights areas where you could file foundational applications with limited competition and/or less risk of prior art. However, increasing neighbor momentum can reduce the score, indicating greater difficulty in securing patent protection."
+              exampleRationale="Microsoft has 8 patents in the focus area with low local density (avg 0.18) and muted neighbor momentum (0.10). Nearby patents and publications remain sparse, suggesting an underdeveloped niche within 'neural network inference optimization'."
             />
 
             <SignalCard
@@ -237,9 +237,9 @@ export default function WhitespaceHelpPage() {
               type="Neighbor Linking Potential Near Focus Area"
               tone="opportunity"
               shortName="bridge"
-              description="Identifies patents and publications that act as bridges between the focus area and other technology clusters. These are high-degree nodes (hubs) that connect otherwise disconnected communities, suggesting cross-domain innovation opportunities. (A “bridging” patent/publication is one in which the invention is directed to one technology area but the scope of protection can be broadened to cover other areas.)"
-              interpretation="A strong bridge signal highlights patents and publications that could serve as foundational IP for multi-domain applications. These are valuable for portfolio breadth and licensing opportunities."
-              exampleRationale="NVIDIA has 5 patents with high betweenness centrality (i.e., how essential a node is for connecting different parts of the graph) (avg 0.62) linking 'AI training' and 'edge inference'. These patents bridge two major technology areas and could enable hybrid solutions."
+              description="Identifies patents and publications that act as bridges between the focus area and other technology clusters. These connectors surface when clusters remain partially separated, but momentum on either side is starting to rise—signalling a narrow window to claim cross-domain coverage before crowding."
+              interpretation="A strong bridge signal spotlights patents and publications near technology areas that could serve as foundational IP for multi-domain applications."
+              exampleRationale="NVIDIA has 5 patents with high betweenness centrality (avg 0.62) linking 'AI training' and 'edge inference'; combined cluster momentum sits at 0.35, indicating filings on both sides are ramping up but patents and publications bridging between the two areas still remains sparse."
             />
 
             <SignalCard
@@ -248,7 +248,7 @@ export default function WhitespaceHelpPage() {
               tone="risk"
               shortName="focus_shift"
               description="Indicates that an assignee is filing applications/obtaining patent grants increasingly close to the focus area over time. This suggests they are shifting R&D resources toward the technology area underlying the focus."
-              interpretation="A strong convergence signal means a competitor is actively moving into a space. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
+              interpretation="A strong convergence signal indicates an assignee is actively moving into a technology area. For example, a convergence signal may indicate a competitive threat that may warrant defensive or blocking strategies."
               exampleRationale="Google has filed 12 patents near the focus area with recent filings moving closer to focus keywords 'LIDAR, autonomous driving'. Average distance to focus decreased from 0.45 to 0.22 over the past 6 months."
             />
 
@@ -258,7 +258,7 @@ export default function WhitespaceHelpPage() {
               tone="risk"
               shortName="crowd_out"
               description="Detects rapid increases in patent filing density around the focus area, indicating a surge of activity from the assignee or competitors. This can signal a crowded or saturated space where differentiation is difficult."
-              interpretation="A strong crowd-out signal warns that the focus area is becoming heavily patented. Consider pivoting to adjacent technologies or focusing on narrow, defensible niches."
+              interpretation="A strong crowd-out signal warns that the focus area is becoming substantially saturated. This indicates a reduced likelihood of successfully obtaining patent protection."
               exampleRationale="Tesla has filed 15 patents and publications near 'autonomous vehicle perception' in the past 3 months. Local density increased from 0.30 to 0.78, indicating a crowding effect."
             />
           </div>
@@ -343,7 +343,7 @@ export default function WhitespaceHelpPage() {
             <li><strong>Nodes</strong>: Each node represents a patent or publication in the analysis sample. Hover over a node to see its title and patent/publication number (if tooltips are supported);</li>
             <li><strong>Edges</strong>: Edges connect patents and publications that are among each other's K-nearest neighbors in the embedding space. More edges indicate tighter semantic clustering;</li>
             <li><strong>Node Size</strong>: Larger nodes have higher whitespace scores, meaning they are more isolated or occupy less crowded areas of the landscape;</li>
-            <li><strong>Whitespace Score (Distance Score)</strong>: Quantified value corresponding to node size. Shown in the node detail sidebar when you click a filing. Function of distance to focus input(s), local neighborhood density, and cluster momentum (via the ⍺ and β weights) to quantify potential opportunity relative to what already exists. Higher values mark patents and publications that sit close to focus input(s) while remaining in sparse and/or fast-moving regions of the graph; lower values either correspond to exact matches to focus input(s) (score is forced to zero so exact matches do not obscure adjacent, under-explored areas) or to patents and publications that are farther away, sit in dense neighborhoods, or belong to slow-moving clusters;</li>
+            <li><strong>Whitespace Score (Distance Score)</strong>: Quantified value corresponding to node size. Shown in the node detail sidebar when you click a filing. Function of distance to focus input(s), local neighborhood density, and cluster momentum (via the ⍺ and β weights) to quantify residual whitespace. Higher values mark patents and publications that sit close to focus input(s) while remaining in sparse, slow-moving regions of the graph; lower values either correspond to exact matches to focus input(s) (score is forced to zero so exact matches do not obscure adjacent, under-explored areas) or to patents and publications in dense neighborhoods and/or belonging to fast-moving clusters where momentum suggests crowding is imminent;</li>
             <li><strong>Node Color</strong>: Colors correspond to Leiden cluster membership. Patents and publications in the same cluster are semantically similar and likely cover related technologies;</li>
             <li><strong>Highlighted Nodes</strong>: When you view examples for a signal, the corresponding nodes are highlighted with a blue outline and slightly increased size. This helps you locate the patents and publications contributing to the signal.</li>
           </ul>

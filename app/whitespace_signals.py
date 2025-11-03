@@ -124,7 +124,7 @@ def signal_emerging_gap(
         conf = 0.0
         message = "Assignee's recent filings overlap or nearly overlap with subject matter area(s) already covered by other assignees' filings near focus input(s). Low whitespace potential near focus input(s)."
     elif heated_neighbors:
-        message = "Assignee's recent filings are directed to lower-density subject matter areas near focus input(s); other assignees' filings are markedly increasing. Moderate existing whitespace potential."
+        message = "Assignee's recent filings are directed to lower-density subject matter areas near focus input(s); other assignees' filings are markedly increasing. Moderate whitespace potential remains, but rising momentum indicates the window is closing."
     else:
         message = "Assignee's recent filings are directed to lower-density subject matter areas near focus input(s); no clear pattern is emerging in other assignees' filings. Higher existing whitespace potential."
 
@@ -212,9 +212,9 @@ def signal_bridge(
         conf = 0.0
         message = "Recent filings in subject matter area(s) near focus input(s) are weakly connected and/or exhibit low filing momentum(s). Limited whitespace potential to link subject matter area(s) near focus input(s)."
     elif shared_growth:
-        message = "Higher momentum(s) for recent filings in neighboring/related subject matter area(s) near focus input(s), but low/no links connect the recent filings with higher momentum(s). Moderate whitespace potential in linking the neighboring/related subject matter area(s) near focus input(s)."
+        message = "Higher momentum(s) for recent filings in neighboring/related subject matter area(s) near focus input(s), but low/no links connect the recent filings with higher momentum(s). Moderate whitespace potential remains, yet accelerating momentum signals urgency to secure the bridge."
     else:
-        message = "Asymmetric momentum patterns shown by recent filings in neighboring/related subject matter area(s) near focus input(s). Higher whitespace potential in linking the neighboring/relatedsubject matter area(s) near focus input(s)."
+        message = "Asymmetric momentum patterns shown by recent filings in neighboring/related subject matter area(s) near focus input(s). Higher whitespace potential exists, but uneven momentum warns that adjacent domains could crowd the bridge quickly."
 
     debug = {
         "openness": float(openness),

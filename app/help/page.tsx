@@ -177,14 +177,14 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>
+              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a> The scoring weights now treat filing momentum as a penalty, discounting areas where velocity is accelerating so that the residual whitespace reflects crowding risk introduced by the publication lag.
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
                Example patents and publications driving each signal are provided to give concrete context to the analysis. The table of examples can be exported as a PDF for offline reference and research.             
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="⬩" title="Confidence-Scored Signals" text="Four signal types (bridging opportunities, underdeveloped areas, high-density areas, convergence momentums) with quantitative confidence scores" />
+              <DetailItem icon="⬩" title="Confidence-Scored Signals" text="Four signal types (bridging opportunities, underdeveloped areas, high-density pressures, convergence momentum warnings) with quantitative confidence scores" />
               <DetailItem icon="⬩" title="Interactive Graph Visualization" text="Explore patent and publication relationships through a Sigma.js-powered network graph with clustering and layout" />
               <DetailItem icon="⬩" title="Assignee-Level Intelligence" text="Signals are grouped by assignee to reveal competitor strategies and positioning" />
               <DetailItem icon="⬩" title="Example Patent Filings" text="View concrete examples of patents and publications driving each signal, sorted by recency or relevance" />
