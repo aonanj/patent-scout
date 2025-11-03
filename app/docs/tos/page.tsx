@@ -208,6 +208,15 @@ export default function TermsOfServicePage() {
                 <li>Impersonate others or misrepresent your affiliation.</li>
               </ul>
             </Subsection>
+
+            <Subsection title="5.3 Automated or Agentic Access Prohibited">
+              <p>
+                The use of any automated, agentic, scripted, or programmatic means, including but not limited to scrapers, bots, spiders, or similar tools, to access and/or interact with the Service is strictly prohibited. All access must be manual and initiated by a human user through authorized interfaces provided by the Company.
+              </p>
+              <p>
+                Any violation of this prohibition may result in immediate suspension or termination of your account and forfeiture of any fees or payments already remitted. We reserve the right to suspend any account We reasonably suspect of violating this restriction while We investigate the suspected conduct. No reimbursements, credits, or extensions will be provided for the duration of any suspension pending the outcome of Our investigation.
+              </p>
+            </Subsection>
           </Section>
 
           <Section title="6. Intellectual Property Rights">

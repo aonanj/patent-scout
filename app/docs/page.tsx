@@ -197,7 +197,7 @@ export default function LegalIndexPage() {
               }}
             >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Applicable To:</strong>: All users. Our Privacy Policy includes various sections that are specific to certain jurisdictions, including sections for GDPR/CCPA compliance and sections for users located in the EEA, UK, Switzerland, California, and other jurisdictions with privacy laws. Your rights under our Privacy Policy are contingent upon your location when accessing and using the platform. Use of a VPN or similar technology to obscure your location constitutes waiver of any privacy rights specific to your actual jurisdiction and agreement to be treated under the laws and regulations of the state of Wyoming, United States.
+                <strong>Applicable To</strong>: All users. Our Privacy Policy includes various sections that are specific to certain jurisdictions, including sections for GDPR/CCPA compliance and sections for users located in the EEA, UK, Switzerland, California, and other jurisdictions with privacy laws. Your rights under our Privacy Policy are contingent upon your location when accessing and using the platform. Use of a VPN or similar technology to obscure your location constitutes waiver of any privacy rights specific to your actual jurisdiction and agreement to be treated under the laws and regulations of the state of Wyoming, United States.
               </p>
             </div>
           </div>
