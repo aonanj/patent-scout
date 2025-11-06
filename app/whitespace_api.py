@@ -302,30 +302,30 @@ def _is_allowed_cluster_term(token: str) -> bool:
     - Exact matches in CLUSTER_LABEL_STOPWORDS (case-insensitive)
     - Tokens that start with any stem in CLUSTER_LABEL_STEM_STOPWORDS
     """
-    logger.info("Checking token for cluster term allowance: %s", token)
+    print("Checking token for cluster term allowance: %s", token)
     if not token:
-        logger.info("Token is empty or None.")
+        print("Token is empty or None.")
         return False
     normalized = token.lower().strip()
     if not normalized:
-        logger.info("Token is empty after stripping.")
+        print("Token is empty after stripping.")
         return False
     if len(normalized) < CLUSTER_LABEL_MIN_LENGTH:
-        logger.info(f"Token {normalized} is too short.")
+        print(f"Token {normalized} is too short.")
         return False
     if normalized.isdigit():
-        logger.info(f"Token {normalized} is purely numeric.")
+        print(f"Token {normalized} is purely numeric.")
         return False
     # Exact match check (case-insensitive)
     for stopword in CLUSTER_LABEL_STOPWORDS:
         if normalized == stopword:
-            logger.info(f"Token {normalized} is a stopword.")
+            print(f"Token {normalized} is a stopword.")
             return False
     for stem in CLUSTER_LABEL_STEM_STOPWORDS:
         if normalized.startswith(stem):
-            logger.info(f"Token {normalized} starts with stopword stem {stem}.")
+            print(f"Token {normalized} starts with stopword stem {stem}.")
             return False
-    logger.info(f"Token {normalized} is allowed.")
+    print(f"Token {normalized} is allowed.")
     return True
 
 # --- DB pool ---
@@ -1363,15 +1363,15 @@ def build_group_signals(
             raw_terms = cluster_label_map.get(node.cluster_id, [])
             label_terms: list[str] = []
             for term in raw_terms:
-                logger.info("Evaluating cluster term: %s", term)
+                print("Evaluating cluster term: %s", term)
                 if _is_allowed_cluster_term(term):
-                    logger.info("Accepted cluster term: %s", term)
+                    print("Accepted cluster term: %s", term)
                     label_terms.append(term)
-            logger.info("Final cluster label terms: %s", label_terms)
+            print("Final cluster label terms: %s", label_terms)
             trimmed_terms = label_terms[:CLUSTER_LABEL_MAX_TERMS]
-            logger.info("Trimmed cluster label terms: %s", trimmed_terms)
+            print("Trimmed cluster label terms: %s", trimmed_terms)
             formatted_terms = _format_label_terms(trimmed_terms) if trimmed_terms else ""
-            logger.info("Formatted cluster label terms: %s", formatted_terms)
+            print("Formatted cluster label terms: %s", formatted_terms)
             label_text = f"Cluster {node.cluster_id}"
             if key not in group_meta:
                 group_meta[key] = {
