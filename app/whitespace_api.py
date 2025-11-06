@@ -260,7 +260,8 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "further",
     "regarding",
     "having",
-    "has"
+    "has",
+    "after",
 }
 CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "algorithm",
@@ -455,6 +456,14 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
+            if len(term) < CLUSTER_LABEL_MIN_LENGTH:
+                continue
+            if term.isdigit():
+                continue
+            if term in CLUSTER_LABEL_STOPWORDS:
+                continue
+            if any(term.startswith(stem) for stem in CLUSTER_LABEL_STEM_STOPWORDS):
+                continue
             if term in universal_tokens:
                 continue
             if term not in ordered_terms:

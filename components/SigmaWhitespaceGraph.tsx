@@ -374,7 +374,12 @@ export default function SigmaWhitespaceGraph({
 
     const toKeywords = (counts: Map<string, number>): string[] => {
       const ordered = Array.from(counts.entries())
-        .filter(([token]) => !universalTokens.has(token))
+        .filter(
+          ([token]) =>
+            !universalTokens.has(token) &&
+            !isStopwordToken(token) &&
+            !/^\d+$/.test(token),
+        )
         .sort((a, b) => {
           if (b[1] !== a[1]) return b[1] - a[1];
           return a[0].localeCompare(b[0]);
