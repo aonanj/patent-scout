@@ -57,7 +57,7 @@ export default function TermsOfServicePage() {
           
           <Section title="Agreement to Terms">
             <p>
-              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.vercel.app/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
+              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.com/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. If you do not agree to these Terms, you must not access or use the Service.

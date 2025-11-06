@@ -92,6 +92,8 @@ origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if 
     "https://127.0.0.1:5174",
     "https://patent-scout.onrender.com",
     "https://patent-scout.vercel.app",
+    "https://www.patent-scout.com",
+    "https://patent-scout.com",
 ]
 
 _FAVICON_PATH = Path(__file__).resolve().parent.parent / "public" / "favicon.ico"

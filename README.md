@@ -17,7 +17,7 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 - Comprehensive pytest suite covering authentication, repository search logic, whitespace signal math, and API contracts ([tests/](tests/)).
 
 ## Live Deployment
-- App: https://patent-scout.vercel.app/
+- App: https://patent-scout.com/
 - Demo login: `phaethon@phaethon.llc` / `pollc123#` (Auth0 username/password grant)
 
 ## Architecture

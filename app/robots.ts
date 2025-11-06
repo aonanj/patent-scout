@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const baseUrl = "https://patent-scout.vercel.app";
+const baseUrl = "https://patent-scout.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://patent-scout.vercel.app/</loc>
+        <loc>https://patent-scout.com/</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>daily</changefreq>
     <priority>1</priority>
     </url>
     <url>
-        <loc>https://patent-scout.vercel.app/help</loc>
+        <loc>https://patent-scout.com/help</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
     <url>
-        <loc>https://patent-scout.vercel.app/docs</loc>
+        <loc>https://patent-scout.com/docs</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
     <url>
-        <loc>https://patent-scout.vercel.app/docs/tos</loc>
+        <loc>https://patent-scout.com/docs/tos</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://patent-scout.vercel.app/docs/privacy</loc>
+        <loc>https://patent-scout.com/docs/privacy</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://patent-scout.vercel.app/docs/dpa</loc>
+        <loc>https://patent-scout.com/docs/dpa</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://patent-scout.vercel.app/whitespace</loc>
+        <loc>https://patent-scout.com/whitespace</loc>
         <lastmod>2025-11-03T14:28:42.914Z</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>

@@ -26,7 +26,7 @@ const appSans = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://patent-scout.vercel.app"),
+  metadataBase: new URL("https://patent-scout.com"),
   applicationName: "Patent Scout",
   title: {
     default: "Patent Scout | AI Patent Intelligence Platform",
@@ -50,11 +50,11 @@ export const metadata: Metadata = {
     title: "Patent Scout | AI Patent Intelligence Platform",
     description:
       "Monitor AI and ML patent filings with semantic search, automated alerts, and whitespace graph analytics powered by Patent Scout.",
-    url: "https://patent-scout.vercel.app/",
+    url: "https://patent-scout.com/",
     siteName: "Patent Scout",
     images: [
       {
-        url: "https://patent-scout.vercel.app/images/PatentScoutLogo.png",
+        url: "https://patent-scout.com/images/PatentScoutLogo.png",
         width: 1200,
         height: 630,
         alt: "Patent Scout logo with AI patent analytics interface",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     title: "Patent Scout | AI Patent Intelligence Platform",
     description:
       "Powerful AI and machine learning patent discovery with semantic search, trends, and automated alerts.",
-    images: ["https://patent-scout.vercel.app/images/PatentScoutLogo.png"],
+    images: ["https://patent-scout.com/images/PatentScoutLogo.png"],
   },
   robots: {
     index: true,
@@ -102,19 +102,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "@context": "https://schema.org",
                   "@type": "Organization",
                   name: "Patent Scout",
-                  url: "https://patent-scout.vercel.app",
+                  url: "https://patent-scout.com",
                   description:
                     "Patent Scout is an AI-driven patent intelligence platform with semantic search, whitespace graph analytics, and automated alerts.",
-                  logo: "https://patent-scout.vercel.app/images/PatentScoutLogo.png"
+                  logo: "https://patent-scout.com/images/PatentScoutLogo.png"
                 },
                 {
                   "@context": "https://schema.org",
                   "@type": "WebSite",
                   name: "Patent Scout",
-                  url: "https://patent-scout.vercel.app",
+                  url: "https://patent-scout.com",
                   potentialAction: {
                     "@type": "SearchAction",
-                    target: "https://patent-scout.vercel.app/?q={search_term_string}",
+                    target: "https://patent-scout.com/?q={search_term_string}",
                     "query-input": "required name=search_term_string",
                   },
                 },

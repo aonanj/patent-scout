@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
           
           <Section title="Introduction">
             <p>
-              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the Patent Scout service (the "<strong>Service</strong>"), accessible at <a href="https://patent-scout.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.vercel.app/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
+              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the Patent Scout service (the "<strong>Service</strong>"), accessible at <a href="https://patent-scout.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.com/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               By using Patent Scout, you agree to the collection and use of information in accordance with this Privacy Policy.
