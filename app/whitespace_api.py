@@ -1352,15 +1352,15 @@ def build_group_signals(
         if group_mode == "cluster":
             key = f"cluster:{node.cluster_id}"
             raw_terms = cluster_label_map.get(node.cluster_id, [])
-            label_terms = [term for term in raw_terms if _is_allowed_cluster_term(term)]
-            trimmed_terms = label_terms[:CLUSTER_LABEL_MAX_TERMS]
+            # This is the fix: use the filtered and trimmed terms.
+            trimmed_terms = raw_terms[:CLUSTER_LABEL_MAX_TERMS]
             formatted_terms = _format_label_terms(trimmed_terms) if trimmed_terms else ""
             label_text = f"Cluster {node.cluster_id}"
             if key not in group_meta:
                 group_meta[key] = {
                     "label": label_text,
                     "cluster_id": node.cluster_id,
-                    "terms": list(trimmed_terms),
+                    "terms": trimmed_terms,
                     "formatted_terms": formatted_terms,
                 }
         else:
