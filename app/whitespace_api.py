@@ -1,6 +1,8 @@
 # app/whitespace_api.py
 from __future__ import annotations
 
+import calendar
+import inspect
 import json
 import math
 import os
@@ -19,7 +21,7 @@ import leidenalg as la
 import numpy as np
 import psycopg
 import umap
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from numpy.typing import NDArray
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
@@ -30,6 +32,8 @@ from sklearn.neighbors import NearestNeighbors
 from infrastructure.logger import get_logger
 
 from .auth import get_current_user
+from .db import get_conn
+from .embed import embed as embed_text
 from .db_errors import is_recoverable_operational_error
 from .repository import CANONICAL_ASSIGNEE_LATERAL, SEARCH_EXPR
 from .subscription_middleware import SubscriptionRequiredError
@@ -49,6 +53,7 @@ router = APIRouter(
 )
 
 User = Annotated[dict, Depends(get_current_user)]
+AsyncConn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
 
 logger = get_logger()
 
@@ -58,6 +63,9 @@ MAX_GRAPH_LAYOUT_NEIGHBORS = 50
 
 SearchMode = Literal["keywords", "assignee"]
 GroupKind = Literal["assignee", "cluster"]
+
+_VECTOR_TYPE = os.getenv("VECTOR_TYPE", "vector").lower()
+_VEC_CAST = "::halfvec" if _VECTOR_TYPE.startswith("half") else "::vector"
 
 ASSIGNEE_FUZZY_THRESHOLD = 0.80
 ASSIGNEE_MATCH_LIMIT = 12
@@ -770,6 +778,54 @@ class WhitespaceResponse(BaseModel):
     group_mode: GroupKind = "assignee"
     matched_assignees: list[str] | None = None
 
+
+class DensityMetrics(BaseModel):
+    mean_per_month: float
+    min_per_month: int
+    max_per_month: int
+
+
+class MomentumPoint(BaseModel):
+    month: str
+    count: int
+
+
+class MomentumMetrics(BaseModel):
+    slope: float
+    cagr: float | None = None
+    bucket: Literal["Up", "Flat", "Down"]
+    series: list[MomentumPoint] = Field(default_factory=list)
+
+
+class CrowdingMetrics(BaseModel):
+    exact: int
+    semantic: int
+    total: int
+    density_per_month: float
+    percentile: float | None = None
+
+
+class RecencyMetrics(BaseModel):
+    m6: int
+    m12: int
+    m24: int
+
+
+class CpcBreakdownItem(BaseModel):
+    cpc: str
+    count: int
+
+
+class WhitespaceOverviewResponse(BaseModel):
+    crowding: CrowdingMetrics
+    density: DensityMetrics
+    momentum: MomentumMetrics
+    top_cpcs: list[CpcBreakdownItem]
+    cpc_breakdown: list[CpcBreakdownItem]
+    recency: RecencyMetrics
+    timeline: list[MomentumPoint]
+    window_months: int
+
 # --- Utilities ---
 def _to_int_date(s: str | None) -> int | None:
     if not s:
@@ -787,6 +843,124 @@ def _from_int_date(value: int | None) -> date | None:
         return date(int(s[:4]), int(s[4:6]), int(s[6:8]))
     except ValueError:
         return None
+
+
+def _parse_iso_date(value: str | None) -> date | None:
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _month_floor_date(d: date) -> date:
+    return date(d.year, d.month, 1)
+
+
+def _shift_months(d: date, months: int) -> date:
+    year = d.year + (d.month - 1 + months) // 12
+    month = (d.month - 1 + months) % 12 + 1
+    day = min(d.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
+
+
+def _months_between(start: date, end: date) -> int:
+    if end < start:
+        return 0
+    return (end.year - start.year) * 12 + (end.month - start.month) + 1
+
+
+def _clean_keywords(raw: str | None) -> str | None:
+    if raw is None:
+        return None
+    cleaned = raw.strip()
+    return cleaned or None
+
+
+def _split_cpc_list(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    parts = [part.strip().upper().replace(" ", "") for part in raw.split(",")]
+    return [p for p in parts if p]
+
+
+def _build_filter_clause(
+    date_from: date | None,
+    date_to: date | None,
+    cpc_filters: list[str],
+) -> tuple[str, list[Any]]:
+    clauses: list[str] = []
+    params: list[Any] = []
+    if date_from:
+        clauses.append("p.pub_date >= %s")
+        params.append(int(date_from.strftime("%Y%m%d")))
+    if date_to:
+        clauses.append("p.pub_date <= %s")
+        params.append(int(date_to.strftime("%Y%m%d")))
+    if cpc_filters:
+        or_clauses = []
+        for code in cpc_filters:
+            like = f"{code}%"
+            or_clauses.append(
+                "EXISTS ("
+                "SELECT 1 FROM jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) c "
+                "WHERE ( (COALESCE(c->>'section','')) || COALESCE(c->>'class','') || "
+                "COALESCE(c->>'subclass','') || COALESCE(c->>'group','') || "
+                "COALESCE('/' || (c->>'subgroup'), '') ) LIKE %s"
+                ")"
+            )
+            params.append(like)
+        clauses.append("(" + " OR ".join(or_clauses) + ")")
+    if not clauses:
+        return "TRUE", []
+    return " AND ".join(clauses), params
+
+
+def _compute_momentum(series: list[MomentumPoint]) -> tuple[float, float | None, Literal["Up", "Flat", "Down"]]:
+    if len(series) < 2:
+        return 0.0, None, "Flat"
+    counts = np.array([pt.count for pt in series], dtype=np.float64)
+    x = np.arange(len(series), dtype=np.float64)
+    x_mean = float(x.mean())
+    y_mean = float(counts.mean())
+    denom = float(((x - x_mean) ** 2).sum())
+    slope = 0.0 if denom == 0.0 else float(((x - x_mean) * (counts - y_mean)).sum() / denom)
+    norm = slope / max(y_mean, 1.0)
+    base = counts[0]
+    steps = max(len(series) - 1, 1)
+    cagr = float((counts[-1] / max(base, 1.0)) ** (1.0 / steps) - 1.0)
+    epsilon = 0.05
+    if norm > epsilon:
+        bucket: Literal["Up", "Flat", "Down"] = "Up"
+    elif norm < -epsilon:
+        bucket = "Down"
+    else:
+        bucket = "Flat"
+    return norm, cagr, bucket
+
+
+async def _lookup_crowding_percentile(conn: psycopg.AsyncConnection, total: int) -> float | None:
+    try:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT percentile
+                FROM whitespace_crowding_percentiles
+                WHERE count_threshold >= %s
+                ORDER BY count_threshold ASC
+                LIMIT 1
+                """,
+                (total,),
+            )
+            row = await cur.fetchone()
+        if row and row[0] is not None:
+            return float(row[0])
+    except psycopg.errors.UndefinedTable:
+        logger.info("Skipping percentile lookup; whitespace_crowding_percentiles table missing.")
+    except Exception:
+        logger.exception("Failed to lookup whitespace crowding percentile.")
+    return None
 
 def load_embeddings(
     conn: psycopg.Connection,
@@ -1208,6 +1382,16 @@ def _ensure_active_subscription(conn: psycopg.Connection, user_id: str) -> None:
         )
 
 
+async def _ensure_active_subscription_async(conn: psycopg.AsyncConnection, user_id: str) -> None:
+    async with conn.cursor() as cur:
+        await cur.execute("SELECT has_active_subscription(%s)", (user_id,))
+        row = await cur.fetchone()
+    if not row or not bool(row[0]):
+        raise SubscriptionRequiredError(
+            detail="This feature requires an active subscription. Please subscribe to continue."
+        )
+
+
 def _normalize_assignee(name: str | None) -> str:
     """Coalesce empty assignee labels into a friendly placeholder."""
     if not name:
@@ -1561,6 +1745,261 @@ def build_group_signals(
         )
 
     return group_payloads, node_signals, node_relevance, node_tooltips
+
+
+@router.get("/overview", response_model=WhitespaceOverviewResponse)
+async def get_whitespace_overview(
+    conn: AsyncConn,
+    current_user: User,
+    keywords: str | None = Query(None, description="Comma-separated keyword query"),
+    cpc: str | None = Query(None, description="Comma-separated CPC filters"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    semantic: int = Query(0, description="Include semantic neighborhood when non-zero"),
+    tau: float | None = Query(None, description="Optional cosine-distance ceiling"),
+    semantic_limit: int = Query(500, ge=1, le=5000),
+) -> WhitespaceOverviewResponse:
+    keywords_clean = _clean_keywords(keywords)
+    cpc_filters = _split_cpc_list(cpc)
+
+    end_date = _parse_iso_date(date_to) or date.today()
+    start_date = _parse_iso_date(date_from)
+    if start_date is None:
+        start_date = _shift_months(_month_floor_date(end_date), -23)
+        start_date = date(start_date.year, start_date.month, 1)
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="date_from cannot be after date_to")
+
+    user_id = current_user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User ID not found in authentication token")
+    await _ensure_active_subscription_async(conn, user_id)
+
+    semantic_enabled = bool(semantic) and bool(keywords_clean)
+    query_vec: list[float] | None = None
+    if semantic_enabled:
+        try:
+            maybe_vec = embed_text(keywords_clean or "")
+            if inspect.isawaitable(maybe_vec):
+                embedding = await maybe_vec
+            else:
+                embedding = maybe_vec
+            query_vec = list(embedding)
+        except Exception as exc:
+            logger.exception("Failed to embed semantic query for whitespace overview.")
+            raise HTTPException(status_code=500, detail="Failed to compute semantic neighborhood") from exc
+    else:
+        semantic_enabled = False
+
+    filter_clause, filter_params = _build_filter_clause(start_date, end_date, cpc_filters)
+
+    filtered_cte = (
+        "filtered AS ("
+        " SELECT p.pub_id, p.pub_date, p.cpc"
+        " FROM patent p"
+        f" WHERE {filter_clause}"
+        ")"
+    )
+
+    if keywords_clean:
+        search_expr = SEARCH_EXPR.replace("p.", "p_kw.")
+        keyword_cte = (
+            "keyword_hits AS ("
+            " SELECT f.pub_id"
+            " FROM filtered f"
+            " JOIN patent p_kw ON p_kw.pub_id = f.pub_id"
+            f" WHERE ({search_expr}) @@ plainto_tsquery('english', %s)"
+            ")"
+        )
+        keyword_params: list[Any] = [keywords_clean]
+    else:
+        keyword_cte = "keyword_hits AS (SELECT f.pub_id FROM filtered f)"
+        keyword_params = []
+
+    if semantic_enabled and query_vec:
+        model_like = "%|ta"
+        lim = max(1, min(int(semantic_limit), 5000))
+        semantic_cte = (
+            "semantic_hits AS ("
+            " SELECT DISTINCT inner.pub_id"
+            " FROM ("
+            "   SELECT f.pub_id, e.embedding <=> %s" + _VEC_CAST + " AS dist"
+            "   FROM filtered f"
+            "   JOIN patent_embeddings e ON e.pub_id = f.pub_id"
+            "   WHERE e.model LIKE %s"
+            "   ORDER BY dist ASC"
+            "   LIMIT %s"
+            " ) inner"
+        )
+        semantic_params: list[Any] = [query_vec, model_like, lim]
+        if tau is not None:
+            semantic_cte += " WHERE inner.dist <= %s"
+            semantic_params.append(tau)
+        semantic_cte += ")"
+    else:
+        semantic_cte = "semantic_hits AS (SELECT f.pub_id FROM filtered f WHERE FALSE)"
+        semantic_params = []
+
+    combined_cte = (
+        "combined AS ("
+        " SELECT pub_id FROM keyword_hits"
+        " UNION"
+        " SELECT pub_id FROM semantic_hits"
+        ")"
+    )
+
+    cte_parts = [
+        (filtered_cte, filter_params),
+        (keyword_cte, keyword_params),
+        (semantic_cte, semantic_params),
+        (combined_cte, []),
+    ]
+    cte_sql = ", ".join(part for part, _ in cte_parts)
+    cte_params: list[Any] = []
+    for _, params in cte_parts:
+        cte_params.extend(params)
+    params_tuple = tuple(cte_params)
+
+    counts_sql = (
+        f"WITH {cte_sql} "
+        "SELECT "
+        " (SELECT COUNT(DISTINCT pub_id) FROM keyword_hits) AS exact_count, "
+        " (SELECT COUNT(DISTINCT pub_id) FROM semantic_hits) AS semantic_count, "
+        " (SELECT COUNT(DISTINCT pub_id) FROM combined) AS total_count"
+    )
+
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(counts_sql, params_tuple)
+        counts_row = await cur.fetchone()
+    if counts_row:
+        exact_count = int(counts_row["exact_count"] or 0)
+        semantic_count = int(counts_row["semantic_count"] or 0)
+        total_count = int(counts_row["total_count"] or 0)
+    else:
+        exact_count = semantic_count = total_count = 0
+
+    create_sql = (
+        f"CREATE TEMP TABLE tmp_ws_scope ON COMMIT DROP AS "
+        f"WITH {cte_sql} "
+        "SELECT DISTINCT pub_id FROM combined"
+    )
+    async with conn.cursor() as cur:
+        await cur.execute(create_sql, params_tuple)
+
+    timeline_sql = """
+        SELECT
+            to_char(date_trunc('month', to_date(p.pub_date::text, 'YYYYMMDD')), 'YYYY-MM') AS month,
+            COUNT(*)::int AS count
+        FROM tmp_ws_scope s
+        JOIN patent p ON p.pub_id = s.pub_id
+        GROUP BY month
+        ORDER BY month
+    """
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(timeline_sql)
+        timeline_rows = await cur.fetchall()
+
+    timeline_points = [
+        MomentumPoint(month=row["month"], count=int(row["count"]))
+        for row in timeline_rows
+        if row["month"] is not None
+    ]
+
+    cpc_sql = """
+        SELECT
+            (
+                COALESCE(c->>'section','') ||
+                COALESCE(c->>'class','') ||
+                COALESCE(c->>'subclass','') ||
+                COALESCE(c->>'group','') ||
+                COALESCE('/' || (c->>'subgroup'), '')
+            ) AS code,
+            COUNT(*)::int AS count
+        FROM tmp_ws_scope s
+        JOIN patent p ON p.pub_id = s.pub_id
+        CROSS JOIN LATERAL jsonb_array_elements(COALESCE(p.cpc, '[]'::jsonb)) AS c
+        GROUP BY code
+        ORDER BY count DESC
+        LIMIT 15
+    """
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(cpc_sql)
+        cpc_rows = await cur.fetchall()
+
+    breakdown = [
+        CpcBreakdownItem(cpc=row["code"] or "Unknown", count=int(row["count"]))
+        for row in cpc_rows
+    ]
+    top_cpcs = breakdown[:5]
+
+    month_counts = [pt.count for pt in timeline_points]
+    if month_counts:
+        density_stats = DensityMetrics(
+            mean_per_month=float(np.mean(month_counts)),
+            min_per_month=int(min(month_counts)),
+            max_per_month=int(max(month_counts)),
+        )
+    else:
+        density_stats = DensityMetrics(mean_per_month=0.0, min_per_month=0, max_per_month=0)
+
+    window_months = max(
+        1,
+        _months_between(_month_floor_date(start_date), _month_floor_date(end_date)),
+    )
+    density_per_month = float(total_count) / float(window_months) if window_months else 0.0
+
+    momentum_slope, momentum_cagr, momentum_bucket = _compute_momentum(timeline_points)
+
+    end_month = _month_floor_date(end_date)
+
+    def _sum_recent(month_span: int) -> int:
+        if not timeline_points:
+            return 0
+        cutoff = _shift_months(end_month, -(month_span - 1))
+        total = 0
+        for pt in timeline_points:
+            try:
+                pt_date = datetime.strptime(pt.month, "%Y-%m").date().replace(day=1)
+            except ValueError:
+                continue
+            if pt_date >= cutoff:
+                total += pt.count
+        return total
+
+    recency = RecencyMetrics(
+        m6=_sum_recent(6),
+        m12=_sum_recent(12),
+        m24=_sum_recent(24),
+    )
+
+    percentile = await _lookup_crowding_percentile(conn, total_count)
+
+    crowding = CrowdingMetrics(
+        exact=exact_count,
+        semantic=semantic_count if semantic_enabled else 0,
+        total=total_count,
+        density_per_month=density_per_month,
+        percentile=percentile,
+    )
+
+    momentum = MomentumMetrics(
+        slope=momentum_slope,
+        cagr=momentum_cagr,
+        bucket=momentum_bucket,
+        series=timeline_points,
+    )
+
+    return WhitespaceOverviewResponse(
+        crowding=crowding,
+        density=density_stats,
+        momentum=momentum,
+        top_cpcs=top_cpcs,
+        cpc_breakdown=breakdown,
+        recency=recency,
+        timeline=timeline_points,
+        window_months=window_months,
+    )
+
 
 @router.post("/graph", response_model=WhitespaceResponse)
 def get_whitespace_graph(
