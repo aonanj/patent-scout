@@ -27,7 +27,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 from sklearn.neighbors import NearestNeighbors
 
-from infrastructure.logger import setup_logger
+from infrastructure.logger import get_logger
 
 from .auth import get_current_user
 from .db_errors import is_recoverable_operational_error
@@ -50,7 +50,7 @@ router = APIRouter(
 
 User = Annotated[dict, Depends(get_current_user)]
 
-logger = setup_logger()
+logger = get_logger()
 
 MAX_GRAPH_LIMIT = 2000
 MAX_GRAPH_NEIGHBORS = 50
@@ -1676,7 +1676,7 @@ def get_whitespace_graph(
 
     node_data = _build_node_data(meta, labels, scores, dens, proximity, distance, mom)
     cluster_term_map = _compute_cluster_term_map(node_data) if group_mode == "cluster" else {}
-
+    logger.info(f"Computed cluster term map: {cluster_term_map}")
     if group_mode == "cluster":
         if matched_labels:
             display_labels = matched_labels[:6]
@@ -1688,7 +1688,8 @@ def get_whitespace_graph(
             scope_text = f"Assignee scope: {req.assignee_query or 'Selected scope'}"
     else:
         scope_text = ", ".join(req.focus_keywords) or ", ".join(req.focus_cpc_like) or "Selected scope"
-
+    logger.info(f"Using scope text: {scope_text}")
+    logger.info(f"Matched labels: {matched_labels}")
     group_payloads, node_signal_map, node_relevance_map, node_tooltips = build_group_signals(
         req,
         node_data,
