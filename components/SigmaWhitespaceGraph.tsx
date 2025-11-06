@@ -232,6 +232,11 @@ const CLUSTER_TERM_STEM_STOPWORDS = [
     "accord",
     "perform",
     "compar",
+    "respect",
+    "creat",
+    "classif",
+    "techniqu",
+    "estimat",
 ];
 
 type ClusterLegendEntry = {

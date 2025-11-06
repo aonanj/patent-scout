@@ -1787,7 +1787,10 @@ def get_whitespace_graph(
         debug_payload["matched_assignees"] = [
             {"name": name, "score": score} for name, score in matched_debug
         ]
-
+    logger.info(f"Returning whitespace graph with matched assignees: {matched_labels}")
+    print("Returning whitespace graph with matched assignees: %s", matched_labels)
+    logger.info(f"Group mode: {group_mode}, scope text: {scope_text}")
+    print("Group mode: %s, scope text: %s", group_mode, scope_text)
     return WhitespaceResponse(
         k=scope_text,
         assignees=group_payloads,
