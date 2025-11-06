@@ -50,8 +50,8 @@ export default function PrivacyPolicyPage() {
             <strong>Effective Date</strong>: October 17, 2025<br />
             <strong>Last Updated</strong>: October 17, 2025
           </div>
-          <p style={{ marginTop: 4, fontSize: 14, color: "#627D98", marginBottom: 0 }}>
-            <a href="/docs" style={{ color: LINK_COLOR, textDecoration: "none" }}>← Back to Help</a>
+          <p style={{ marginTop: 8, fontSize: 14, color: "#627D98", marginBottom: 0 }}>
+            <a href="/docs" style={{ color: LINK_COLOR, textDecoration: "none" }}>← Back to Legal</a>
           </p>
         </div>
 

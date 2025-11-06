@@ -294,16 +294,27 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
 
 
 def _is_allowed_cluster_term(token: str) -> bool:
-    """Return True when a token can be used in cluster labels."""
+    """Return True when a token can be used in cluster labels.
+    
+    This function filters out:
+    - Empty or very short tokens
+    - Pure numeric tokens
+    - Exact matches in CLUSTER_LABEL_STOPWORDS (case-insensitive)
+    - Tokens that start with any stem in CLUSTER_LABEL_STEM_STOPWORDS
+    """
     if not token:
         return False
-    normalized = token.lower()
+    normalized = token.lower().strip()
+    if not normalized:
+        return False
     if len(normalized) < CLUSTER_LABEL_MIN_LENGTH:
         return False
     if normalized.isdigit():
         return False
+    # Exact match check (case-insensitive)
     if normalized in CLUSTER_LABEL_STOPWORDS:
         return False
+    # Stem-based filtering
     if any(normalized.startswith(stem) for stem in CLUSTER_LABEL_STEM_STOPWORDS):
         return False
     return True
@@ -419,15 +430,28 @@ def _assignee_search_patterns(raw: str, canonical: str) -> list[str]:
 
 
 def _tokenize_cluster_terms(text: str | None) -> Iterable[str]:
+    """Extract and filter tokens from text for cluster labeling.
+    
+    Only yields tokens that pass the _is_allowed_cluster_term filter.
+    """
     if not text:
         return []
     for token in re.findall(r"[A-Za-z0-9]+", text.lower()):
-        if not _is_allowed_cluster_term(token):
-            continue
-        yield token
+        # Apply filtering at the source to ensure consistency
+        if _is_allowed_cluster_term(token):
+            yield token
 
 
 def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[str]]:
+    """Compute distinctive terms for each cluster, excluding common stopwords.
+    
+    This function:
+    1. Groups nodes by cluster
+    2. Samples top nodes from each cluster
+    3. Extracts and counts terms from titles and abstracts
+    4. Filters out universal terms and stopwords
+    5. Returns the most distinctive terms per cluster
+    """
     clusters: dict[int, list[NodeDatum]] = defaultdict(list)
     for node in node_data:
         clusters[node.cluster_id].append(node)
@@ -452,7 +476,7 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
 
     coverage: Counter[str] = Counter()
     for counter in cluster_token_counts.values():
-        for token in counter.keys():
+        for token in counter:
             coverage[token] += 1
 
     cluster_count = len(cluster_token_counts)
@@ -466,10 +490,13 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
+            # Double-check that term passes all filters
             if not _is_allowed_cluster_term(term):
                 continue
+            # Skip universal terms that appear in most clusters
             if term in universal_tokens:
                 continue
+            # Avoid duplicates
             if term not in ordered_terms:
                 ordered_terms.append(term)
             if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
