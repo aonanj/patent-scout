@@ -248,7 +248,7 @@ const numberStyle: React.CSSProperties = {
   borderRadius: 12,
   padding: "0 14px",
   outline: "none",
-  minWidth: 60,
+  minWidth: 40,
   fontSize: 13,
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
@@ -1581,7 +1581,7 @@ export default function WhitespacePage() {
 
         {/* Footer */}
         <footer style={footerStyle}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#6BAEDB] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#6BAEDB] hover:underline hover:text-amber-400">Legal</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#636363] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#636363] hover:underline hover:text-amber-400">Legal</a>
         </footer>
       </div>
     </div>
