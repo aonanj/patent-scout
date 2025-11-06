@@ -406,6 +406,7 @@ export default function WhitespaceHelpPage() {
             <TableColumn column="Patent/Pub No" description="Patent or publication number, linked to Google Patents." />
             <TableColumn column="Assignee" description="The entity to whom the patent or publication is assigned." />
             <TableColumn column="Grant/Pub Date" description="The date the patent was granted or application was published (YYYY-MM-DD format)." />
+            <TableColumn column="Whitespace Score" description="The computed whitespace score for the patent or publication, indicating its isolation and relevance." />
             <TableColumn column="Abstract" description="A truncated abstract (up to 280 characters) providing context about the patent or publication." />
           </div>
 
@@ -416,7 +417,7 @@ export default function WhitespaceHelpPage() {
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Signal metadata (assignee, signal type, confidence, sort mode);</li>
             <li>Focus scope (keywords, CPC, date range);</li>
-            <li>Full details for each example patent and publication (title, patent/pub no. (pub_id), assignee, date, abstract, and any signal-specific notes).</li>
+            <li>Full details for each example patent and publication (title, patent/pub no. (pub_id), assignee, date, score, abstract, and any signal-specific notes).</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
             The PDF is generated client-side using a minimal PDF builder and downloads immediately. File names are auto-generated based on assignee name and signal type (e.g., <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>Google_focus_shift_recent_examples.pdf</code>).

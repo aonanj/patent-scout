@@ -933,7 +933,7 @@ def compute_whitespace_metrics(
     alpha: float,
     beta: float,
     momentum: NDArray[np.float32],
-) -> NDArray[np.float32]:
+) -> tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
     """
     Composite whitespace score with *inverted* momentum (higher momentum reduces whitespace).
 
@@ -948,6 +948,9 @@ def compute_whitespace_metrics(
 
     Returns:
         score: [N] whitespace score, >= 0, with focus items zeroed.
+        proximity: [N] soft distance weighting relative to focus vector.
+        distance: [N] Euclidean distance from each point to the focus vector.
+        focus_vector: [D] centroid used for focus weighting.
     """
     N = X.shape[0]
     assert dens.shape == (N,)
@@ -961,9 +964,11 @@ def compute_whitespace_metrics(
     else:
         F = X.mean(axis=0)
         alpha_eff = alpha * 0.5  # conservative when no explicit focus
+    F = F.astype(np.float32, copy=False)
 
     # Proximity
-    d = np.linalg.norm(X - F, axis=1)
+    diff = X - F
+    d = np.linalg.norm(diff, axis=1).astype(np.float32)
     proximity = np.exp(-alpha_eff * d, dtype=np.float32)
 
     # Sparsity = 1 - normalized density
@@ -993,7 +998,7 @@ def compute_whitespace_metrics(
     # Final score
     score = proximity * sparsity * penalty
     score[focus_mask] = 0.0
-    return score.astype(np.float32)
+    return score.astype(np.float32), proximity.astype(np.float32), d, F
 
 
 def _persist_sync(
