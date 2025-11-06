@@ -520,7 +520,7 @@ function AlertAction({ action, description }: { action: string; description: str
 
 function FlowStep({ num, title, description }: { num: string; title: string; description: string }) {
   return (
-    <div style={{ padding: 20, borderRadius: 18, background: "rgba(95, 168, 210, 0.16)", border: "1px solid rgba(155, 199, 255, 0.35)", boxShadow: "0 16px 32px rgba(107, 174, 219, 0.2)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
+    <div style={{ padding: 20, borderRadius: 18, background: "rgba(95, 168, 210, 0.16)", border: "1px solid rgba(155, 199, 255, 0.35)", boxShadow: "0 6px 12px rgba(107, 174, 219, 0.2)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
       <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
         <div style={{ minWidth: 30, height: 30, borderRadius: "50%", background: "rgba(16, 42, 67, 0.92)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 15 }}>
           {num}

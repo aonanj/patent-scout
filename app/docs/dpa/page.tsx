@@ -7,7 +7,7 @@ const TEXT_COLOR = "#102A43";
 const LINK_COLOR = "#5FA8D2";
 const CARD_BG = "rgba(255, 255, 255, 0.8)";
 const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
-const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+const CARD_SHADOW = "0 10px 24px rgba(15, 23, 42, 0.28)";
 
 const pageWrapperStyle: CSSProperties = {
   padding: "48px 24px 64px",
