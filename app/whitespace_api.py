@@ -292,6 +292,22 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "operat",
 )
 
+
+def _is_allowed_cluster_term(token: str) -> bool:
+    """Return True when a token can be used in cluster labels."""
+    if not token:
+        return False
+    normalized = token.lower()
+    if len(normalized) < CLUSTER_LABEL_MIN_LENGTH:
+        return False
+    if normalized.isdigit():
+        return False
+    if normalized in CLUSTER_LABEL_STOPWORDS:
+        return False
+    if any(normalized.startswith(stem) for stem in CLUSTER_LABEL_STEM_STOPWORDS):
+        return False
+    return True
+
 # --- DB pool ---
 _DB_URL = os.getenv("DATABASE_URL")
 _pool: ConnectionPool | None = None
@@ -406,13 +422,7 @@ def _tokenize_cluster_terms(text: str | None) -> Iterable[str]:
     if not text:
         return []
     for token in re.findall(r"[A-Za-z0-9]+", text.lower()):
-        if len(token) < CLUSTER_LABEL_MIN_LENGTH:
-            continue
-        if token in CLUSTER_LABEL_STOPWORDS:
-            continue
-        if any(token.startswith(stem) for stem in CLUSTER_LABEL_STEM_STOPWORDS):
-            continue
-        if token.isdigit():
+        if not _is_allowed_cluster_term(token):
             continue
         yield token
 
@@ -456,13 +466,7 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
-            if len(term) < CLUSTER_LABEL_MIN_LENGTH:
-                continue
-            if term.isdigit():
-                continue
-            if term in CLUSTER_LABEL_STOPWORDS:
-                continue
-            if any(term.startswith(stem) for stem in CLUSTER_LABEL_STEM_STOPWORDS):
+            if not _is_allowed_cluster_term(term):
                 continue
             if term in universal_tokens:
                 continue
@@ -1320,7 +1324,8 @@ def build_group_signals(
     for node in node_data:
         if group_mode == "cluster":
             key = f"cluster:{node.cluster_id}"
-            label_terms = cluster_label_map.get(node.cluster_id, [])
+            raw_terms = cluster_label_map.get(node.cluster_id, [])
+            label_terms = [term for term in raw_terms if _is_allowed_cluster_term(term)]
             trimmed_terms = label_terms[:CLUSTER_LABEL_MAX_TERMS]
             formatted_terms = _format_label_terms(trimmed_terms) if trimmed_terms else ""
             label_text = f"Cluster {node.cluster_id}"
