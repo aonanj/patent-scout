@@ -502,11 +502,14 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
+            present = 0
             if term not in ordered_terms and term not in universal_tokens and _is_allowed_cluster_term(term):
                 for ot in ordered_terms:
                     if term.startswith(ot) or ot.startswith(term):
+                        present = 1
                         break
-                ordered_terms.append(term)
+                if present == 0:
+                    ordered_terms.append(term)
             if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
                 break
         cluster_terms[cluster_id] = ordered_terms
@@ -865,7 +868,7 @@ def load_embeddings(
         params.append(req.limit)
     vecs: list[np.ndarray] = []
     meta: list[EmbeddingMeta] = []
-    with conn.cursor(row_factory=dict_row) as cur:
+    with conn.cursor(row_factory=dict_row) as cur: # type: ignore
         cur.execute(_sql.SQL(sql), params) # type: ignore
         for r in cur:
             vecs.append(np.asarray(json.loads(r["embedding"]), dtype=np.float32))
