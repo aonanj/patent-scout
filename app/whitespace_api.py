@@ -27,7 +27,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 from sklearn.neighbors import NearestNeighbors
 
-from infrastructure.logger import get_logger
+from infrastructure.logger import setup_logger
 
 from .auth import get_current_user
 from .db_errors import is_recoverable_operational_error
@@ -50,7 +50,7 @@ router = APIRouter(
 
 User = Annotated[dict, Depends(get_current_user)]
 
-logger = get_logger()
+logger = setup_logger()
 
 MAX_GRAPH_LIMIT = 2000
 MAX_GRAPH_NEIGHBORS = 50
@@ -499,19 +499,12 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
-            # Double-check that term passes all filters
-            if not _is_allowed_cluster_term(term):
-                continue
-            # Skip universal terms that appear in most clusters
-            if term in universal_tokens:
-                continue
-            # Avoid duplicates
-            if term not in ordered_terms:
+            if term not in ordered_terms and term not in universal_tokens and _is_allowed_cluster_term(term):
                 ordered_terms.append(term)
             if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
                 break
         cluster_terms[cluster_id] = ordered_terms
-    print(f"Computed cluster terms: {cluster_terms}")
+    logger.error(f"Computed cluster terms: {cluster_terms}")
     return cluster_terms
 
 
