@@ -210,11 +210,11 @@ def signal_bridge(
 
     if not ok:
         conf = 0.0
-        message = "Recent filings in subject matter area(s) near focus input(s) are weakly connected and/or exhibit low filing momentum(s). Limited whitespace potential to link subject matter area(s) near focus input(s)."
+        message = "Recent filings in subject matter area(s) near focus input(s) are weakly connected and/or exhibit low filing momentum(s). Higher whitespace potential to link subject matter area(s) near focus input(s)."
     elif shared_growth:
-        message = "Higher momentum(s) for recent filings in neighboring/related subject matter area(s) near focus input(s), but low/no links connect the recent filings with higher momentum(s). Moderate whitespace potential remains, yet accelerating momentum signals urgency to secure the bridge."
+        message = "Higher momentum(s) for recent filings in neighboring/related subject matter area(s) near focus input(s), but low/no links connect the recent filings with higher momentum(s). Moderate whitespace potential remains."
     else:
-        message = "Asymmetric momentum patterns shown by recent filings in neighboring/related subject matter area(s) near focus input(s). Higher whitespace potential exists, but uneven momentum warns that adjacent domains could crowd the bridge quickly."
+        message = "Asymmetric momentum patterns shown by recent filings in neighboring/related subject matter area(s) near focus input(s), and neighboring/related subject matter area(s) near focus input(s) have some existing links. Lower whitespace potential exists."
 
     debug = {
         "openness": float(openness),

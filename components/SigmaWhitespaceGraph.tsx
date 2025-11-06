@@ -199,6 +199,14 @@ const CLUSTER_TERM_STOPWORDS = new Set<string>([
     "having",
     "has",
     "after",
+    "while",
+    "whether",
+    "during",
+    "before",
+    "another",
+    "particular",
+    "potential",
+    "possible",
 ]);
 const CLUSTER_TERM_STEM_STOPWORDS = [
     "algorithm",
@@ -237,6 +245,9 @@ const CLUSTER_TERM_STEM_STOPWORDS = [
     "classif",
     "techniqu",
     "estimat",
+    "receiv",
+    "involv",
+    "obtain"
 ];
 
 type ClusterLegendEntry = {

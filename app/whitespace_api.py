@@ -262,6 +262,8 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "having",
     "has",
     "after",
+    "possible",
+    "potential",
 }
 CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "algorithm",
@@ -290,6 +292,8 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "identify",
     "implement",
     "operat",
+    "involv",
+    "obtain"
 )
 
 
@@ -495,16 +499,17 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
         threshold = max(2, math.ceil(cluster_count * CLUSTER_LABEL_COMMON_TERM_RATIO))
 
     universal_tokens: set[str] = {token for token, count in coverage.items() if count >= threshold}
-    print(f"Universal tokens identified for exclusion: {universal_tokens}")
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
             if term not in ordered_terms and term not in universal_tokens and _is_allowed_cluster_term(term):
+                for ot in ordered_terms:
+                    if term.startswith(ot) or ot.startswith(term):
+                        break
                 ordered_terms.append(term)
             if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
                 break
         cluster_terms[cluster_id] = ordered_terms
-    logger.error(f"Computed cluster terms: {cluster_terms}")
     return cluster_terms
 
 
