@@ -352,15 +352,15 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 12 }}>
             <GraphInterpretation
               pattern="Dense clusters"
-              meaning="Indicate heavily patented, well-explored technology areas. These are typically mature domains with many competitors."
+              meaning="Indicate heavily patented and/or well-explored technology areas. These are typically mature domains with many competitors."
             />
             <GraphInterpretation
               pattern="Sparse regions with large nodes"
-              meaning="Represent whitespace opportunities—areas where few patents and publications exist; patent filings in this space are isolated. Potential to be first mover, establish strong IP protection, etc."
+              meaning="Represent whitespace opportunities—areas where few patents and publications exist; patents and publications in this space are isolated. Potential to be first mover, establish strong IP protection, etc."
             />
             <GraphInterpretation
               pattern="Bridge nodes (high degree)"
-              meaning="Nodes with many connections (hubs) that link different clusters. These are valuable for cross-domain innovation."
+              meaning="Nodes with many connections (hubs) that link different clusters. These may be valuable for cross-domain innovation."
             />
             <GraphInterpretation
               pattern="Isolated nodes far from clusters"
@@ -402,11 +402,11 @@ export default function WhitespaceHelpPage() {
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Table Columns</h3>
           <div style={{ display: "grid", gap: 12 }}>
             <TableColumn column="#" description="Sequential index (1–8)." />
-            <TableColumn column="Title" description="Patent title, displayed in bold." />
-            <TableColumn column="Patent/Pub No" description="Publication number, linked to Google Patents. Click to view the full patent." />
-            <TableColumn column="Assignee" description="The entity to whom the patent is assigned." />
+            <TableColumn column="Title" description="Patent or publication title." />
+            <TableColumn column="Patent/Pub No" description="Patent or publication number, linked to Google Patents." />
+            <TableColumn column="Assignee" description="The entity to whom the patent or publication is assigned." />
             <TableColumn column="Grant/Pub Date" description="The date the patent was granted or application was published (YYYY-MM-DD format)." />
-            <TableColumn column="Abstract" description="A truncated abstract (up to 280 characters) providing context about the patent." />
+            <TableColumn column="Abstract" description="A truncated abstract (up to 280 characters) providing context about the patent or publication." />
           </div>
 
           <h3 style={{ margin: "20px 0 12px", fontSize: 18, fontWeight: 600, color: TEXT_COLOR }}>Exporting Examples</h3>
