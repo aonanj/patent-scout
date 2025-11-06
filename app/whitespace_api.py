@@ -255,7 +255,12 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "cause",
     "causes",
     "causing",
-    "caused"
+    "caused",
+    "being",
+    "further",
+    "regarding",
+    "having",
+    "has"
 }
 CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "algorithm",
@@ -275,6 +280,15 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "technolog",
     "utiliz",
     "employ",
+    "provid",
+    "addition",
+    "compris",
+    "generat",
+    "hav",
+    "identifi",
+    "identify",
+    "implement",
+    "operat",
 )
 
 # --- DB pool ---
