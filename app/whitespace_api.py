@@ -495,7 +495,7 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
         threshold = max(2, math.ceil(cluster_count * CLUSTER_LABEL_COMMON_TERM_RATIO))
 
     universal_tokens: set[str] = {token for token, count in coverage.items() if count >= threshold}
-
+    print(f"Universal tokens identified for exclusion: {universal_tokens}")
     for cluster_id, counter in cluster_token_counts.items():
         ordered_terms: list[str] = []
         for term, _ in counter.most_common():
@@ -511,7 +511,7 @@ def _compute_cluster_term_map(node_data: Sequence[NodeDatum]) -> dict[int, list[
             if len(ordered_terms) >= CLUSTER_LABEL_MAX_TERMS:
                 break
         cluster_terms[cluster_id] = ordered_terms
-
+    print(f"Computed cluster terms: {cluster_terms}")
     return cluster_terms
 
 
