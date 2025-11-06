@@ -2,6 +2,7 @@
 
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState, useCallback, Suspense } from "react";
+import type { CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
 import SubscriptionStatus from "@/components/billing/SubscriptionStatus";
 import PricingPlans from "@/components/billing/PricingPlans";
@@ -26,6 +27,87 @@ type PricePlan = {
   interval_count: number;
   description: string | null;
   is_active: boolean;
+};
+
+const TEXT_COLOR = "#102A43";
+const LINK_COLOR = "#5FA8D2";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
+
+const successCardStyle: CSSProperties = {
+  ...cardBaseStyle,
+  background: "rgba(16, 185, 129, 0.16)",
+  border: "1px solid rgba(34, 197, 94, 0.45)",
+  boxShadow: "0 24px 44px rgba(34, 197, 94, 0.28)",
+};
+
+const errorCardStyle: CSSProperties = {
+  ...cardBaseStyle,
+  background: "rgba(248, 113, 113, 0.18)",
+  border: "1px solid rgba(239, 68, 68, 0.45)",
+  boxShadow: "0 24px 44px rgba(239, 68, 68, 0.22)",
+};
+
+const actionButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 28px",
+  borderRadius: 999,
+  background: "linear-gradient(105deg, #5FA8D2 0%, #39506B 100%)",
+  color: "#ffffff",
+  fontWeight: 600,
+  fontSize: 14,
+  border: "1px solid rgba(107, 174, 219, 0.55)",
+  boxShadow: "0 18px 36px rgba(107, 174, 219, 0.55)",
+  cursor: "pointer",
+  transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
+};
+
+const footerStyle: CSSProperties = {
+  alignSelf: "center",
+  padding: "16px 24px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.22)",
+  border: "1px solid rgba(255, 255, 255, 0.35)",
+  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  color: "#1f2937",
+  textAlign: "center",
+  fontSize: 13,
+  fontWeight: 500,
+  gap: 4,
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
@@ -185,10 +267,12 @@ function BillingContent() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#eaf6ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
-          <p className="mt-4 text-sm text-slate-600">Loading...</p>
+      <div style={pageWrapperStyle}>
+        <div className="glass-surface" style={surfaceStyle}>
+          <div className="glass-card" style={{ ...cardBaseStyle, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
+            <p style={{ marginTop: 16, fontSize: 14, color: TEXT_COLOR }}>Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -196,55 +280,60 @@ function BillingContent() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold mb-4" style={{ color: '#102A43' }}>Sign in to Continue</h2>
-          <p className="text-slate-600 mb-6">
-            Please log in to view your subscription or purchase a plan.
-          </p>
-          <button
-            onClick={() => loginWithRedirect()}
-            className="w-full px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors"
-          >
-            Log in / Sign up
-          </button>
+      <div style={pageWrapperStyle}>
+        <div className="glass-surface" style={surfaceStyle}>
+          <div className="glass-card" style={{ ...cardBaseStyle, textAlign: "center" }}>
+            <h2 style={{ margin: 0, fontSize: 28, fontWeight: 700, color: TEXT_COLOR }}>Sign in to Continue</h2>
+            <p style={{ marginTop: 12, fontSize: 14, color: "#627D98" }}>
+              Please log in to view your subscription or purchase a plan.
+            </p>
+            <button
+              onClick={() => loginWithRedirect()}
+              style={{ ...actionButtonStyle, width: "100%", justifyContent: "center", marginTop: 24 }}
+            >
+              Log in / Sign up
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#eaf6ff]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: '#102A43' }}>Billing & Subscription</h1>
-          <p className="mt-2 text-slate-600">Manage your Patent Scout subscription</p>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Billing & Subscription</h1>
+          <p style={{ marginTop: 16, fontSize: 15, lineHeight: 1.6, color: "#627D98", marginBottom: 0 }}>
+            Manage your Patent Scout subscription, review billing status, and update payment preferences.
+          </p>
         </div>
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">{successMessage}</p>
+          <div className="glass-card" style={successCardStyle}>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#14532d" }}>{successMessage}</p>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="glass-card" style={errorCardStyle}>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#7f1d1d" }}>{error}</p>
             <button
               onClick={loadData}
-              className="mt-2 text-sm text-red-700 underline hover:text-red-900"
+              style={{ ...actionButtonStyle, marginTop: 16 }}
             >
               Try again
             </button>
           </div>
         )}
 
-        {/* Subscription Status Section */}
+        {/* Subscription or Pricing */}
         {subscription?.has_active ? (
-          <div className="mb-8">
+          <div className="glass-card" style={{ ...cardBaseStyle }}>
             <SubscriptionStatus
               subscription={subscription}
               onManage={handleManageSubscription}
@@ -252,34 +341,28 @@ function BillingContent() {
             />
           </div>
         ) : (
-          /* Pricing Plans Section */
-          <div className="mb-8">
+          <div className="glass-card" style={{ ...cardBaseStyle }}>
             <PricingPlans plans={plans} onSubscribe={handleSubscribe} />
           </div>
         )}
 
-        {/* Footer Info */}
-        <div className="mt-12 p-6 bg-white rounded-lg border border-slate-200">
-          <h3 className="text-sm font-semibold mb-3" style={{ color: '#102A43' }}>Billing & Technical Support</h3>
-          <p className="text-sm text-slate-600 mb-4">
-            For subscription, billing, and other technical issues, please contact <strong>{" "}
-            <a href="mailto:support@phaethon.llc" className="text-sky-600 hover:underline">
-              support@phaethon.llc
-            </a></strong>.
+        {/* Support Info */}
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR }}>Billing & Technical Support</h2>
+          <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: TEXT_COLOR }}>
+            For subscription, billing, and technical issues, contact <strong><a href="mailto:support@phaethon.llc" style={{ color: LINK_COLOR, textDecoration: "none" }}>support@phaethon.llc</a></strong>.
           </p>
-          <p className="text-sm text-slate-600">
-            For urgent issues, we are also available via phone and text at <strong>(949) 328-0878</strong>.
+          <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: TEXT_COLOR }}>
+            For urgent issues, phone and text support are available at <strong>(949) 328-0878</strong>. Please include your account email so we can assist quickly.
           </p>
-          <p className="text-sm text-slate-600">
-           Please include your account email in your message.
+          <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: TEXT_COLOR, marginBottom: 0 }}>
+            Phone and text support require an active subscription.
           </p>
-          <p className="text-sm text-slate-600">
-           Phone and text support require an active subscription. 
-          </p>
-          <div className="flex gap-4 mt-4" style={{ textAlign: "center", fontSize: "12px", justifyContent: "center"}}>
-            <a>2025 © Phaethon Order LLC</a> | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">phaethonorder.com</a> | <a href="/help" className="text-blue-400 hover:underline">Help</a> | <a href="/docs" className="text-blue-400 hover:underline">Legal</a>
-          </div>
         </div>
+
+        <footer style={footerStyle}>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#636363] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#636363] hover:underline hover:text-amber-400">Legal</a>
+        </footer>
       </div>
     </div>
   );
@@ -288,10 +371,12 @@ function BillingContent() {
 export default function BillingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#eaf6ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
-          <p className="mt-4 text-sm text-slate-600">Loading...</p>
+      <div style={pageWrapperStyle}>
+        <div className="glass-surface" style={surfaceStyle}>
+          <div className="glass-card" style={{ ...cardBaseStyle, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-sky-500 border-r-transparent"></div>
+            <p style={{ marginTop: 16, fontSize: 14, color: TEXT_COLOR }}>Loading...</p>
+          </div>
         </div>
       </div>
     }>

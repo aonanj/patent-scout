@@ -1,16 +1,50 @@
 // app/docs/dpa/page.tsx
 "use client";
 
+import type { CSSProperties } from "react";
+
 const TEXT_COLOR = "#102A43";
 const LINK_COLOR = "#5FA8D2";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
 
 export default function DataProcessingAgreementPage() {
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
         
         {/* Header */}
-        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Data Processing Agreement</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
             <strong>Effective Date</strong>: October 17, 2025<br />
@@ -19,7 +53,7 @@ export default function DataProcessingAgreementPage() {
         </div>
 
         {/* Content */}
-        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           
           <Section title="Introduction and Agreement">
             <p>
@@ -669,7 +703,19 @@ export default function DataProcessingAgreementPage() {
           </Section>
 
           {/* ANNEXES */}
-          <div id="annex-a" style={{ marginTop: 48, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div
+            id="annex-a"
+            style={{
+              marginTop: 48,
+              padding: 24,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 20,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 18px 34px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex A: Details of Processing</h2>
             
             <div style={{ marginTop: 20 }}>
@@ -747,7 +793,19 @@ export default function DataProcessingAgreementPage() {
             </div>
           </div>
 
-          <div id="annex-b" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div
+            id="annex-b"
+            style={{
+              marginTop: 32,
+              padding: 24,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 20,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 18px 34px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex B: Technical and Organizational Security Measures</h2>
             
             <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
@@ -918,7 +976,19 @@ export default function DataProcessingAgreementPage() {
             </p>
           </div>
 
-          <div id="annex-c" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div
+            id="annex-c"
+            style={{
+              marginTop: 32,
+              padding: 24,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 20,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 18px 34px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex C: List of Authorized Sub-processors</h2>
             
             <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
@@ -1013,7 +1083,19 @@ export default function DataProcessingAgreementPage() {
             </div>
           </div>
 
-          <div id="annex-d" style={{ marginTop: 32, padding: 24, background: "#eaf6ff", borderRadius: 8, border: "2px solid #5FA8D2" }}>
+          <div
+            id="annex-d"
+            style={{
+              marginTop: 32,
+              padding: 24,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 20,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 18px 34px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Annex D: Standard Contractual Clauses</h2>
             
             <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
@@ -1126,15 +1208,26 @@ export default function DataProcessingAgreementPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: 32, padding: 20, background: "#eaf6ff", borderRadius: 8, border: "1px solid #e5e7eb" }}>
-            <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>Acknowledgment and Acceptance</p>
-            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13 }}>
+          <div
+            style={{
+              marginTop: 32,
+              padding: 20,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 16,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
+            <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: TEXT_COLOR }}>Acknowledgment and Acceptance</p>
+            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, color: TEXT_COLOR }}>
               BY USING THE SERVICE, CUSTOMER ACKNOWLEDGES THAT IT HAS READ, UNDERSTOOD, AND AGREES TO BE BOUND BY THIS DATA PROCESSING AGREEMENT, INCLUDING ALL ANNEXES.
             </p>
-            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13 }}>
+            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, color: TEXT_COLOR }}>
               This DPA is effective as of the date Customer first accesses or uses the Service, or the date Customer executes the Terms of Service, whichever is earlier.
             </p>
-            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, fontWeight: 600 }}>
+            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, fontWeight: 600, color: TEXT_COLOR }}>
               IF CUSTOMER DOES NOT AGREE TO THIS DPA, CUSTOMER MUST NOT ACCESS OR USE THE SERVICE.
             </p>
           </div>
@@ -1168,7 +1261,7 @@ function Subsection({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-const footerStyle: React.CSSProperties = {
+const footerStyle: CSSProperties = {
   alignSelf: "center",
   padding: "16px 24px",
   borderRadius: 999,

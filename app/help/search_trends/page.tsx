@@ -1,18 +1,66 @@
 // app/help/search_trends/page.tsx
 "use client";
 
+import type { CSSProperties } from "react";
+
 const TEXT_COLOR = "#102A43";
 const LINK_COLOR = "#5FA8D2";
-const CARD_BG = "white";
-const CARD_BORDER = "#e5e7eb";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
+
+const linkButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 28px",
+  borderRadius: 999,
+  background: "linear-gradient(105deg, #5FA8D2 0%, #39506B 100%)",
+  color: "#ffffff",
+  fontWeight: 600,
+  fontSize: 14,
+  border: "1px solid rgba(107, 174, 219, 0.55)",
+  boxShadow: "0 18px 36px rgba(107, 174, 219, 0.55)",
+  textDecoration: "none",
+  transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
+};
 
 export default function SearchTrendsHelpPage() {
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
 
         {/* Header */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div>
               <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Search & Trends Guide</h1>
@@ -22,19 +70,8 @@ export default function SearchTrendsHelpPage() {
             </div>
             <a
               href="/"
-              style={{
-                display: "inline-block",
-                padding: "10px 24px",
-                background: LINK_COLOR,
-                color: "white",
-                borderRadius: 6,
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: 14,
-                transition: "background 0.2s"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = "#3A506B"}
-              onMouseOut={(e) => e.currentTarget.style.background = LINK_COLOR}
+              className="btn-modern"
+              style={linkButtonStyle}
             >
               Go to Search & Trends →
             </a>
@@ -45,7 +82,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Overview */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Overview</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Search & Trends combines three core capabilities:
@@ -58,7 +95,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Search Interface */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Search Interface & Inputs</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The search interface provides multiple input fields to refine your patent search. Inputs no longer auto-submit; make your edits and click <strong>Apply</strong> to run the search so the trend graph and table stay perfectly in sync.
@@ -127,7 +164,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Control Buttons */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Action Buttons</h2>
 
           <div style={{ display: "grid", gap: 20 }}>
@@ -149,7 +186,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Search Results */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Search Results</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Search results are displayed in a paginated list (20 results per page) with detailed metadata for each patent.
@@ -184,7 +221,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Trend Visualization */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Trend Visualization</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             The Trend chart visualizes patent filing patterns based on your current search filters. It updates automatically when filters change and respects all search inputs (keywords, semantic query, assignee, CPC, date range).
@@ -219,7 +256,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Alerts Workflow */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Managing Alerts</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Alerts enable specific search criteria to be monitored over time. USPTO publishes patent and publication data on a weekly basis. Search criteria is checked against the newly published data, and new matches to your criteria are sent via email. This section explains how to create, manage, and use alerts.
@@ -295,7 +332,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* UI/UX Flow Summary */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>UI/UX Flow Summary</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Example walkthrough of a Search & Trends session:
@@ -341,7 +378,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Best Practices */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Best Practices</h2>
 
           <div style={{ display: "grid", gap: 16 }}>
@@ -369,7 +406,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Troubleshooting */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Troubleshooting</h2>
 
           <div style={{ display: "grid", gap: 16 }}>
@@ -397,7 +434,7 @@ export default function SearchTrendsHelpPage() {
         </div>
 
         {/* Related Resources */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Related Resources</h2>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><a href="/help/whitespace" style={{ color: LINK_COLOR }}>Whitespace Analysis Guide</a> – Learn how to identify strategic opportunities and risks</li>
@@ -417,7 +454,7 @@ export default function SearchTrendsHelpPage() {
 
 function InputDescription({ label, description, example, tips }: { label: string; description: string; example: string; tips: string[] }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
+    <div style={{ padding: 18, border: `2px solid ${CARD_BORDER}`, borderRadius: 16 }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{label}</h4>
       <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>
@@ -483,21 +520,21 @@ function AlertAction({ action, description }: { action: string; description: str
 
 function FlowStep({ num, title, description }: { num: string; title: string; description: string }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#eaf6ff" }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <div style={{ minWidth: 32, height: 32, borderRadius: "50%", background: TEXT_COLOR, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15 }}>
+    <div style={{ padding: 20, borderRadius: 18, background: "rgba(95, 168, 210, 0.16)", border: "1px solid rgba(155, 199, 255, 0.35)", boxShadow: "0 16px 32px rgba(107, 174, 219, 0.2)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
+      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+        <div style={{ minWidth: 36, height: 36, borderRadius: "50%", background: "rgba(16, 42, 67, 0.92)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15 }}>
           {num}
         </div>
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{title}</h4>
       </div>
-      <p style={{ margin: "10px 0 0 44px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
+      <p style={{ margin: "12px 0 0 52px", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
 }
 
 function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#f0fdf4" }}>
+    <div style={{ padding: 20, borderRadius: 18, background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(34, 197, 94, 0.35)", boxShadow: "0 14px 28px rgba(34, 197, 94, 0.18)" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#166534" }}>{title}</h4>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{tip}</p>
     </div>
@@ -506,14 +543,14 @@ function BestPractice({ title, tip }: { title: string; tip: string }) {
 
 function Troubleshoot({ issue, solution }: { issue: string; solution: string }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8, background: "#fef3c7" }}>
+    <div style={{ padding: 20, borderRadius: 18, background: "rgba(250, 204, 21, 0.18)", border: "1px solid rgba(250, 204, 21, 0.35)", boxShadow: "0 14px 28px rgba(245, 158, 11, 0.22)" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#92400e" }}>Issue: {issue}</h4>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>Solution:</strong> {solution}</p>
     </div>
   );
 }
 
-const footerStyle: React.CSSProperties = {
+const footerStyle: CSSProperties = {
   alignSelf: "center",
   padding: "16px 24px",
   borderRadius: 999,

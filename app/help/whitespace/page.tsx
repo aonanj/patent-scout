@@ -44,7 +44,7 @@ const linkButtonStyle: CSSProperties = {
   justifyContent: "center",
   padding: "10px 28px",
   borderRadius: 999,
-  background: "linear-gradient(135deg, #38bdf8 0%, #6366f1 100%)",
+  background: "linear-gradient(105deg, #5FA8D2 0%, #39506B 100%)",
   color: "#ffffff",
   fontWeight: 600,
   fontSize: 14,
@@ -513,7 +513,7 @@ export default function WhitespaceHelpPage() {
 
 function InputDescription({ label, description, example, tips }: { label: string; description: string; example: string; tips: string[] }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
+    <div style={{ padding: 16, border: `2px solid ${CARD_BORDER}`, borderRadius: 8 }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{label}</h4>
       <p style={{ margin: "8px 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>

@@ -1,16 +1,50 @@
 // app/docs/privacy/page.tsx
 "use client";
 
+import type { CSSProperties } from "react";
+
 const TEXT_COLOR = "#102A43";
 const LINK_COLOR = "#5FA8D2";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageWrapperStyle: CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+  color: TEXT_COLOR,
+};
+
+const surfaceStyle: CSSProperties = {
+  maxWidth: 960,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 24,
+  padding: 32,
+  borderRadius: 28,
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+};
 
 export default function PrivacyPolicyPage() {
   return (
-    <div style={{ padding: 20, background: "#eaf6ff", minHeight: "100vh", color: TEXT_COLOR }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 24 }}>
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={surfaceStyle}>
         
         {/* Header */}
-        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Privacy Policy</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
             <strong>Effective Date</strong>: October 17, 2025<br />
@@ -19,7 +53,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         {/* Content */}
-        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 32, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+        <div className="glass-card" style={{ ...cardBaseStyle }}>
           
           <Section title="Introduction">
             <p>
@@ -767,8 +801,19 @@ export default function PrivacyPolicyPage() {
             </ul>
           </Section>
 
-          <div style={{ marginTop: 32, padding: 20, background: "#eaf6ff", borderRadius: 8, border: "1px solid #e5e7eb" }}>
-            <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>Summary of Key Points</p>
+          <div
+            style={{
+              marginTop: 32,
+              padding: 20,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 16,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
+            <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: TEXT_COLOR }}>Summary of Key Points</p>
             <table style={{ width: "100%", marginTop: 12, fontSize: 13, borderCollapse: "collapse" }}>
               <tbody>
                 <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -807,12 +852,23 @@ export default function PrivacyPolicyPage() {
             </table>
           </div>
 
-          <div style={{ marginTop: 32, padding: 20, background: "#eaf6ff", borderRadius: 8, border: "1px solid #e5e7eb" }}>
-            <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>Acknowledgment</p>
-            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, fontWeight: 600 }}>
+          <div
+            style={{
+              marginTop: 32,
+              padding: 20,
+              background: "rgba(107, 174, 219, 0.12)",
+              borderRadius: 16,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
+            <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: TEXT_COLOR }}>Acknowledgment</p>
+            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, fontWeight: 600, color: TEXT_COLOR }}>
               BY USING PATENT SCOUT, YOU ACKNOWLEDGE THAT YOU HAVE READ AND UNDERSTOOD THIS PRIVACY POLICY AND AGREE TO ITS TERMS.
             </p>
-            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13 }}>
+            <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, color: TEXT_COLOR }}>
               If you do not agree with this Privacy Policy, please do not use the Service.
             </p>
           </div>
@@ -846,7 +902,7 @@ function Subsection({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-const footerStyle: React.CSSProperties = {
+const footerStyle: CSSProperties = {
   alignSelf: "center",
   padding: "16px 24px",
   borderRadius: 999,
