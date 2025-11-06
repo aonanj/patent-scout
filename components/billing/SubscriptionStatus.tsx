@@ -264,7 +264,8 @@ export default function SubscriptionStatus({ subscription, onManage, accountEmai
         <div className="flex justify-center">
           <button
             onClick={onManage}
-            className="px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors hover:underline"
+            className="px-6 py-3 text-white rounded-lg hover:bg-sky-600 font-semibold transition-colors hover:underline"
+            style={{ background: 'linear-gradient(105deg, #5FA8D2 0%, #39506B 100%)' }}
           >
             Manage Subscription
           </button>

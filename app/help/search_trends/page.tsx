@@ -522,7 +522,7 @@ function FlowStep({ num, title, description }: { num: string; title: string; des
   return (
     <div style={{ padding: 20, borderRadius: 18, background: "rgba(95, 168, 210, 0.16)", border: "1px solid rgba(155, 199, 255, 0.35)", boxShadow: "0 16px 32px rgba(107, 174, 219, 0.2)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
       <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-        <div style={{ minWidth: 36, height: 36, borderRadius: "50%", background: "rgba(16, 42, 67, 0.92)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15 }}>
+        <div style={{ minWidth: 30, height: 30, borderRadius: "50%", background: "rgba(16, 42, 67, 0.92)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 15 }}>
           {num}
         </div>
         <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT_COLOR }}>{title}</h4>
@@ -534,7 +534,7 @@ function FlowStep({ num, title, description }: { num: string; title: string; des
 
 function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
-    <div style={{ padding: 20, borderRadius: 18, background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(34, 197, 94, 0.35)", boxShadow: "0 14px 28px rgba(34, 197, 94, 0.18)" }}>
+    <div style={{ padding: 20, borderRadius: 18, background: "rgba(16, 185, 129, 0.12)", opacity: 0.7, border: "1px solid rgba(34, 197, 94, 0.35)", boxShadow: "0 4px 8px rgba(34, 197, 94, 0.18)" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#166534" }}>{title}</h4>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{tip}</p>
     </div>
@@ -543,7 +543,7 @@ function BestPractice({ title, tip }: { title: string; tip: string }) {
 
 function Troubleshoot({ issue, solution }: { issue: string; solution: string }) {
   return (
-    <div style={{ padding: 20, borderRadius: 18, background: "rgba(250, 204, 21, 0.18)", border: "1px solid rgba(250, 204, 21, 0.35)", boxShadow: "0 14px 28px rgba(245, 158, 11, 0.22)" }}>
+    <div style={{ padding: 20, borderRadius: 18, background: "rgba(250, 204, 21, 0.18)", opacity: 0.7, border: "1px solid rgba(250, 204, 21, 0.35)", boxShadow: "0 4px 8px rgba(245, 158, 11, 0.22)" }}>
       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#92400e" }}>Issue: {issue}</h4>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}><strong>Solution:</strong> {solution}</p>
     </div>
