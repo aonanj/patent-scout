@@ -136,7 +136,7 @@ export default function HelpIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(57, 80, 107, 0.12)",
+                background: "rgba(57, 80, 107, 0.22)",
                 borderRadius: 14,
                 border: "1px solid rgba(155, 199, 255, 0.35)",
                 boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
@@ -195,7 +195,7 @@ export default function HelpIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(57, 80, 107, 0.12)",
+                background: "rgba(57, 80, 107, 0.22)",
                 borderRadius: 14,
                 border: "1px solid rgba(107, 174, 219, 0.25)",
                 boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
@@ -277,7 +277,7 @@ export default function HelpIndexPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Need Help?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            If you have questions or encounter issues not covered in this documentation, please contact our support team:
+            If you have questions or encounter issues not covered in this documentation, please contact:
           </p>
           <div style={{ marginTop: 16 }}>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
@@ -319,7 +319,7 @@ function InfoSection({ title, content }: { title: string; content: React.ReactNo
 
 function ResourceLink({ title, description, href, external }: { title: string; description: string; href: string; external: boolean }) {
   return (
-    <div style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
+    <div style={{ padding: 16, border: `2px solid ${CARD_BORDER}`, borderRadius: 8 }}>
       <a
         href={href}
         className="hover:underline"
