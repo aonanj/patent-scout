@@ -136,7 +136,7 @@ export default function HelpIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(107, 174, 219, 0.12)",
+                background: "rgba(57, 80, 107, 0.12)",
                 borderRadius: 14,
                 border: "1px solid rgba(155, 199, 255, 0.35)",
                 boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
@@ -195,7 +195,7 @@ export default function HelpIndexPage() {
               style={{
                 marginTop: 20,
                 padding: 18,
-                background: "rgba(107, 174, 219, 0.12)",
+                background: "rgba(57, 80, 107, 0.12)",
                 borderRadius: 14,
                 border: "1px solid rgba(107, 174, 219, 0.25)",
                 boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
@@ -336,7 +336,7 @@ function ResourceLink({ title, description, href, external }: { title: string; d
 
 function Footnote({ id, title, description, href, external }: { id: string; title: string; description: string; href: string; external: boolean }) {
   return (
-    <div id={id} style={{ padding: 16, border: `1px solid ${CARD_BORDER}`, borderRadius: 8 }}>
+    <div id={id} style={{ padding: 16, border: `2px solid ${CARD_BORDER}`, borderRadius: 8 }}>
       * <a
         href={href}
         className="hover:underline"
