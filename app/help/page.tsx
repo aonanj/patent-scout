@@ -177,18 +177,18 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Whitespace page quantifies how crowded a scope is, how quickly activity is changing, and where filings cluster by CPC. Four tiles (Crowding, Density, Momentum, Top CPCs) headline the view, backed by a monthly sparkline, CPC bar chart, and a sortable result table with direct patent links.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>
+              The Whitespace Analysis page provides a quantitative view of patent and publication activity within a defined scope. This page includes analysis and insights for saturation, activity rate, and momentum measurements, as well as identifying CPC codes under which patent and publications are concentrated. The interface presents four primary metrics (subject matter saturation, patent and publication activity rate, patent grant and publication momentum, and top CPC codes) supported by a monthly trend line, CPC distribution chart, and sortable results table with direct links to the underlying patents and publications.
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-              When you need competitor-specific insight, toggle “Group by Assignee” to load the legacy Sigma graph and confidence-scored signals (emerging gaps, bridges, convergence, crowd-out). Otherwise, the overview primitives provide a fast and auditable whitespace readout.
+              An optional “Group by Assignee” toggle enables the KNN Sigma graph visualization with confidence-scored signals highlighting potential gaps, bridging opportunities*, focus convergence, and crowd-out patterns.
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="⬩" title="Crowding & Density Tiles" text="Exact vs. semantic counts, density per month, and percentile labels expose how busy a space is." />
-              <DetailItem icon="⬩" title="Momentum Labeling" text="Monthly trendline, slope, and CAGR classify activity as Up, Flat, or Down." />
-              <DetailItem icon="⬩" title="CPC Distribution" text="Top CPC badges plus a ranked bar chart highlight adjacent technology slices." />
-              <DetailItem icon="⬩" title="In-Page Result Table" text="Patent and publication rows (with CPC badges and external links) anchor qualitative review." />
-              <DetailItem icon="⬩" title="Optional Assignee Signals" text="Enable the toggle to restore the Sigma.js graph and per-assignee convergence, bridge, crowd-out, and emerging gap signals." />
+              <DetailItem icon="⬩" title="Saturation & Activity Rate Tiles" text="Exact vs. semantic counts, patent grants and publications per month, and percentile labels indicate how busy a target search set is." />
+              <DetailItem icon="⬩" title="Momentum Labeling" text="Monthly trendline, slope, and CAGR classify patent grant and publication activity as rising, declining, or flat." />
+              <DetailItem icon="⬩" title="CPC Distribution" text="Top CPC codes plus a ranked bar chart highlight relevant technology areas." />
+              <DetailItem icon="⬩" title="Result Set Table" text="Patent and publication rows (with CPC codes and external links) illustrate the data supporting the whitespace analysis and insights." />
+              <DetailItem icon="⬩" title="(Optional) Group by Assignee" text="Enable to view a KNN graph and per-assignee opportunity and risk confidence signals for potential gap, bridge opportunity*, crowd-out risk, and focus convergence risk." />
             </div>
 
             <div
@@ -204,7 +204,7 @@ export default function HelpIndexPage() {
               }}
             >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Example Use Cases</strong>: Strategic IP investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
+                <strong>Example Use Cases</strong>: AI/ML R&D and/or investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
               </p>
             </div>
           </div>

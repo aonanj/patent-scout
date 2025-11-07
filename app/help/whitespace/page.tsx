@@ -75,7 +75,7 @@ export default function WhitespaceHelpPage() {
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             The Whitespace Analysis page is a platform for overview and insights directed to input search criteria. Analysis information displayed on this page can be searched and sorted in multiple ways, providing a dynamic and flexible interface ideal for AI/ML prior art searches, competitive landscape monitoring, underexplored technology areas conducive to R&D innovation, and more.
           </p>
-          <p style={{ marginTop: 6, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
+          <p style={{ marginTop: 8, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             Analysis and insights available on this page are generated based on user-defined focus keywords, CPC filters, and date ranges. The overview section provides a high-level summary of key metrics, while the tables and charts allow for in-depth exploration of patent filings relevant to the specified criteria. For example, key metrics include subject matter saturation, patent and publication activity rates and momentum, and CPC trends for specific search criteria and semantically similar concepts.
           </p>
         </div>
@@ -204,7 +204,7 @@ export default function WhitespaceHelpPage() {
               description="Ranks CPC codes by patent and publication volume. A shorter bar generally corresponds to a less explored technology area, whereas a longer bar may suggest a more developed or saturated technology area."
             />
             <LayoutSection
-              title="Recency badges"
+              title="Recent intervals"
               description="Summaries for the last 6, 12, 18, and 24 months. This information can be read with near-term patent and publication velocity against historical averages."
             />
           </div>
@@ -213,7 +213,7 @@ export default function WhitespaceHelpPage() {
         {/* Results Table */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Patent & Publication Table</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 6 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
             Result set table lists up to 1000 patents and publications per target search set, sortable on recency, relevance, or assignee name. Click any patent/publication number to open the document in a new tab. 
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
@@ -323,7 +323,7 @@ function InputDescription({
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
       <p style={{ margin: "8px 0", fontSize: 13, fontStyle: "italic", color: "#627D98" }}>{example}</p>
       <div style={{ marginTop: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_COLOR, marginBottom: 6 }}>Tips:</div>
+        <div style={{ fontSize: 13, fontWeight: 500, color: TEXT_COLOR, marginBottom: 6 }}>Notes:</div>
         <ul style={{ marginLeft: 20, fontSize: 13, lineHeight: 1.5, listStyleType: "circle", listStylePosition: "outside", color: TEXT_COLOR }}>
           {tips.map((tip, idx) => (
             <li key={idx}>{tip}</li>
