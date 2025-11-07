@@ -96,6 +96,190 @@ type RunQuery = {
   semantic: boolean;
 };
 
+function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+  return (
+    <label htmlFor={htmlFor} style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+      {children}
+    </label>
+  );
+}
+
+function Row({
+  children,
+  gap = 12,
+  align = "flex-end",
+}: {
+  children: React.ReactNode;
+  gap?: number;
+  align?: React.CSSProperties["alignItems"];
+}) {
+  return (
+    <div style={{ display: "flex", gap, alignItems: align, flexWrap: "wrap" }}>{children}</div>
+  );
+}
+
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div
+      className="glass-card"
+      style={{
+        padding: 20,
+        borderRadius: 20,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+const buttonBaseStyle: React.CSSProperties = {
+  height: 40,
+  padding: "0 20px",
+  borderRadius: 999,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  fontSize: 13,
+  fontWeight: 600,
+  letterSpacing: "0.01em",
+  transition: "all 0.18s ease",
+};
+
+function PrimaryButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="btn-modern"
+      style={{
+        ...buttonBaseStyle,
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function GhostButton({ onClick, children, disabled, style, title }: { onClick?: () => void; children: React.ReactNode; disabled?: boolean; style?: React.CSSProperties; title?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="btn-outline"
+      style={{
+        ...buttonBaseStyle,
+        height: 38,
+        fontWeight: 500,
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+const pageWrapperStyle: React.CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+};
+
+const pageSurfaceStyle: React.CSSProperties = {
+  maxWidth: 1240,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 20,
+  padding: 28,
+  borderRadius: 28,
+};
+
+const inputStyle: React.CSSProperties = {
+  height: 38,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
+  outline: "none",
+  minWidth: 220,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#102A43",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+
+const tileStyle: React.CSSProperties = {
+  padding: 20,
+  borderRadius: 18,
+  background: "rgba(255,255,255,0.9)",
+  boxShadow: "0 18px 36px rgba(15,23,42,0.16)",
+  display: "grid",
+  gap: 8,
+};
+
+const toggleLabelStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  fontSize: 13,
+  color: "#1f2937",
+};
+
+const tableStyle: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: 12,
+  background: "rgba(255, 255, 255, 0.78)",
+  borderRadius: 16,
+  overflow: "hidden",
+  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.22)",
+};
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(148, 163, 184, 0.3)",
+  color: "#102A43",
+  background: "rgba(148, 163, 184, 0.22)",
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "10px 12px",
+  borderTop: "1px solid rgba(148, 163, 184, 0.2)",
+  verticalAlign: "top",
+};
+
+const footerStyle: React.CSSProperties = {
+  alignSelf: "center",
+  padding: "16px 24px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.22)",
+  border: "1px solid rgba(255, 255, 255, 0.35)",
+  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  color: "#1f2937",
+  textAlign: "center",
+  fontSize: 13,
+  fontWeight: 500,
+  gap: 4,
+};
+
 const numberFmt = new Intl.NumberFormat("en-US");
 const percentFmt = new Intl.NumberFormat("en-US", {
   style: "percent",
@@ -257,42 +441,6 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
     </div>
   );
 }
-
-const tileStyle: React.CSSProperties = {
-  padding: 20,
-  borderRadius: 18,
-  background: "rgba(255,255,255,0.88)",
-  boxShadow: "0 18px 36px rgba(15,23,42,0.16)",
-  display: "grid",
-  gap: 8,
-};
-
-const sectionCardStyle: React.CSSProperties = {
-  padding: 22,
-  borderRadius: 22,
-  background: "rgba(255,255,255,0.92)",
-  boxShadow: "0 18px 44px rgba(15,23,42,0.18)",
-};
-
-const inputStyle: React.CSSProperties = {
-  height: 40,
-  borderRadius: 12,
-  border: "1px solid rgba(148,163,184,0.5)",
-  padding: "0 14px",
-  fontSize: 13,
-  color: "#1f2937",
-  background: "rgba(255,255,255,0.8)",
-  minWidth: 220,
-  boxShadow: "0 12px 24px rgba(15,23,42,0.12)",
-};
-
-const toggleLabelStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  fontSize: 13,
-  color: "#1f2937",
-};
 
 export default function WhitespacePage() {
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
@@ -498,204 +646,187 @@ export default function WhitespacePage() {
     return overview.top_cpcs.slice(0, 5);
   }, [overview]);
 
-  return (
-    <div style={{ padding: "48px 24px 64px", display: "grid", gap: 28, background: "linear-gradient(180deg,#f8fafc 0%, #e2e8f0 60%, #cbd5f5 100%)", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", width: "100%", display: "grid", gap: 24 }}>
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "grid", gap: 6 }}>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#0f172a" }}>Whitespace Overview</h1>
-            <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
-              Break down whitespace into crowding, momentum, and CPC placement. Group by assignee only when you need deeper context.
-            </p>
-          </div>
-          {!isAuthenticated && !authLoading && (
-            <button
-              type="button"
-              onClick={() => loginWithRedirect()}
-              style={{
-                borderRadius: 999,
-                padding: "10px 18px",
-                border: "1px solid rgba(37,99,235,0.4)",
-                background: "rgba(37,99,235,0.08)",
-                fontWeight: 600,
-                fontSize: 13,
-                color: "#1d4ed8",
-              }}
-            >
-              Log in to Run
-            </button>
-          )}
-        </header>
+  const handleReset = useCallback(() => {
+    setKeywords("");
+    setCpcFilter("");
+    setDateFrom(defaults.from);
+    setDateTo(defaults.to);
+    setShowSemantic(true);
+    setGroupByAssignee(false);
+    setOverview(null);
+    setResults([]);
+    setTotalResults(0);
+    setAssigneeData(null);
+    setError(null);
+    setLastQuery(null);
+  }, [defaults.from, defaults.to]);
 
-        <div style={{ ...sectionCardStyle }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-            <div style={{ display: "grid", gap: 6 }}>
-              <label htmlFor="ws-keywords" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>Focus Keywords</label>
-              <input
-                id="ws-keywords"
-                placeholder="e.g., foundation models, multimodal reasoning"
-                value={keywords}
-                onChange={handleInput(setKeywords)}
-                style={{ ...inputStyle, minWidth: 280 }}
-              />
+  return (
+    <div style={pageWrapperStyle}>
+      <div className="glass-surface" style={pageSurfaceStyle}>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "grid", gap: 4 }}>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Whitespace Overview</h1>
+              <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
+                Measure crowding, density, and momentum for any AI/ML scope, then layer on the assignee graph when you need competitive context.
+              </p>
             </div>
-            <div style={{ display: "grid", gap: 6 }}>
-              <label htmlFor="ws-cpc" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>CPC Filter</label>
-              <input
-                id="ws-cpc"
-                placeholder="e.g., G06N20/00, A61B5/00"
-                value={cpcFilter}
-                onChange={handleInput(setCpcFilter)}
-                style={inputStyle}
-              />
-            </div>
-            <div style={{ display: "grid", gap: 6 }}>
-              <label htmlFor="ws-from" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>From</label>
-              <input
-                id="ws-from"
-                type="date"
-                value={dateFrom}
-                onChange={handleInput(setDateFrom)}
-                style={inputStyle}
-              />
-            </div>
-            <div style={{ display: "grid", gap: 6 }}>
-              <label htmlFor="ws-to" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>To</label>
-              <input
-                id="ws-to"
-                type="date"
-                value={dateTo}
-                onChange={handleInput(setDateTo)}
-                style={inputStyle}
-              />
-            </div>
+            {!isAuthenticated && !authLoading && (
+              <GhostButton onClick={() => loginWithRedirect()}>
+                Log in to Run
+              </GhostButton>
+            )}
           </div>
-          <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18 }}>
-            <label style={toggleLabelStyle}>
-              <input
-                type="checkbox"
-                checked={showSemantic}
-                onChange={(event) => setShowSemantic(event.target.checked)}
-              />
-              Show Semantic Neighbors
-            </label>
-            <label style={toggleLabelStyle}>
-              <input
-                type="checkbox"
-                checked={groupByAssignee}
-                onChange={(event) => handleToggleGroup(event.target.checked)}
-              />
-              Group by Assignee (legacy signals)
-            </label>
-            <button
-              type="button"
-              onClick={runAnalysis}
-              disabled={loading || authLoading}
-              style={{
-                borderRadius: 999,
-                padding: "10px 24px",
-                background: "linear-gradient(105deg, #5FA8D2 0%, #39506B 100%)",
-                color: "#ffffff",
-                border: "1px solid rgba(107, 174, 219, 0.55)",
-                fontWeight: 600,
-                letterSpacing: "0.01em",
-                boxShadow: "0 16px 30px rgba(37,99,235,0.25)",
-                cursor: "pointer",
-                opacity: loading ? 0.75 : 1,
-              }}
-            >
-              {loading ? "Calculating…" : "Run Overview"}
-            </button>
-          </div>
-          {error && (
-            <div style={{ marginTop: 16, fontSize: 13, color: "#b91c1c", fontWeight: 600 }}>{error}</div>
-          )}
           {summaryLine && (
-            <div style={{ marginTop: 18, fontSize: 12, color: "#475569", fontWeight: 600 }}>
+            <div style={{ marginTop: 12, fontSize: 12, color: "#475569", fontWeight: 600 }}>
               {summaryLine}
             </div>
           )}
-        </div>
+        </Card>
+
+        <Card>
+          <div style={{ display: "grid", gap: 16 }}>
+            <Row gap={16}>
+              <div style={{ display: "grid", gap: 6, minWidth: 280, flex: 1 }}>
+                <Label htmlFor="ws-keywords">Focus Keywords</Label>
+                <input
+                  id="ws-keywords"
+                  placeholder="e.g., foundation models, multimodal reasoning"
+                  value={keywords}
+                  onChange={handleInput(setKeywords)}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6, minWidth: 220 }}>
+                <Label htmlFor="ws-cpc">CPC Filter</Label>
+                <input
+                  id="ws-cpc"
+                  placeholder="e.g., G06N20/00, A61B5/00"
+                  value={cpcFilter}
+                  onChange={handleInput(setCpcFilter)}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-from">From</Label>
+                <input id="ws-from" type="date" value={dateFrom} onChange={handleInput(setDateFrom)} style={inputStyle} />
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Label htmlFor="ws-to">To</Label>
+                <input id="ws-to" type="date" value={dateTo} onChange={handleInput(setDateTo)} style={inputStyle} />
+              </div>
+            </Row>
+            <Row align="center">
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <label style={toggleLabelStyle}>
+                  <input type="checkbox" checked={showSemantic} onChange={(event) => setShowSemantic(event.target.checked)} />
+                  Show Semantic Neighbors
+                </label>
+                <label style={toggleLabelStyle}>
+                  <input type="checkbox" checked={groupByAssignee} onChange={(event) => handleToggleGroup(event.target.checked)} />
+                  Group by Assignee (legacy signals)
+                </label>
+              </div>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <PrimaryButton onClick={runAnalysis} disabled={loading || authLoading}>
+                  {loading ? "Calculating…" : "Run Overview"}
+                </PrimaryButton>
+                <GhostButton onClick={handleReset}>Reset</GhostButton>
+              </div>
+            </Row>
+            {error && (
+              <div style={{ fontSize: 13, color: "#b91c1c", fontWeight: 600 }}>{error}</div>
+            )}
+          </div>
+        </Card>
 
         {overview && (
           <>
-            <section style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-              <div style={tileStyle}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Crowding (24-mo)</span>
-                <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
-                  {numberFmt.format(overview.crowding.total)}
-                </span>
-                <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
-                  <span>Exact: {numberFmt.format(overview.crowding.exact)}</span>
-                  {showSemantic && (
-                    <span>Semantic: {numberFmt.format(overview.crowding.semantic)}</span>
-                  )}
-                  <span>Percentile: {overview.crowding.percentile !== null && overview.crowding.percentile !== undefined ? percentFmt.format(overview.crowding.percentile) : "--"}</span>
+            <Card>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Scope Metrics</h2>
+                <span style={{ fontSize: 12, color: "#475569" }}>Window: {overview.window_months} months</span>
+              </div>
+              <div style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+                <div style={tileStyle}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Crowding</span>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{numberFmt.format(overview.crowding.total)}</span>
+                  <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
+                    <span>Exact: {numberFmt.format(overview.crowding.exact)}</span>
+                    {showSemantic && <span>Semantic: {numberFmt.format(overview.crowding.semantic)}</span>}
+                    <span>Percentile: {overview.crowding.percentile !== null && overview.crowding.percentile !== undefined ? percentFmt.format(overview.crowding.percentile) : "--"}</span>
+                  </div>
+                </div>
+                <div style={tileStyle}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Density</span>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{overview.crowding.density_per_month.toFixed(1)} / mo</span>
+                  <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
+                    <span>Mean: {overview.density.mean_per_month.toFixed(1)}</span>
+                    <span>Band: {overview.density.min_per_month} – {overview.density.max_per_month}</span>
+                  </div>
+                </div>
+                <div style={tileStyle}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Momentum</span>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: overview.momentum.bucket === "Up" ? "#15803d" : overview.momentum.bucket === "Down" ? "#b91c1c" : "#0f172a" }}>
+                    {overview.momentum.bucket}
+                  </span>
+                  <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
+                    <span>Slope: {overview.momentum.slope.toFixed(2)}</span>
+                    <span>CAGR: {overview.momentum.cagr !== null && overview.momentum.cagr !== undefined ? percentFmt.format(overview.momentum.cagr) : "--"}</span>
+                  </div>
+                </div>
+                <div style={tileStyle}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Top CPCs</span>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {topCpcTile.length === 0 && <span style={{ fontSize: 12, color: "#475569" }}>No CPCs in window.</span>}
+                    {topCpcTile.map((item) => (
+                      <div key={item.cpc} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#1f2937" }}>
+                        <span>{item.cpc || "Unknown"}</span>
+                        <span>{numberFmt.format(item.count)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div style={tileStyle}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Density</span>
-                <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
-                  {overview.crowding.density_per_month.toFixed(1)} / mo
-                </span>
-                <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
-                  <span>Mean: {overview.density.mean_per_month.toFixed(1)}</span>
-                  <span>Band: {overview.density.min_per_month} – {overview.density.max_per_month}</span>
-                </div>
-              </div>
-              <div style={tileStyle}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Momentum</span>
-                <span style={{ fontSize: 28, fontWeight: 700, color: overview.momentum.bucket === "Up" ? "#15803d" : overview.momentum.bucket === "Down" ? "#b91c1c" : "#0f172a" }}>
-                  {overview.momentum.bucket}
-                </span>
-                <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
-                  <span>Slope: {overview.momentum.slope.toFixed(2)}</span>
-                  <span>CAGR: {overview.momentum.cagr !== null && overview.momentum.cagr !== undefined ? percentFmt.format(overview.momentum.cagr) : "--"}</span>
-                </div>
-              </div>
-              <div style={tileStyle}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Top CPCs</span>
-                <div style={{ display: "grid", gap: 6 }}>
-                  {topCpcTile.length === 0 && <span style={{ fontSize: 12, color: "#475569" }}>No CPCs in window.</span>}
-                  {topCpcTile.map((item) => (
-                    <div key={item.cpc} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#1f2937" }}>
-                      <span>{item.cpc || "Unknown"}</span>
-                      <span>{numberFmt.format(item.count)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
+            </Card>
 
-            <section style={{ display: "grid", gap: 24, gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr)" }}>
-              <div style={sectionCardStyle}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#1f2937", marginBottom: 12 }}>Timeline</div>
-                <TimelineSparkline points={overview.timeline} />
+            <Card>
+              <div style={{ display: "grid", gap: 24, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Timeline</div>
+                  <TimelineSparkline points={overview.timeline} />
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, color: "#475569" }}>
+                    <span>M6: {numberFmt.format(overview.recency.m6)}</span>
+                    <span>M12: {numberFmt.format(overview.recency.m12)}</span>
+                    <span>M24: {numberFmt.format(overview.recency.m24)}</span>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>CPC Density</div>
+                  <CpcBarChart items={overview.cpc_breakdown.slice(0, 8)} />
+                </div>
               </div>
-              <div style={sectionCardStyle}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#1f2937", marginBottom: 12 }}>CPC Density</div>
-                <CpcBarChart items={overview.cpc_breakdown.slice(0, 8)} />
-              </div>
-            </section>
+            </Card>
           </>
         )}
 
-        <section style={{ ...sectionCardStyle, display: "grid", gap: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Result Set</div>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Result Set</h2>
             <div style={{ fontSize: 12, color: "#475569" }}>
               {totalResults ? `${numberFmt.format(totalResults)} filings` : "No filings yet"}
             </div>
           </div>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 640 }}>
+            <table style={tableStyle}>
               <thead>
-                <tr style={{ background: "rgba(226,232,240,0.6)" }}>
-                  <th style={{ textAlign: "left", padding: "10px 12px", color: "#0f172a" }}>Title</th>
-                  <th style={{ textAlign: "left", padding: "10px 12px", color: "#0f172a" }}>Publication</th>
-                  <th style={{ textAlign: "left", padding: "10px 12px", color: "#0f172a" }}>Assignee</th>
-                  <th style={{ textAlign: "left", padding: "10px 12px", color: "#0f172a" }}>Date</th>
-                  <th style={{ textAlign: "left", padding: "10px 12px", color: "#0f172a" }}>CPC</th>
+                <tr>
+                  <th style={thStyle}>Title</th>
+                  <th style={thStyle}>Publication</th>
+                  <th style={thStyle}>Assignee</th>
+                  <th style={thStyle}>Date</th>
+                  <th style={thStyle}>CPC</th>
                 </tr>
               </thead>
               <tbody>
@@ -705,41 +836,28 @@ export default function WhitespacePage() {
                   </tr>
                 )}
                 {results.map((row) => (
-                  <tr key={row.pub_id} style={{ borderTop: "1px solid rgba(148,163,184,0.25)" }}>
-                    <td style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 600 }}>
-                      {row.title || row.pub_id}
-                    </td>
-                    <td style={{ padding: "10px 12px" }}>
-                      <a
-                        href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: "#1d4ed8", textDecoration: "none" }}
-                      >
+                  <tr key={row.pub_id}>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{row.title || row.pub_id}</td>
+                    <td style={tdStyle}>
+                      <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#1d4ed8", textDecoration: "none" }}>
                         {row.pub_id}
                       </a>
                       {row.kind_code ? ` (${row.kind_code})` : ""}
                     </td>
-                    <td style={{ padding: "10px 12px", color: "#475569" }}>
-                      {row.assignee_name ? row.assignee_name : "Unknown"}
-                    </td>
-                    <td style={{ padding: "10px 12px", color: "#475569" }}>
-                      {formatPubDate(row.pub_date)}
-                    </td>
-                    <td style={{ padding: "10px 12px", color: "#475569" }}>
-                      {CPCList(row.cpc)}
-                    </td>
+                    <td style={tdStyle}>{row.assignee_name ? row.assignee_name : "Unknown"}</td>
+                    <td style={tdStyle}>{formatPubDate(row.pub_date)}</td>
+                    <td style={tdStyle}>{CPCList(row.cpc)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </section>
+        </Card>
 
         {groupByAssignee && (
-          <section style={{ ...sectionCardStyle, display: "grid", gap: 20 }}>
+          <Card style={{ display: "grid", gap: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Assignee Signals</h2>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Assignee Signals</h2>
               {assigneeLoading && <span style={{ fontSize: 12, color: "#475569" }}>Loading…</span>}
             </div>
             {assigneeData?.graph && (
@@ -792,10 +910,12 @@ export default function WhitespacePage() {
                 </div>
               )}
             </div>
-          </section>
+          </Card>
         )}
       </div>
+      <footer style={footerStyle}>
+        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#636363] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#636363] hover:underline hover:text-amber-400">Legal</a>
+      </footer>
     </div>
   );
 }
-
