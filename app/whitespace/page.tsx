@@ -356,16 +356,17 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
     );
   }
   const width = 520;
-  const height = 160;
-  const padding = 16;
+  const height = 180;
+  const padding = 24;
+  const lineHeight = height - padding * 2;
   const maxCount = Math.max(...points.map((pt) => pt.count), 1);
   const step = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
 
   const coords = points.map((pt, idx) => {
     const x = padding + idx * step;
     const normalized = maxCount ? pt.count / maxCount : 0;
-    const y = height - padding - normalized * (height - padding * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
+    const y = padding + lineHeight - normalized * lineHeight;
+    return { x, y };
   });
 
   return (
@@ -376,24 +377,42 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
         strokeWidth={2.5}
         strokeLinejoin="round"
         strokeLinecap="round"
-        points={coords.join(" ")}
+        points={coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")}
       />
-      {points.map((pt, idx) => {
-        const x = padding + idx * step;
-        const normalized = maxCount ? pt.count / maxCount : 0;
-        const y = height - padding - normalized * (height - padding * 2);
+      {coords.map((coord, idx) => {
+        const x = coord.x;
+        const count = points[idx].count;
         return (
-          <circle key={pt.month} cx={x} cy={y} r={3.5} fill="#1d4ed8" />
+          <g key={points[idx].month}>
+            <line
+              x1={x}
+              x2={x}
+              y1={padding}
+              y2={height - padding}
+              stroke="rgba(148,163,184,0.5)"
+              strokeDasharray="4 3"
+            />
+            <circle cx={x} cy={coord.y} r={3.5} fill="#1d4ed8" />
+            <text x={x} y={height - padding + 14} fontSize={10} fill="#1e293b" textAnchor="middle">
+              {points[idx].month}
+            </text>
+            <text x={x} y={height - padding + 28} fontSize={10} fill="#475569" textAnchor="middle">
+              {numberFmt.format(count)}
+            </text>
+          </g>
         );
       })}
-      <text x={padding} y={height - 4} fontSize={11} fill="#475569">
-        {points[0]?.month ?? ""}
-      </text>
-      <text x={width - padding - 8} y={height - 4} fontSize={11} fill="#475569" textAnchor="end">
-        {points[points.length - 1]?.month ?? ""}
-      </text>
     </svg>
   );
+}
+
+function cpcDefinitionUrl(cpc: string): string | null {
+  if (!cpc) return null;
+  const clean = cpc.replace(/\s+/g, "");
+  if (clean.length < 4) return null;
+  const prefix = clean.slice(0, 4).toUpperCase();
+  const anchor = clean.toUpperCase();
+  return `https://www.uspto.gov/web/patents/classification/cpc/html/def${prefix}.html#${anchor}`;
 }
 
 function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
@@ -407,10 +426,17 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
     <div style={{ display: "grid", gap: 10 }}>
       {items.map((item) => {
         const width = `${Math.max(4, Math.round((item.count / max) * 100))}%`;
+        const url = cpcDefinitionUrl(item.cpc);
         return (
-          <div key={item.cpc} style={{ display: "grid", gap: 6 }}>
+          <div key={item.cpc || `cpc-${item.count}`} style={{ display: "grid", gap: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, color: "#1f2937" }}>
-              <span>{item.cpc || "Unknown"}</span>
+              {url ? (
+                <a href={url} target="_blank" rel="noreferrer" style={{ color: "#0f172a", textDecoration: "none" }}>
+                  {item.cpc || "Unknown"}
+                </a>
+              ) : (
+                <span>{item.cpc || "Unknown"}</span>
+              )}
               <span>{numberFmt.format(item.count)}</span>
             </div>
             <div style={{ background: "rgba(148,163,184,0.25)", borderRadius: 999, height: 8 }}>
