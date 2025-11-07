@@ -470,7 +470,7 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
     <svg width={width} height={height} style={{ borderRadius: 16, background: "rgba(248,250,252,0.8)" }}>
       <polyline
         fill="none"
-        stroke="#2563eb"
+        stroke="#3a506b"
         strokeWidth={2.5}
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -566,7 +566,7 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
                   width,
                   height: "100%",
                   borderRadius: 999,
-                  background: "linear-gradient(90deg, #38bdf8 0%, #102a43 100%)",
+                  background: "linear-gradient(90deg, #5FA8D2 0%, #102a43 100%)",
                 }}
               />
             </div>
