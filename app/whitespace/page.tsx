@@ -2,6 +2,7 @@
 
 import { useAuth0 } from "@auth0/auth0-react";
 import dynamic from "next/dynamic";
+import jsPDF from "jspdf";
 import type { ChangeEvent } from "react";
 import {
   useCallback,
@@ -63,7 +64,7 @@ type PatentHit = {
 
 type SearchResponse = {
   total: number;
-  items: PatentHit[];
+  items?: PatentHit[];
 };
 
 type SignalStatus = "none" | "weak" | "medium" | "strong";
@@ -283,6 +284,9 @@ const percentFmt = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
+const RESULTS_PER_PAGE = 25;
+const SEARCH_BATCH_SIZE = 250;
+const PDF_EXPORT_LIMIT = 1000;
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
   focus_shift: "Convergence",
@@ -440,12 +444,14 @@ export default function WhitespacePage() {
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [results, setResults] = useState<PatentHit[]>([]);
   const [totalResults, setTotalResults] = useState(0);
+  const [resultPage, setResultPage] = useState(1);
   const [assigneeData, setAssigneeData] = useState<WhitespaceGraphResponse | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [assigneeLoading, setAssigneeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastQuery, setLastQuery] = useState<RunQuery | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const handleInput =
     (setter: (value: string) => void) =>
@@ -540,42 +546,65 @@ export default function WhitespacePage() {
         cache: "no-store",
       });
 
-      const payload = {
-        keywords: currentQuery.keywords || null,
-        semantic_query: currentQuery.semantic ? currentQuery.keywords || null : null,
-        limit: 100,
-        offset: 0,
-        filters: {
-          cpc: currentQuery.cpc || null,
-          date_from: fromInt ?? null,
-          date_to: toInt ?? null,
-        },
+      const baseFilters = {
+        cpc: currentQuery.cpc || null,
+        date_from: fromInt ?? null,
+        date_to: toInt ?? null,
       };
+      const semanticQuery = currentQuery.semantic ? currentQuery.keywords || null : null;
+      const aggregatedResults: PatentHit[] = [];
+      let totalCount = 0;
+      let offset = 0;
+      let fetching = true;
 
-      const searchPromise = fetch("/api/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      while (fetching) {
+        const searchPayload = {
+          keywords: currentQuery.keywords || null,
+          semantic_query: semanticQuery,
+          limit: SEARCH_BATCH_SIZE,
+          offset,
+          filters: baseFilters,
+          sort_by: "pub_date_desc" as const,
+        };
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(searchPayload),
+        });
+        if (!res.ok) {
+          const detail = await res.json().catch(() => ({}));
+          throw new Error(detail.detail || `Search failed (${res.status})`);
+        }
+        const data = (await res.json()) as SearchResponse;
+        const batchItems = data.items ?? [];
+        if (offset === 0) {
+          totalCount = data.total ?? batchItems.length ?? 0;
+        }
+        if (batchItems.length) {
+          aggregatedResults.push(...batchItems);
+        }
+        const received = batchItems.length;
+        if (received < SEARCH_BATCH_SIZE || aggregatedResults.length >= totalCount) {
+          fetching = false;
+        } else {
+          offset += SEARCH_BATCH_SIZE;
+        }
+      }
 
-      const [overviewRes, searchRes] = await Promise.all([overviewPromise, searchPromise]);
+      const overviewRes = await overviewPromise;
       if (!overviewRes.ok) {
         const detail = await overviewRes.json().catch(() => ({}));
         throw new Error(detail.detail || `Overview failed (${overviewRes.status})`);
       }
-      if (!searchRes.ok) {
-        const detail = await searchRes.json().catch(() => ({}));
-        throw new Error(detail.detail || `Search failed (${searchRes.status})`);
-      }
 
       const overviewJson = (await overviewRes.json()) as OverviewResponse;
-      const searchJson = (await searchRes.json()) as SearchResponse;
       setOverview(overviewJson);
-      setResults(searchJson.items || []);
-      setTotalResults(searchJson.total || 0);
+      setResults(aggregatedResults);
+      setTotalResults(totalCount || aggregatedResults.length);
+      setResultPage(1);
       setLastQuery(currentQuery);
 
       if (groupByAssignee) {
@@ -633,6 +662,23 @@ export default function WhitespacePage() {
     return overview.top_cpcs.slice(0, 5);
   }, [overview]);
 
+  const paginatedResults = useMemo(() => {
+    const start = (resultPage - 1) * RESULTS_PER_PAGE;
+    return results.slice(start, start + RESULTS_PER_PAGE);
+  }, [results, resultPage]);
+
+  const totalResultPages = useMemo(() => {
+    if (!results.length) return 1;
+    return Math.max(1, Math.ceil(results.length / RESULTS_PER_PAGE));
+  }, [results]);
+
+  const startIndex = (resultPage - 1) * RESULTS_PER_PAGE;
+  const showingRangeLabel = results.length
+    ? `${numberFmt.format(startIndex + 1)}-${numberFmt.format(Math.min(results.length, startIndex + RESULTS_PER_PAGE))} of ${numberFmt.format(results.length)}`
+    : "No filings yet";
+  const canPrev = resultPage > 1;
+  const canNext = resultPage < totalResultPages;
+
   const handleReset = useCallback(() => {
     setKeywords("");
     setCpcFilter("");
@@ -643,10 +689,129 @@ export default function WhitespacePage() {
     setOverview(null);
     setResults([]);
     setTotalResults(0);
+    setResultPage(1);
     setAssigneeData(null);
     setError(null);
     setLastQuery(null);
   }, []);
+
+  const exportResultsPdf = useCallback(() => {
+    if (!overview || results.length === 0) {
+      setError("Run the overview before exporting.");
+      return;
+    }
+    setExporting(true);
+    try {
+      const doc = new jsPDF({ unit: "pt", format: "letter" });
+      const marginX = 48;
+      const marginY = 54;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const contentWidth = pageWidth - marginX * 2;
+      let y = marginY;
+
+      const ensureSpace = (height = 16) => {
+        if (y + height > pageHeight - marginY) {
+          doc.addPage();
+          y = marginY;
+        }
+      };
+
+      const addWrappedText = (text: string, fontSize = 12, gap = 14, font: "normal" | "bold" | "italic" = "normal") => {
+        doc.setFont("helvetica", font);
+        doc.setFontSize(fontSize);
+        const wrapped = doc.splitTextToSize(text, contentWidth);
+        wrapped.forEach((line: string) => {
+          ensureSpace();
+          doc.text(line, marginX, y);
+          y += gap;
+        });
+      };
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Patent Scout – Whitespace Overview", marginX, y);
+      y += 24;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      const scopeLines = [
+        `Keywords: ${keywords || "—"}`,
+        `CPC Filter: ${cpcFilter || "—"}`,
+        `Date Range: ${(dateFrom || "—")} – ${(dateTo || "—")}`,
+        `Semantic Neighbors: ${showSemantic ? "On" : "Off"}`,
+        `Group by Assignee: ${groupByAssignee ? "On" : "Off"}`,
+      ];
+      scopeLines.forEach((line) => addWrappedText(line));
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      ensureSpace();
+      doc.text("Scope Metrics", marginX, y);
+      y += 18;
+
+      const percentileLabelText =
+        overview.crowding.percentile !== null && overview.crowding.percentile !== undefined
+          ? percentFmt.format(overview.crowding.percentile)
+          : "--";
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      const metricLines = [
+        `Crowding: ${numberFmt.format(overview.crowding.total)} total (Exact ${numberFmt.format(
+          overview.crowding.exact,
+        )}${showSemantic ? `, Semantic ${numberFmt.format(overview.crowding.semantic)}` : ""}, Percentile ${percentileLabelText})`,
+        `Density: ${overview.crowding.density_per_month.toFixed(1)}/mo (Mean ${overview.density.mean_per_month.toFixed(
+          1,
+        )}, Band ${overview.density.min_per_month} – ${overview.density.max_per_month})`,
+        `Momentum: ${overview.momentum.bucket} (Slope ${overview.momentum.slope.toFixed(2)}, CAGR ${
+          overview.momentum.cagr !== null && overview.momentum.cagr !== undefined ? percentFmt.format(overview.momentum.cagr) : "--"
+        })`,
+        `Top CPCs: ${overview.top_cpcs
+          .slice(0, 3)
+          .map((c) => `${c.cpc || "Unknown"} (${numberFmt.format(c.count)})`)
+          .join(", ") || "—"}`,
+      ];
+      metricLines.forEach((line) => addWrappedText(line));
+
+      ensureSpace();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      const exportRows = results.slice(0, PDF_EXPORT_LIMIT);
+      doc.text(`Results (${numberFmt.format(exportRows.length)} of ${numberFmt.format(results.length)})`, marginX, y);
+      y += 20;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      exportRows.forEach((row, idx) => {
+        const title = `${idx + 1}. ${row.title || row.pub_id}`;
+        const details = [
+          `Publication: ${row.pub_id}${row.kind_code ? ` (${row.kind_code})` : ""}`,
+          `Assignee: ${row.assignee_name ?? "Unknown"}`,
+          `Date: ${formatPubDate(row.pub_date)}`,
+          `CPC: ${CPCList(row.cpc)}`,
+        ];
+        addWrappedText(title, 12, 14, "bold");
+        details.forEach((line) => addWrappedText(line));
+        y += 4;
+      });
+
+      if (results.length > PDF_EXPORT_LIMIT) {
+        ensureSpace();
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.text(`Note: Export limited to first ${PDF_EXPORT_LIMIT.toLocaleString()} results.`, marginX, y);
+      }
+
+      const filename = `whitespace_results_${Date.now()}.pdf`;
+      doc.save(filename);
+    } catch (err) {
+      console.error(err);
+      const message = err instanceof Error ? err.message : "Failed to export PDF.";
+      setError(message);
+    } finally {
+      setExporting(false);
+    }
+  }, [overview, results, keywords, cpcFilter, dateFrom, dateTo, showSemantic, groupByAssignee]);
 
   return (
     <div style={pageWrapperStyle}>
@@ -815,10 +980,18 @@ export default function WhitespacePage() {
         )}
 
         <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Result Set</h2>
-            <div style={{ fontSize: 12, color: "#475569" }}>
-              {totalResults ? `${numberFmt.format(totalResults)} filings` : "No filings yet"}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Result Set</h2>
+              <div style={{ fontSize: 12, color: "#475569" }}>
+                {totalResults ? `${numberFmt.format(totalResults)} patents & publications` : "No data"}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, color: "#94a3b8" }}>PDF export limited to {PDF_EXPORT_LIMIT.toLocaleString()} rows</span>
+              <GhostButton onClick={exportResultsPdf} disabled={results.length === 0 || exporting} style={{ height: 36 }}>
+                {exporting ? "Exporting…" : "Export PDF"}
+              </GhostButton>
             </div>
           </div>
           <div
@@ -836,32 +1009,44 @@ export default function WhitespacePage() {
                     <th style={thStyle}>Title</th>
                     <th style={thStyle}>Publication</th>
                     <th style={thStyle}>Assignee</th>
-                  <th style={thStyle}>Date</th>
-                  <th style={thStyle}>CPC</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.length === 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ padding: "12px", color: "#475569" }}></td>
+                    <th style={thStyle}>Date</th>
+                    <th style={thStyle}>CPC</th>
                   </tr>
-                )}
-                {results.map((row) => (
-                  <tr key={row.pub_id}>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{row.title || row.pub_id}</td>
-                    <td style={tdStyle}>
-                      <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#1d4ed8", textDecoration: "none" }}>
-                        {row.pub_id}
-                      </a>
-                      {row.kind_code ? ` (${row.kind_code})` : ""}
-                    </td>
-                    <td style={tdStyle}>{row.assignee_name ? row.assignee_name : "Unknown"}</td>
-                    <td style={tdStyle}>{formatPubDate(row.pub_date)}</td>
-                    <td style={tdStyle}>{CPCList(row.cpc)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedResults.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "12px", color: "#475569" }}>Run the overview to populate filings.</td>
+                    </tr>
+                  )}
+                  {paginatedResults.map((row) => (
+                    <tr key={row.pub_id}>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{row.title || row.pub_id}</td>
+                      <td style={tdStyle}>
+                        <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#1d4ed8", textDecoration: "none" }}>
+                          {row.pub_id}
+                        </a>
+                        {row.kind_code ? ` (${row.kind_code})` : ""}
+                      </td>
+                      <td style={tdStyle}>{row.assignee_name ? row.assignee_name : "Unknown"}</td>
+                      <td style={tdStyle}>{formatPubDate(row.pub_date)}</td>
+                      <td style={tdStyle}>{CPCList(row.cpc)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: "#475569" }}>{showingRangeLabel}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <GhostButton onClick={() => setResultPage((prev) => Math.max(1, prev - 1))} disabled={!canPrev} style={{ height: 34 }}>
+                Previous
+              </GhostButton>
+              <span style={{ fontSize: 12, color: "#475569" }}>Page {numberFmt.format(resultPage)} / {numberFmt.format(totalResultPages)}</span>
+              <GhostButton onClick={() => setResultPage((prev) => Math.min(totalResultPages, prev + 1))} disabled={!canNext} style={{ height: 34 }}>
+                Next
+              </GhostButton>
             </div>
           </div>
         </Card>
