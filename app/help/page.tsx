@@ -84,7 +84,7 @@ export default function HelpIndexPage() {
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
-            <li><strong>Whitespace Analysis</strong>: Identify strategic opportunities and competitive risks through graph-based analysis of AI/ML IP landscapes, with confidence-scored signals highlighting focus convergence, emerging gaps, crowd-out risks, and bridging opportunities.</li>
+            <li><strong>Whitespace Analysis</strong>: Size whitespace with crowding, density, momentum, and CPC context tiles, then optionally layer on assignee signals for competitive storytelling.</li>
           </ul>
         </div>
 
@@ -164,7 +164,7 @@ export default function HelpIndexPage() {
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Whitespace Analysis</h3>
                 <p style={{ marginTop: 8, fontSize: 13, color: "#627D98", marginBottom: 0 }}>
-                  Graph-based strategic intelligence with confidence-scored signals
+                  Overview tiles for whitespace primitives with an optional assignee signal deep dive
                 </p>
               </div>
               <a
@@ -177,18 +177,18 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Whitespace page reveals strategic opportunities and competitive risks by analyzing the semantic relationships between patents and publications. Using graph algorithms, clustering, and signal scoring, the Whitespace page informs on what AI/ML-related areas are especially sparse or dense with IP, as well as where assignee filings are converging. In addition, the Whitespace page indicates potential opportunities for bridging IP that links AI/ML-related areas.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>
+              The Whitespace page quantifies how crowded a scope is, how quickly activity is changing, and where filings cluster by CPC. Four tiles (Crowding, Density, Momentum, Top CPCs) headline the view, backed by a monthly sparkline, CPC bar chart, and a sortable result table with direct patent links.<a href="#footnote1" className="hover:underline" style={{ color: LINK_COLOR }}>*</a>
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-               Example patents and publications driving each signal are provided to give concrete context to the analysis. The table of examples can be exported as a PDF for offline reference and research.             
+              When you need competitor-specific insight, toggle “Group by Assignee” to load the legacy Sigma graph and confidence-scored signals (emerging gaps, bridges, convergence, crowd-out). Otherwise, the overview primitives provide a fast and auditable whitespace readout.
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="⬩" title="Confidence-Scored Signals" text="Four signal types (bridging opportunities, underdeveloped areas, high-density pressures, convergence momentum warnings) with quantitative confidence scores" />
-              <DetailItem icon="⬩" title="Interactive Graph Visualization" text="Explore patent and publication relationships through a Sigma.js-powered network graph with clustering and layout" />
-              <DetailItem icon="⬩" title="Assignee-Level Intelligence" text="Signals are grouped by assignee to reveal competitor strategies and positioning" />
-              <DetailItem icon="⬩" title="Example Patent Filings" text="View concrete examples of patents and publications driving each signal, sorted by recency or relevance" />
-              <DetailItem icon="⬩" title="Advanced Tuning" text="Adjust neighbor count, clustering resolution, and scoring weights to refine analysis" />
+              <DetailItem icon="⬩" title="Crowding & Density Tiles" text="Exact vs. semantic counts, density per month, and percentile labels expose how busy a space is." />
+              <DetailItem icon="⬩" title="Momentum Labeling" text="Monthly trendline, slope, and CAGR classify activity as Up, Flat, or Down." />
+              <DetailItem icon="⬩" title="CPC Distribution" text="Top CPC badges plus a ranked bar chart highlight adjacent technology slices." />
+              <DetailItem icon="⬩" title="In-Page Result Table" text="Patent and publication rows (with CPC badges and external links) anchor qualitative review." />
+              <DetailItem icon="⬩" title="Optional Assignee Signals" text="Enable the toggle to restore the Sigma.js graph and per-assignee convergence, bridge, crowd-out, and emerging gap signals." />
             </div>
 
             <div
@@ -233,12 +233,12 @@ export default function HelpIndexPage() {
 
             <InfoSection
               title="4. Explore Whitespace Opportunities"
-              content="Navigate to the Whitespace page to analyze strategic positioning. Enter focus keywords or CPC codes that define your technology area, then review the confidence-scored signals to identify opportunities and risks."
+              content="Navigate to the Whitespace page to size the space. Enter focus keywords or CPC codes, review the crowding/density/momentum tiles, inspect the timeline and CPC bars, and then dip into the result table for representative filings."
             />
 
             <InfoSection
               title="5. Export and Share Insights"
-              content="Use the CSV and PDF export features on Search & Trends, or export example patents and publications from Whitespace signals as PDF reports for later reference."
+              content="Use CSV/PDF exports from Search & Trends for shareable reports, and copy links from the Whitespace table when you need to circulate specific patents or publications."
             />
           </div>
         </div>

@@ -8,7 +8,7 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 ## Feature Highlights
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). Filters are edited live, but searches only execute when the user clicks the `Apply` button, removing prior debounce-driven inconsistencies across the trend graph and table.
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
-- Whitespace analytics on focus keyword(s) and/or CPC(s) using igraph, UMAP, Leiden clustering, and signal scoring ordered by Assignee, and visually indicated through an interactive Sigma.js graph ([app/whitespace_api.py](app/whitespace_api.py), [app/whitespace_signals.py](app/whitespace_signals.py), [components/SigmaWhitespaceGraph.tsx](components/SigmaWhitespaceGraph.tsx), [app/whitespace/page.tsx](app/whitespace/page.tsx)).
+- Whitespace overview that surfaces crowding, density, momentum, and CPC placement for focus keyword(s) and/or CPC(s), with an optional assignee signal graph for deeper dives ([app/whitespace_api.py](app/whitespace_api.py), [app/whitespace_signals.py](app/whitespace_signals.py), [components/SigmaWhitespaceGraph.tsx](components/SigmaWhitespaceGraph.tsx), [app/whitespace/page.tsx](app/whitespace/page.tsx)).
 - Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
 - Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent and application coverage.
 - Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
@@ -262,13 +262,16 @@ python add_canon_name.py \
 ```
 
 ## Whitespace Analytics
-[app/whitespace_api.py](app/whitespace_api.py) builds user-specific patent and publication graphs by selecting an embedding model (`WS_EMBEDDING_MODEL`), computing cosine KNN neighborhoods, applying Leiden community detection, and scoring whitespace intensity per assignee. Signal detection logic in [app/whitespace_signals.py](app/whitespace_signals.py) evaluates focus convergence, emerging gaps, crowd-out risk, and bridge opportunities based on patent and publication clustering patterns and assignee behavior.
+[app/whitespace_api.py](app/whitespace_api.py) now serves two complementary experiences:
 
-The `/whitespace/graph` endpoint accepts filters (keywords, CPCs, date ranges), neighbor counts, and layout configuration. The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) renders the response with Sigma.js and Force-Atlas2 layout, surfaces per-assignee signal cards, and displays detailed patent and publication examples. User-specific whitespace tables ensure isolated analysis per authenticated user.
+- `/whitespace/overview` composes the primitives that matter most for whitespace research. For any keyword/CPC scope it returns exact and semantic crowding counts, density per month, momentum slope/CAGR with a labeled Up/Flat/Down bucket, top CPC slices, recent filing tallies (6/12/24 months), and the full monthly timeline used across the UI.
+- `/whitespace/graph` (unchanged) builds a user-specific embedding graph when the optional “Group by Assignee” facet is enabled. It selects an embedding model (`WS_EMBEDDING_MODEL`), computes cosine KNN neighborhoods, applies Leiden community detection, and scores whitespace intensity per grouping. Signal detection logic in [app/whitespace_signals.py](app/whitespace_signals.py) still evaluates convergence, emerging gaps, crowd-out, and bridge opportunities.
+
+The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) now defaults to the overview primitives: four tiles (Crowding, Density, Momentum, Top CPCs), a timeline sparkline, CPC bar chart, and a patent results table with semantic toggle. Enabling “Group by Assignee” pulls in the legacy Sigma.js visualization and signal cards for teams that need assignee clustering context.
 
 ## Screenshots
 - Search & Trends UI – ![docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
-- Whitespace Signals UI – ![docs/screenshots/whitespace-ui.png](docs/screenshots/whitespace-ui.png)
+- Whitespace Overview UI – ![docs/screenshots/whitespace-ui.png](docs/screenshots/whitespace-ui.png)
 - Patent Scout API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
 ## Documentation & Legal Pages

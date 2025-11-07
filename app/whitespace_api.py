@@ -1821,7 +1821,7 @@ async def get_whitespace_overview(
         lim = max(1, min(int(semantic_limit), 5000))
         semantic_cte = (
             "semantic_hits AS ("
-            " SELECT DISTINCT inner.pub_id"
+            " SELECT DISTINCT nn.pub_id"
             " FROM ("
             "   SELECT f.pub_id, e.embedding <=> %s" + _VEC_CAST + " AS dist"
             "   FROM filtered f"
@@ -1829,11 +1829,11 @@ async def get_whitespace_overview(
             "   WHERE e.model LIKE %s"
             "   ORDER BY dist ASC"
             "   LIMIT %s"
-            " ) inner"
+            " ) AS nn"
         )
         semantic_params: list[Any] = [query_vec, model_like, lim]
         if tau is not None:
-            semantic_cte += " WHERE inner.dist <= %s"
+            semantic_cte += " WHERE nn.dist <= %s"
             semantic_params.append(tau)
         semantic_cte += ")"
     else:
