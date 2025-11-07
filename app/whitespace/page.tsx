@@ -391,6 +391,45 @@ function formatRangeLabel(points: OverviewPoint[], monthsBack: number): { label:
   return { label: `${monthsBack} months (${startMonth} – ${endMonth})`, months: monthsBack };
 }
 
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function parseTimelineMonth(month?: string): Date | null {
+  if (!month) return null;
+  const [yearStr, monthStr] = month.split("-");
+  const year = Number(yearStr);
+  const monthIndex = Number(monthStr) - 1;
+  if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return null;
+  return new Date(year, monthIndex, 1);
+}
+
+function shiftMonth(date: Date, delta: number): Date {
+  const shifted = new Date(date);
+  shifted.setMonth(shifted.getMonth() + delta);
+  shifted.setDate(1);
+  return shifted;
+}
+
+function sumRecentMonths(points: OverviewPoint[], monthsBack: number): number {
+  if (!points.length || monthsBack <= 0) return 0;
+  const lastDate = parseTimelineMonth(points[points.length - 1].month);
+  if (!lastDate) return 0;
+  const cutoff = shiftMonth(lastDate, -(monthsBack - 1));
+  return points.reduce((total, pt) => {
+    const ptDate = parseTimelineMonth(pt.month);
+    if (ptDate && ptDate >= cutoff) {
+      return total + pt.count;
+    }
+    return total;
+  }, 0);
+}
+
+function formatTimelineMonthLabel(month?: string): string {
+  const parsed = parseTimelineMonth(month);
+  if (!parsed) return "--";
+  const shortYear = parsed.getFullYear().toString().slice(-2);
+  return `${MONTH_LABELS[parsed.getMonth()]} '${shortYear}`;
+}
+
 function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
   if (!points.length) {
     return (
@@ -398,9 +437,11 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
     );
   }
   const width = 520;
-  const height = 180;
+  const chartHeight = 180;
+  const labelSpace = 28;
+  const height = chartHeight + labelSpace;
   const padding = 24;
-  const lineHeight = height - padding * 2;
+  const lineHeight = chartHeight - padding * 2;
   const maxCount = Math.max(...points.map((pt) => pt.count), 1);
   const step = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
 
@@ -417,7 +458,13 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
       const idx = Math.max(0, points.length - months);
       return { months, idx, point: points[idx], coord: coords[idx] };
     })
-    .filter((entry) => entry.point);
+    .filter((entry): entry is { months: number; idx: number; point: OverviewPoint; coord: { x: number; y: number } } => Boolean(entry.point && entry.coord));
+
+  const latestEntry =
+    coords.length > 0 && points.length > 0
+      ? { point: points[points.length - 1], coord: coords[coords.length - 1] }
+      : null;
+  const labelY = chartHeight + labelSpace - 8;
 
   return (
     <svg width={width} height={height} style={{ borderRadius: 16, background: "rgba(248,250,252,0.8)" }}>
@@ -430,16 +477,49 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
         points={coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")}
       />
       {intervalLines.map((entry) => (
-        <line
-          key={`interval-${entry.months}`}
-          x1={entry.coord.x}
-          x2={entry.coord.x}
-          y1={padding}
-          y2={height - padding}
-          stroke="rgba(148,163,184,0.6)"
-          strokeDasharray="6 4"
-        />
+        <g key={`interval-${entry.months}`}>
+          <line
+            x1={entry.coord.x}
+            x2={entry.coord.x}
+            y1={padding}
+            y2={chartHeight - padding}
+            stroke="rgba(148,163,184,0.6)"
+            strokeDasharray="6 4"
+          />
+          <text
+            x={entry.coord.x}
+            y={labelY}
+            textAnchor="middle"
+            fontSize={10}
+            fill="#475569"
+            style={{ fontWeight: 600 }}
+          >
+            {formatTimelineMonthLabel(entry.point.month)}
+          </text>
+        </g>
       ))}
+      {latestEntry && (
+        <g>
+          <line
+            x1={latestEntry.coord.x}
+            x2={latestEntry.coord.x}
+            y1={padding}
+            y2={chartHeight - padding}
+            stroke="#1d4ed8"
+            strokeDasharray="4 3"
+          />
+          <text
+            x={latestEntry.coord.x + 4}
+            y={labelY - 10}
+            textAnchor="start"
+            fontSize={11}
+            fill="#1d4ed8"
+            style={{ fontWeight: 700 }}
+          >
+            {formatTimelineMonthLabel(latestEntry.point.month)}
+          </text>
+        </g>
+      )}
       {coords.map((coord, idx) => (
         <circle key={points[idx].month} cx={coord.x} cy={coord.y} r={3.5} fill="#1d4ed8" />
       ))}
@@ -728,6 +808,18 @@ export default function WhitespacePage() {
   const topCpcTile = useMemo(() => {
     if (!overview) return [];
     return overview.top_cpcs.slice(0, 5);
+  }, [overview]);
+
+  const recencyValues = useMemo(() => {
+    if (!overview) {
+      return { 6: 0, 12: 0, 18: 0, 24: 0 };
+    }
+    return {
+      6: overview.recency.m6,
+      12: overview.recency.m12,
+      18: sumRecentMonths(overview.timeline, 18),
+      24: overview.recency.m24,
+    };
   }, [overview]);
 
   const sortedResults = useMemo(() => {
@@ -1090,16 +1182,16 @@ export default function WhitespacePage() {
                   <TimelineSparkline points={overview.timeline} />
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#475569", display: "grid", gap: 4 }}>
                     <li>
-                      {formatRangeLabel(overview.timeline, 6).label}: {numberFmt.format(overview.recency.m6)}
+                      {formatRangeLabel(overview.timeline, 6).label}: {numberFmt.format(recencyValues[6])}
                     </li>
                     <li>
-                      {formatRangeLabel(overview.timeline, 12).label}: {numberFmt.format(overview.recency.m12)}
+                      {formatRangeLabel(overview.timeline, 12).label}: {numberFmt.format(recencyValues[12])}
                     </li>
                     <li>
-                      {formatRangeLabel(overview.timeline, 18).label}: {numberFmt.format(overview.recency.m24 + overview.recency.m12 - overview.recency.m6)}
+                      {formatRangeLabel(overview.timeline, 18).label}: {numberFmt.format(recencyValues[18])}
                     </li>
                     <li>
-                      {formatRangeLabel(overview.timeline, 24).label}: {numberFmt.format(overview.recency.m24)}
+                      {formatRangeLabel(overview.timeline, 24).label}: {numberFmt.format(recencyValues[24])}
                     </li>
                   </ul>
                 </div>
