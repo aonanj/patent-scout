@@ -25,6 +25,8 @@ const SigmaWhitespaceGraph = dynamic(
 type OverviewPoint = {
   month: string;
   count: number;
+  top_assignee?: string | null;
+  top_assignee_count?: number | null;
 };
 
 type OverviewResponse = {
@@ -430,7 +432,14 @@ function formatTimelineMonthLabel(month?: string): string {
   return `${MONTH_LABELS[parsed.getMonth()]} '${shortYear}`;
 }
 
+function formatTimelineFullLabel(month?: string): string {
+  const parsed = parseTimelineMonth(month);
+  if (!parsed) return "--";
+  return `${MONTH_LABELS[parsed.getMonth()]} ${parsed.getFullYear()}`;
+}
+
 function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   if (!points.length) {
     return (
       <div style={{ fontSize: 12, color: "#475569" }}>No results in selected window.</div>
@@ -451,6 +460,9 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
     const y = padding + lineHeight - normalized * lineHeight;
     return { x, y };
   });
+  const activeIdx = hoveredIdx != null && hoveredIdx < coords.length ? hoveredIdx : null;
+  const activePoint = activeIdx != null ? points[activeIdx] : null;
+  const activeCoord = activeIdx != null ? coords[activeIdx] : null;
 
   const intervalMonths = [6, 12, 18, 24];
   const intervalLines = intervalMonths
@@ -466,64 +478,131 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
       : null;
   const labelY = chartHeight + labelSpace - 8;
 
+  const tooltipWidth = 220;
+  const tooltipHeight = 88;
+  const tooltipLeft = activeCoord
+    ? Math.min(Math.max(activeCoord.x - tooltipWidth / 2, 0), width - tooltipWidth)
+    : 0;
+  const tooltipTop = activeCoord ? Math.max(8, activeCoord.y - tooltipHeight - 10) : 0;
+  const filingsLabel =
+    activePoint?.count != null
+      ? `${numberFmt.format(activePoint.count)} ${activePoint.count === 1 ? "filing" : "filings"}`
+      : null;
+  const topAssigneeLabel = activePoint?.top_assignee || "Unknown";
+
   return (
-    <svg width={width} height={height} style={{ borderRadius: 16, background: "rgba(248,250,252,0.8)" }}>
-      <polyline
-        fill="none"
-        stroke="#3a506b"
-        strokeWidth={2.5}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        points={coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")}
-      />
-      {intervalLines.map((entry) => (
-        <g key={`interval-${entry.months}`}>
-          <line
-            x1={entry.coord.x}
-            x2={entry.coord.x}
-            y1={padding}
-            y2={chartHeight - padding}
-            stroke="rgba(148,163,184,0.6)"
-            strokeDasharray="6 4"
-          />
-          <text
-            x={entry.coord.x}
-            y={labelY}
-            textAnchor="middle"
-            fontSize={10}
-            fill="#475569"
-            style={{ fontWeight: 600 }}
-          >
-            {formatTimelineMonthLabel(entry.point.month)}
-          </text>
-        </g>
-      ))}
-      {latestEntry && (
-        <g>
-          <line
-            x1={latestEntry.coord.x}
-            x2={latestEntry.coord.x}
-            y1={padding}
-            y2={chartHeight - padding}
-            stroke="#3A506B"
-            strokeDasharray="4 3"
-          />
-          <text
-            x={latestEntry.coord.x}
-            y={labelY}
-            textAnchor="middle"
-            fontSize={10}
-            fill="#475569"
-            style={{ fontWeight: 600 }}
-          >
-            {formatTimelineMonthLabel(latestEntry.point.month)}
-          </text>
-        </g>
+    <div style={{ position: "relative", width, height }}>
+      <svg
+        width={width}
+        height={height}
+        style={{ borderRadius: 16, background: "rgba(248,250,252,0.8)", display: "block" }}
+        onMouseLeave={() => setHoveredIdx(null)}
+      >
+        <polyline
+          fill="none"
+          stroke="#3a506b"
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          points={coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")}
+        />
+        {intervalLines.map((entry) => (
+          <g key={`interval-${entry.months}`}>
+            <line
+              x1={entry.coord.x}
+              x2={entry.coord.x}
+              y1={padding}
+              y2={chartHeight - padding}
+              stroke="rgba(148,163,184,0.6)"
+              strokeDasharray="6 4"
+            />
+            <text
+              x={entry.coord.x}
+              y={labelY}
+              textAnchor="middle"
+              fontSize={10}
+              fill="#475569"
+              style={{ fontWeight: 600 }}
+            >
+              {formatTimelineMonthLabel(entry.point.month)}
+            </text>
+          </g>
+        ))}
+        {latestEntry && (
+          <g>
+            <line
+              x1={latestEntry.coord.x}
+              x2={latestEntry.coord.x}
+              y1={padding}
+              y2={chartHeight - padding}
+              stroke="rgba(148,163,184,0.6)"
+              strokeDasharray="6 4"
+            />
+            <text
+              x={latestEntry.coord.x}
+              y={labelY}
+              textAnchor="middle"
+              fontSize={10}
+              fill="#475569"
+              style={{ fontWeight: 600 }}
+            >
+              {formatTimelineMonthLabel(latestEntry.point.month)}
+            </text>
+          </g>
+        )}
+        {coords.map((coord, idx) => {
+          const isActive = idx === activeIdx;
+          const ariaLabelParts = [
+            formatTimelineFullLabel(points[idx].month),
+            `${numberFmt.format(points[idx].count)} ${points[idx].count === 1 ? "filing" : "filings"}`,
+          ];
+          if (points[idx].top_assignee) {
+            ariaLabelParts.push(`top assignee ${points[idx].top_assignee}`);
+          }
+          return (
+            <circle
+              key={points[idx].month}
+              cx={coord.x}
+              cy={coord.y}
+              r={isActive ? 5 : 3.5}
+              fill={isActive ? "#1F3E5D" : "#3A506B"}
+              stroke={isActive ? "#ffffff" : "none"}
+              strokeWidth={isActive ? 1.25 : 0}
+              tabIndex={0}
+              role="img"
+              aria-label={ariaLabelParts.join(", ")}
+              onMouseEnter={() => setHoveredIdx(idx)}
+              onFocus={() => setHoveredIdx(idx)}
+              onMouseLeave={() => setHoveredIdx((current) => (current === idx ? null : current))}
+              onBlur={() => setHoveredIdx((current) => (current === idx ? null : current))}
+              style={{ cursor: "pointer" }}
+            />
+          );
+        })}
+      </svg>
+      {activePoint && activeCoord && (
+        <div
+          style={{
+            position: "absolute",
+            left: tooltipLeft,
+            top: tooltipTop,
+            width: tooltipWidth,
+            background: "rgba(15,23,42,0.92)",
+            color: "#ffffff",
+            padding: "12px 16px",
+            borderRadius: 14,
+            boxShadow: "0 12px 30px rgba(15,23,42,0.35)",
+            fontSize: 12,
+            lineHeight: 1.5,
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 13 }}>{formatTimelineFullLabel(activePoint.month)}</div>
+          {filingsLabel && <div>{filingsLabel}</div>}
+          <div style={{ color: "#D9E2EC" }}>Top assignee: {topAssigneeLabel}</div>
+        </div>
       )}
-      {coords.map((coord, idx) => (
-        <circle key={points[idx].month} cx={coord.x} cy={coord.y} r={3.5} fill="#3A506B" />
-      ))}
-    </svg>
+    </div>
   );
 }
 
@@ -1281,7 +1360,6 @@ export default function WhitespacePage() {
                         <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#3A506B", textDecoration: "none" }}>
                           {row.pub_id}
                         </a>
-                        {row.kind_code ? ` (${row.kind_code})` : ""}
                       </td>
                       <td style={tdStyle}>{row.assignee_name ? row.assignee_name : "Unknown"}</td>
                       <td style={tdStyle}>{formatPubDate(row.pub_date)}</td>

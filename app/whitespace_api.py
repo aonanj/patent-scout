@@ -788,6 +788,8 @@ class DensityMetrics(BaseModel):
 class MomentumPoint(BaseModel):
     month: str
     count: int
+    top_assignee: str | None = None
+    top_assignee_count: int | None = None
 
 
 class MomentumMetrics(BaseModel):
@@ -1887,20 +1889,70 @@ async def get_whitespace_overview(
         await cur.execute(create_sql, params_tuple)
 
     timeline_sql = """
+        WITH month_base AS (
+            SELECT
+                date_trunc('month', to_date(p.pub_date::text, 'YYYYMMDD')) AS month_date,
+                to_char(date_trunc('month', to_date(p.pub_date::text, 'YYYYMMDD')), 'YYYY-MM') AS month_label,
+                COALESCE(can.canonical_assignee_name, NULLIF(p.assignee_name, ''), 'Unknown') AS canonical_assignee_name
+            FROM tmp_ws_scope s
+            JOIN patent p ON p.pub_id = s.pub_id
+            LEFT JOIN canonical_assignee_name can ON can.id = p.canonical_assignee_name_id
+        ),
+        monthly_totals AS (
+            SELECT
+                month_date,
+                month_label AS month,
+                COUNT(*)::int AS count
+            FROM month_base
+            GROUP BY month_date, month
+        ),
+        monthly_assignee_counts AS (
+            SELECT
+                month_date,
+                canonical_assignee_name,
+                COUNT(*)::int AS assignee_count
+            FROM month_base
+            GROUP BY month_date, canonical_assignee_name
+        ),
+        monthly_top_assignee AS (
+            SELECT
+                month_date,
+                canonical_assignee_name,
+                assignee_count
+            FROM (
+                SELECT
+                    month_date,
+                    canonical_assignee_name,
+                    assignee_count,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY month_date
+                        ORDER BY assignee_count DESC, canonical_assignee_name ASC
+                    ) AS rank
+                FROM monthly_assignee_counts
+            ) ranked
+            WHERE rank = 1
+        )
         SELECT
-            to_char(date_trunc('month', to_date(p.pub_date::text, 'YYYYMMDD')), 'YYYY-MM') AS month,
-            COUNT(*)::int AS count
-        FROM tmp_ws_scope s
-        JOIN patent p ON p.pub_id = s.pub_id
-        GROUP BY month
-        ORDER BY month
+            totals.month,
+            totals.count,
+            top_assignee.canonical_assignee_name AS top_assignee,
+            top_assignee.assignee_count AS top_assignee_count
+        FROM monthly_totals totals
+        LEFT JOIN monthly_top_assignee top_assignee
+            ON top_assignee.month_date = totals.month_date
+        ORDER BY totals.month_date
     """
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(timeline_sql)
         timeline_rows = await cur.fetchall()
 
     timeline_points = [
-        MomentumPoint(month=row["month"], count=int(row["count"]))
+        MomentumPoint(
+            month=row["month"],
+            count=int(row["count"]),
+            top_assignee=row.get("top_assignee"),
+            top_assignee_count=int(row["top_assignee_count"]) if row.get("top_assignee_count") is not None else None,
+        )
         for row in timeline_rows
         if row["month"] is not None
     ]

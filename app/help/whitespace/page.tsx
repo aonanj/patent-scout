@@ -73,7 +73,10 @@ export default function WhitespaceHelpPage() {
             </a>
           </div>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            The Whitespace page now surfaces the primitives that determine whether an AI/ML concept is crowded, accelerating, or still open. Use this guide to interpret the overview tiles, timeline, CPC distribution, and optional assignee signals.
+            The Whitespace Analysis page is a platform for overview and insights directed to input search criteria. Analysis information displayed on this page can be searched and sorted in multiple ways, providing a dynamic and flexible interface ideal for AI/ML prior art searches, competitive landscape monitoring, underexplored technology areas conducive to R&D innovation, and more.
+          </p>
+          <p style={{ marginTop: 6, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
+            Analysis and insights available on this page are generated based on user-defined focus keywords, CPC filters, and date ranges. The overview section provides a high-level summary of key metrics, while the tables and charts allow for in-depth exploration of patent filings relevant to the specified criteria. For example, key metrics include subject matter saturation, patent and publication activity rates and momentum, and CPC trends for specific search criteria and semantically similar concepts.
           </p>
         </div>
 
@@ -84,12 +87,12 @@ export default function WhitespaceHelpPage() {
             For any combination of focus keywords, CPC filters, and date range the overview performs the following steps:
           </p>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>Builds a focus cohort using PostgreSQL full-text search and, when enabled, semantic nearest neighbors.</li>
-            <li>Counts distinct publications in that cohort (exact, semantic, and combined) and normalizes volume per month.</li>
-            <li>Buckets filings by month via the trend API to compute slope, CAGR, and the Up / Flat / Down momentum label.</li>
+            <li>Builds a target search set using full-text search over Patent Scout's relational database, including exact matches and, when enabled, semantic nearest neighbors.</li>
+            <li>Counts distinct patents and publications in the target search set (exact, semantic, and combined) and normalizes volume per month.</li>
+            <li>Tracks monthly patent grants and publications to measure growth trends, such as slope and compound annual growth rate (CAGR), and classifies momentum as rising, stable, or declining.</li>
             <li>Aggregates CPC classifications to show the top slices and a broader breakdown for adjacent technology clusters.</li>
-            <li>Summarizes recency (6/12/24 month totals) and, when available, tags crowding with a percentile vs. historical queries.</li>
-            <li>Optionally (when “Group by Assignee” is enabled) builds the legacy embedding graph and signal cards per assignee.</li>
+            <li>Summarizes recency (6/12/18/24 month totals) and, when available, tags saturation with a percentile vs. historical queries.</li>
+            <li>With “Group by Assignee” enabled, builds an embedding graph and signal cards per assignee.</li>
           </ol>
         </div>
 
@@ -102,16 +105,16 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <InputDescription
               label="Focus Keywords"
-              description="Use comma-separated phrases that describe the technology you care about. The overview treats them as a Postgres `tsquery` over title, abstract, and claims."
+              description="Use comma-separated words and/or phrases that describe the AI/ML subject matter of interest. The analysis reflects keyword, key phrase, and semantic search matches (when enabled) found in the title, abstract, and claims of patents and publications."
               example="Example: foundation models, multi-modal reasoning, retrieval augmented generation"
               tips={[
-                "Broader phrases enlarge the cohort; combine with CPC filters to focus results.",
-                "Keywords drive both exact counts and the optional semantic neighbor embedding."
+                "Broader keywords and phrases produce a greater result set; combine with CPC filters to narrow the result set to a specific technology area.",
+                "Focus keywords and phrases are used to obtain both exact matches and semantic nearest neighbors (when enabled)."
               ]}
             />
             <InputDescription
               label="CPC Filter"
-              description="Filter the cohort to filings tagged with specific CPC prefixes. Supports partial codes such as G06N or full designations like G06F17/30."
+              description="Concentrate the target search set in a specific technology area with CPC classification codes. Supports partial codes such as G06N and full designations like G06F17/30."
               example="Example: G06N20/00, A61B5, G06V, G06K9/00"
               tips={[
                 "Multiple CPC filters are OR’ed together; combine with keywords for precise intersections.",
@@ -120,29 +123,29 @@ export default function WhitespaceHelpPage() {
             />
             <InputDescription
               label="Date Range"
-              description="Restrict filings by publication date. Empty fields fall back to the full corpus. When only an end date is provided the start defaults to 23 months earlier."
+              description="Restrict the results set to a specific time range corresponding to patent grant date or publication date. Empty fields fall back to the full data set in Patent Scout's database. When only an end date is provided the start defaults to 23 months earlier."
               example="Example: From 2023-07-01, To 2025-06-30"
               tips={[
-                "Shorter ranges highlight current activity; longer ranges provide more stable density and percentile signals.",
+                "Shorter ranges can highlight current activity (e.g., competitors' R&D and investment areas); longer ranges provide more stable density and percentile signals.",
                 "Momentum uses the monthly series inside the selected window."
               ]}
             />
             <InputDescription
               label="Show Semantic Neighbors (toggle)"
-              description="When enabled, the overview retrieves the nearest neighbors from the embedding index and merges them with exact keyword hits."
+              description="When enabled, whitespace analysis matches semantic nearest neighbors (based on embedding index) and merges those with exact keyword and phrase matches."
               example="Default: Enabled"
               tips={[
-                "Disable if you want to analyze only literal keyword matches.",
-                "Semantic neighbors obey the same date and CPC filters after the nearest neighbor search."
+                "Disable to receive only literal keyword matches (useful for prior art searches).",
+                "Semantic nearest neighbors follow the same date and CPC filters after results are returned from semantic search."
               ]}
             />
             <InputDescription
               label="Group by Assignee (toggle)"
-              description="Loads the legacy graph, assignee signal cards, and Sigma visualization beneath the overview. Off by default."
+              description="Loads more complex, weighted whitespace signals calculated per assignee. Includes context graph, assignee signal cards, and Sigma visualization beneath the overview. Off by default."
               example="Default: Disabled"
               tips={[
-                "Enable only when you need convergence / crowd-out style signals tied to specific assignees.",
-                "Toggling on after a run reuses the latest filters—no need to re-run the overview."
+                "Enable to view focus convergence / subject matter oversaturation signals tied to specific assignees.",
+                "Toggling on after a run reuses the most recent search parameters (rerunning the search is unnecessary)."
               ]}
             />
           </div>
@@ -153,20 +156,20 @@ export default function WhitespaceHelpPage() {
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Interpreting the Overview Tiles</h2>
           <div style={{ display: "grid", gap: 16 }}>
             <MetricTile
-              title="Crowding"
+              title="Saturation"
               summary="Exact, semantic, and total distinct publication counts inside the window."
               bullets={[
                 "Review exact vs. semantic to see how literal the coverage is.",
-                "Density per month = total count divided by the number of months (window defaults to 24).",
+                "Activate rate (e.g., new patent grants and publications per month) is a function of total count divided by the number of months (window defaults to 24).",
                 "Percentile (when present) maps into Low / Medium / High / Very High guidance."
               ]}
             />
             <MetricTile
-              title="Density"
+              title="Activity Rate"
               summary="Average filings per month plus the observed min/max band."
               bullets={[
-                "Use the band to understand volatility inside the window.",
-                "High density with a narrow band indicates sustained filing cadence."
+                "Together with the timeline (described infra), patent grant/publication activity rates can expose volatility inside a date range.",
+                "High activity rate coupled with a narrow band indicates steady and consistent emphasis on obtaining IP protection for AI/ML innovations."
               ]}
             />
             <MetricTile
@@ -174,7 +177,7 @@ export default function WhitespaceHelpPage() {
               summary="Slope of the monthly time series and CAGR over the window."
               bullets={[
                 "Momentum bucket: Up (> +0.05), Down (< -0.05), otherwise Flat.",
-                "Slope is normalized by average volume; use CAGR to contextualize growth rate."
+                "Slope is normalized by average volume; CAGR can be used to contextualize growth rate."
               ]}
             />
             <MetricTile
@@ -182,7 +185,7 @@ export default function WhitespaceHelpPage() {
               summary="Highest volume CPC codes among matched filings."
               bullets={[
                 "Shows the leading technology slices at a glance.",
-                "Use the detailed CPC bar chart below for depth beyond the top five."
+                "Detailed CPC bar chart includes links to comprehensive and specific definitions for each CPC code, including those outside the top five."
               ]}
             />
           </div>
@@ -194,15 +197,15 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <LayoutSection
               title="Timeline sparkline"
-              description="Plots monthly publication counts across the selected window. Hover in the UI to inspect the exact month totals. Sudden inflections foreshadow changes in the momentum bucket."
+              description="Plots monthly publication counts across the selected window. Hover in the UI to inspect the exact month totals. Sharp inflections may indicate changes in momentum."
             />
             <LayoutSection
-              title="CPC density bars"
-              description="Ranks CPC codes by filing volume. Concentrated bars indicate a narrow technology footprint; a long tail suggests broader exploration. Pair with the Top CPCs tile to see absolute counts."
+              title="CPC trend chart"
+              description="Ranks CPC codes by patent and publication volume. A shorter bar generally corresponds to a less explored technology area, whereas a longer bar may suggest a more developed or saturated technology area."
             />
             <LayoutSection
               title="Recency badges"
-              description="Summaries for the last 6, 12, and 24 months. Use these to compare near-term filing velocity against the historical average."
+              description="Summaries for the last 6, 12, 18, and 24 months. This information can be read with near-term patent and publication velocity against historical averages."
             />
           </div>
         </div>
@@ -210,15 +213,19 @@ export default function WhitespaceHelpPage() {
         {/* Results Table */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Patent & Publication Table</h2>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 6 }}>
+            Result set table lists up to 1000 patents and publications per target search set, sortable on recency, relevance, or assignee name. Click any patent/publication number to open the document in a new tab. 
+          </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-            The table lists up to 100 filings per run (ordered by recency). Click any publication number to open the Google Patents record in a new tab.
+            Result set table can be exported as a PDF (up to 1000 patents and publications) for later reference and review. The exported PDF includes the overview and analysis displayed above on the page. 
           </p>
           <div style={{ display: "grid", gap: 10 }}>
-            <TableColumn column="Title" description="Official title; if missing we display the publication number." />
-            <TableColumn column="Publication" description="USPTO publication identifier with kind code. Links out to Google Patents." />
+            <TableColumn column="Title" description="Patent or publication title." />
+            <TableColumn column="Abstract" description="The abstract of the patent or publication, truncated to 200 characters." />
+            <TableColumn column="Patent/Pub No." description="USPTO patent or publication identifier with kind code. Links to Google Patents." />
             <TableColumn column="Assignee" description="Canonicalized assignee name when available; 'Unknown' if not present." />
-            <TableColumn column="Date" description="Publication date formatted as YYYY-MM-DD." />
-            <TableColumn column="CPC Badges" description="Up to four CPC codes (section/class/subclass/group) attached to the filing." />
+            <TableColumn column="Grant/Pub Date" description="Patent grant or publication date, formatted as YYYY-MM-DD." />
+            <TableColumn column="CPC" description="Top CPC codes (section/class/subclass/group) used for classifying the patent or publication (up to four)." />
           </div>
         </div>
 
@@ -226,28 +233,28 @@ export default function WhitespaceHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Optional Assignee Signals</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Switching on “Group by Assignee” augments the overview with the legacy clustering view. It fetches embeddings, builds a cosine KNN graph, and evaluates four signals per grouping:
+            Switching on “Group by Assignee” augments the whitespace analysis with a per-assignee clustering view. More complex, weighted signals are calculated from semantic embeddings, which are used to build a cosine KNN graph and evaluate four signals per grouping:
           </p>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Emerging Gap</strong>: Opportunity where an assignee has coverage but neighboring clusters stay sparse.</li>
-            <li><strong>Bridge</strong>: Cross-cluster connectors with rising momentum on both sides.</li>
-            <li><strong>Convergence</strong>: Risk indicator showing an assignee filing closer to your focus scope over time.</li>
-            <li><strong>Crowd-out</strong>: Risk indicator where local density around your scope is accelerating sharply.</li>
+            <li><strong>Potential Gap</strong>: Opportunity where an assignee may have some IP protection, but neighboring clusters are underexplored.</li>
+            <li><strong>Bridging Opportunity</strong>: Cross-cluster connectors with lower momentum on both sides.</li>
+            <li><strong>Focus Convergence</strong>: Risk indicator showing an assignee with IP protection trending very close to the target search set.</li>
+            <li><strong>Crowd-out</strong>: Risk indicator where local density and momentum around the target search set is sharply rising.</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
-            Use this toggle when you need narrative around specific competitors. For quick whitespace sizing, the overview tiles are usually sufficient.
+            Toggle on "Group by Assignee" to generate specific analysis and insights scoped to specific entities (e.g., competitors, investors in the AI/ML space, etc.).
           </p>
         </div>
 
         {/* Workflow */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Suggested Workflow</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Example Workflow</h2>
           <ol style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>Start with focus keywords and a 24-month window to gauge baseline crowding and momentum.</li>
-            <li>Layer CPC filters to narrow into adjacent clusters and watch how the CPC bars shift.</li>
-            <li>Inspect the timeline sparkline to confirm whether momentum aligns with the bucket label.</li>
-            <li>Review filings in the table and spot-check CPC coverage before diving into full-text review.</li>
-            <li>Enable “Group by Assignee” if you need competitive storytelling or candidate filings for diligence.</li>
+            <li>Start with focus keywords and phrases over a 24-month window to gauge baseline saturation and momentum.</li>
+            <li>Narrow the target search set with CPC filters to concentrate on specific technology areas of interest.</li>
+            <li>Timeline graph can be used to confirm that momentum is accurately labeled (e.g., rising, declining, etc.).</li>
+            <li>Result set table provides a quick and comprehensive reference list of patents and publications germane to the target search set.</li>
+            <li>(Optional) Enabling "Group by Assignee" can provide a more granular view of R&D activity and investment for specific entities (e.g., competitors, investors in the AI/ML space, etc.).</li>
           </ol>
         </div>
 
@@ -260,12 +267,12 @@ export default function WhitespaceHelpPage() {
               tip="Shift the end date to align with product launches or regulatory moments. Comparing periods highlights whether filings are accelerating into that milestone."
             />
             <BestPractice
-              title="Compare exact vs. semantic crowding"
-              tip="Large gaps between exact and semantic counts mean the language around your concept varies. Consider broadening keywords or tightening the semantic toggle."
+              title="Compare exact vs. semantic saturation"
+              tip="A smaller gap between exact-match results and semantic-search results indicates the target search set is well-aligned with conventional terminology used across the domain. Large gaps between exact-match results and semantic-search results indicate that the relevant concepts are often expressed in different wording than the target search set. That is, the domain uses diverse terminology or synonyms not captured by the literal query. Expanding upon keywords and phrases (e.g., using synonyms, abbreviations, etc.) and/or adding CPC filters can help refine the target search set."
             />
             <BestPractice
               title="Monitor CPC drift"
-              tip="When the CPC bar chart shifts after minor keyword tweaks, the concept spans multiple technology families—plan follow-up analyses per cluster."
+              tip="When small keyword changes cause noticeable shifts in the CPC distribution, the overall concept likely spans multiple technology areas. Depending on the goal, this may be a signal to explore the concept in more granular clusters."
             />
           </div>
         </div>
@@ -276,15 +283,15 @@ export default function WhitespaceHelpPage() {
           <div style={{ display: "grid", gap: 16 }}>
             <Troubleshoot
               issue="No results returned"
-              solution="Verify at least one keyword or CPC is provided. Try widening the date range or disabling semantic neighbors if the query is very niche."
+              solution="Verify at least one keyword or CPC is provided. Try expanding the date range or disabling semantic neighbors if the query is very niche."
             />
             <Troubleshoot
-              issue="Momentum stays Flat"
-              solution="Check the timeline sparkline for month-to-month variability. Extending the window or adding semantic neighbors can reveal more signal."
+              issue="Momentum stays flat"
+              solution="Check the timeline sparkline for month-to-month variability. Extending the window or adding semantic neighbors can expose greater insights."
             />
             <Troubleshoot
               issue="Assignee graph looks empty"
-              solution="Ensure “Group by Assignee” is toggled on and the latest run completed. Some narrow scopes simply lack enough filings per assignee to form signals."
+              solution="Ensure “Group by Assignee” is toggled on and the latest run completed. Some narrow scopes may lack a sufficient number of patents and publications per assignee to expose a signal with that satisfies a minimum level of confidence."
             />
           </div>
         </div>
@@ -393,4 +400,3 @@ const footerStyle: React.CSSProperties = {
   fontWeight: 500,
   gap: 4,
 };
-
