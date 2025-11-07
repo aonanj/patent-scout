@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import type { ChangeEvent } from "react";
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -60,6 +61,7 @@ type PatentHit = {
   pub_date?: number | string | null;
   kind_code?: string | null;
   cpc?: Array<Record<string, string>> | null;
+  score?: number | null;
 };
 
 type SearchResponse = {
@@ -97,6 +99,8 @@ type RunQuery = {
   dateTo: string;
   semantic: boolean;
 };
+
+type ResultSort = "relevance_desc" | "pub_date_desc" | "assignee_asc";
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -287,6 +291,19 @@ const percentFmt = new Intl.NumberFormat("en-US", {
 const RESULTS_PER_PAGE = 25;
 const SEARCH_BATCH_SIZE = 250;
 const PDF_EXPORT_LIMIT = 1000;
+const ABSTRACT_PREVIEW_LIMIT = 200;
+
+const RESULT_SORT_LABELS: Record<ResultSort, string> = {
+  relevance_desc: "Most Relevant",
+  pub_date_desc: "Newest First",
+  assignee_asc: "Assignee (A→Z)",
+};
+
+const RESULT_SORT_OPTIONS: Array<{ value: ResultSort; label: string }> = [
+  { value: "relevance_desc", label: RESULT_SORT_LABELS.relevance_desc },
+  { value: "pub_date_desc", label: RESULT_SORT_LABELS.pub_date_desc },
+  { value: "assignee_asc", label: RESULT_SORT_LABELS.assignee_asc },
+];
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
   focus_shift: "Convergence",
@@ -310,6 +327,14 @@ function formatPubDate(value: unknown): string {
     return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
   }
   return raw;
+}
+
+function pubDateValue(value: PatentHit["pub_date"]): number | null {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && /^\d+$/.test(value.trim())) {
+    return parseInt(value.trim(), 10);
+  }
+  return null;
 }
 
 function formatPatentId(pubId: string): string {
@@ -347,6 +372,14 @@ function CPCList(cpc: PatentHit["cpc"]): string {
   });
   if (codes.size === 0) return "--";
   return Array.from(codes).slice(0, 4).join(", ");
+}
+
+function abstractPreviewText(value?: string | null, limit = ABSTRACT_PREVIEW_LIMIT): string {
+  if (!value) return "—";
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return "—";
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit).trimEnd()}…`;
 }
 
 function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
@@ -471,6 +504,7 @@ export default function WhitespacePage() {
   const [results, setResults] = useState<PatentHit[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [resultPage, setResultPage] = useState(1);
+  const [sortBy, setSortBy] = useState<ResultSort>("relevance_desc");
   const [assigneeData, setAssigneeData] = useState<WhitespaceGraphResponse | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -590,7 +624,7 @@ export default function WhitespacePage() {
           limit: SEARCH_BATCH_SIZE,
           offset,
           filters: baseFilters,
-          sort_by: "pub_date_desc" as const,
+          sort_by: "relevance_desc" as const,
         };
         const res = await fetch("/api/search", {
           method: "POST",
@@ -688,19 +722,69 @@ export default function WhitespacePage() {
     return overview.top_cpcs.slice(0, 5);
   }, [overview]);
 
+  const sortedResults = useMemo(() => {
+    if (!results.length) return results;
+    if (sortBy === "relevance_desc") {
+      return results;
+    }
+    const copy = [...results];
+    if (sortBy === "pub_date_desc") {
+      copy.sort((a, b) => {
+        const aDate = pubDateValue(a.pub_date);
+        const bDate = pubDateValue(b.pub_date);
+        if (aDate === null && bDate === null) {
+          return (a.pub_id || "").localeCompare(b.pub_id || "");
+        }
+        if (aDate === null) return 1;
+        if (bDate === null) return -1;
+        if (aDate === bDate) {
+          return (a.pub_id || "").localeCompare(b.pub_id || "");
+        }
+        return bDate - aDate;
+      });
+      return copy;
+    }
+    copy.sort((a, b) => {
+      const aName = (a.assignee_name || "").trim();
+      const bName = (b.assignee_name || "").trim();
+      const aEmpty = aName === "";
+      const bEmpty = bName === "";
+      if (aEmpty && bEmpty) {
+        return (a.pub_id || "").localeCompare(b.pub_id || "");
+      }
+      if (aEmpty) return 1;
+      if (bEmpty) return -1;
+      const cmp = aName.localeCompare(bName, undefined, { sensitivity: "base" });
+      if (cmp !== 0) return cmp;
+      const bDate = pubDateValue(b.pub_date);
+      const aDate = pubDateValue(a.pub_date);
+      if (aDate !== bDate) {
+        if (aDate === null) return 1;
+        if (bDate === null) return -1;
+        return bDate - aDate;
+      }
+      return (a.pub_id || "").localeCompare(b.pub_id || "");
+    });
+    return copy;
+  }, [results, sortBy]);
+
   const paginatedResults = useMemo(() => {
     const start = (resultPage - 1) * RESULTS_PER_PAGE;
-    return results.slice(start, start + RESULTS_PER_PAGE);
-  }, [results, resultPage]);
+    return sortedResults.slice(start, start + RESULTS_PER_PAGE);
+  }, [sortedResults, resultPage]);
 
   const totalResultPages = useMemo(() => {
-    if (!results.length) return 1;
-    return Math.max(1, Math.ceil(results.length / RESULTS_PER_PAGE));
-  }, [results]);
+    if (!sortedResults.length) return 1;
+    return Math.max(1, Math.ceil(sortedResults.length / RESULTS_PER_PAGE));
+  }, [sortedResults]);
+
+  useEffect(() => {
+    setResultPage((prev) => Math.min(prev, totalResultPages));
+  }, [totalResultPages]);
 
   const startIndex = (resultPage - 1) * RESULTS_PER_PAGE;
-  const showingRangeLabel = results.length
-    ? `${numberFmt.format(startIndex + 1)}-${numberFmt.format(Math.min(results.length, startIndex + RESULTS_PER_PAGE))} of ${numberFmt.format(results.length)}`
+  const showingRangeLabel = sortedResults.length
+    ? `${numberFmt.format(startIndex + 1)}-${numberFmt.format(Math.min(sortedResults.length, startIndex + RESULTS_PER_PAGE))} of ${numberFmt.format(sortedResults.length)}`
     : "";
   const canPrev = resultPage > 1;
   const canNext = resultPage < totalResultPages;
@@ -716,13 +800,14 @@ export default function WhitespacePage() {
     setResults([]);
     setTotalResults(0);
     setResultPage(1);
+    setSortBy("relevance_desc");
     setAssigneeData(null);
     setError(null);
     setLastQuery(null);
   }, []);
 
   const exportResultsPdf = useCallback(() => {
-    if (!overview || results.length === 0) {
+    if (!overview || sortedResults.length === 0) {
       setError("Run search before exporting.");
       return;
     }
@@ -802,10 +887,14 @@ export default function WhitespacePage() {
       ensureSpace();
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
-      const exportRows = results.slice(0, PDF_EXPORT_LIMIT);
-      doc.text(`Results (${numberFmt.format(exportRows.length)} of ${numberFmt.format(results.length)})`, marginX, y);
-      y += 20;
-
+      const exportRows = sortedResults.slice(0, PDF_EXPORT_LIMIT);
+      doc.text(`Results (${numberFmt.format(exportRows.length)} of ${numberFmt.format(sortedResults.length)})`, marginX, y);
+      y += 16;
+      ensureSpace();
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(11);
+      doc.text(`Sort: ${RESULT_SORT_LABELS[sortBy]}`, marginX, y);
+      y += 18;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
       exportRows.forEach((row, idx) => {
@@ -815,13 +904,14 @@ export default function WhitespacePage() {
           `Assignee: ${row.assignee_name ?? "Unknown"}`,
           `Date: ${formatPubDate(row.pub_date)}`,
           `CPC: ${CPCList(row.cpc)}`,
+          `Abstract: ${abstractPreviewText(row.abstract)}`,
         ];
         addWrappedText(title, 12, 14, "bold");
         details.forEach((line) => addWrappedText(line));
         y += 4;
       });
 
-      if (results.length > PDF_EXPORT_LIMIT) {
+      if (sortedResults.length > PDF_EXPORT_LIMIT) {
         ensureSpace();
         doc.setFont("helvetica", "italic");
         doc.setFontSize(10);
@@ -837,7 +927,7 @@ export default function WhitespacePage() {
     } finally {
       setExporting(false);
     }
-  }, [overview, results, keywords, cpcFilter, dateFrom, dateTo, showSemantic, groupByAssignee]);
+  }, [overview, sortedResults, keywords, cpcFilter, dateFrom, dateTo, showSemantic, groupByAssignee, sortBy]);
 
   return (
     <div style={pageWrapperStyle}>
@@ -1013,9 +1103,35 @@ export default function WhitespacePage() {
                 {totalResults ? `${numberFmt.format(totalResults)} patents & publications` : "No data"}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Label htmlFor="result-sort">Sort</Label>
+                <select
+                  id="result-sort"
+                  value={sortBy}
+                  onChange={(event) => {
+                    setSortBy(event.target.value as ResultSort);
+                    setResultPage(1);
+                  }}
+                  style={{
+                    height: 32,
+                    borderRadius: 10,
+                    border: "1px solid rgba(148,163,184,0.6)",
+                    background: "rgba(248,250,252,0.9)",
+                    padding: "0 10px",
+                    fontSize: 12,
+                    color: "#0f172a",
+                  }}
+                >
+                  {RESULT_SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <span style={{ fontSize: 12, color: "#94a3b8" }}>(Max export: {PDF_EXPORT_LIMIT.toLocaleString()} rows)</span>
-              <GhostButton onClick={exportResultsPdf} disabled={results.length === 0 || exporting} style={{ height: 36 }}>
+              <GhostButton onClick={exportResultsPdf} disabled={sortedResults.length === 0 || exporting} style={{ height: 36 }}>
                 {exporting ? "Exporting…" : "Export PDF"}
               </GhostButton>
             </div>
@@ -1033,6 +1149,7 @@ export default function WhitespacePage() {
                 <thead>
                   <tr>
                     <th style={thStyle}>Title</th>
+                    <th style={thStyle}>Abstract Preview</th>
                     <th style={thStyle}>Patent/Pub No.</th>
                     <th style={thStyle}>Assignee</th>
                     <th style={thStyle}>Grant/Pub Date</th>
@@ -1042,12 +1159,15 @@ export default function WhitespacePage() {
                 <tbody>
                   {paginatedResults.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ padding: "12px", color: "#475569" }}></td>
+                      <td colSpan={6} style={{ padding: "12px", color: "#475569" }}></td>
                     </tr>
                   )}
                   {paginatedResults.map((row) => (
                     <tr key={row.pub_id}>
                       <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{row.title || row.pub_id}</td>
+                      <td style={{ ...tdStyle, color: "#475569", minWidth: 220, maxWidth: 360 }}>
+                        {abstractPreviewText(row.abstract)}
+                      </td>
                       <td style={tdStyle}>
                         <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#1d4ed8", textDecoration: "none" }}>
                           {row.pub_id}

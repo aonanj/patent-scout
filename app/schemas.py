@@ -12,7 +12,7 @@ class SearchFilters(BaseModel):
     date_to: int | None = None # YYYYMMDD
 
 
-SearchSortOption = Literal["pub_date_desc", "assignee_asc"]
+SearchSortOption = Literal["relevance_desc", "pub_date_desc", "assignee_asc"]
 
 
 class SearchRequest(BaseModel):

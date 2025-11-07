@@ -105,6 +105,16 @@ def _assignee_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
     pub_id = row.get("pub_id") or ""
     return (name_priority, comp_name, date_sort, pub_id)
 
+
+def _pub_date_desc_sort_key(row: dict[str, Any]) -> tuple[int, Any, str]:
+    """Sort key for publication date descending with stable fallback."""
+    raw = row.get("pub_date")
+    if isinstance(raw, int):
+        return (0, -raw, row.get("pub_id") or "")
+    if isinstance(raw, str) and raw.isdigit():
+        return (0, -int(raw), row.get("pub_id") or "")
+    return (1, row.get("pub_id") or "")
+
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
                       jump: float = 0.1,
@@ -178,9 +188,9 @@ async def export_rows(
         base_query = f"{from_clause} WHERE {' AND '.join(where)}"
         if sort_by == "assignee_asc":
             order_by = f"ORDER BY {ASSIGNEE_SORT_EXPR} ASC NULLS LAST, p.pub_date DESC, p.pub_id ASC"
-        elif keywords:
+        elif sort_by == "relevance_desc" and keywords:
             # order by text search rank when keywords present
-            order_by = (f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC")
+            order_by = f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC"
             args.append(keywords)
         else:
             order_by = "ORDER BY p.pub_date DESC"
@@ -238,6 +248,8 @@ async def export_rows(
     kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
     if sort_by == "assignee_asc":
         kept = sorted(kept, key=_assignee_sort_key)
+    elif sort_by == "pub_date_desc":
+        kept = sorted(kept, key=_pub_date_desc_sort_key)
     kept = kept[:limit]
     out: list[dict[str, Any]] = []
     for r in kept:
@@ -302,12 +314,10 @@ async def search_hybrid(
 
         if sort_by == "assignee_asc":
             order_by = f"ORDER BY {ASSIGNEE_SORT_EXPR} ASC NULLS LAST, p.pub_date DESC, p.pub_id ASC"
-        elif keywords:
+        elif sort_by == "relevance_desc" and keywords:
             # add keyword again for ordering
             args.append(keywords)
-            order_by = (
-                f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC"
-            )
+            order_by = f"ORDER BY ts_rank_cd(({SEARCH_EXPR}), {tsq}) DESC, p.pub_date DESC"
         else:
             order_by = "ORDER BY p.pub_date DESC"
 
@@ -354,6 +364,8 @@ async def search_hybrid(
     kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
     if sort_by == "assignee_asc":
         kept = sorted(kept, key=_assignee_sort_key)
+    elif sort_by == "pub_date_desc":
+        kept = sorted(kept, key=_pub_date_desc_sort_key)
 
     # Calculate total based on filtered results
     total = len(kept)
