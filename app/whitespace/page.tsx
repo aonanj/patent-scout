@@ -294,32 +294,6 @@ const toggleLabelStyle: React.CSSProperties = {
   color: "#1f2937",
 };
 
-const footerStyle: React.CSSProperties = {
-  alignSelf: "center",
-  padding: "16px 24px",
-  borderRadius: 999,
-  background: "rgba(255, 255, 255, 0.22)",
-  border: "1px solid rgba(255, 255, 255, 0.35)",
-  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  color: "#1f2937",
-  textAlign: "center",
-  fontSize: 13,
-  fontWeight: 500,
-  gap: 4
-};
-
-const pageSurfaceStyle: React.CSSProperties = {
-  maxWidth: 1240,
-  width: "100%",
-  margin: "0 auto",
-  display: "grid",
-  gap: 20,
-  padding: 28,
-  borderRadius: 28,
-};
-
 export default function WhitespacePage() {
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
   const defaults = useMemo(defaultDateRange, []);
@@ -531,7 +505,7 @@ export default function WhitespacePage() {
           <div style={{ display: "grid", gap: 6 }}>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#0f172a" }}>Whitespace Overview</h1>
             <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
-              AI/ML IP whitespace analysis from semantic search. Discover over/undercrowded technology areas, patent grant/application filing momentum, and CPC placement.
+              Break down whitespace into crowding, momentum, and CPC placement. Group by assignee only when you need deeper context.
             </p>
           </div>
           {!isAuthenticated && !authLoading && (
@@ -559,17 +533,17 @@ export default function WhitespacePage() {
               <label htmlFor="ws-keywords" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>Focus Keywords</label>
               <input
                 id="ws-keywords"
-                placeholder="e.g., autonomous vehicles, signal recovery, ..."
+                placeholder="e.g., foundation models, multimodal reasoning"
                 value={keywords}
                 onChange={handleInput(setKeywords)}
                 style={{ ...inputStyle, minWidth: 280 }}
               />
             </div>
             <div style={{ display: "grid", gap: 6 }}>
-              <label htmlFor="ws-cpc" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>CPC (%Like%)</label>
+              <label htmlFor="ws-cpc" style={{ fontSize: 12, fontWeight: 600, color: "#1f2937" }}>CPC Filter</label>
               <input
                 id="ws-cpc"
-                placeholder="e.g., G06N%, A61B5/00"
+                placeholder="e.g., G06N20/00, A61B5/00"
                 value={cpcFilter}
                 onChange={handleInput(setCpcFilter)}
                 style={inputStyle}
@@ -630,7 +604,7 @@ export default function WhitespacePage() {
                 opacity: loading ? 0.75 : 1,
               }}
             >
-              {loading ? "Calculating…" : "Run search"}
+              {loading ? "Calculating…" : "Run Overview"}
             </button>
           </div>
           {error && (
@@ -727,7 +701,7 @@ export default function WhitespacePage() {
               <tbody>
                 {results.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ padding: "12px", color: "#475569" }}> </td>
+                    <td colSpan={5} style={{ padding: "12px", color: "#475569" }}>Run the overview to populate filings.</td>
                   </tr>
                 )}
                 {results.map((row) => (
@@ -814,19 +788,13 @@ export default function WhitespacePage() {
               ))}
               {!assigneeLoading && (assigneeData?.assignees?.length ?? 0) === 0 && (
                 <div style={{ fontSize: 12, color: "#475569" }}>
-                  Run the overview or adjust filters to expose assignee-level signals.
+                  Run the overview or adjust filters to surface assignee-level signals.
                 </div>
               )}
             </div>
           </section>
         )}
       </div>
-        <div className="glass-surface" style={pageSurfaceStyle}>
-          {/* Footer */}
-          <footer style={footerStyle}>
-            2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#636363] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#636363] hover:underline hover:text-amber-400">Legal</a>
-          </footer>
-        </div>
     </div>
   );
 }
