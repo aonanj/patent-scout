@@ -656,7 +656,7 @@ export default function WhitespacePage() {
             <div style={{ display: "grid", gap: 4 }}>
               <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Whitespace Overview</h1>
               <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
-                Measure crowding, density, and momentum for any AI/ML scope, then layer on the assignee graph when you need competitive context.
+                AI/ML IP analysis based on semantic searching.
               </p>
             </div>
             {!isAuthenticated && !authLoading && (
@@ -679,17 +679,17 @@ export default function WhitespacePage() {
                 <Label htmlFor="ws-keywords">Focus Keywords</Label>
                 <input
                   id="ws-keywords"
-                  placeholder="e.g., foundation models, multimodal reasoning"
+                  placeholder="e.g., autonomous vehicles, multimodal reasoning"
                   value={keywords}
                   onChange={handleInput(setKeywords)}
                   style={inputStyle}
                 />
               </div>
               <div style={{ display: "grid", gap: 6, minWidth: 220 }}>
-                <Label htmlFor="ws-cpc">CPC Filter</Label>
+                <Label htmlFor="ws-cpc">CPC (%LIKE%)</Label>
                 <input
                   id="ws-cpc"
-                  placeholder="e.g., G06N20/00, A61B5/00"
+                  placeholder="e.g., G06N%, A61B5/00"
                   value={cpcFilter}
                   onChange={handleInput(setCpcFilter)}
                   style={inputStyle}
@@ -728,12 +728,12 @@ export default function WhitespacePage() {
                 </label>
                 <label style={toggleLabelStyle}>
                   <input type="checkbox" checked={groupByAssignee} onChange={(event) => handleToggleGroup(event.target.checked)} />
-                  Group by Assignee (legacy signals)
+                  Group by Assignee
                 </label>
               </div>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <PrimaryButton onClick={runAnalysis} disabled={loading || authLoading}>
-                  {loading ? "Calculating…" : "Run Overview"}
+                  {loading ? "Calculating…" : "Run Search"}
                 </PrimaryButton>
                 <GhostButton onClick={handleReset}>Reset</GhostButton>
               </div>
@@ -753,7 +753,7 @@ export default function WhitespacePage() {
               </div>
               <div style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <div style={tileStyle}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Crowding</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Patent/Pub Saturation</span>
                   <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{numberFmt.format(overview.crowding.total)}</span>
                   <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
                     <span>Exact: {numberFmt.format(overview.crowding.exact)}</span>
@@ -762,7 +762,7 @@ export default function WhitespacePage() {
                   </div>
                 </div>
                 <div style={tileStyle}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Density</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Grant/Pub Activity Rate</span>
                   <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{overview.crowding.density_per_month.toFixed(1)} / mo</span>
                   <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
                     <span>Mean: {overview.density.mean_per_month.toFixed(1)}</span>
@@ -770,7 +770,7 @@ export default function WhitespacePage() {
                   </div>
                 </div>
                 <div style={tileStyle}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Momentum</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Grant/Pub Momentum</span>
                   <span style={{ fontSize: 28, fontWeight: 700, color: overview.momentum.bucket === "Up" ? "#15803d" : overview.momentum.bucket === "Down" ? "#b91c1c" : "#0f172a" }}>
                     {overview.momentum.bucket}
                   </span>
@@ -843,7 +843,7 @@ export default function WhitespacePage() {
               <tbody>
                 {results.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ padding: "12px", color: "#475569" }}>Run the overview to populate filings.</td>
+                    <td colSpan={5} style={{ padding: "12px", color: "#475569" }}></td>
                   </tr>
                 )}
                 {results.map((row) => (
@@ -918,7 +918,7 @@ export default function WhitespacePage() {
               ))}
               {!assigneeLoading && (assigneeData?.assignees?.length ?? 0) === 0 && (
                 <div style={{ fontSize: 12, color: "#475569" }}>
-                  Run the overview or adjust filters to surface assignee-level signals.
+                  Run search or adjust filters to discover assignee-level signals.
                 </div>
               )}
             </div>
