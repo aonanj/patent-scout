@@ -6,6 +6,7 @@ import type { ChangeEvent } from "react";
 import {
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -239,10 +240,6 @@ const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 12,
-  background: "rgba(255, 255, 255, 0.78)",
-  borderRadius: 16,
-  overflow: "hidden",
-  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.22)",
 };
 
 const thStyle: React.CSSProperties = {
@@ -300,19 +297,6 @@ const STATUS_BADGES: Record<SignalStatus, string> = {
   medium: "Medium",
   strong: "Strong",
 };
-
-function toISODate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function defaultDateRange(): { from: string; to: string } {
-  const today = new Date();
-  const end = toISODate(today);
-  const startDate = new Date(today);
-  startDate.setMonth(startDate.getMonth() - 23);
-  startDate.setDate(1);
-  return { from: toISODate(startDate), to: end };
-}
 
 function formatPubDate(value: unknown): string {
   if (value === null || value === undefined) return "--";
@@ -444,12 +428,12 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
 
 export default function WhitespacePage() {
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
-  const defaults = useMemo(defaultDateRange, []);
+  const today = useRef<string>(new Date().toISOString().slice(0, 10)).current;
 
   const [keywords, setKeywords] = useState("");
   const [cpcFilter, setCpcFilter] = useState("");
-  const [dateFrom, setDateFrom] = useState(defaults.from);
-  const [dateTo, setDateTo] = useState(defaults.to);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [showSemantic, setShowSemantic] = useState(true);
   const [groupByAssignee, setGroupByAssignee] = useState(false);
 
@@ -542,8 +526,11 @@ export default function WhitespacePage() {
       const params = new URLSearchParams();
       if (currentQuery.keywords) params.set("keywords", currentQuery.keywords);
       if (currentQuery.cpc) params.set("cpc", currentQuery.cpc);
-      if (currentQuery.dateFrom) params.set("date_from", currentQuery.dateFrom);
-      if (currentQuery.dateTo) params.set("date_to", currentQuery.dateTo);
+      const toIntDate = (value: string) => (value ? parseInt(value.replace(/-/g, ""), 10) : undefined);
+      const fromInt = toIntDate(currentQuery.dateFrom);
+      const toInt = toIntDate(currentQuery.dateTo);
+      if (fromInt) params.set("date_from", String(fromInt));
+      if (toInt) params.set("date_to", String(toInt));
       if (currentQuery.semantic) params.set("semantic", "1");
 
       const overviewPromise = fetch(`/api/whitespace/overview?${params.toString()}`, {
@@ -560,8 +547,8 @@ export default function WhitespacePage() {
         offset: 0,
         filters: {
           cpc: currentQuery.cpc || null,
-          date_from: currentQuery.dateFrom || null,
-          date_to: currentQuery.dateTo || null,
+          date_from: fromInt ?? null,
+          date_to: toInt ?? null,
         },
       };
 
@@ -649,8 +636,8 @@ export default function WhitespacePage() {
   const handleReset = useCallback(() => {
     setKeywords("");
     setCpcFilter("");
-    setDateFrom(defaults.from);
-    setDateTo(defaults.to);
+    setDateFrom("");
+    setDateTo("");
     setShowSemantic(true);
     setGroupByAssignee(false);
     setOverview(null);
@@ -659,7 +646,7 @@ export default function WhitespacePage() {
     setAssigneeData(null);
     setError(null);
     setLastQuery(null);
-  }, [defaults.from, defaults.to]);
+  }, []);
 
   return (
     <div style={pageWrapperStyle}>
@@ -710,11 +697,27 @@ export default function WhitespacePage() {
               </div>
               <div style={{ display: "grid", gap: 6 }}>
                 <Label htmlFor="ws-from">From</Label>
-                <input id="ws-from" type="date" value={dateFrom} onChange={handleInput(setDateFrom)} style={inputStyle} />
+                <input
+                  id="ws-from"
+                  type="date"
+                  min="2022-01-01"
+                  max={dateTo || today}
+                  value={dateFrom}
+                  onChange={handleInput(setDateFrom)}
+                  style={inputStyle}
+                />
               </div>
               <div style={{ display: "grid", gap: 6 }}>
                 <Label htmlFor="ws-to">To</Label>
-                <input id="ws-to" type="date" value={dateTo} onChange={handleInput(setDateTo)} style={inputStyle} />
+                <input
+                  id="ws-to"
+                  type="date"
+                  min={dateFrom || "2022-01-02"}
+                  max={today}
+                  value={dateTo}
+                  onChange={handleInput(setDateTo)}
+                  style={inputStyle}
+                />
               </div>
             </Row>
             <Row align="center">
@@ -818,13 +821,21 @@ export default function WhitespacePage() {
               {totalResults ? `${numberFmt.format(totalResults)} filings` : "No filings yet"}
             </div>
           </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Title</th>
-                  <th style={thStyle}>Publication</th>
-                  <th style={thStyle}>Assignee</th>
+          <div
+            style={{
+              borderRadius: 16,
+              background: "rgba(255, 255, 255, 0.78)",
+              boxShadow: "0 18px 40px rgba(15, 23, 42, 0.22)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ overflowX: "auto" }}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Title</th>
+                    <th style={thStyle}>Publication</th>
+                    <th style={thStyle}>Assignee</th>
                   <th style={thStyle}>Date</th>
                   <th style={thStyle}>CPC</th>
                 </tr>
@@ -851,6 +862,7 @@ export default function WhitespacePage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </Card>
 
