@@ -639,7 +639,7 @@ export default function WhitespacePage() {
         setAssigneeData(null);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to run whitespace overview.";
+      const message = err instanceof Error ? err.message : "Failed to run whitespace analysis.";
       setError(message);
     } finally {
       setLoading(false);
@@ -701,7 +701,7 @@ export default function WhitespacePage() {
   const startIndex = (resultPage - 1) * RESULTS_PER_PAGE;
   const showingRangeLabel = results.length
     ? `${numberFmt.format(startIndex + 1)}-${numberFmt.format(Math.min(results.length, startIndex + RESULTS_PER_PAGE))} of ${numberFmt.format(results.length)}`
-    : "No filings yet";
+    : "";
   const canPrev = resultPage > 1;
   const canNext = resultPage < totalResultPages;
 
@@ -723,7 +723,7 @@ export default function WhitespacePage() {
 
   const exportResultsPdf = useCallback(() => {
     if (!overview || results.length === 0) {
-      setError("Run the overview before exporting.");
+      setError("Run search before exporting.");
       return;
     }
     setExporting(true);
@@ -845,9 +845,9 @@ export default function WhitespacePage() {
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ display: "grid", gap: 4 }}>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Whitespace Overview</h1>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Whitespace Analysis</h1>
               <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
-                AI/ML IP analysis based on semantic searching.
+                Assess subject matter saturation, patent grant and publication activity rates and momentum, and CPC classification trends for specific search criteria and semantically similar concepts.
               </p>
             </div>
             {!isAuthenticated && !authLoading && (
@@ -1008,13 +1008,13 @@ export default function WhitespacePage() {
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Result Set</h2>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: "semibold", color: "#0f172a" }}>RESULTS</h2>
               <div style={{ fontSize: 12, color: "#475569" }}>
                 {totalResults ? `${numberFmt.format(totalResults)} patents & publications` : "No data"}
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, color: "#94a3b8" }}>PDF export limited to {PDF_EXPORT_LIMIT.toLocaleString()} rows</span>
+              <span style={{ fontSize: 12, color: "#94a3b8" }}>(Max export: {PDF_EXPORT_LIMIT.toLocaleString()} rows)</span>
               <GhostButton onClick={exportResultsPdf} disabled={results.length === 0 || exporting} style={{ height: 36 }}>
                 {exporting ? "Exporting…" : "Export PDF"}
               </GhostButton>
@@ -1033,16 +1033,16 @@ export default function WhitespacePage() {
                 <thead>
                   <tr>
                     <th style={thStyle}>Title</th>
-                    <th style={thStyle}>Publication</th>
+                    <th style={thStyle}>Patent/Pub No.</th>
                     <th style={thStyle}>Assignee</th>
-                    <th style={thStyle}>Date</th>
+                    <th style={thStyle}>Grant/Pub Date</th>
                     <th style={thStyle}>CPC</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedResults.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ padding: "12px", color: "#475569" }}>Run the overview to populate filings.</td>
+                      <td colSpan={5} style={{ padding: "12px", color: "#475569" }}></td>
                     </tr>
                   )}
                   {paginatedResults.map((row) => (
