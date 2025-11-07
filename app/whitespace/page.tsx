@@ -509,12 +509,12 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
             strokeDasharray="4 3"
           />
           <text
-            x={latestEntry.coord.x + 4}
-            y={labelY - 10}
-            textAnchor="start"
-            fontSize={11}
-            fill="#1d4ed8"
-            style={{ fontWeight: 700 }}
+            x={latestEntry.coord.x}
+            y={labelY}
+            textAnchor="middle"
+            fontSize={10}
+            fill="#475569"
+            style={{ fontWeight: 600 }}
           >
             {formatTimelineMonthLabel(latestEntry.point.month)}
           </text>
@@ -1258,7 +1258,7 @@ export default function WhitespacePage() {
                 <thead>
                   <tr>
                     <th style={thStyle}>Title</th>
-                    <th style={thStyle}>Abstract Preview</th>
+                    <th style={thStyle}>Abstract</th>
                     <th style={thStyle}>Patent/Pub No.</th>
                     <th style={thStyle}>Assignee</th>
                     <th style={thStyle}>Grant/Pub Date</th>
