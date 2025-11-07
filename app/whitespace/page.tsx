@@ -505,7 +505,7 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
             x2={latestEntry.coord.x}
             y1={padding}
             y2={chartHeight - padding}
-            stroke="#1d4ed8"
+            stroke="#3A506B"
             strokeDasharray="4 3"
           />
           <text
@@ -521,7 +521,7 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
         </g>
       )}
       {coords.map((coord, idx) => (
-        <circle key={points[idx].month} cx={coord.x} cy={coord.y} r={3.5} fill="#1d4ed8" />
+        <circle key={points[idx].month} cx={coord.x} cy={coord.y} r={3.5} fill="#3A506B" />
       ))}
     </svg>
   );
@@ -1278,7 +1278,7 @@ export default function WhitespacePage() {
                         {abstractPreviewText(row.abstract)}
                       </td>
                       <td style={tdStyle}>
-                        <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#1d4ed8", textDecoration: "none" }}>
+                        <a href={`https://patents.google.com/patent/${formatPatentId(row.pub_id)}`} target="_blank" rel="noreferrer" style={{ color: "#3A506B", textDecoration: "none" }}>
                           {row.pub_id}
                         </a>
                         {row.kind_code ? ` (${row.kind_code})` : ""}
