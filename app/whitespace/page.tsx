@@ -238,7 +238,7 @@ const toggleLabelStyle: React.CSSProperties = {
   alignItems: "center",
   gap: 10,
   fontSize: 13,
-  color: "#1f2937",
+  color: "#102a43",
 };
 
 const tableStyle: React.CSSProperties = {
@@ -275,7 +275,7 @@ const footerStyle: React.CSSProperties = {
   boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
-  color: "#1f2937",
+  color: "#102a43",
   textAlign: "center",
   fontSize: 13,
   fontWeight: 500,
@@ -382,6 +382,15 @@ function abstractPreviewText(value?: string | null, limit = ABSTRACT_PREVIEW_LIM
   return `${normalized.slice(0, limit).trimEnd()}…`;
 }
 
+function formatRangeLabel(points: OverviewPoint[], monthsBack: number): { label: string; months: number } {
+  if (!points.length) return { label: "--", months: monthsBack };
+  const endIdx = points.length - 1;
+  const startIdx = Math.max(0, points.length - monthsBack);
+  const startMonth = points[startIdx]?.month ?? points[0].month;
+  const endMonth = points[endIdx]?.month ?? points[points.length - 1].month;
+  return { label: `${monthsBack} months (${startMonth} – ${endMonth})`, months: monthsBack };
+}
+
 function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
   if (!points.length) {
     return (
@@ -402,6 +411,14 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
     return { x, y };
   });
 
+  const intervalMonths = [6, 12, 18, 24];
+  const intervalLines = intervalMonths
+    .map((months) => {
+      const idx = Math.max(0, points.length - months);
+      return { months, idx, point: points[idx], coord: coords[idx] };
+    })
+    .filter((entry) => entry.point);
+
   return (
     <svg width={width} height={height} style={{ borderRadius: 16, background: "rgba(248,250,252,0.8)" }}>
       <polyline
@@ -412,29 +429,20 @@ function TimelineSparkline({ points }: { points: OverviewPoint[] }) {
         strokeLinecap="round"
         points={coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")}
       />
-      {coords.map((coord, idx) => {
-        const x = coord.x;
-        const count = points[idx].count;
-        return (
-          <g key={points[idx].month}>
-            <line
-              x1={x}
-              x2={x}
-              y1={padding}
-              y2={height - padding}
-              stroke="rgba(148,163,184,0.5)"
-              strokeDasharray="4 3"
-            />
-            <circle cx={x} cy={coord.y} r={3.5} fill="#1d4ed8" />
-            <text x={x} y={height - padding + 14} fontSize={10} fill="#1e293b" textAnchor="middle">
-              {points[idx].month}
-            </text>
-            <text x={x} y={height - padding + 28} fontSize={10} fill="#475569" textAnchor="middle">
-              {numberFmt.format(count)}
-            </text>
-          </g>
-        );
-      })}
+      {intervalLines.map((entry) => (
+        <line
+          key={`interval-${entry.months}`}
+          x1={entry.coord.x}
+          x2={entry.coord.x}
+          y1={padding}
+          y2={height - padding}
+          stroke="rgba(148,163,184,0.6)"
+          strokeDasharray="6 4"
+        />
+      ))}
+      {coords.map((coord, idx) => (
+        <circle key={points[idx].month} cx={coord.x} cy={coord.y} r={3.5} fill="#1d4ed8" />
+      ))}
     </svg>
   );
 }
@@ -462,9 +470,9 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
         const url = cpcDefinitionUrl(item.cpc);
         return (
           <div key={item.cpc || `cpc-${item.count}`} style={{ display: "grid", gap: 6 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, color: "#1f2937" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, color: "#102a43" }}>
               {url ? (
-                <a href={url} target="_blank" rel="noreferrer" style={{ color: "#0f172a", textDecoration: "none" }}>
+                <a href={url} target="_blank" rel="noreferrer" className="text-[#6BAEDB] hover:underline hover:text-[#39506B]">
                   {item.cpc || "Unknown"}
                 </a>
               ) : (
@@ -478,7 +486,7 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
                   width,
                   height: "100%",
                   borderRadius: 999,
-                  background: "linear-gradient(90deg, #38bdf8 0%, #0f172a 100%)",
+                  background: "linear-gradient(90deg, #38bdf8 0%, #102a43 100%)",
                 }}
               />
             </div>
@@ -714,7 +722,7 @@ export default function WhitespacePage() {
     if (!overview) return null;
     const percentile = overview.crowding.percentile;
     const percentileLabelText = percentile !== null && percentile !== undefined ? percentileLabel(percentile) : "--";
-    return `Crowding: ${numberFmt.format(overview.crowding.total)} total (${percentileLabelText}) | Density: ${overview.crowding.density_per_month.toFixed(1)}/mo | Momentum: ${overview.momentum.bucket}`;
+    return `Saturation: ${numberFmt.format(overview.crowding.total)} total (${percentileLabelText}) | Activity Rate: ${overview.crowding.density_per_month.toFixed(1)}/mo | Momentum: ${overview.momentum.bucket}`;
   }, [overview]);
 
   const topCpcTile = useMemo(() => {
@@ -868,10 +876,10 @@ export default function WhitespacePage() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
       const metricLines = [
-        `Crowding: ${numberFmt.format(overview.crowding.total)} total (Exact ${numberFmt.format(
+        `Saturation: ${numberFmt.format(overview.crowding.total)} total (Exact ${numberFmt.format(
           overview.crowding.exact,
         )}${showSemantic ? `, Semantic ${numberFmt.format(overview.crowding.semantic)}` : ""}, Percentile ${percentileLabelText})`,
-        `Density: ${overview.crowding.density_per_month.toFixed(1)}/mo (Mean ${overview.density.mean_per_month.toFixed(
+        `Activity Rate: ${overview.crowding.density_per_month.toFixed(1)}/mo (Mean ${overview.density.mean_per_month.toFixed(
           1,
         )}, Band ${overview.density.min_per_month} – ${overview.density.max_per_month})`,
         `Momentum: ${overview.momentum.bucket} (Slope ${overview.momentum.slope.toFixed(2)}, CAGR ${
@@ -935,9 +943,9 @@ export default function WhitespacePage() {
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ display: "grid", gap: 4 }}>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Whitespace Analysis</h1>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#102a43" }}>Whitespace Analysis</h1>
               <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
-                Assess subject matter saturation, patent grant and publication activity rates and momentum, and CPC classification trends for specific search criteria and semantically similar concepts.
+                Subject matter saturation, patent and publication activity rates and momentum, and CPC trends for specific search criteria and semantically similar concepts.
               </p>
             </div>
             {!isAuthenticated && !authLoading && (
@@ -1029,13 +1037,13 @@ export default function WhitespacePage() {
           <>
             <Card>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Scope Metrics</h2>
+                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#102a43" }}>Scope Metrics</h2>
                 <span style={{ fontSize: 12, color: "#475569" }}>Window: {overview.window_months} months</span>
               </div>
               <div style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <div style={tileStyle}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Patent/Pub Saturation</span>
-                  <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{numberFmt.format(overview.crowding.total)}</span>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: "#102a43" }}>{numberFmt.format(overview.crowding.total)}</span>
                   <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
                     <span>Exact: {numberFmt.format(overview.crowding.exact)}</span>
                     {showSemantic && <span>Semantic: {numberFmt.format(overview.crowding.semantic)}</span>}
@@ -1044,7 +1052,7 @@ export default function WhitespacePage() {
                 </div>
                 <div style={tileStyle}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Grant/Pub Activity Rate</span>
-                  <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{overview.crowding.density_per_month.toFixed(1)} / mo</span>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: "#102a43" }}>{overview.crowding.density_per_month.toFixed(1)} / mo</span>
                   <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
                     <span>Mean: {overview.density.mean_per_month.toFixed(1)}</span>
                     <span>Band: {overview.density.min_per_month} – {overview.density.max_per_month}</span>
@@ -1052,7 +1060,7 @@ export default function WhitespacePage() {
                 </div>
                 <div style={tileStyle}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Grant/Pub Momentum</span>
-                  <span style={{ fontSize: 28, fontWeight: 700, color: overview.momentum.bucket === "Up" ? "#15803d" : overview.momentum.bucket === "Down" ? "#b91c1c" : "#0f172a" }}>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: overview.momentum.bucket === "Up" ? "#15803d" : overview.momentum.bucket === "Down" ? "#b91c1c" : "#102a43" }}>
                     {overview.momentum.bucket}
                   </span>
                   <div style={{ fontSize: 13, color: "#475569", display: "grid", gap: 2 }}>
@@ -1065,7 +1073,7 @@ export default function WhitespacePage() {
                   <div style={{ display: "grid", gap: 6 }}>
                     {topCpcTile.length === 0 && <span style={{ fontSize: 12, color: "#475569" }}>No CPCs in window.</span>}
                     {topCpcTile.map((item) => (
-                      <div key={item.cpc} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#1f2937" }}>
+                      <div key={item.cpc} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#102a43" }}>
                         <span>{item.cpc || "Unknown"}</span>
                         <span>{numberFmt.format(item.count)}</span>
                       </div>
@@ -1078,16 +1086,25 @@ export default function WhitespacePage() {
             <Card>
               <div style={{ display: "grid", gap: 24, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
                 <div style={{ display: "grid", gap: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Timeline</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#102a43" }}>Timeline</div>
                   <TimelineSparkline points={overview.timeline} />
-                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, color: "#475569" }}>
-                    <span>M6: {numberFmt.format(overview.recency.m6)}</span>
-                    <span>M12: {numberFmt.format(overview.recency.m12)}</span>
-                    <span>M24: {numberFmt.format(overview.recency.m24)}</span>
-                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#475569", display: "grid", gap: 4 }}>
+                    <li>
+                      {formatRangeLabel(overview.timeline, 6).label}: {numberFmt.format(overview.recency.m6)}
+                    </li>
+                    <li>
+                      {formatRangeLabel(overview.timeline, 12).label}: {numberFmt.format(overview.recency.m12)}
+                    </li>
+                    <li>
+                      {formatRangeLabel(overview.timeline, 18).label}: {numberFmt.format(overview.recency.m24 + overview.recency.m12 - overview.recency.m6)}
+                    </li>
+                    <li>
+                      {formatRangeLabel(overview.timeline, 24).label}: {numberFmt.format(overview.recency.m24)}
+                    </li>
+                  </ul>
                 </div>
                 <div style={{ display: "grid", gap: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>CPC Density</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#102a43" }}>CPC Trends</div>
                   <CpcBarChart items={overview.cpc_breakdown.slice(0, 8)} />
                 </div>
               </div>
@@ -1098,7 +1115,7 @@ export default function WhitespacePage() {
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: "semibold", color: "#0f172a" }}>RESULTS</h2>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: "semibold", color: "#102a43" }}>RESULTS</h2>
               <div style={{ fontSize: 12, color: "#475569" }}>
                 {totalResults ? `${numberFmt.format(totalResults)} patents & publications` : "No data"}
               </div>
@@ -1120,7 +1137,7 @@ export default function WhitespacePage() {
                     background: "rgba(248,250,252,0.9)",
                     padding: "0 10px",
                     fontSize: 12,
-                    color: "#0f172a",
+                    color: "#102a43",
                   }}
                 >
                   {RESULT_SORT_OPTIONS.map((option) => (
@@ -1164,7 +1181,7 @@ export default function WhitespacePage() {
                   )}
                   {paginatedResults.map((row) => (
                     <tr key={row.pub_id}>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: "#0f172a" }}>{row.title || row.pub_id}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: "#102a43" }}>{row.title || row.pub_id}</td>
                       <td style={{ ...tdStyle, color: "#475569", minWidth: 220, maxWidth: 360 }}>
                         {abstractPreviewText(row.abstract)}
                       </td>
@@ -1200,7 +1217,7 @@ export default function WhitespacePage() {
         {groupByAssignee && (
           <Card style={{ display: "grid", gap: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>Assignee Signals</h2>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#102a43" }}>Assignee Signals</h2>
               {assigneeLoading && <span style={{ fontSize: 12, color: "#475569" }}>Loading…</span>}
             </div>
             {assigneeData?.graph && (
@@ -1221,7 +1238,7 @@ export default function WhitespacePage() {
                     gap: 10,
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{assignee.assignee}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#102a43" }}>{assignee.assignee}</div>
                   {assignee.summary && (
                     <div style={{ fontSize: 12, color: "#475569" }}>{assignee.summary}</div>
                   )}
@@ -1257,7 +1274,7 @@ export default function WhitespacePage() {
         )}
       </div>
       <footer style={footerStyle}>
-        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#636363] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#636363] hover:underline hover:text-amber-400">Legal</a>
+        2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
       </footer>
     </div>
   );

@@ -291,7 +291,7 @@ export default function WhitespaceHelpPage() {
 
         {/* Footer */}
         <footer style={footerStyle}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#636363] hover:underline hover:text-amber-400">phaethonorder.com</a> | <a href="/help" className="text-[#636363] hover:underline hover:text-amber-400">Help</a> | <a href="/docs" className="text-[#636363] hover:underline hover:text-amber-400">Legal</a>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
         </footer>
       </div>
     </div>
@@ -387,7 +387,7 @@ const footerStyle: React.CSSProperties = {
   boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
-  color: "#1f2937",
+  color: "#102a43",
   textAlign: "center",
   fontSize: 13,
   fontWeight: 500,
