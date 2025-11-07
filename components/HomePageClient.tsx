@@ -751,6 +751,8 @@ export default function HomePageClient() {
             </SecondaryButton>
           </div>
         </Card>
+      </div>
+      <div className="glass-surface" style={pageSurfaceStyle}>
         {/* Footer */}
         <footer style={footerStyle}>
           2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
