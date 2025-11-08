@@ -57,26 +57,20 @@ from typing import Any
 
 import asyncpg
 import httpx
+from dotenv import load_dotenv
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except Exception:
-    pass
-
-DB_URL = os.getenv("DATABASE_URL")
-
-MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
-MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
-MAILGUN_FROM_NAME = os.getenv("MAILGUN_FROM_NAME", "Patent Scout Alerts")
-MAILGUN_FROM_EMAIL = os.getenv(
-    "MAILGUN_FROM_EMAIL",
-    f"alerts@{MAILGUN_DOMAIN}" if MAILGUN_DOMAIN else "alerts@patentscout.com"
-)
-MAILGUN_BASE_URL = os.getenv("MAILGUN_BASE_URL", "https://api.mailgun.net/v3")
 
 
 def _from_header() -> str:
+
+    load_dotenv()
+
+    MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
+    MAILGUN_FROM_NAME = os.getenv("MAILGUN_FROM_NAME", "Patent Scout Alerts")
+    MAILGUN_FROM_EMAIL = os.getenv(
+        "MAILGUN_FROM_EMAIL",
+        f"alerts@{MAILGUN_DOMAIN}" if MAILGUN_DOMAIN else "alerts@patentscout.com"
+    )
     return f"{MAILGUN_FROM_NAME} <{MAILGUN_FROM_EMAIL}>"
 
 
@@ -86,6 +80,12 @@ async def send_mailgun_email(
     text_body: str,
     html_body: str | None = None,
 ) -> None:
+    
+    load_dotenv()
+
+    MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
+    MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
+    MAILGUN_BASE_URL = os.getenv("MAILGUN_BASE_URL", "https://api.mailgun.net/v3")
     # If Mailgun is not configured, no-op with console output.
     if not (MAILGUN_DOMAIN and MAILGUN_API_KEY):
         print("[info] Mailgun not configured; printing email:")
@@ -239,6 +239,9 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
 
 
 async def main():
+    load_dotenv()
+    DB_URL = os.getenv("DATABASE_URL")
+
     conn = await asyncpg.connect(DB_URL)
     try:
         # Fetch active queries and join to owner email
