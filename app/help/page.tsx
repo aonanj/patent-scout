@@ -84,7 +84,7 @@ export default function HelpIndexPage() {
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
-            <li><strong>Whitespace Analysis</strong>: Size whitespace with crowding, density, momentum, and CPC context tiles, then optionally layer on assignee signals for competitive storytelling.</li>
+            <li><strong>Whitespace Analysis</strong>: Overview and analysis of the AI/ML IP landscape with subject matter saturation, activity rates, momentum, and CPC distribution. Option to focus on specific assignees.</li>
           </ul>
         </div>
 
@@ -125,11 +125,11 @@ export default function HelpIndexPage() {
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="⬩" title="Hybrid Search" text="Combine keyword and semantic queries to find relevant patents and publications using both exact matches and AI-powered similarity" />
+              <DetailItem icon="⬩" title="Hybrid Search" text="Combine keyword and semantic queries to find relevant patents and publications using both exact and semantically similar matches" />
               <DetailItem icon="⬩" title="Advanced Filters" text="Narrow results by assignee, CPC code, grant/publication date range, and more" />
-              <DetailItem icon="⬩" title="Trend Visualization" text="Visualize patent filing trends by month, CPC classification, or assignee to spot patterns and emerging areas" />
+              <DetailItem icon="⬩" title="Trend Visualization" text="Visualize patent and publication trends by month, CPC classification, or assignee to spot patterns and emerging areas" />
               <DetailItem icon="⬩" title="Export Capabilities" text="Download search results as CSV or enriched PDF reports for offline analysis" />
-              <DetailItem icon="⬩" title="Saved Alerts" text="Save your search criteria and receive notifications when new patents and publications match your filters" />
+              <DetailItem icon="⬩" title="Saved Alerts" text="Save search criteria and receive notifications when new patents and publications match those specific filters" />
             </div>
 
             <div
@@ -164,7 +164,7 @@ export default function HelpIndexPage() {
               <div style={{ flex: 1, minWidth: 250 }}>
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Whitespace Analysis</h3>
                 <p style={{ marginTop: 8, fontSize: 13, color: "#627D98", marginBottom: 0 }}>
-                  Overview tiles for whitespace primitives with an optional assignee signal deep dive
+                  Insights on how busy specific technology areas are and where opportunities may exist
                 </p>
               </div>
               <a

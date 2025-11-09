@@ -72,6 +72,7 @@ type SearchResponse = {
 };
 
 type SignalStatus = "none" | "weak" | "medium" | "strong";
+type ActiveSignalStatus = Exclude<SignalStatus, "none">;
 
 type SignalInfo = {
   type: SignalKind;
@@ -79,6 +80,13 @@ type SignalInfo = {
   confidence: number;
   why: string;
   node_ids: string[];
+};
+
+type SignalAccent = "green" | "red";
+type SignalAccentStyle = {
+  background: string;
+  borderColor: string;
+  textColor: string;
 };
 
 type AssigneeSignals = {
@@ -308,7 +316,7 @@ const RESULT_SORT_OPTIONS: Array<{ value: ResultSort; label: string }> = [
 ];
 
 const SIGNAL_LABELS: Record<SignalKind, string> = {
-  focus_shift: "Convergence",
+  focus_shift: "Focus Convergence",
   emerging_gap: "Sparse Focus Area",
   crowd_out: "Crowd-out Risk",
   bridge: "Bridge Opportunity",
@@ -320,6 +328,36 @@ const STATUS_BADGES: Record<SignalStatus, string> = {
   medium: "Medium",
   strong: "Strong",
 };
+
+const SIGNAL_ACCENT_BY_KIND: Record<SignalKind, SignalAccent | null> = {
+  focus_shift: "red",
+  emerging_gap: "green",
+  crowd_out: "red",
+  bridge: "green",
+};
+
+const SIGNAL_STATUS_ACCENT_STYLES: Record<
+  SignalAccent,
+  Record<ActiveSignalStatus, SignalAccentStyle>
+> = {
+  green: {
+    weak: { background: "#ecfdf5", borderColor: "#a7f3d0", textColor: "#065f46" },
+    medium: { background: "#86efac", borderColor: "#22c55e", textColor: "#064e3b" },
+    strong: { background: "#065f46", borderColor: "#34d399", textColor: "#ecfdf5" },
+  },
+  red: {
+    weak: { background: "#fee2e2", borderColor: "#fecaca", textColor: "#7f1d1d" },
+    medium: { background: "#fca5a5", borderColor: "#ef4444", textColor: "#7f1d1d" },
+    strong: { background: "#7f1d1d", borderColor: "#fecaca", textColor: "#fee2e2" },
+  },
+};
+
+function getSignalAccentStyle(signal: SignalInfo): SignalAccentStyle | null {
+  if (signal.status === "none") return null;
+  const accent = SIGNAL_ACCENT_BY_KIND[signal.type];
+  if (!accent) return null;
+  return SIGNAL_STATUS_ACCENT_STYLES[accent][signal.status];
+}
 
 function formatPubDate(value: unknown): string {
   if (value === null || value === undefined) return "--";
@@ -391,6 +429,19 @@ function formatRangeLabel(points: OverviewPoint[], monthsBack: number): { label:
   const startMonth = points[startIdx]?.month ?? points[0].month;
   const endMonth = points[endIdx]?.month ?? points[points.length - 1].month;
   return { label: `${monthsBack} months (${startMonth} – ${endMonth})`, months: monthsBack };
+}
+
+function normalizeNodeIds(ids?: string[]): string[] {
+  if (!Array.isArray(ids)) return [];
+  const unique = new Set<string>();
+  ids.forEach((id) => {
+    if (typeof id !== "string") return;
+    const trimmed = id.trim();
+    if (trimmed) {
+      unique.add(trimmed);
+    }
+  });
+  return Array.from(unique);
 }
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -673,6 +724,8 @@ export default function WhitespacePage() {
   const [resultPage, setResultPage] = useState(1);
   const [sortBy, setSortBy] = useState<ResultSort>("relevance_desc");
   const [assigneeData, setAssigneeData] = useState<WhitespaceGraphResponse | null>(null);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
+  const [activeSignalKey, setActiveSignalKey] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [assigneeLoading, setAssigneeLoading] = useState(false);
@@ -731,6 +784,18 @@ export default function WhitespacePage() {
     },
     [getAccessTokenSilently],
   );
+
+  useEffect(() => {
+    if (!groupByAssignee) {
+      setHighlightedNodeIds([]);
+      setActiveSignalKey(null);
+    }
+  }, [groupByAssignee]);
+
+  useEffect(() => {
+    setHighlightedNodeIds([]);
+    setActiveSignalKey(null);
+  }, [assigneeData?.graph]);
 
   const runAnalysis = useCallback(async () => {
     if (!isAuthenticated) {
@@ -861,6 +926,8 @@ export default function WhitespacePage() {
   const handleToggleGroup = useCallback(
     async (checked: boolean) => {
       setGroupByAssignee(checked);
+       setHighlightedNodeIds([]);
+       setActiveSignalKey(null);
       if (!checked) {
         setAssigneeData(null);
         return;
@@ -981,9 +1048,30 @@ export default function WhitespacePage() {
     setResultPage(1);
     setSortBy("relevance_desc");
     setAssigneeData(null);
+    setHighlightedNodeIds([]);
+    setActiveSignalKey(null);
     setError(null);
     setLastQuery(null);
   }, []);
+
+  const handleSignalCardClick = useCallback(
+    (assigneeName: string, signalType: SignalKind, nodeIds: string[]) => {
+      const sanitizedNodes = [...nodeIds];
+      const signalKey = `${assigneeName}::${signalType}`;
+      if (sanitizedNodes.length === 0) {
+        setHighlightedNodeIds([]);
+        setActiveSignalKey(null);
+        return;
+      }
+      setHighlightedNodeIds((prev) => {
+        const sameLength = prev.length === sanitizedNodes.length;
+        const sameOrder = sameLength && prev.every((id, idx) => id === sanitizedNodes[idx]);
+        return sameOrder && activeSignalKey === signalKey ? [] : sanitizedNodes;
+      });
+      setActiveSignalKey((prev) => (prev === signalKey ? null : signalKey));
+    },
+    [activeSignalKey],
+  );
 
   const exportResultsPdf = useCallback(() => {
     if (!overview || sortedResults.length === 0) {
@@ -1387,12 +1475,12 @@ export default function WhitespacePage() {
         {groupByAssignee && (
           <Card style={{ display: "grid", gap: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#102a43" }}>Assignee Signals</h2>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: "semibold", color: "#102a43" }}>ASSIGNEE SIGNALS</h2>
               {assigneeLoading && <span style={{ fontSize: 12, color: "#475569" }}>Loading…</span>}
             </div>
             {assigneeData?.graph && (
               <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(148,163,184,0.25)" }}>
-                <SigmaWhitespaceGraph data={assigneeData.graph} height={420} selectedSignal={null} highlightedNodeIds={[]} />
+                <SigmaWhitespaceGraph data={assigneeData.graph} height={420} selectedSignal={null} highlightedNodeIds={highlightedNodeIds} />
               </div>
             )}
             <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
@@ -1413,24 +1501,53 @@ export default function WhitespacePage() {
                     <div style={{ fontSize: 12, color: "#475569" }}>{assignee.summary}</div>
                   )}
                   <div style={{ display: "grid", gap: 6 }}>
-                    {assignee.signals.map((signal) => (
-                      <div
-                        key={signal.type}
-                        style={{
-                          display: "grid",
-                          gap: 4,
-                          padding: "8px 10px",
-                          borderRadius: 12,
-                          background: "rgba(226,232,240,0.6)",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600 }}>
-                          <span>{SIGNAL_LABELS[signal.type]}</span>
-                          <span>{STATUS_BADGES[signal.status]}</span>
-                        </div>
-                        <div style={{ fontSize: 11, color: "#475569" }}>{signal.why}</div>
-                      </div>
-                    ))}
+                    {assignee.signals.map((signal) => {
+                      const signalKey = `${assignee.assignee}::${signal.type}`;
+                      const accentStyle = getSignalAccentStyle(signal);
+                      const nodeIds = normalizeNodeIds(signal.node_ids);
+                      const hasTargets = nodeIds.length > 0;
+                      const isActive = activeSignalKey === signalKey && highlightedNodeIds.length > 0;
+                      return (
+                        <button
+                          key={signal.type}
+                          type="button"
+                          aria-pressed={isActive}
+                          disabled={!hasTargets}
+                          onClick={() => handleSignalCardClick(assignee.assignee, signal.type, nodeIds)}
+                          style={{
+                            display: "grid",
+                            gap: 4,
+                            padding: "8px 10px",
+                            borderRadius: 12,
+                            border: `1px solid ${accentStyle?.borderColor ?? "rgba(148,163,184,0.3)"}`,
+                            background: accentStyle?.background ?? "rgba(226,232,240,0.6)",
+                            color: accentStyle?.textColor ?? "#102a43",
+                            cursor: hasTargets ? "pointer" : "default",
+                            opacity: hasTargets ? 1 : 0.65,
+                            textAlign: "left",
+                            transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                            font: "inherit",
+                            boxShadow: isActive ? "0 0 0 2px rgba(59,130,246,0.35)" : undefined,
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, color: accentStyle?.textColor ?? "#102a43" }}>
+                            <span>{SIGNAL_LABELS[signal.type]}</span>
+                            <span
+                              style={{
+                                padding: "2px 8px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                background: accentStyle ? "rgba(255,255,255,0.2)" : "rgba(15,23,42,0.06)",
+                                color: accentStyle ? accentStyle.textColor : "#0f172a",
+                              }}
+                            >
+                              {STATUS_BADGES[signal.status]}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, color: accentStyle?.textColor ?? "#475569" }}>{signal.why}</div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}

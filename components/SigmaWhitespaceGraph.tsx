@@ -207,6 +207,7 @@ const CLUSTER_TERM_STOPWORDS = new Set<string>([
     "particular",
     "potential",
     "possible",
+    "different",
 ]);
 const CLUSTER_TERM_STEM_STOPWORDS = [
     "algorithm",
@@ -247,7 +248,9 @@ const CLUSTER_TERM_STEM_STOPWORDS = [
     "estimat",
     "receiv",
     "involv",
-    "obtain"
+    "obtain",
+    "describ",
+    "detect"
 ];
 
 type ClusterLegendEntry = {
@@ -261,6 +264,42 @@ function isStopwordToken(token: string): boolean {
   if (token.length < CLUSTER_TERM_MIN_LENGTH) return true;
   if (CLUSTER_TERM_STOPWORDS.has(token)) return true;
   return CLUSTER_TERM_STEM_STOPWORDS.some((stem) => token.startsWith(stem));
+}
+
+function singularizeTokenForVocabulary(token: string, vocabulary: Set<string>): string | null {
+  if (!token.endsWith("s") || token.length < 4) return null;
+
+  const candidates: string[] = [];
+  if (token.endsWith("ies") && token.length > 4) {
+    candidates.push(`${token.slice(0, -3)}y`);
+  }
+  if (token.endsWith("ves") && token.length > 4) {
+    candidates.push(`${token.slice(0, -3)}f`);
+    candidates.push(`${token.slice(0, -3)}fe`);
+  }
+  const esSuffixes = ["ses", "xes", "zes", "ches", "shes"];
+  if (esSuffixes.some((suffix) => token.endsWith(suffix))) {
+    candidates.push(token.slice(0, -2));
+  }
+  if (!token.endsWith("ss") && !token.endsWith("us") && !token.endsWith("is")) {
+    candidates.push(token.slice(0, -1));
+  }
+
+  for (const candidate of candidates) {
+    if (
+      candidate &&
+      candidate.length >= CLUSTER_TERM_MIN_LENGTH &&
+      vocabulary.has(candidate)
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function canonicalizeKeyword(token: string, vocabulary: Set<string>): string {
+  return singularizeTokenForVocabulary(token, vocabulary) ?? token;
 }
 
 function hslToHex(h: number, s: number, l: number): string {
@@ -467,6 +506,7 @@ export default function SigmaWhitespaceGraph({
     });
 
     const toKeywords = (counts: Map<string, number>): string[] => {
+      const vocabulary = new Set(counts.keys());
       const ordered = Array.from(counts.entries())
         .filter(
           ([token]) =>
@@ -479,11 +519,30 @@ export default function SigmaWhitespaceGraph({
           return a[0].localeCompare(b[0]);
         })
         .map(([term]) => term);
+      const deduped: string[] = [];
+      const canonicalIndex = new Map<string, number>();
+
+      ordered.forEach((token) => {
+        const canonical = canonicalizeKeyword(token, vocabulary);
+        const existingIndex = canonicalIndex.get(canonical);
+        if (existingIndex === undefined) {
+          deduped.push(token);
+          canonicalIndex.set(canonical, deduped.length - 1);
+          return;
+        }
+
+        const existingToken = deduped[existingIndex];
+        const tokenIsSingular = token === canonical;
+        const existingIsSingular = existingToken === canonical;
+        if (tokenIsSingular && !existingIsSingular) {
+          deduped[existingIndex] = token;
+        }
+      });
       const desiredCount = Math.max(
         CLUSTER_TERM_MIN_COUNT,
-        Math.min(CLUSTER_TERM_MAX_COUNT, ordered.length),
+        Math.min(CLUSTER_TERM_MAX_COUNT, deduped.length),
       );
-      return ordered.slice(0, desiredCount);
+      return deduped.slice(0, desiredCount);
     };
 
     const formatTerm = (term: string) =>

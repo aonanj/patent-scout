@@ -231,7 +231,7 @@ export default function WhitespaceHelpPage() {
 
         {/* Optional Legacy Signals */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Optional Assignee Signals</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Assignee Signals (Optional)</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Switching on “Group by Assignee” augments the whitespace analysis with a per-assignee clustering view. More complex, weighted signals are calculated from semantic embeddings, which are used to build a cosine KNN graph and evaluate four signals per grouping:
           </p>
