@@ -96,9 +96,9 @@ async def send_mailgun_email(
         print("Subject:", subject)
         print(text_body)
 
-    url = "https://api.mailgun.net/v3/mg.spurly.io/messages"
+    url = "https://api.mailgun.net/v3/mg.phaethonorder.com/messages"
     data = {
-        "from": "Support <noreply@mg.spurly.io>",
+        "from": "no-reply <noreply@mg.phaethonorder.com>",
         "to": [to_email],
         "subject": subject,
         "text": text_body,
