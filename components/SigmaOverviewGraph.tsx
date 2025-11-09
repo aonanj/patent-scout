@@ -250,7 +250,10 @@ const CLUSTER_TERM_STEM_STOPWORDS = [
     "involv",
     "obtain",
     "describ",
-    "detect"
+    "detect",
+    "disclos",
+    "apply",
+    "analyz"
 ];
 
 type ClusterLegendEntry = {
@@ -281,7 +284,7 @@ function singularizeTokenForVocabulary(token: string, vocabulary: Set<string>): 
   if (esSuffixes.some((suffix) => token.endsWith(suffix))) {
     candidates.push(token.slice(0, -2));
   }
-  if (!token.endsWith("ss") && !token.endsWith("us") && !token.endsWith("is")) {
+  if (!token.endsWith("ss") && !token.endsWith("us") && !token.endsWith("is") && !token.endsWith("ed")) {
     candidates.push(token.slice(0, -1));
   }
 

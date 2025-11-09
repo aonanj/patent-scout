@@ -304,6 +304,9 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "obtain",
     "describ",
     "detect",
+    "disclos",
+    "apply",
+    "analyz"
 )
 
 

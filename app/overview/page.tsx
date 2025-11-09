@@ -414,6 +414,58 @@ function CPCList(cpc: PatentHit["cpc"]): string {
   return Array.from(codes).slice(0, 4).join(", ");
 }
 
+function pad2(value: number): string {
+  return value.toString().padStart(2, "0");
+}
+
+function formatIsoDateUtc(date: Date): string {
+  return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
+}
+
+function parseIsoDateUtc(value?: string | null): Date | null {
+  if (!value) return null;
+  const [yearStr, monthStr, dayStr] = value.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  if ([year, month, day].some((part) => Number.isNaN(part))) {
+    return null;
+  }
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function monthFloorUtc(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+function shiftMonthsUtc(date: Date, months: number): Date {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const targetMonthIndex = month + months;
+  const targetYear = year + Math.floor(targetMonthIndex / 12);
+  const normalizedMonth = ((targetMonthIndex % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(targetYear, normalizedMonth + 1, 0)).getUTCDate();
+  const day = Math.min(date.getUTCDate(), lastDay);
+  return new Date(Date.UTC(targetYear, normalizedMonth, day));
+}
+
+function deriveOverviewDateRange(
+  dateFromValue: string,
+  dateToValue: string,
+  todayIso: string,
+): { dateFrom: string; dateTo: string } {
+  const fallbackToday = parseIsoDateUtc(todayIso);
+  const parsedEnd = parseIsoDateUtc(dateToValue) ?? fallbackToday;
+  if (!parsedEnd) {
+    return { dateFrom: dateFromValue, dateTo: dateToValue };
+  }
+  const resolvedTo = dateToValue || formatIsoDateUtc(parsedEnd);
+  const flooredEnd = monthFloorUtc(parsedEnd);
+  const defaultStart = shiftMonthsUtc(flooredEnd, -23);
+  const resolvedFrom = dateFromValue || formatIsoDateUtc(defaultStart);
+  return { dateFrom: resolvedFrom, dateTo: resolvedTo };
+}
+
 function abstractPreviewText(value?: string | null, limit = ABSTRACT_PREVIEW_LIMIT): string {
   if (!value) return "—";
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -802,16 +854,19 @@ export default function OverviewPage() {
       await loginWithRedirect();
       return;
     }
-    if (!keywords.trim() && !cpcFilter.trim()) {
+    const trimmedKeywords = keywords.trim();
+    const trimmedCpc = cpcFilter.trim();
+    if (!trimmedKeywords && !trimmedCpc) {
       setError("Enter focus keywords or a CPC filter to run the overview.");
       return;
     }
+    const { dateFrom: derivedDateFrom, dateTo: derivedDateTo } = deriveOverviewDateRange(dateFrom, dateTo, today);
 
     const currentQuery: RunQuery = {
-      keywords: keywords.trim(),
-      cpc: cpcFilter.trim(),
-      dateFrom,
-      dateTo,
+      keywords: trimmedKeywords,
+      cpc: trimmedCpc,
+      dateFrom: derivedDateFrom || "",
+      dateTo: derivedDateTo || "",
       semantic: showSemantic,
     };
 
@@ -915,6 +970,7 @@ export default function OverviewPage() {
     dateFrom,
     dateTo,
     getAccessTokenSilently,
+    today,
     groupByAssignee,
     isAuthenticated,
     keywords,
