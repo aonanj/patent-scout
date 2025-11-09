@@ -76,7 +76,7 @@ export default function WhitespaceHelpPage() {
             The Whitespace Analysis page is a platform for overview and insights directed to input search criteria. Analysis information displayed on this page can be searched and sorted in multiple ways, providing a dynamic and flexible interface ideal for AI/ML prior art searches, competitive landscape monitoring, underexplored technology areas conducive to R&D innovation, and more.
           </p>
           <p style={{ marginTop: 8, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            Analysis and insights available on this page are generated based on user-defined focus keywords, CPC filters, and date ranges. The overview section provides a high-level summary of key metrics, while the tables and charts allow for in-depth exploration of patent filings relevant to the specified criteria. For example, key metrics include subject matter saturation, patent and publication activity rates and momentum, and CPC trends for specific search criteria and semantically similar concepts.
+            Analysis and insights available on this page are generated based on user-defined focus keywords, CPC filters, and date ranges. The overview section provides a high-level summary of key metrics, while the tables and charts allow for in-depth exploration of patent filings relevant to the specified criteria. For example, key metrics include subject matter saturation, patent and publication activity rates and momentum, and CPC distribution for specific search criteria and semantically similar concepts.
           </p>
         </div>
 
@@ -200,12 +200,12 @@ export default function WhitespaceHelpPage() {
               description="Plots monthly publication counts across the selected window. Hover in the UI to inspect the exact month totals. Sharp inflections may indicate changes in momentum."
             />
             <LayoutSection
-              title="CPC trend chart"
+              title="CPC distribution chart"
               description="Ranks CPC codes by patent and publication volume. A shorter bar generally corresponds to a less explored technology area, whereas a longer bar may suggest a more developed or saturated technology area."
             />
             <LayoutSection
               title="Recent intervals"
-              description="Summaries for the last 6, 12, 18, and 24 months. This information can be read with near-term patent and publication velocity against historical averages."
+              description="Summaries for the last 6, 12, 18, and 24 months. This information can be read with near-term patent and publication activity rates against historical averages."
             />
           </div>
         </div>

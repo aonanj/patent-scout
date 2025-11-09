@@ -1116,7 +1116,7 @@ export default function WhitespacePage() {
             <div style={{ display: "grid", gap: 4 }}>
               <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#102a43" }}>Whitespace Analysis</h1>
               <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
-                Subject matter saturation, patent and publication activity rates and momentum, and CPC trends for specific search criteria and semantically similar concepts.
+                Subject matter saturation, patent/publication activity rates and momentum, and CPC distribution for specific search criteria and semantically similar areas.
               </p>
             </div>
             {!isAuthenticated && !authLoading && (
@@ -1275,7 +1275,7 @@ export default function WhitespacePage() {
                   </ul>
                 </div>
                 <div style={{ display: "grid", gap: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#102a43" }}>CPC Trends</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#102a43" }}>CPC Distribution</div>
                   <CpcBarChart items={overview.cpc_breakdown.slice(0, 8)} />
                 </div>
               </div>
