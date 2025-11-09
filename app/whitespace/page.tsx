@@ -1146,7 +1146,7 @@ export default function WhitespacePage() {
                 />
               </div>
               <div style={{ display: "grid", gap: 6, minWidth: 220 }}>
-                <Label htmlFor="ws-cpc">CPC (%LIKE%)</Label>
+                <Label htmlFor="ws-cpc">CPC</Label>
                 <input
                   id="ws-cpc"
                   placeholder="e.g., G06N%, A61B5/00"
