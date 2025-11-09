@@ -1013,46 +1013,33 @@ def load_embeddings(
             """
         )
     # params for focus expr appear after date params
-    focus_params: list[Any] = []
+    focus_param_values: list[Any] = []
     if req.focus_keywords:
-        focus_params.extend(req.focus_keywords)
+        focus_param_values.extend(req.focus_keywords)
     if req.focus_cpc_like:
-        focus_params.append(req.focus_cpc_like)
+        focus_param_values.append(req.focus_cpc_like)
 
     focus_expr = " AND ".join(focus_conds) if focus_conds else "FALSE"
 
-    sql = f"""
-    SELECT
-      e.pub_id,
-      e.embedding,
-      p.pub_date,
-      COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name,
-      p.title,
-      p.abstract,
-      ({focus_expr}) AS is_focus
-    FROM patent_embeddings e
-    JOIN patent p USING (pub_id)
-    {CANONICAL_ASSIGNEE_LATERAL}
-    WHERE {' AND '.join(where)}
-    ORDER BY is_focus DESC, p.pub_date DESC, e.pub_id
-    """
-    params: list[Any] = []
-    # IMPORTANT: Parameter order must match placeholder order in SQL string
-    # Placeholders appear first in SELECT (focus_expr), then in WHERE (base_params), then LIMIT
-    params.extend(focus_params)
-    params.extend(base_params)
-    if req.limit:
-        sql += " LIMIT %s"
-        params.append(req.limit)
+    where_sql = " AND ".join(where)
+    target_limit = min(req.limit or MAX_GRAPH_LIMIT, MAX_GRAPH_LIMIT)
+    if target_limit <= 0:
+        raise HTTPException(400, "limit must be greater than zero.")
+
     vecs: list[np.ndarray] = []
     meta: list[EmbeddingMeta] = []
-    with conn.cursor(row_factory=dict_row) as cur: # type: ignore
-        cur.execute(_sql.SQL(sql), params) # type: ignore
+    seen_pub_ids: set[str] = set()
+
+    def _ingest_rows(cur: psycopg.Cursor[dict[str, Any]]) -> bool:
         for r in cur:
+            pub_id = str(r["pub_id"])
+            if pub_id in seen_pub_ids:
+                continue
+            seen_pub_ids.add(pub_id)
             vecs.append(np.asarray(json.loads(r["embedding"]), dtype=np.float32))
             meta.append(
                 EmbeddingMeta(
-                    pub_id=str(r["pub_id"]),
+                    pub_id=pub_id,
                     is_focus=bool(r["is_focus"]),
                     pub_date=_from_int_date(r.get("pub_date")),
                     assignee=(r.get("assignee_name") or None),
@@ -1060,6 +1047,66 @@ def load_embeddings(
                     abstract=(r.get("abstract") or None),
                 )
             )
+            if len(vecs) >= target_limit:
+                return True
+        return False
+
+    def _run_query(sql: str, params: Sequence[Any]) -> bool:
+        with conn.cursor(row_factory=dict_row) as cur:  # type: ignore
+            cur.execute(_sql.SQL(sql), params)  # type: ignore
+            return _ingest_rows(cur)
+
+    has_focus_filters = bool(focus_conds)
+    if has_focus_filters:
+        focus_sql = f"""
+        SELECT
+          e.pub_id,
+          e.embedding,
+          p.pub_date,
+          COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name,
+          p.title,
+          p.abstract,
+          TRUE AS is_focus
+        FROM patent_embeddings e
+        JOIN patent p USING (pub_id)
+        {CANONICAL_ASSIGNEE_LATERAL}
+        WHERE {where_sql}
+          AND ({focus_expr})
+        ORDER BY p.pub_date DESC, e.pub_id
+        LIMIT %s
+        """
+        focus_params: list[Any] = []
+        focus_params.extend(base_params)
+        focus_params.extend(focus_param_values)
+        focus_params.append(target_limit)
+        done = _run_query(focus_sql, focus_params)
+    else:
+        done = False
+
+    if not done and len(vecs) < target_limit:
+        fallback_limit = target_limit if not has_focus_filters else min(target_limit * 2, MAX_GRAPH_LIMIT * 2)
+        fallback_sql = f"""
+        SELECT
+          e.pub_id,
+          e.embedding,
+          p.pub_date,
+          COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name,
+          p.title,
+          p.abstract,
+          ({focus_expr}) AS is_focus
+        FROM patent_embeddings e
+        JOIN patent p USING (pub_id)
+        {CANONICAL_ASSIGNEE_LATERAL}
+        WHERE {where_sql}
+        ORDER BY p.pub_date DESC, e.pub_id
+        LIMIT %s
+        """
+        fallback_params: list[Any] = []
+        fallback_params.extend(focus_param_values)
+        fallback_params.extend(base_params)
+        fallback_params.append(fallback_limit)
+        _run_query(fallback_sql, fallback_params)
+
     if not vecs:
         raise HTTPException(400, "No embeddings match the filters.")
     X = np.vstack(vecs)

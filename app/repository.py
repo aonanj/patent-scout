@@ -113,7 +113,7 @@ def _pub_date_desc_sort_key(row: dict[str, Any]) -> tuple[int, Any, str]:
         return (0, -raw, row.get("pub_id") or "")
     if isinstance(raw, str) and raw.isdigit():
         return (0, -int(raw), row.get("pub_id") or "")
-    return (1, row.get("pub_id") or "")
+    return (1, None, row.get("pub_id") or "")
 
 def _adaptive_filters(rows: list[dict[str, Any]], *,
                       dist_cap: float | None = None,
