@@ -43,7 +43,7 @@ from .schemas import (
 from .stripe_config import ensure_stripe_configured
 from .stripe_webhooks import process_webhook_event, verify_webhook_signature
 from .subscription_middleware import ActiveSubscription
-from .whitespace_api import router as whitespace_router
+from .overview_api import router as overview_router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -106,7 +106,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(whitespace_router)
+app.include_router(overview_router)
 app.include_router(payment_router)
 
 class DateRangeReponse(BaseModel):

@@ -1,7 +1,7 @@
 """Backfill patent_assignee join table from patent rows.
 
 Revision ID: f1a2b3c4d5e6
-Revises: e1f2g3h4i5j6
+Revises: h2i3j4k5l6m7
 Create Date: 2025-10-22 00:00:00.000000
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "f1a2b3c4d5e6"
-down_revision: str = "e1f2g3h4i5j6"
+down_revision: str = "h2i3j4k5l6m7"
 branch_labels: str | None = None
 depends_on: str | None = None
 

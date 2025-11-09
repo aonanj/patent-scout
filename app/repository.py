@@ -246,10 +246,12 @@ async def export_rows(
         rows: list[dict[str, Any]] = await cur.fetchall()
 
     kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
+    # Preserve distance ordering by default so exports stay relevance-sorted;
+    # only re-sort when callers explicitly ask for an assignee grouping.
+    # Keep rows ordered by distance for semantic relevance unless callers
+    # explicitly request the canonical-assignee sort.
     if sort_by == "assignee_asc":
         kept = sorted(kept, key=_assignee_sort_key)
-    elif sort_by == "pub_date_desc":
-        kept = sorted(kept, key=_pub_date_desc_sort_key)
     kept = kept[:limit]
     out: list[dict[str, Any]] = []
     for r in kept:
@@ -364,8 +366,6 @@ async def search_hybrid(
     kept = _adaptive_filters(rows, jump=SEMANTIC_JUMP, limit=topk)
     if sort_by == "assignee_asc":
         kept = sorted(kept, key=_assignee_sort_key)
-    elif sort_by == "pub_date_desc":
-        kept = sorted(kept, key=_pub_date_desc_sort_key)
 
     # Calculate total based on filtered results
     total = len(kept)

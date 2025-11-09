@@ -14,11 +14,11 @@ import {
 
 import type {
   SignalKind,
-  WsGraph,
-} from "../../components/SigmaWhitespaceGraph";
+  OverviewGraph,
+} from "../../components/SigmaOverviewGraph";
 
-const SigmaWhitespaceGraph = dynamic(
-  () => import("../../components/SigmaWhitespaceGraph"),
+const SigmaOverviewGraph = dynamic(
+  () => import("../../components/SigmaOverviewGraph"),
   { ssr: false },
 );
 
@@ -96,10 +96,10 @@ type AssigneeSignals = {
   label_terms?: string[] | null;
 };
 
-type WhitespaceGraphResponse = {
+type OverviewGraphResponse = {
   k: string;
   assignees: AssigneeSignals[];
-  graph: WsGraph | null;
+  graph: OverviewGraph | null;
 };
 
 type RunQuery = {
@@ -707,7 +707,7 @@ function CpcBarChart({ items }: { items: { cpc: string; count: number }[] }) {
   );
 }
 
-export default function WhitespacePage() {
+export default function OverviewPage() {
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
   const today = useRef<string>(new Date().toISOString().slice(0, 10)).current;
 
@@ -723,7 +723,7 @@ export default function WhitespacePage() {
   const [totalResults, setTotalResults] = useState(0);
   const [resultPage, setResultPage] = useState(1);
   const [sortBy, setSortBy] = useState<ResultSort>("relevance_desc");
-  const [assigneeData, setAssigneeData] = useState<WhitespaceGraphResponse | null>(null);
+  const [assigneeData, setAssigneeData] = useState<OverviewGraphResponse | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
   const [activeSignalKey, setActiveSignalKey] = useState<string | null>(null);
 
@@ -764,7 +764,7 @@ export default function WhitespacePage() {
           search_mode: "keywords" as const,
           assignee_query: null,
         };
-        const response = await fetch("/api/whitespace/graph", {
+        const response = await fetch("/api/overview/graph", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -776,7 +776,7 @@ export default function WhitespacePage() {
           const detail = await response.json().catch(() => ({} as Record<string, unknown>));
           throw new Error((detail as { detail?: string }).detail || `HTTP ${response.status}`);
         }
-        const data = (await response.json()) as WhitespaceGraphResponse;
+        const data = (await response.json()) as OverviewGraphResponse;
         setAssigneeData(data);
       } finally {
         setAssigneeLoading(false);
@@ -831,7 +831,7 @@ export default function WhitespacePage() {
       if (toInt) params.set("date_to", String(toInt));
       if (currentQuery.semantic) params.set("semantic", "1");
 
-      const overviewPromise = fetch(`/api/whitespace/overview?${params.toString()}`, {
+      const overviewPromise = fetch(`/api/overview/overview?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -889,7 +889,7 @@ export default function WhitespacePage() {
       const overviewRes = await overviewPromise;
       if (!overviewRes.ok) {
         const detail = await overviewRes.json().catch(() => ({}));
-        throw new Error(detail.detail || `Overview failed (${overviewRes.status})`);
+        throw new Error(detail.detail || `IP Overview failed (${overviewRes.status})`);
       }
 
       const overviewJson = (await overviewRes.json()) as OverviewResponse;
@@ -905,7 +905,7 @@ export default function WhitespacePage() {
         setAssigneeData(null);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to run whitespace analysis.";
+      const message = err instanceof Error ? err.message : "Failed to run overview analysis.";
       setError(message);
     } finally {
       setLoading(false);
@@ -1108,7 +1108,7 @@ export default function WhitespacePage() {
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Patent Scout – Whitespace Overview", marginX, y);
+      doc.text("Patent Scout – IP Overview", marginX, y);
       y += 24;
 
       doc.setFont("helvetica", "normal");
@@ -1185,7 +1185,7 @@ export default function WhitespacePage() {
         doc.text(`Note: Export limited to first ${PDF_EXPORT_LIMIT.toLocaleString()} results.`, marginX, y);
       }
 
-      const filename = `whitespace_results_${Date.now()}.pdf`;
+      const filename = `overview_results_${Date.now()}.pdf`;
       doc.save(filename);
     } catch (err) {
       console.error(err);
@@ -1202,7 +1202,7 @@ export default function WhitespacePage() {
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ display: "grid", gap: 4 }}>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#102a43" }}>Whitespace Analysis</h1>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#102a43" }}>IP Overview</h1>
               <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
                 Subject matter saturation, patent/publication activity rates and momentum, and CPC distribution for specific search criteria and semantically similar areas.
               </p>
@@ -1480,7 +1480,7 @@ export default function WhitespacePage() {
             </div>
             {assigneeData?.graph && (
               <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(148,163,184,0.25)" }}>
-                <SigmaWhitespaceGraph data={assigneeData.graph} height={420} selectedSignal={null} highlightedNodeIds={highlightedNodeIds} />
+                <SigmaOverviewGraph data={assigneeData.graph} height={420} selectedSignal={null} highlightedNodeIds={highlightedNodeIds} />
               </div>
             )}
             <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>

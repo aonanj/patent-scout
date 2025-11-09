@@ -359,9 +359,9 @@ export default function HomePageClient() {
     }
   }, [getAccessTokenSilently, appliedQ, appliedSemantic, appliedAssignee, appliedCpc, appliedDateFrom, appliedDateTo, trendGroupBy]);
 
-  // whitespace analysis moved to /whitespace page
+  // IP Overview analysis moved to /overview page
 
-  // NOTE: rendering is now handled by SigmaWhitespaceGraph component below.
+  // NOTE: rendering is now handled by SigmaOverviewGraph component below.
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -645,7 +645,7 @@ export default function HomePageClient() {
           )}
         </Card>
 
-        {/* Whitespace Analysis moved to its own page at /whitespace */}
+        {/* IP Overview moved to its own page at /overview */}
 
         <Card>
           <Row align="center">

@@ -114,7 +114,7 @@ export default function PrivacyPolicyPage() {
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Search queries (keywords, semantic descriptions, etc.);</li>
                 <li>Patents and publications viewed and interactions;</li>
-                <li>Features used (search, trends, whitespace analysis, exports, etc.);</li>
+                <li>Features used (search, trends, IP overview, exports, etc.);</li>
                 <li>Alert configuration and triggering events;</li>
                 <li>Time spent on platform and session duration;</li>
                 <li>Navigation paths and click patterns.</li>
@@ -179,7 +179,7 @@ export default function PrivacyPolicyPage() {
                 <li>Create and manage your user account;</li>
                 <li>Authenticate your identity and authorize access;</li>
                 <li>Process searches and generate results;</li>
-                <li>Deliver trend analysis and whitespace identification;</li>
+                <li>Deliver trend analysis and IP overview information;</li>
                 <li>Send automated patent alerts based on your configurations;</li>
                 <li>Generate and deliver export files (CSV, PDF);</li>
                 <li>Provide customer support and respond to inquiries;</li>

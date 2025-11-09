@@ -1,20 +1,20 @@
 # Patent Scout
 
-> Patent Scout is a data and analytics platform for artificial intelligence (AI) and machine learning (ML) IP. The platform blends hybrid semantic search, trend analytics, whitespace graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes 56k+ AI/ML-related patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
+> Patent Scout is a data and analytics platform for artificial intelligence (AI) and machine learning (ML) IP. The platform blends hybrid semantic search, trend analytics, IP overview graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes 56k+ AI/ML-related patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
 
 ## Overview
-The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and whitespace endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific whitespace analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
+The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and overview endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific IP overview analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
 
 ## Feature Highlights
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). Filters are edited live, but searches only execute when the user clicks the `Apply` button, removing prior debounce-driven inconsistencies across the trend graph and table.
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
-- Whitespace overview that surfaces crowding, density, momentum, and CPC placement for focus keyword(s) and/or CPC(s), with an optional assignee signal graph for deeper dives ([app/whitespace_api.py](app/whitespace_api.py), [app/whitespace_signals.py](app/whitespace_signals.py), [components/SigmaWhitespaceGraph.tsx](components/SigmaWhitespaceGraph.tsx), [app/whitespace/page.tsx](app/whitespace/page.tsx)).
+- IP Overview that surfaces saturation, activity rates, momentum, and CPC distribution for focus keyword(s) and/or CPC(s), with optional group by assignee signals ([app/overview_api.py](app/overview_api.py), [app/overview_signals.py](app/overview_signals.py), [components/SigmaOverviewGraph.tsx](components/SigmaOverviewGraph.tsx), [app/overview/page.tsx](app/overview/page.tsx)).
 - Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
 - Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent and application coverage.
 - Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
 - Automated Mailgun/console alert notifications for saved queries packaged as standalone runner ([alerts_runner.py](alerts_runner.py)).
-- User-specific whitespace analysis with isolated graph computation and personalized signal detection.
-- Comprehensive pytest suite covering authentication, repository search logic, whitespace signal math, and API contracts ([tests/](tests/)).
+- User-specific IP overview analysis with isolated graph computation and personalized signal detection.
+- Comprehensive pytest suite covering authentication, repository search logic, overview signal math, and API contracts ([tests/](tests/)).
 
 ## Live Deployment
 - App: https://patent-scout.com/
@@ -35,7 +35,7 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 ┌────────────────────────┐        ┌────────────────────────────┐
 │ FastAPI service        │◄──────►│ Postgres + pgvector        │
 │ app/api.py             │        │ patent, embeddings, alerts │
-│ └─ whitespace_api.py   │        └─────────┬──────────────────┘
+│ └─ overview_api.py     │        └─────────┬──────────────────┘
 └───────────┬────────────┘                  │
             │                               │
             │                       ┌──────────────────────────┐
@@ -53,7 +53,7 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 ```
 
 ## Tech Stack
-- **Backend**: FastAPI 0.115+, Pydantic v2, psycopg 3 async pools, asyncpg 0.30+, aiosmtplib 4.0+, whitespace analytics with igraph, leidenalg, umap-learn, and scikit-learn ([app/](app/)).
+- **Backend**: FastAPI 0.115+, Pydantic v2, psycopg 3 async pools, asyncpg 0.30+, aiosmtplib 4.0+, overview analytics with igraph, leidenalg, umap-learn, and scikit-learn ([app/](app/)).
 - **Frontend**: Next.js 15.5, React 19.1, Auth0 React SDK 2.4, Sigma.js 3.0-beta, Graphology 0.25, Force-Atlas2 layout, Tailwind CSS 3.4, TypeScript 5.9 ([app/*.tsx](app/), [components/](components/)).
 - **Data Pipelines**: Google BigQuery, USPTO PEDS API, USPTO bulk XML parsing, OpenAI `text-embedding-3` models ([etl.py](etl.py), [etl_uspto.py](etl_uspto.py), [etl_xml_fulltext.py](etl_xml_fulltext.py)).
 - **Infrastructure & Tooling**: Postgres 15+ with pgvector, Alembic migrations, pytest with asyncio support, Ruff linting, pip-tools lockfiles, Docker containerization ([migrations/](migrations/), [tests/](tests/)).
@@ -62,8 +62,8 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 ```
 ├── app/
 │   ├── api.py                       # FastAPI application & routers
-│   ├── whitespace_api.py            # Whitespace analytics endpoint
-│   ├── whitespace_signals.py        # Whitespace signal calculation logic
+│   ├── overview_api.py            # IP Overview endpoint
+│   ├── overview_signals.py        # IP Overview signal calculation logic
 │   ├── auth.py                      # Auth0 JWT validation
 │   ├── config.py                    # Settings from environment
 │   ├── db.py                        # Async DB connection pools
@@ -75,13 +75,13 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 │   │   ├── export/route.ts          # CSV/PDF export
 │   │   ├── trend/volume/route.ts    # Trend analytics
 │   │   ├── saved-queries/           # Alert CRUD endpoints
-│   │   └── whitespace/graph/        # Whitespace graph endpoints
+│   │   └── overview/graph/          # IP Overview graph endpoints
 │   ├── page.tsx                     # Search & trends experience
-│   ├── whitespace/page.tsx          # Whitespace exploration UI
+│   ├── overview/page.tsx            # IP Overview exploration UI
 │   ├── help/                        # Help documentation pages
 │   │   ├── page.tsx                 # Help index
 │   │   ├── search_trends/page.tsx   # Search & trends help
-│   │   └── whitespace/page.tsx      # Whitespace help
+│   │   └── overview/page.tsx        # IP Overview help
 │   ├── docs/                        # Legal & commercial pages
 │   │   ├── privacy/page.tsx         # Privacy policy
 │   │   ├── tos/page.tsx             # Terms of service
@@ -89,14 +89,14 @@ The repository contains the full Patent Scout stack: FastAPI exposes the search,
 │   └── providers.tsx, layout.tsx, globals.css
 ├── components/
 │   ├── NavBar.tsx                   # Auth0-aware navigation & alert modal
-│   └── SigmaWhitespaceGraph.tsx     # Sigma.js graph renderer
+│   └── SigmaOverviewGraph.tsx     # Sigma.js graph renderer
 ├── tests/                           # pytest suite (API, repository, signals, auth)
 │   ├── test_api.py, test_auth.py, test_config.py, test_db.py
 │   ├── test_embed.py, test_repository.py
-│   └── test_whitespace_signals.py, test_whitespace_utils.py
+│   └── test_overview_signals.py, test_overview_utils.py
 ├── migrations/                      # Alembic environment + versions
 │   ├── env.py                       # Migration configuration
-│   └── versions/                    # Schema migrations (whitespace, user tables)
+│   └── versions/                    # Schema migrations (overview, user tables)
 ├── docs/
 │   ├── screenshots/                 # UI & API imagery
 │   └── uspto_odp_api/               # USPTO API schema reference
@@ -161,7 +161,7 @@ The bundled `start.sh` executes `alembic upgrade head` before launching Uvicorn.
 ```bash
 pytest
 ```
-Unit and integration tests cover search repository queries, API endpoints, Auth0 config validation, whitespace signals, and database helpers.
+Unit and integration tests cover search repository queries, API endpoints, Auth0 config validation, IP Overview signals, and database helpers.
 
 ## Environment Variables
 
@@ -174,7 +174,7 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `OPENAI_API_KEY` – Enables semantic queries, PDF export enrichment, and ETL embeddings.
 - `EMBEDDING_MODEL` / `SEMANTIC_TOPK` / `SEMANTIC_JUMP` / `VECTOR_TYPE` – Hybrid search tuning knobs.
 - `EXPORT_MAX_ROWS` / `EXPORT_SEMANTIC_TOPK` – Export limits shared by CSV/PDF generators.
-- `WS_EMBEDDING_MODEL` – Preferred embedding suffix for whitespace analytics.
+- `OVERVIEW_EMBEDDING_MODEL` – Preferred embedding suffix for IP Overview analytics (falls back to `WS_EMBEDDING_MODEL` for legacy deployments).
 
 ### Frontend / Next.js
 - `NEXT_PUBLIC_AUTH0_DOMAIN`
@@ -261,21 +261,21 @@ python add_canon_name.py \
   --dsn "postgresql://user:pass@host/db?sslmode=require"
 ```
 
-## Whitespace Analytics
-[app/whitespace_api.py](app/whitespace_api.py) now serves two complementary experiences:
+## IP Overview
+[app/overview_api.py](app/overview_api.py) serves two complementary experiences:
 
-- `/whitespace/overview` composes the primitives that matter most for whitespace research. For any keyword/CPC scope it returns exact and semantic crowding counts, density per month, momentum slope/CAGR with a labeled Up/Flat/Down bucket, top CPC slices, recent filing tallies (6/12/24 months), and the full monthly timeline used across the UI.
-- `/whitespace/graph` (unchanged) builds a user-specific embedding graph when the optional “Group by Assignee” facet is enabled. It selects an embedding model (`WS_EMBEDDING_MODEL`), computes cosine KNN neighborhoods, applies Leiden community detection, and scores whitespace intensity per grouping. Signal detection logic in [app/whitespace_signals.py](app/whitespace_signals.py) still evaluates convergence, emerging gaps, crowd-out, and bridge opportunities.
+- `/overview/overview` composes analysis and insights for IP Overview. For any keyword/CPC scope it returns exact and semantic saturation counts, activity rate (per month), momentum slope/CAGR with labeled Up/Flat/Down, top CPC slices, recent filing tallies (6/12/18/24 months), and the full monthly timeline used across the UI.
+- `/overview/graph` builds a user-specific embedding graph when the optional “Group by Assignee” facet is enabled. It selects an embedding model (`OVERVIEW_EMBEDDING_MODEL`, falling back to `WS_EMBEDDING_MODEL`), computes cosine KNN neighborhoods, applies Leiden community detection, and scores intensity per grouping. Signal detection logic in [app/overview_signals.py](app/overview_signals.py) evaluates convergence, emerging gaps, crowd-out, and bridge opportunities.
 
-The React UI ([app/whitespace/page.tsx](app/whitespace/page.tsx)) now defaults to the overview primitives: four tiles (Crowding, Density, Momentum, Top CPCs), a timeline sparkline, CPC bar chart, and a patent results table with semantic toggle. Enabling “Group by Assignee” pulls in the legacy Sigma.js visualization and signal cards for teams that need assignee clustering context.
+The React UI ([app/overview/page.tsx](app/overview/page.tsx)) defaults to the overview primitives: four tiles (Crowding, Density, Momentum, Top CPCs), a timeline sparkline, CPC bar chart, and a patent results table with semantic toggle. Enabling “Group by Assignee” pulls in a Sigma.js visualization and signal cards for assignee clustering context.
 
 ## Screenshots
 - Search & Trends UI – ![docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
-- Whitespace Overview UI – ![docs/screenshots/whitespace-ui.png](docs/screenshots/whitespace-ui.png)
+- IP Overview UI – ![docs/screenshots/overview-ui.png](docs/screenshots/overview-ui.png)
 - Patent Scout API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
 ## Documentation & Legal Pages
-- **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [search & trends](app/help/search_trends/page.tsx) and [whitespace analytics](app/help/whitespace/page.tsx).
+- **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [Search & Trends](app/help/search_trends/page.tsx) and [IP Overview](app/help/overview/page.tsx).
 - **Legal Pages**: Privacy policy ([app/docs/privacy/page.tsx](app/docs/privacy/page.tsx)), Terms of Service ([app/docs/tos/page.tsx](app/docs/tos/page.tsx)), and Data Processing Agreement ([app/docs/dpa/page.tsx](app/docs/dpa/page.tsx)).
 
 ## License

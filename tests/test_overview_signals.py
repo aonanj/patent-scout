@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from app.whitespace_signals import (
+from app.overview_signals import (
     SignalComputation,
     signal_bridge,
     signal_crowd_out,
@@ -46,7 +46,7 @@ def test_signal_focus_shift_partial_trend_is_detected() -> None:
 
 def test_signal_emerging_gap_detects_sparse_hotspot() -> None:
     result = signal_emerging_gap(
-        whitespace_series=[0.42, 0.53, 0.97],
+        overview_series=[0.42, 0.53, 0.97],
         cohort_scores=[0.1, 0.2, 0.3, 0.4, 0.75, 0.8, 0.88, 0.9, 0.92, 0.94],
         neighbor_momentum=0.65,
     )
@@ -56,7 +56,7 @@ def test_signal_emerging_gap_detects_sparse_hotspot() -> None:
 
 def test_signal_emerging_gap_no_signal_when_percentile_low() -> None:
     result = signal_emerging_gap(
-        whitespace_series=[0.21, 0.24],
+        overview_series=[0.21, 0.24],
         cohort_scores=[0.1, 0.2, 0.3, 0.4],
         neighbor_momentum=0.8,
     )
@@ -66,7 +66,7 @@ def test_signal_emerging_gap_no_signal_when_percentile_low() -> None:
 
 def test_signal_emerging_gap_flags_sparse_even_with_cool_neighbors() -> None:
     result = signal_emerging_gap(
-        whitespace_series=[0.41, 0.45, 0.98],
+        overview_series=[0.41, 0.45, 0.98],
         cohort_scores=[0.1, 0.2, 0.3, 0.4, 0.75, 0.8, 0.88, 0.9, 0.92, 0.94],
         neighbor_momentum=0.12,
     )
@@ -76,7 +76,7 @@ def test_signal_emerging_gap_flags_sparse_even_with_cool_neighbors() -> None:
 
 def test_signal_crowd_out_detects_density_increase() -> None:
     result = signal_crowd_out(
-        whitespace_series=[0.55, 0.48, 0.41, 0.36],
+        overview_series=[0.55, 0.48, 0.41, 0.36],
         density_series=[0.22, 0.28, 0.34, 0.39],
     )
     assert result.ok
@@ -85,7 +85,7 @@ def test_signal_crowd_out_detects_density_increase() -> None:
 
 def test_signal_crowd_out_flags_static_crowding_pressure() -> None:
     result = signal_crowd_out(
-        whitespace_series=[0.34, 0.31, 0.3],
+        overview_series=[0.34, 0.31, 0.3],
         density_series=[0.61, 0.64, 0.66],
     )
     assert result.ok

@@ -255,7 +255,7 @@ export default function SubscriptionStatus({ subscription, onManage, accountEmai
                   clipRule="evenodd"
                 />
               </svg>
-              <span>Whitespace analysis & trend visualization</span>
+              <span>IP overview information & trend visualization</span>
             </li>
           </ul>
         </div>

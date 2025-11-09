@@ -1,4 +1,4 @@
-// app/help/whitespace/page.tsx
+// app/help/overview/page.tsx
 "use client";
 
 import type { CSSProperties } from "react";
@@ -54,7 +54,7 @@ const linkButtonStyle: CSSProperties = {
   transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
 };
 
-export default function WhitespaceHelpPage() {
+export default function OverviewHelpPage() {
   return (
     <div style={pageWrapperStyle}>
       <div className="glass-surface" style={surfaceStyle}>
@@ -63,17 +63,17 @@ export default function WhitespaceHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div>
-              <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Whitespace Analysis Guide</h1>
+              <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>IP Overview Guide</h1>
               <p style={{ marginTop: 8, fontSize: 14, color: "#627D98", marginBottom: 0 }}>
                 <a href="/help" style={{ color: LINK_COLOR, textDecoration: "none" }}>← Back to Help</a>
               </p>
             </div>
-            <a href="/whitespace" className="btn-modern" style={linkButtonStyle}>
-              Go to Whitespace →
+            <a href="/overview" className="btn-modern" style={linkButtonStyle}>
+              Go to IP Overview →
             </a>
           </div>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            The Whitespace Analysis page is a platform for overview and insights directed to input search criteria. Analysis information displayed on this page can be searched and sorted in multiple ways, providing a dynamic and flexible interface ideal for AI/ML prior art searches, competitive landscape monitoring, underexplored technology areas conducive to R&D innovation, and more.
+            The IP Overview page is a platform for overview and insights directed to input search criteria. Analysis information displayed on this page can be searched and sorted in multiple ways, providing a dynamic and flexible interface ideal for AI/ML prior art searches, competitive landscape monitoring, underexplored technology areas conducive to R&D innovation, and more.
           </p>
           <p style={{ marginTop: 8, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
             Analysis and insights available on this page are generated based on user-defined focus keywords, CPC filters, and date ranges. The overview section provides a high-level summary of key metrics, while the tables and charts allow for in-depth exploration of patent filings relevant to the specified criteria. For example, key metrics include subject matter saturation, patent and publication activity rates and momentum, and CPC distribution for specific search criteria and semantically similar concepts.
@@ -82,9 +82,9 @@ export default function WhitespaceHelpPage() {
 
         {/* Overview */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What the Whitespace Overview Measures</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What the IP Overview Provides</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            For any combination of focus keywords, CPC filters, and date range the overview performs the following steps:
+            For any combination of focus keywords, CPC filters, and date range the IP Overview workflow performs the following steps:
           </p>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li>Builds a target search set using full-text search over Patent Scout's relational database, including exact matches and, when enabled, semantic nearest neighbors.</li>
@@ -132,7 +132,7 @@ export default function WhitespaceHelpPage() {
             />
             <InputDescription
               label="Show Semantic Neighbors (toggle)"
-              description="When enabled, whitespace analysis matches semantic nearest neighbors (based on embedding index) and merges those with exact keyword and phrase matches."
+              description="When enabled, IP Overview analysis matches semantic nearest neighbors (based on embedding index) and merges those with exact keyword and phrase matches."
               example="Default: Enabled"
               tips={[
                 "Disable to receive only literal keyword matches (useful for prior art searches).",
@@ -141,7 +141,7 @@ export default function WhitespaceHelpPage() {
             />
             <InputDescription
               label="Group by Assignee (toggle)"
-              description="Loads more complex, weighted whitespace signals calculated per assignee. Includes context graph, assignee signal cards, and Sigma visualization beneath the overview. Off by default."
+              description="Loads more complex, weighted opportunity/risk signals calculated per assignee. Includes context graph, assignee signal cards, and Sigma visualization beneath the overview summary. Off by default."
               example="Default: Disabled"
               tips={[
                 "Enable to view focus convergence / subject matter oversaturation signals tied to specific assignees.",
@@ -153,7 +153,7 @@ export default function WhitespaceHelpPage() {
 
         {/* Overview Tiles */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Interpreting the Overview Tiles</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Interpreting the IP Overview Tiles</h2>
           <div style={{ display: "grid", gap: 16 }}>
             <MetricTile
               title="Saturation"
@@ -233,7 +233,7 @@ export default function WhitespaceHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Assignee Signals (Optional)</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Switching on “Group by Assignee” augments the whitespace analysis with a per-assignee clustering view. More complex, weighted signals are calculated from semantic embeddings, which are used to build a cosine KNN graph and evaluate four signals per grouping:
+            Switching on “Group by Assignee” augments the IP Overview analysis with a per-assignee clustering view. More complex, weighted signals are calculated from semantic embeddings, which are used to build a cosine KNN graph and evaluate four signals per grouping:
           </p>
           <ul style={{ marginLeft: 20, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Potential Gap</strong>: Opportunity where an assignee may have some IP protection, but neighboring clusters are underexplored.</li>

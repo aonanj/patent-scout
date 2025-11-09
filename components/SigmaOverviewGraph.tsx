@@ -7,7 +7,7 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 
 export type SignalKind = "focus_shift" | "emerging_gap" | "crowd_out" | "bridge";
 
-export type WsNode = {
+export type OverviewNode = {
   id: string;
   cluster_id: number;
   assignee?: string | null;
@@ -18,24 +18,24 @@ export type WsNode = {
   title?: string | null;
   tooltip?: string | null;
   pub_date?: string | number | null;
-  whitespace_score?: number | null;
+  overview_score?: number | null;
   local_density?: number | null;
   abstract?: string | null;
 };
 
-export type WsEdge = {
+export type OverviewEdge = {
   source: string;
   target: string;
   weight?: number;
 };
 
-export type WsGraph = {
-  nodes: WsNode[];
-  edges: WsEdge[];
+export type OverviewGraph = {
+  nodes: OverviewNode[];
+  edges: OverviewEdge[];
 };
 
-export type SigmaWhitespaceGraphProps = {
-  data: WsGraph | null;
+export type SigmaOverviewGraphProps = {
+  data: OverviewGraph | null;
   height?: number;
   selectedSignal?: SignalKind | null;
   highlightedNodeIds?: string[];
@@ -372,12 +372,12 @@ function formatGooglePatentId(pubId: string): string {
   return cleanedId;
 }
 
-export default function SigmaWhitespaceGraph({
+export default function SigmaOverviewGraph({
   data,
   height = 400,
   selectedSignal = null,
   highlightedNodeIds,
-}: SigmaWhitespaceGraphProps) {
+}: SigmaOverviewGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<any>(null);
   const graphRef = useRef<any>(null);
@@ -403,7 +403,7 @@ export default function SigmaWhitespaceGraph({
     const nodes = data?.nodes ?? [];
     if (nodes.length === 0) return [];
 
-    const clusterBuckets = new Map<number, { color: string; nodes: WsNode[] }>();
+    const clusterBuckets = new Map<number, { color: string; nodes: OverviewNode[] }>();
     nodes.forEach((node) => {
       const clusterId = node.cluster_id;
       if (!clusterBuckets.has(clusterId)) {
@@ -424,7 +424,7 @@ export default function SigmaWhitespaceGraph({
         .filter((token) => !isStopwordToken(token));
     };
 
-    const computeTokenCounts = (clusterNodes: WsNode[]): Map<string, number> => {
+    const computeTokenCounts = (clusterNodes: OverviewNode[]): Map<string, number> => {
       const counts = new Map<string, number>();
       if (clusterNodes.length === 0) {
         return counts;
@@ -435,15 +435,15 @@ export default function SigmaWhitespaceGraph({
         const aRel = normalizeRelevance(a.relevance);
         if (bRel !== aRel) return bRel - aRel;
 
-        const bWhitespace =
-          typeof b.whitespace_score === "number" && Number.isFinite(b.whitespace_score)
-            ? b.whitespace_score
+        const bOverview =
+          typeof b.overview_score === "number" && Number.isFinite(b.overview_score)
+            ? b.overview_score
             : 0;
-        const aWhitespace =
-          typeof a.whitespace_score === "number" && Number.isFinite(a.whitespace_score)
-            ? a.whitespace_score
+        const aOverview =
+          typeof a.overview_score === "number" && Number.isFinite(a.overview_score)
+            ? a.overview_score
             : 0;
-        if (bWhitespace !== aWhitespace) return bWhitespace - aWhitespace;
+        if (bOverview !== aOverview) return bOverview - aOverview;
 
         const aDensity =
           typeof a.local_density === "number" && Number.isFinite(a.local_density)
@@ -570,7 +570,7 @@ export default function SigmaWhitespaceGraph({
       });
   }, [data, clusterColor]);
 
-  const sizeForNode = useCallback((node: WsNode) => {
+  const sizeForNode = useCallback((node: OverviewNode) => {
     const rel = normalizeRelevance(node.relevance);
     return 4 + 10 * rel;
   }, []);
@@ -987,11 +987,11 @@ export default function SigmaWhitespaceGraph({
       )}
       {selectedNode && (() => {
         const nodeData = data?.nodes?.find(n => n.id === selectedNode);
-        const rawScore = nodeData?.whitespace_score ?? null;
+        const rawScore = nodeData?.overview_score ?? null;
         const score = typeof rawScore === 'number' && Number.isFinite(rawScore) ? rawScore.toFixed(3) : '--';
         return (
           <div style={{ color: "#475569", fontSize: 12 }}>
-            <strong>Whitespace Score:</strong> {score}
+            <strong>Overview Score:</strong> {score}
           </div>
         );
       })()}

@@ -1,4 +1,3 @@
-# app/whitespace_api.py
 from __future__ import annotations
 
 import calendar
@@ -37,7 +36,7 @@ from .embed import embed as embed_text
 from .db_errors import is_recoverable_operational_error
 from .repository import CANONICAL_ASSIGNEE_LATERAL, SEARCH_EXPR
 from .subscription_middleware import SubscriptionRequiredError
-from .whitespace_signals import (
+from .overview_signals import (
     SignalComputation,
     SignalKind,
     signal_bridge,
@@ -47,8 +46,8 @@ from .whitespace_signals import (
 )
 
 router = APIRouter(
-    prefix="/whitespace",
-    tags=["whitespace"],
+    prefix="/overview",
+    tags=["overview"],
     dependencies=[Depends(get_current_user)],
 )
 
@@ -356,7 +355,7 @@ def _reset_pool(bad_pool: ConnectionPool | None) -> None:
     try:
         bad_pool.close()
     except Exception as exc:  # pragma: no cover - defensive logging
-        logger.exception("Error closing whitespace pool after failure: %s", exc)
+        logger.exception("Error closing overview pool after failure: %s", exc)
     finally:
         _pool = None
 
@@ -737,7 +736,7 @@ class GraphNode(BaseModel):
     title: str | None = None
     tooltip: str | None = None
     pub_date: date | None = None
-    whitespace_score: float | None = None
+    overview_score: float | None = None
     local_density: float | None = None
     abstract: str | None = None
 
@@ -773,7 +772,7 @@ class AssigneeSignals(BaseModel):
     label_terms: list[str] | None = None
 
 
-class WhitespaceResponse(BaseModel):
+class OverviewResponse(BaseModel):
     k: str
     assignees: list[AssigneeSignals]
     graph: GraphContext | None = None
@@ -821,7 +820,7 @@ class CpcBreakdownItem(BaseModel):
     count: int
 
 
-class WhitespaceOverviewResponse(BaseModel):
+class IPOverviewResponse(BaseModel):
     crowding: CrowdingMetrics
     density: DensityMetrics
     momentum: MomentumMetrics
@@ -951,7 +950,7 @@ async def _lookup_crowding_percentile(conn: psycopg.AsyncConnection, total: int)
             await cur.execute(
                 """
                 SELECT percentile
-                FROM whitespace_crowding_percentiles
+                FROM overview_crowding_percentiles
                 WHERE count_threshold >= %s
                 ORDER BY count_threshold ASC
                 LIMIT 1
@@ -962,9 +961,9 @@ async def _lookup_crowding_percentile(conn: psycopg.AsyncConnection, total: int)
         if row and row[0] is not None:
             return float(row[0])
     except psycopg.errors.UndefinedTable:
-        logger.info("Skipping percentile lookup; whitespace_crowding_percentiles table missing.")
+        logger.info("Skipping percentile lookup; overview_crowding_percentiles table missing.")
     except Exception:
-        logger.exception("Failed to lookup whitespace crowding percentile.")
+        logger.exception("Failed to lookup overview crowding percentile.")
     return None
 
 def load_embeddings(
@@ -1168,7 +1167,7 @@ def neighbor_momentum(conn: psycopg.Connection, pub_ids: list[str], labels: np.n
     return arr
 
 
-def compute_whitespace_metrics(
+def compute_overview_metrics(
     X: NDArray[np.float32],
     labels: NDArray[np.int32],
     dens: NDArray[np.float32],
@@ -1178,7 +1177,7 @@ def compute_whitespace_metrics(
     momentum: NDArray[np.float32],
 ) -> tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
     """
-    Composite whitespace score with *inverted* momentum (higher momentum reduces whitespace).
+    Composite overview score with *inverted* momentum (higher momentum reduces overview).
 
     Args:
         X: [N, D] embeddings.
@@ -1190,7 +1189,7 @@ def compute_whitespace_metrics(
         momentum: [K] per-cluster momentum in [0,1], K >= max(labels)+1.
 
     Returns:
-        score: [N] whitespace score, >= 0, with focus items zeroed.
+        score: [N] overview score, >= 0, with focus items zeroed.
         proximity: [N] soft distance weighting relative to focus vector.
         distance: [N] Euclidean distance from each point to the focus vector.
         focus_vector: [D] centroid used for focus weighting.
@@ -1283,16 +1282,16 @@ def _persist_sync(
             ON CONFLICT (user_id, src, dst) DO UPDATE SET w = EXCLUDED.w
         """)
 
-        # 2) Temp updates for user-specific whitespace analysis
+        # 2) Temp updates for user-specific overview analysis
         cur.execute("""
             CREATE TEMP TABLE tmp_updates(
               pub_id          text PRIMARY KEY,
               cluster_id      int,
               local_density   real,
-              whitespace_score real
+              overview_score real
             ) ON COMMIT DROP
         """)
-        with cur.copy("COPY tmp_updates (pub_id, cluster_id, local_density, whitespace_score) FROM STDIN") as cp:
+        with cur.copy("COPY tmp_updates (pub_id, cluster_id, local_density, overview_score) FROM STDIN") as cp:
             for pid, cid, d, s in zip(
                 pub_ids,
                 labels.astype(int).tolist(),
@@ -1302,16 +1301,16 @@ def _persist_sync(
             ):
                 cp.write_row((pid, int(cid), float(d), float(s)))
 
-        # Upsert into user_whitespace_analysis table (user-specific)
+        # Upsert into user_overview_analysis table (user-specific)
         cur.execute("""
-            INSERT INTO user_whitespace_analysis (user_id, pub_id, model, cluster_id, local_density, whitespace_score, updated_at)
-            SELECT %s, pub_id, %s, cluster_id, local_density, whitespace_score, NOW()
+            INSERT INTO user_overview_analysis (user_id, pub_id, model, cluster_id, local_density, overview_score, updated_at)
+            SELECT %s, pub_id, %s, cluster_id, local_density, overview_score, NOW()
             FROM tmp_updates
             ON CONFLICT (user_id, pub_id, model)
             DO UPDATE SET
                 cluster_id = EXCLUDED.cluster_id,
                 local_density = EXCLUDED.local_density,
-                whitespace_score = EXCLUDED.whitespace_score,
+                overview_score = EXCLUDED.overview_score,
                 updated_at = NOW()
         """, (user_id, model))
 
@@ -1350,12 +1349,12 @@ def _persist_background(
             return
         except psycopg.OperationalError as exc:
             if not is_recoverable_operational_error(exc):
-                logger.exception("Failed to persist whitespace metrics")
+                logger.exception("Failed to persist overview metrics")
                 return
             attempts += 1
             last_error = exc
             logger.warning(
-                "Recoverable database error while persisting whitespace metrics (attempt %s/%s): %s",
+                "Recoverable database error while persisting overview metrics (attempt %s/%s): %s",
                 attempts,
                 _MAX_DB_RETRIES,
                 exc,
@@ -1364,11 +1363,11 @@ def _persist_background(
             current_pool = get_pool()
             time.sleep(min(0.1 * attempts, 1.0))
         except Exception:
-            logger.exception("Failed to persist whitespace metrics")
+            logger.exception("Failed to persist overview metrics")
             return
 
     logger.error(
-        "Failed to persist whitespace metrics after %s attempts: %s",
+        "Failed to persist overview metrics after %s attempts: %s",
         _MAX_DB_RETRIES,
         last_error,
     )
@@ -1643,7 +1642,7 @@ def build_group_signals(
 
         dist_series: list[float] = []
         share_series: list[float] = []
-        whitespace_series: list[float] = []
+        overview_series: list[float] = []
         density_series: list[float] = []
         momentum_series: list[float] = []
         n_samples = 0
@@ -1656,7 +1655,7 @@ def build_group_signals(
             n_samples += count
             dist_series.append(float(np.mean([n.distance for n in bucket_nodes])))
             share_series.append(sum(1 for n in bucket_nodes if n.is_focus) / count)
-            whitespace_series.append(float(np.mean([n.score for n in bucket_nodes])))
+            overview_series.append(float(np.mean([n.score for n in bucket_nodes])))
             density_series.append(float(np.mean([n.density for n in bucket_nodes])))
             momentum_series.append(float(np.mean([n.momentum for n in bucket_nodes])))
             latest_nodes = bucket_nodes
@@ -1664,8 +1663,8 @@ def build_group_signals(
         neighbor_momentum = momentum_series[-1] if momentum_series else 0.0
 
         focus_result = signal_focus_shift(dist_series, share_series, n_samples)
-        emerging_result = signal_emerging_gap(whitespace_series, cohort_scores_list, neighbor_momentum)
-        crowd_result = signal_crowd_out(whitespace_series, density_series)
+        emerging_result = signal_emerging_gap(overview_series, cohort_scores_list, neighbor_momentum)
+        crowd_result = signal_crowd_out(overview_series, density_series)
 
         group_indices = [n.index for n in nodes]
         openness, inter_weight, mom_left, mom_right, bridge_node_indices = _compute_bridge_inputs(
@@ -1722,7 +1721,7 @@ def build_group_signals(
                 "window_end": end_date.isoformat(),
                 "dist_series": dist_series,
                 "share_series": share_series,
-                "whitespace_series": whitespace_series,
+                "overview_series": overview_series,
                 "density_series": density_series,
                 "momentum_series": momentum_series,
                 "neighbor_momentum": neighbor_momentum,
@@ -1752,8 +1751,8 @@ def build_group_signals(
     return group_payloads, node_signals, node_relevance, node_tooltips
 
 
-@router.get("/overview", response_model=WhitespaceOverviewResponse)
-async def get_whitespace_overview(
+@router.get("/overview", response_model=IPOverviewResponse)
+async def get_ip_overview(
     conn: AsyncConn,
     current_user: User,
     keywords: str | None = Query(None, description="Comma-separated keyword query"),
@@ -1763,7 +1762,7 @@ async def get_whitespace_overview(
     semantic: int = Query(0, description="Include semantic neighborhood when non-zero"),
     tau: float | None = Query(None, description="Optional cosine-distance ceiling"),
     semantic_limit: int = Query(500, ge=1, le=5000),
-) -> WhitespaceOverviewResponse:
+) -> IPOverviewResponse:
     keywords_clean = _clean_keywords(keywords)
     cpc_filters = _split_cpc_list(cpc)
 
@@ -1791,7 +1790,7 @@ async def get_whitespace_overview(
                 embedding = maybe_vec
             query_vec = list(embedding)
         except Exception as exc:
-            logger.exception("Failed to embed semantic query for whitespace overview.")
+            logger.exception("Failed to embed semantic query for overview overview.")
             raise HTTPException(status_code=500, detail="Failed to compute semantic neighborhood") from exc
     else:
         semantic_enabled = False
@@ -2044,7 +2043,7 @@ async def get_whitespace_overview(
         series=timeline_points,
     )
 
-    return WhitespaceOverviewResponse(
+    return IPOverviewResponse(
         crowding=crowding,
         density=density_stats,
         momentum=momentum,
@@ -2056,13 +2055,13 @@ async def get_whitespace_overview(
     )
 
 
-@router.post("/graph", response_model=WhitespaceResponse)
-def get_whitespace_graph(
+@router.post("/graph", response_model=OverviewResponse)
+def get_overview_graph(
     req: GraphRequest,
     pool: Annotated[ConnectionPool, Depends(get_pool)],
     background_tasks: BackgroundTasks,
     current_user: User,
-) -> WhitespaceResponse:
+) -> OverviewResponse:
     _validate_graph_params(req)
 
     # Extract user_id from JWT token (Auth0 uses 'sub' claim for user ID)
@@ -2082,7 +2081,10 @@ def get_whitespace_graph(
         try:
             with current_pool.connection() as conn:
                 _ensure_active_subscription(conn, user_id)
-                model = pick_model(conn, preferred=os.getenv("WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"))
+                preferred_model = os.getenv("OVERVIEW_EMBEDDING_MODEL") or os.getenv(
+                    "WS_EMBEDDING_MODEL", "text-embedding-3-small|ta"
+                )
+                model = pick_model(conn, preferred=preferred_model)
                 if req.search_mode == "assignee":
                     group_mode = "cluster"
                     matched_canonical_ids, matched_labels, matched_debug = _match_canonical_assignees(
@@ -2099,7 +2101,7 @@ def get_whitespace_graph(
                 point_count = len(pub_ids)
 
                 if point_count < 2:
-                    raise HTTPException(status_code=400, detail="Not enough embeddings to build whitespace graph.")
+                    raise HTTPException(status_code=400, detail="Not enough embeddings to build overview graph.")
                 if req.neighbors >= point_count:
                     raise HTTPException(
                         status_code=400,
@@ -2115,22 +2117,22 @@ def get_whitespace_graph(
                 labels = cluster_labels(dist, idx, req.resolution)
                 dens = local_density(dist)
                 mom = neighbor_momentum(conn, pub_ids, labels)
-                scores, proximity, distance, focus_vector = compute_whitespace_metrics(
+                scores, proximity, distance, focus_vector = compute_overview_metrics(
                     X, labels, dens, focus_mask, req.alpha, req.beta, mom
                 )
             pool = current_pool
             break
         except psycopg.errors.UndefinedTable as exc:
-            logger.error("Whitespace schema missing; run database migrations before serving traffic.")
+            logger.error("Overview schema missing; run database migrations before serving traffic.")
             raise HTTPException(
                 status_code=500,
-                detail="Whitespace graph schema is not initialized. Run database migrations.",
+                detail="Overview graph schema is not initialized. Run database migrations.",
             ) from exc
         except psycopg.errors.InsufficientPrivilege as exc:
-            logger.error("Database role lacks privileges for whitespace query: %s", exc)
+            logger.error("Database role lacks privileges for overview query: %s", exc)
             raise HTTPException(
                 status_code=500,
-                detail="Database role is missing privileges required for whitespace queries.",
+                detail="Database role is missing privileges required for overview queries.",
             ) from exc
         except psycopg.OperationalError as exc:
             if not is_recoverable_operational_error(exc):
@@ -2138,7 +2140,7 @@ def get_whitespace_graph(
             attempts += 1
             last_error = exc
             logger.warning(
-                "Recoverable database error while building whitespace graph (attempt %s/%s): %s",
+                "Recoverable database error while building overview graph (attempt %s/%s): %s",
                 attempts,
                 _MAX_DB_RETRIES,
                 exc,
@@ -2151,7 +2153,7 @@ def get_whitespace_graph(
     else:
         assert last_error is not None
         logger.error(
-            "Exhausted retries while building whitespace graph due to database errors: %s",
+            "Exhausted retries while building overview graph due to database errors: %s",
             last_error,
         )
         raise HTTPException(
@@ -2243,7 +2245,7 @@ def get_whitespace_graph(
                 title=meta_row.title,
                 tooltip=node_tooltips.get(node_id),
                 pub_date=datum.pub_date,
-                whitespace_score=datum.score,
+                overview_score=datum.score,
                 local_density=datum.density,
                 abstract=meta_row.abstract,
             )
@@ -2289,11 +2291,11 @@ def get_whitespace_graph(
         debug_payload["matched_assignees"] = [
             {"name": name, "score": score} for name, score in matched_debug
         ]
-    logger.info(f"Returning whitespace graph with matched assignees: {matched_labels}")
-    print("Returning whitespace graph with matched assignees: %s", matched_labels)
+    logger.info(f"Returning overview graph with matched assignees: {matched_labels}")
+    print("Returning overview graph with matched assignees: %s", matched_labels)
     logger.info(f"Group mode: {group_mode}, scope text: {scope_text}")
     print("Group mode: %s, scope text: %s", group_mode, scope_text)
-    return WhitespaceResponse(
+    return OverviewResponse(
         k=scope_text,
         assignees=group_payloads,
         graph=graph_context,

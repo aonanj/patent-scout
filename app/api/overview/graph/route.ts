@@ -1,4 +1,4 @@
-// app/api/whitespace/graph/route.ts
+// app/api/overview/graph/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchWithRetry } from "../../_lib/fetch-with-retry";
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   headers.append("Content-Type", "application/json");
 
   const body = await req.json();
-  const url = `${process.env.BACKEND_URL}/whitespace/graph`;
+  const url = `${process.env.BACKEND_URL}/overview/graph`;
 
   try {
     const payload = JSON.stringify(body);
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: any) {
-    console.error("API proxy error for /whitespace/graph:", err);
+    console.error("API proxy error for /overview/graph:", err);
     return new NextResponse(
       JSON.stringify({ error: "Failed to reach backend", detail: String(err) }),
       { status: 500, headers: { "Content-Type": "application/json" } }

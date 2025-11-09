@@ -1,4 +1,4 @@
-// app/api/whitespace/overview/route.ts
+// app/api/overview/overview/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   }
 
   const searchParams = req.nextUrl.search;
-  const url = `${process.env.BACKEND_URL}/whitespace/overview${searchParams}`;
+  const url = `${process.env.BACKEND_URL}/overview/overview${searchParams}`;
 
   try {
     const response = await fetchWithRetry(() =>
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: unknown) {
-    console.error("API proxy error for /whitespace/overview:", err);
+    console.error("API proxy error for /overview/overview:", err);
     return new NextResponse(
       JSON.stringify({ error: "Failed to reach backend", detail: String(err) }),
       { status: 500, headers: { "Content-Type": "application/json" } },

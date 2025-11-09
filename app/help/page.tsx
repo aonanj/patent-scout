@@ -71,7 +71,7 @@ export default function HelpIndexPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Introduction to the Patent Scout Platform</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-            Patent Scout is an IP platform specific to AI/ML data and analytics. The platform combines hybrid semantic search, trend analysis, and whitespace signaling to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML innovations and investments and the entities active in this space. The platform is built on a relational database system that includes 56,000+ AI/ML-related patents and publications dating back to 2023.
+            Patent Scout is an IP platform specific to AI/ML data and analytics. The platform combines hybrid semantic search, trend analysis, and IP overview information to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML innovations and investments and the entities active in this space. The platform is built on a relational database system that includes 56,000+ AI/ML-related patents and publications dating back to 2023.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
             Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry corresponds to a patent or publication with multiple associated AI embeddings. The multiple AI embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields.
@@ -84,7 +84,7 @@ export default function HelpIndexPage() {
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
-            <li><strong>Whitespace Analysis</strong>: Overview and analysis of the AI/ML IP landscape with subject matter saturation, activity rates, momentum, and CPC distribution. Option to focus on specific assignees.</li>
+            <li><strong>IP Overview</strong>: Analysis and insights on the AI/ML IP landscape with subject matter saturation, activity rates, momentum, and CPC distribution. Option to focus on specific assignees.</li>
           </ul>
         </div>
 
@@ -150,7 +150,7 @@ export default function HelpIndexPage() {
             </div>
           </div>
 
-          {/* Whitespace Analysis Card */}
+          {/* IP Overview Card */}
           <div
             className="glass-card"
             style={{
@@ -162,13 +162,13 @@ export default function HelpIndexPage() {
           >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div style={{ flex: 1, minWidth: 250 }}>
-                <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Whitespace Analysis</h3>
+                <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>IP Overview</h3>
                 <p style={{ marginTop: 8, fontSize: 13, color: "#627D98", marginBottom: 0 }}>
                   Insights on how busy specific technology areas are and where opportunities may exist
                 </p>
               </div>
               <a
-                href="/help/whitespace"
+                href="/help/overview"
                 className="btn-modern"
                 style={linkButtonStyle}
               >
@@ -177,7 +177,7 @@ export default function HelpIndexPage() {
             </div>
 
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-              The Whitespace Analysis page provides a quantitative view of patent and publication activity within a defined scope. This page includes analysis and insights for saturation, activity rate, and momentum measurements, as well as identifying CPC codes under which patent and publications are concentrated. The interface presents four primary metrics (subject matter saturation, patent and publication activity rate, patent grant and publication momentum, and top CPC codes) supported by a monthly trend line, CPC distribution chart, and sortable results table with direct links to the underlying patents and publications.
+              The IP Overview page provides a quantitative view of patent and publication activity within a defined scope. This page includes analysis and insights for saturation, activity rate, and momentum measurements, as well as identifying CPC codes under which patent and publications are concentrated. The interface presents four primary metrics (subject matter saturation, patent and publication activity rate, patent grant and publication momentum, and top CPC codes) supported by a monthly trend line, CPC distribution chart, and sortable results table with direct links to the underlying patents and publications.
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
               An optional “Group by Assignee” toggle enables the KNN Sigma graph visualization with confidence-scored signals highlighting potential gaps, bridging opportunities*, focus convergence, and crowd-out patterns.
@@ -187,7 +187,7 @@ export default function HelpIndexPage() {
               <DetailItem icon="⬩" title="Saturation & Activity Rate Tiles" text="Exact vs. semantic counts, patent grants and publications per month, and percentile labels indicate how busy a target search set is." />
               <DetailItem icon="⬩" title="Momentum Labeling" text="Monthly trendline, slope, and CAGR classify patent grant and publication activity as rising, declining, or flat." />
               <DetailItem icon="⬩" title="CPC Distribution" text="Top CPC codes plus a ranked bar chart highlight relevant technology areas." />
-              <DetailItem icon="⬩" title="Result Set Table" text="Patent and publication rows (with CPC codes and external links) illustrate the data supporting the whitespace analysis and insights." />
+              <DetailItem icon="⬩" title="Result Set Table" text="Patent and publication rows (with CPC codes and external links) illustrate the data supporting the IP overview analysis and insights." />
               <DetailItem icon="⬩" title="(Optional) Group by Assignee" text="Enable to view a KNN graph and per-assignee opportunity and risk confidence signals for potential gap, bridge opportunity*, crowd-out risk, and focus convergence risk." />
             </div>
 
@@ -204,7 +204,7 @@ export default function HelpIndexPage() {
               }}
             >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Example Use Cases</strong>: AI/ML R&D and/or investment decisions, whitespace opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
+                <strong>Example Use Cases</strong>: AI/ML investment decisions, R&D opportunity identification, competitive threat assessment, and understanding where R&D focus is shifting in and around specific technology areas in the context of AI/ML.
               </p>
             </div>
           </div>
@@ -232,13 +232,13 @@ export default function HelpIndexPage() {
             />
 
             <InfoSection
-              title="4. Explore Whitespace Opportunities"
-              content="Navigate to the Whitespace page to size the space. Enter focus keywords or CPC codes, review the crowding/density/momentum tiles, inspect the timeline and CPC bars, and then dip into the result table for representative filings."
+              title="4. Explore AI/ML IP Opportunities"
+              content="Navigate to the IP Overview page to view how busy a technology area is. Enter focus keywords and/or CPC codes, review the saturation/activity rate/momentum tiles, inspect the timeline and CPC bars, and review the result set table for representative filings."
             />
 
             <InfoSection
               title="5. Export and Share Insights"
-              content="Use CSV/PDF exports from Search & Trends for shareable reports, and copy links from the Whitespace table when you need to circulate specific patents or publications."
+              content="Use CSV/PDF exports for shareable reports, and copy links from the IP Overview result set table to access full text and figures of specific patents or publications."
             />
           </div>
         </div>

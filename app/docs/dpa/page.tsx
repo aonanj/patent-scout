@@ -724,7 +724,7 @@ export default function DataProcessingAgreementPage() {
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Subject Matter of Processing</h3>
               <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
-                Provision of the Patent Scout service, including patent search, trend analysis, whitespace identification, alert delivery, data export, and customer support.
+                Provision of the Patent Scout service, including patent search, trend analysis, IP overview, alert delivery, data export, and customer support.
               </p>
             </div>
 

@@ -33,14 +33,14 @@ export const metadata: Metadata = {
     template: "%s | Patent Scout",
   },
   description:
-    "Patent Scout delivers semantic patent search, whitespace graph analytics, and automated alerts so IP teams can monitor AI and machine learning filings in real time.",
+    "Patent Scout delivers semantic patent search, IP overview graph analytics, and automated alerts so IP teams can monitor AI and machine learning filings in real time.",
   keywords: [
     "AI patent search",
     "machine learning patents",
     "intellectual property analytics",
     "pgvector patent database",
     "semantic patent search",
-    "whitespace analysis",
+    "IP overview analysis",
     "patent alerts platform",
   ],
   authors: [{ name: "Patent Scout" }],
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Patent Scout | AI Patent Intelligence Platform",
     description:
-      "Monitor AI and ML patent filings with semantic search, automated alerts, and whitespace graph analytics powered by Patent Scout.",
+      "Monitor AI and ML patent filings with semantic search, automated alerts, and IP overview graph analytics powered by Patent Scout.",
     url: "https://patent-scout.com/",
     siteName: "Patent Scout",
     images: [
@@ -104,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   name: "Patent Scout",
                   url: "https://patent-scout.com",
                   description:
-                    "Patent Scout is an AI-driven patent intelligence platform with semantic search, whitespace graph analytics, and automated alerts.",
+                    "Patent Scout is an AI-driven patent intelligence platform with semantic search, IP overview graph analytics, and automated alerts.",
                   logo: "https://patent-scout.com/images/PatentScoutLogo.png"
                 },
                 {

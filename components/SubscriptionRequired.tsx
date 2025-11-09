@@ -130,7 +130,7 @@ export default function SubscriptionRequired({
               <div>
                 <div className="font-semibold" style={{ color: '#102A43' }}>AI-powered insights</div>
                 <div className="text-sm text-slate-600">
-                  Semantic search and whitespace analysis
+                  Semantic search and risk/opportunity analysis
                 </div>
               </div>
             </div>

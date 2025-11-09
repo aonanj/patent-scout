@@ -1,4 +1,4 @@
-// app/api/whitespace/run/route.ts
+// app/api/overview/graph/run/route.ts
 import { NextRequest } from "next/server";
 
 import { fetchWithRetry } from "../../../_lib/fetch-with-retry";
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     const payload = JSON.stringify(body);
     const resp = await fetchWithRetry(() =>
-      fetch(`${process.env.BACKEND_URL}/whitespace/graph`, {
+      fetch(`${process.env.BACKEND_URL}/overview/graph`, {
         method: "POST",
         headers: headers,
         body: payload,
