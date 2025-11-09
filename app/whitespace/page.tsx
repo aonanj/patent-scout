@@ -1149,7 +1149,7 @@ export default function WhitespacePage() {
                 <Label htmlFor="ws-cpc">CPC</Label>
                 <input
                   id="ws-cpc"
-                  placeholder="e.g., G06N%, A61B5/00"
+                  placeholder="e.g., G06N, A61B5/00"
                   value={cpcFilter}
                   onChange={handleInput(setCpcFilter)}
                   style={inputStyle}
