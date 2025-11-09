@@ -84,15 +84,16 @@ async def send_mailgun_email(
     load_dotenv()
 
     MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
-    MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
+    MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY", "")
     MAILGUN_BASE_URL = os.getenv("MAILGUN_BASE_URL", "https://api.mailgun.net/v3")
     # If Mailgun is not configured, no-op with console output.
     if not (MAILGUN_DOMAIN and MAILGUN_API_KEY):
         print("[info] Mailgun not configured; printing email:")
+        print("Mailgun Domain: ", MAILGUN_DOMAIN)
+        print("MAILGUN API KEY: ", MAILGUN_API_KEY)
         print("To:", to_email)
         print("Subject:", subject)
         print(text_body)
-        return
 
     url = f"{MAILGUN_BASE_URL}/{MAILGUN_DOMAIN}/messages"
     data = {
