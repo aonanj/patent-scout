@@ -1,5 +1,5 @@
 export default function Head() {
-  const canonical = "https://patent-scout.com/docs/privacy";
+  const canonical = "https://synapse-ip.com/docs/privacy";
   const description =
     "Learn how SynapseIP collects, processes, and safeguards personal data for AI/ML IP intelligence subscribers in the Privacy Policy.";
 

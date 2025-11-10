@@ -1,5 +1,5 @@
 export default function Head() {
-  const canonical = "https://patent-scout.com/docs/tos";
+  const canonical = "https://synapse-ip.com/docs/tos";
   const description =
     "Understand the Terms of Service governing access to SynapseIP's AI/ML IP search, analytics, and alerting platform.";
 

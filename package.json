@@ -26,20 +26,20 @@
     "build": "next build",
     "start": "next start"
   },
-  "name": "patent-scout",
+  "name": "synapse-ip",
   "version": "1.0.0",
   "description": "Lightweight AI/ML IP search and alerting using Postgres (Neon.tech), pgvector, FastAPI, and a Next.js frontend.",
   "main": "tailwind.config.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aonanj/patent-scout.git"
+    "url": "git+https://github.com/aonanj/synapseip.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/aonanj/patent-scout/issues"
+    "url": "https://github.com/aonanj/synapseip/issues"
   },
-  "homepage": "https://github.com/aonanj/patent-scout#readme"
+  "homepage": "https://github.com/aonanj/synapseip#readme"
 }

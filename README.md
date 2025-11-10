@@ -17,7 +17,7 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 - Comprehensive pytest suite covering authentication, repository search logic, overview signal math, and API contracts ([tests/](tests/)).
 
 ## Live Deployment
-- App: https://patent-scout.com/
+- App: https://synapse-ip.com/
 - Demo login: `phaethon@phaethon.llc` / `pollc123#` (Auth0 username/password grant)
 
 ## Architecture
@@ -152,8 +152,8 @@ Next.js route handlers under `app/api/*` forward requests to the FastAPI service
 
 ### Docker (API only)
 ```bash
-docker build -t patent-scout .
-docker run --rm -p 8000:8000 --env-file .env patent-scout
+docker build -t synapseip .
+docker run --rm -p 8000:8000 --env-file .env synapseip
 ```
 The bundled `start.sh` executes `alembic upgrade head` before launching Uvicorn.
 

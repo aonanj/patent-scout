@@ -26,7 +26,7 @@ const appSans = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://patent-scout.com"),
+  metadataBase: new URL("https://synapse-ip.com"),
   applicationName: "SynapseIP",
   title: {
     default: "SynapseIP | AI Patent Intelligence Platform",
@@ -50,11 +50,11 @@ export const metadata: Metadata = {
     title: "SynapseIP | AI/ML IP Intelligence Platform",
     description:
       "Monitor AI/ML IP with semantic search, automated alerts, IP overview, graph analytics, and more powered by SynapseIP.",
-    url: "https://patent-scout.com/",
+    url: "https://synapse-ip.com/",
     siteName: "SynapseIP",
     images: [
       {
-        url: "https://patent-scout.com/images/synapseip-banner.png",
+        url: "https://synapse-ip.com/images/synapseip-banner.png",
         width: 1300,
         height: 360,
         alt: "SynapseIP banner with AI/ML analytics interface",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     title: "SynapseIP | AI/ML IP Intelligence Platform",
     description:
       "Powerful AI/ML IP discovery with semantic search, trends, and automated alerts.",
-    images: ["https://patent-scout.com/images/synapseip-banner.png"],
+    images: ["https://synapse-ip.com/images/synapseip-banner.png"],
   },
   robots: {
     index: true,
@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${appSans.className} app-shell min-h-screen text-gray-900`}>
         <Script
-          id="patent-scout-structured-data"
+          id="synapseip-structured-data"
           type="application/ld+json"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
@@ -102,19 +102,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "@context": "https://schema.org",
                   "@type": "Organization",
                   name: "SynapseIP",
-                  url: "https://patent-scout.com",
+                  url: "https://synapse-ip.com",
                   description:
                     "SynapseIP is an AI-driven IP intelligence platform with semantic search, IP overview, graph analytics, and automated alerts.",
-                  logo: "https://patent-scout.com/images/synapseip-banner.png"
+                  logo: "https://synapse-ip.com/images/synapseip-banner.png"
                 },
                 {
                   "@context": "https://schema.org",
                   "@type": "WebSite",
                   name: "SynapseIP",
-                  url: "https://patent-scout.com",
+                  url: "https://synapse-ip.com",
                   potentialAction: {
                     "@type": "SearchAction",
-                    target: "https://patent-scout.com/?q={search_term_string}",
+                    target: "https://synapse-ip.com/?q={search_term_string}",
                     "query-input": "required name=search_term_string",
                   },
                 },

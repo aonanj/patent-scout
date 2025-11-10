@@ -456,7 +456,7 @@ export default function HomePageClient() {
       const a = document.createElement('a');
       const objUrl = URL.createObjectURL(blob);
       a.href = objUrl;
-      a.download = `patent_scout_export.${fmt}`;
+      a.download = `synapseip_export.${fmt}`;
       document.body.appendChild(a);
       a.click();
       a.remove();

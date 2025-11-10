@@ -90,10 +90,10 @@ origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if 
     "https://127.0.0.1:3000",
     "https://localhost:5174",
     "https://127.0.0.1:5174",
-    "https://patent-scout.onrender.com",
-    "https://patent-scout.vercel.app",
-    "https://www.patent-scout.com",
-    "https://patent-scout.com",
+    "https://synapseip.onrender.com",
+    "https://synapseip.vercel.app",
+    "https://www.synapse-ip.com",
+    "https://synapse-ip.com",
 ]
 
 _FAVICON_PATH = Path(__file__).resolve().parent.parent / "public" / "favicon.ico"
@@ -423,7 +423,7 @@ async def export(
         sort_by=sort,
     )
 
-    filename = "patent_scout_export"
+    filename = "synapseip_export"
     if format == "csv":
         def gen():
             header = ["pub_id", "title", "abstract", "assignee_name", "pub_date", "cpc", "priority_date"]
