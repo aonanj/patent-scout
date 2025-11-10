@@ -175,7 +175,7 @@ Represents edges in a K-Nearest Neighbors graph, likely for similarity analysis,
 | :--- | :--- | :--- | :--- |
 | `src` | `text` | not null | |
 | `dst` | `text` | not null | |
-| `(unnamed)` | `real` | true | |
+| `w` | `real` | true | |
 | `user id` | `text` | not null | |
 
 
