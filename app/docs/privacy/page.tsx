@@ -60,7 +60,7 @@ export default function PrivacyPolicyPage() {
           
           <Section title="Introduction">
             <p>
-              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the SynapseIP service (the "<strong>Service</strong>"), accessible at <a href="https://synapse-ip.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://synapse-ip.com/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
+              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the SynapseIP service (the "<strong>Service</strong>"), accessible at <a href="https://www.synapse-ip.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.synapse-ip.com/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               By using SynapseIP, you agree to the collection and use of information in accordance with this Privacy Policy.

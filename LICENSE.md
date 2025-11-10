@@ -28,7 +28,7 @@ Copyright © 2025 Phaethon Order LLC. All rights reserved.
 
 ### Terms of Service 
 
-* Access and use of this service is governed by the [Terms of Service](https://synapse-ip.com/docs) ("Terms"). 
+* Access and use of this service is governed by the [Terms of Service](https://www.synapse-ip.com/docs) ("Terms"). 
     - To the extent applicable, access and use of the service under this Evaluation License remains subject to these Terms. 
 
 ### Contact

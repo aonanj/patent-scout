@@ -17,7 +17,7 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 - Comprehensive pytest suite covering authentication, repository search logic, overview signal math, and API contracts ([tests/](tests/)).
 
 ## Live Deployment
-- App: https://synapse-ip.com/
+- App: https://www.synapse-ip.com/
 - Demo login: `phaethon@phaethon.llc` / `pollc123#` (Auth0 username/password grant)
 
 ## Architecture

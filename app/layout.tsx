@@ -26,7 +26,7 @@ const appSans = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://synapse-ip.com"),
+  metadataBase: new URL("https://www.synapse-ip.com"),
   applicationName: "SynapseIP",
   title: {
     default: "SynapseIP | AI Patent Intelligence Platform",
@@ -50,13 +50,13 @@ export const metadata: Metadata = {
     title: "SynapseIP | AI/ML IP Intelligence Platform",
     description:
       "Monitor AI/ML IP with semantic search, automated alerts, IP overview, graph analytics, and more powered by SynapseIP.",
-    url: "https://synapse-ip.com/",
+    url: "https://www.synapse-ip.com/",
     siteName: "SynapseIP",
     images: [
       {
-        url: "https://synapse-ip.com/images/synapseip-banner.png",
+        url: "https://www.synapse-ip.com/images/synapseip-banner-short.png",
         width: 1300,
-        height: 360,
+        height: 256,
         alt: "SynapseIP banner with AI/ML analytics interface",
       },
     ],
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     title: "SynapseIP | AI/ML IP Intelligence Platform",
     description:
       "Powerful AI/ML IP discovery with semantic search, trends, and automated alerts.",
-    images: ["https://synapse-ip.com/images/synapseip-banner.png"],
+    images: ["https://www.synapse-ip.com/images/synapseip-banner-short.png"],
   },
   robots: {
     index: true,
@@ -102,19 +102,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "@context": "https://schema.org",
                   "@type": "Organization",
                   name: "SynapseIP",
-                  url: "https://synapse-ip.com",
+                  url: "https://www.synapse-ip.com",
                   description:
                     "SynapseIP is an AI-driven IP intelligence platform with semantic search, IP overview, graph analytics, and automated alerts.",
-                  logo: "https://synapse-ip.com/images/synapseip-banner.png"
+                  logo: "https://www.synapse-ip.com/images/synapseip-banner-short.png"
                 },
                 {
                   "@context": "https://schema.org",
                   "@type": "WebSite",
                   name: "SynapseIP",
-                  url: "https://synapse-ip.com",
+                  url: "https://www.synapse-ip.com",
                   potentialAction: {
                     "@type": "SearchAction",
-                    target: "https://synapse-ip.com/?q={search_term_string}",
+                    target: "https://www.synapse-ip.com/?q={search_term_string}",
                     "query-input": "required name=search_term_string",
                   },
                 },

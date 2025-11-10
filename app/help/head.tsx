@@ -1,5 +1,5 @@
 export default function Head() {
-  const canonical = "https://synapse-ip.com/help";
+  const canonical = "https://www.synapse-ip.com/help";
   const description =
     "Get answers to common SynapseIP questions, from AI/ML IP semantic search tips to managing automated alerts and IP overview analysis.";
 

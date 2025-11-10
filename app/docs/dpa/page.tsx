@@ -438,7 +438,7 @@ export default function DataProcessingAgreementPage() {
 
             <Subsection title="6.4 Sub-processor List">
               <p>
-                The current list of Authorized Sub-processors is available in <strong>Annex C</strong> and may be updated at <a href="https://synapse-ip.com/docs/dpa#annex-c" className="hover:underline" style={{ color: LINK_COLOR }}>https://synapse-ip.com/docs/dpa#annex-c</a>.
+                The current list of Authorized Sub-processors is available in <strong>Annex C</strong> and may be updated at <a href="https://www.synapse-ip.com/docs/dpa#annex-c" className="hover:underline" style={{ color: LINK_COLOR }}>https://www.synapse-ip.com/docs/dpa#annex-c</a>.
               </p>
             </Subsection>
           </Section>

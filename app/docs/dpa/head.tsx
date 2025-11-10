@@ -1,5 +1,5 @@
 export default function Head() {
-  const canonical = "https://synapse-ip.com/docs/dpa";
+  const canonical = "https://www.synapse-ip.com/docs/dpa";
   const description =
     "Review SynapseIP's Data Processing Agreement outlining GDPR and CCPA commitments for enterprise patent intelligence customers.";
 

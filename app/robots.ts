@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const baseUrl = "https://synapse-ip.com";
+const baseUrl = "https://www.synapse-ip.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {

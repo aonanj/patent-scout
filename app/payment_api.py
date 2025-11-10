@@ -190,7 +190,7 @@ async def create_checkout_session(
     stripe_customer_id = await get_or_create_stripe_customer(conn, user_id, req.email)
 
     # Determine frontend URL for redirects
-    frontend_url = os.getenv("FRONTEND_URL", "https://synapse-ip.com")
+    frontend_url = os.getenv("FRONTEND_URL", "https://www.synapse-ip.com")
     success_url = req.success_url or f"{frontend_url}/billing?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = req.cancel_url or f"{frontend_url}/billing"
 
@@ -279,7 +279,7 @@ async def create_portal_session(conn: Conn, user: User) -> CustomerPortalRespons
     stripe_customer_id = result["stripe_customer_id"]
 
     # Determine return URL
-    frontend_url = os.getenv("FRONTEND_URL", "https://synapse-ip.com")
+    frontend_url = os.getenv("FRONTEND_URL", "https://www.synapse-ip.com")
     return_url = f"{frontend_url}/billing"
 
     try:
