@@ -54,6 +54,7 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 
 ## Tech Stack
 - **Backend**: FastAPI 0.115+, Pydantic v2, psycopg 3 async pools, asyncpg 0.30+, aiosmtplib 4.0+, overview analytics with igraph, leidenalg, umap-learn, and scikit-learn ([app/](app/)).
+  - [DATABASE_SCHEMA](DATABASE_SCHEMA.md)
 - **Frontend**: Next.js 15.5, React 19.1, Auth0 React SDK 2.4, Sigma.js 3.0-beta, Graphology 0.25, Force-Atlas2 layout, Tailwind CSS 3.4, TypeScript 5.9 ([app/*.tsx](app/), [components/](components/)).
 - **Data Pipelines**: Google BigQuery, USPTO PEDS API, USPTO bulk XML parsing, OpenAI `text-embedding-3` models ([etl.py](etl.py), [etl_uspto.py](etl_uspto.py), [etl_xml_fulltext.py](etl_xml_fulltext.py)).
 - **Infrastructure & Tooling**: Postgres 15+ with pgvector, Alembic migrations, pytest with asyncio support, Ruff linting, pip-tools lockfiles, Docker containerization ([migrations/](migrations/), [tests/](tests/)).
