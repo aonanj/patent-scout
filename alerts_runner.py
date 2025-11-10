@@ -14,7 +14,7 @@ Env:
 
     MAILGUN_DOMAIN="mg.your-domain.com"
     MAILGUN_API_KEY="key-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    MAILGUN_FROM_NAME="Patent Scout Alerts"
+    MAILGUN_FROM_NAME="SynapseIP Alerts"
     MAILGUN_FROM_EMAIL="alerts@your-domain.com"
     # Optional:
     MAILGUN_BASE_URL="https://api.mailgun.net/v3"  # default
@@ -65,11 +65,11 @@ def _from_header() -> str:
 
     load_dotenv()
 
-    MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
-    MAILGUN_FROM_NAME = os.getenv("MAILGUN_FROM_NAME", "Patent Scout Alerts")
+    MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.phaethonorder.com")
+    MAILGUN_FROM_NAME = os.getenv("MAILGUN_FROM_NAME", "SynapseIP Alerts")
     MAILGUN_FROM_EMAIL = os.getenv(
         "MAILGUN_FROM_EMAIL",
-        f"alerts@{MAILGUN_DOMAIN}" if MAILGUN_DOMAIN else "alerts@patentscout.com"
+        f"alerts@{MAILGUN_DOMAIN}" if MAILGUN_DOMAIN else "synapseip-alerts@phaethonorder.com"
     )
     return f"{MAILGUN_FROM_NAME} <{MAILGUN_FROM_EMAIL}>"
 
@@ -83,7 +83,7 @@ async def send_mailgun_email(
     
     load_dotenv()
 
-    MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.spurly.io")
+    MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN", "mg.phaethonorder.com")
     MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY", "")
     MAILGUN_BASE_URL = os.getenv("MAILGUN_BASE_URL", "https://api.mailgun.net/v3")
     # If Mailgun is not configured, no-op with console output.
@@ -236,7 +236,7 @@ async def run_one(conn: asyncpg.Connection, sq: asyncpg.Record) -> int:
     if not to_email:
         print(f"[warn] No owner email for saved_query id={sq['id']}; skipping email send")
     else:
-        await send_mailgun_email(to_email, f"Patent Scout Alert: {name}", text, html)
+        await send_mailgun_email(to_email, f"SynapseIP Alert: {name}", text, html)
     return count
 
 

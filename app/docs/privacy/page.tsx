@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
         
         {/* Header */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Privacy Policy</h1>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>SynapseIP Privacy Policy</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
             <strong>Effective Date</strong>: October 17, 2025<br />
             <strong>Last Updated</strong>: October 17, 2025
@@ -60,10 +60,10 @@ export default function PrivacyPolicyPage() {
           
           <Section title="Introduction">
             <p>
-              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the Patent Scout service (the "<strong>Service</strong>"), accessible at <a href="https://patent-scout.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.com/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
+              Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") operates the SynapseIP service (the "<strong>Service</strong>"), accessible at <a href="https://patent-scout.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.com/</a>. This Privacy Policy explains how We collect, use, disclose, and protect your personal information when you use the Service.
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
-              By using Patent Scout, you agree to the collection and use of information in accordance with this Privacy Policy.
+              By using SynapseIP, you agree to the collection and use of information in accordance with this Privacy Policy.
             </p>
             <p>
               If you do not agree with Our policies and practices, do not use the Service.
@@ -351,7 +351,7 @@ export default function PrivacyPolicyPage() {
                 We may share aggregated, anonymized, or de-identified information that cannot reasonably be used to identify you. For example:
               </p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li>"Patent Scout users searched for X CPC classification Y times this month";</li>
+                <li>"SynapseIP users searched for X CPC classification Y times this month";</li>
                 <li>Aggregated trend reports for industry research.</li>
               </ul>
             </Subsection>
@@ -437,7 +437,7 @@ export default function PrivacyPolicyPage() {
 
           <Section title="7. International Data Transfers">
             <p>
-              Patent Scout is operated from the United States. If you are accessing the Service from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States and other countries where Our service providers operate.
+              SynapseIP is operated from the United States. If you are accessing the Service from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States and other countries where Our service providers operate.
             </p>
 
             <Subsection title="7.1 Adequacy and Safeguards">
@@ -663,7 +663,7 @@ export default function PrivacyPolicyPage() {
 
           <Section title="11. Children's Privacy">
             <p>
-              Patent Scout is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children under 18.
+              SynapseIP is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children under 18.
             </p>
             <p>
               If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a>. We will delete such information promptly upon verification.
@@ -742,7 +742,7 @@ export default function PrivacyPolicyPage() {
               We encourage you to read the privacy policies of any site you visit.
             </p>
             <p>
-              This Privacy Policy applies only to information collected by Patent Scout.
+              This Privacy Policy applies only to information collected by SynapseIP.
             </p>
           </Section>
 
@@ -767,7 +767,7 @@ export default function PrivacyPolicyPage() {
           <Section title="17. Additional Disclosures">
             <Subsection title="17.1 Patent Data Processing">
               <p>
-                <strong>Public Patent Information</strong>: Patent Scout processes publicly available patent data from government databases. This data (patent and publication titles, abstracts, claims, inventor names, assignee names) is not "personal information" under most privacy laws, as it relates to published patent documents.
+                <strong>Public Patent Information</strong>: SynapseIP processes publicly available patent data from government databases. This data (patent and publication titles, abstracts, claims, inventor names, assignee names) is not "personal information" under most privacy laws, as it relates to published patent documents.
               </p>
               <p style={{ marginTop: 12 }}>
                 <strong>Your Search Data</strong>: Your search queries, saved alerts, and usage patterns ARE personal information and are protected under this Privacy Policy.
@@ -869,7 +869,7 @@ export default function PrivacyPolicyPage() {
           >
             <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: TEXT_COLOR }}>Acknowledgment</p>
             <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, fontWeight: 600, color: TEXT_COLOR }}>
-              BY USING PATENT SCOUT, YOU ACKNOWLEDGE THAT YOU HAVE READ AND UNDERSTOOD THIS PRIVACY POLICY AND AGREE TO ITS TERMS.
+              BY USING SynapseIP, YOU ACKNOWLEDGE THAT YOU HAVE READ AND UNDERSTOOD THIS PRIVACY POLICY AND AGREE TO ITS TERMS.
             </p>
             <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, color: TEXT_COLOR }}>
               If you do not agree with this Privacy Policy, please do not use the Service.

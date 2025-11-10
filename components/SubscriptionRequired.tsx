@@ -91,7 +91,7 @@ export default function SubscriptionRequired({
         <div className="p-6">
           <p className="text-slate-700 mb-6">
             {feature.charAt(0).toUpperCase() + feature.slice(1)} requires an active subscription to
-            Patent Scout.
+            SynapseIP.
           </p>
 
           <div className="space-y-3 mb-6">

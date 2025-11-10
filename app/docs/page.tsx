@@ -63,7 +63,7 @@ export default function LegalIndexPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Legal Documentation</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            Welcome to Patent Scout's legal resource center. Access and use of the Patent Scout Platform is governed by our Terms of Service. The resources provided here are freely accessible without a subscription. By subscribing to Patent Scout and using the Platform, you are agreeing to the Terms and accepting our Privacy Policy. We reserve the right to update these documents at our discretion without direct notification to users. Please review them periodically to stay informed of any changes.
+            Welcome to SynapseIP's legal resource center. Access and use of the SynapseIP Platform is governed by our Terms of Service. The resources provided here are freely accessible without a subscription. By subscribing to SynapseIP and using the Platform, you are agreeing to the Terms and accepting our Privacy Policy. We reserve the right to update these documents at our discretion without direct notification to users. Please review them periodically to stay informed of any changes.
           </p>
         </div>
 
@@ -71,15 +71,15 @@ export default function LegalIndexPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Overview</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is committed to transparency, data protection, and legal compliance. Login credentials and financial information (e.g., payment details for subscriptions) are handled through trusted third-party providers (i.e., Auth0 for authentication, Stripe for payment processing). Patent Scout does not store any user information beyond the minimum necessary to provide the service. The user information we do store is protected under our Privacy Policy, and will not be sold or otherwise shared with any third parties for advertising or marketing purposes. Please refer to the following key legal documents for further information:
+            SynapseIP is committed to transparency, data protection, and legal compliance. Login credentials and financial information (e.g., payment details for subscriptions) are handled through trusted third-party providers (i.e., Auth0 for authentication, Stripe for payment processing). SynapseIP does not store any user information beyond the minimum necessary to provide the service. The user information we do store is protected under our Privacy Policy, and will not be sold or otherwise shared with any third parties for advertising or marketing purposes. Please refer to the following key legal documents for further information:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li><strong>Terms of Service</strong>: Governs use of the Patent Scout platform; outlines our duties and responsibilities; defines acceptable scope of use on the platform.</li>
+            <li><strong>Terms of Service</strong>: Governs use of the SynapseIP platform; outlines our duties and responsibilities; defines acceptable scope of use on the platform.</li>
             <li><strong>Privacy Policy</strong>: Explains how we collect, use, protect, and disseminate user information; outlines how to request a copy of your data and delete your data from our systems.</li>
             <li><strong>Data Processing Agreement</strong>: Defines data protection obligations for B2B customers where we process personal data on your behalf (required for GDPR/CCPA compliance).</li>
           </ul>
           <p style={{ marginTop: 16, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            These documents are effective as of <strong>October 17, 2025</strong> and apply to all users of the Patent Scout service.
+            These documents are effective as of <strong>October 17, 2025</strong> and apply to all users of the SynapseIP service.
           </p>
         </div>
 
@@ -113,11 +113,11 @@ export default function LegalIndexPage() {
             </div>
             
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-              The Terms of Service constitute a legally binding agreement between you and Phaethon Order LLC for use of the Patent Scout service. This document covers:
+              The Terms of Service constitute a legally binding agreement between you and Phaethon Order LLC for use of the SynapseIP service. This document covers:
             </p>
             
             <div style={{ display: "grid", gap: 12 }}>
-              <DetailItem icon="➣" title="Service Description" text="What Patent Scout provides and how it works" />
+              <DetailItem icon="➣" title="Service Description" text="What SynapseIP provides and how it works" />
               <DetailItem icon="➣" title="Critical Disclaimers" text="NOT legal advice; no warranty of accuracy or completeness" />
               <DetailItem icon="➣" title="Account & Registration" text="Eligibility requirements, authentication, and account security" />
               <DetailItem icon="➣" title="Subscription & Payment" text="Pricing, billing, refunds, and cancellation policies" />
@@ -139,7 +139,7 @@ export default function LegalIndexPage() {
               }}
             >
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Applicable To</strong>: All users of Patent Scout, without express or implied exception. A "user" is anyone accessing and navigating the Patent Scout platform, or the owner of any automated or agentic system that accesses and navigates the platform. Accessing and navigating the platform constitutes acceptance of these Terms.
+                <strong>Applicable To</strong>: All users of SynapseIP, without express or implied exception. A "user" is anyone accessing and navigating the SynapseIP platform, or the owner of any automated or agentic system that accesses and navigates the platform. Accessing and navigating the platform constitutes acceptance of these Terms.
               </p>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function LegalIndexPage() {
             </div>
             
             <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-              Our Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use Patent Scout. This document covers:
+              Our Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use SynapseIP. This document covers:
             </p>
             
             <div style={{ display: "grid", gap: 12 }}>
@@ -245,7 +245,7 @@ export default function LegalIndexPage() {
 
             <div style={{ marginTop: 20, padding: 16, background: "#FFF4E6", borderRadius: 6, border: "1px solid #FFD666" }}>
               <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-                <strong>Who Should Read This</strong>: <strong>B2B customers</strong> (companies, VCs, R&D teams, law firms) who process personal data of their employees/users through Patent Scout. Required for GDPR Article 28 compliance and enterprise contracts.
+                <strong>Who Should Read This</strong>: <strong>B2B customers</strong> (companies, VCs, R&D teams, law firms) who process personal data of their employees/users through SynapseIP. Required for GDPR Article 28 compliance and enterprise contracts.
               </p>
             </div>
 
@@ -303,7 +303,7 @@ export default function LegalIndexPage() {
             
             <InfoSection 
               title="✧ Multi-Jurisdictional Compliance"
-              content="Patent Scout complies with data protection laws in multiple jurisdictions including GDPR (EEA), UK GDPR, Swiss FADP, CCPA/CPRA (California), and privacy laws in Virginia, Colorado, Connecticut, and Utah. Our legal framework is designed to meet the requirements of all applicable jurisdictions."
+              content="SynapseIP complies with data protection laws in multiple jurisdictions including GDPR (EEA), UK GDPR, Swiss FADP, CCPA/CPRA (California), and privacy laws in Virginia, Colorado, Connecticut, and Utah. Our legal framework is designed to meet the requirements of all applicable jurisdictions."
             />
             
             <InfoSection 

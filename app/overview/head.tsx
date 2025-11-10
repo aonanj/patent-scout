@@ -5,7 +5,7 @@ export default function Head() {
 
   return (
     <>
-      <title>IP Overview | Patent Scout</title>
+      <title>IP Overview | SynapseIP</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
     </>

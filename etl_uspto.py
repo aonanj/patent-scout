@@ -2,7 +2,7 @@
 """
 etl_uspto.py
 
-USPTO Open Data Portal (PEDS) → Postgres loader for Patent Scout staging.
+USPTO Open Data Portal (PEDS) → Postgres loader for SynapseIP staging.
 
 Differences from the BigQuery loader:
 - Reads patent metadata via the USPTO Patent Examination Data System API.
@@ -54,7 +54,7 @@ AI_KEYWORDS_DEFAULT = (
     "machine-learning",
     "neural-network",
 )
-# CPC codes for AI domain (from patent-scout.md)
+# CPC codes for AI domain 
 AI_CPC_CODES = [
     "G06N*",
     "G06V*",

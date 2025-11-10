@@ -151,8 +151,8 @@ export default function NavBar() {
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-slate-200">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-2">
         <div className="flex items-center gap-2">
-          <Link href="/" aria-label="Patent Scout Home" className="inline-flex items-center gap-2">
-            <Image src="/images/PatentScoutLogo.png" alt="Patent Scout" width={211} height={38} className="hover:scale-105 transition-transform py-2" />
+          <Link href="/" aria-label="SynapseIP Home" className="inline-flex items-center gap-2">
+            <Image src="/images/synapseip-banner.png" alt="SynapseIP" width={300} height={84} className="hover:scale-105 transition-transform py-2" />
           </Link>
         </div>
 

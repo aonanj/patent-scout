@@ -87,7 +87,7 @@ export default function OverviewHelpPage() {
             For any combination of focus keywords, CPC filters, and date range the IP Overview workflow performs the following steps:
           </p>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "decimal", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>Builds a target search set using full-text search over Patent Scout's relational database, including exact matches and, when enabled, semantic nearest neighbors.</li>
+            <li>Builds a target search set using full-text search over SynapseIP's relational database, including exact matches and, when enabled, semantic nearest neighbors.</li>
             <li>Counts distinct patents and publications in the target search set (exact, semantic, and combined) and normalizes volume per month.</li>
             <li>Tracks monthly patent grants and publications to measure growth trends, such as slope and compound annual growth rate (CAGR), and classifies momentum as rising, stable, or declining.</li>
             <li>Aggregates CPC classifications to show the top slices and a broader breakdown for adjacent technology clusters.</li>
@@ -123,7 +123,7 @@ export default function OverviewHelpPage() {
             />
             <InputDescription
               label="Date Range"
-              description="Restrict the results set to a specific time range corresponding to patent grant date or publication date. Empty fields fall back to the full data set in Patent Scout's database. When only an end date is provided the start defaults to 23 months earlier."
+              description="Restrict the results set to a specific time range corresponding to patent grant date or publication date. Empty fields fall back to the full data set in SynapseIP's database. When only an end date is provided the start defaults to 23 months earlier."
               example="Example: From 2023-07-01, To 2025-06-30"
               tips={[
                 "Shorter ranges can highlight current activity (e.g., competitors' R&D and investment areas); longer ranges provide more stable density and percentile signals.",

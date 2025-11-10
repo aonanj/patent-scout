@@ -1164,7 +1164,7 @@ export default function OverviewPage() {
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Patent Scout – IP Overview", marginX, y);
+      doc.text("SynapseIP – IP Overview", marginX, y);
       y += 24;
 
       doc.setFont("helvetica", "normal");

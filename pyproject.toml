@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "patent-scout-api"
 version = "0.1.0"
-description = "Patent Scout FastAPI search service"
+description = "SynapseIP FastAPI search service"
 requires-python = ">=3.13"
 authors = [{name = "Phaethon Order"}]
 dependencies = [

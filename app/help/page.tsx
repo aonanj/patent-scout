@@ -61,26 +61,26 @@ export default function HelpIndexPage() {
 
         {/* Header */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Help</h1>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>SynapseIP Help</h1>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            Welcome to Patent Scout, an advanced data and analytics platform directed to artificial intelligence (AI) and machine learning (ML) intellectual property (IP). This help center includes documentation describing the platform's various features and terminology, as well as guides to the user interfaces and workflows on the platform.
+            Welcome to SynapseIP, an advanced data and analytics platform directed to artificial intelligence (AI) and machine learning (ML) intellectual property (IP). This help center includes documentation describing the platform's various features and terminology, as well as guides to the user interfaces and workflows on the platform.
           </p>
         </div>
 
         {/* Overview */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Introduction to the Patent Scout Platform</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Introduction to the SynapseIP Platform</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-            Patent Scout is an IP platform specific to AI/ML data and analytics. The platform combines hybrid semantic search, trend analysis, and IP overview information to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML innovations and investments and the entities active in this space. The platform is built on a relational database system that includes 56,000+ AI/ML-related patents and publications dating back to 2023.
+            SynapseIP is an IP platform specific to AI/ML data and analytics. The platform combines hybrid semantic search, trend analysis, and IP overview information to provide an integrated and in-depth understanding of the IP landscape as it relates to AI/ML innovations and investments and the entities active in this space. The platform is built on a relational database system that includes 56,000+ AI/ML-related patents and publications dating back to 2023.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
             Each entry (i.e., patent or publication) in the database is enriched with metadata and context; specifically, each entry corresponds to a patent or publication with multiple associated AI embeddings. The multiple AI embeddings enable accurate and robust semantic searching over multiple fields and combinations of fields.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Metadata and context for each entry further include the assignee name (i.e., owner). The Patent Scout platform normalizes each assignee name to ensure that the AI/ML IP assets held by different entities are accurately and comprehensively represented.
+            Metadata and context for each entry further include the assignee name (i.e., owner). The SynapseIP platform normalizes each assignee name to ensure that the AI/ML IP assets held by different entities are accurately and comprehensively represented.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Patent Scout is designed with a streamlined user interface divided between two primary web service pages:
+            SynapseIP is designed with a streamlined user interface divided between two primary web service pages:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
@@ -121,7 +121,7 @@ export default function HelpIndexPage() {
               The Search & Trends page is the primary interface for discovering and monitoring granted patents and published applications. It combines powerful search capabilities with visual trend analytics to provide an easily comprehensible view of the AI/ML IP landscape. The intuitive interface allows users to construct complex queries using both keywords and semantic similarity, filter results by various metadata fields, and visualize filing trends over time, by CPC classification, or by assignee. 
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
-              The Search & Trends page further includes the option to save a particular search configuration as an alert. Patent Scout updates its database on a weekly basis, following the USPTO schedule. Saved searches are automatically run when new data becomes available, and users are notified of new matches.
+              The Search & Trends page further includes the option to save a particular search configuration as an alert. SynapseIP updates its database on a weekly basis, following the USPTO schedule. Saved searches are automatically run when new data becomes available, and users are notified of new matches.
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
@@ -218,12 +218,12 @@ export default function HelpIndexPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <InfoSection
               title="1. Authentication"
-              content="Patent Scout uses Auth0 for secure authentication. Log in or sign up using the button in the top navigation bar. All features require authentication to ensure data security and usage tracking."
+              content="SynapseIP uses Auth0 for secure authentication. Log in or sign up using the button in the top navigation bar. All features require authentication to ensure data security and usage tracking."
             />
 
             <InfoSection
               title="2. Start with Search & Trends"
-              content="Exploring the Search & Trends page may be helpful in familiarizing yourself with the patent and publication data set accessible through Patent Scout. Try a semantic query like 'autonomous vehicle perception systems' or use keyword filters to narrow results. Experiment with trend groupings to understand filing patterns."
+              content="Exploring the Search & Trends page may be helpful in familiarizing yourself with the patent and publication data set accessible through SynapseIP. Try a semantic query like 'autonomous vehicle perception systems' or use keyword filters to narrow results. Experiment with trend groupings to understand filing patterns."
             />
 
             <InfoSection
@@ -266,7 +266,7 @@ export default function HelpIndexPage() {
 
             <ResourceLink
               title="Legal Documentation"
-              description="Review the Patent Scout platform Terms of Service, Privacy Policy, and Data Processing Agreement."
+              description="Review the SynapseIP platform Terms of Service, Privacy Policy, and Data Processing Agreement."
               href="/docs"
               external={false}
             />
@@ -282,7 +282,7 @@ export default function HelpIndexPage() {
           <div style={{ marginTop: 16 }}>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
               <strong>Email</strong>: <a href="mailto:support@phaethon.llc" className="hover:underline" style={{ color: LINK_COLOR }}>support@phaethon.llc</a><br />
-              <strong>Subject Line</strong>: Patent Scout Support Request<br />
+              <strong>Subject Line</strong>: SynapseIP Support Request<br />
               <strong>Website</strong>: <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://phaethonorder.com</a>
             </p>
           </div>

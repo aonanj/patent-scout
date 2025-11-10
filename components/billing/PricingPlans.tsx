@@ -234,7 +234,7 @@ export default function PricingPlans({ plans, onSubscribe }: PricingPlansProps) 
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold mb-3" style={{ color: '#102A43' }}>Choose Your Plan</h2>
         <p className="text-lg text-slate-600">
-          Get full access to all Patent Scout features
+          Get full access to all SynapseIP features
         </p>
       </div>
 

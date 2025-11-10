@@ -27,13 +27,13 @@ const appSans = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://patent-scout.com"),
-  applicationName: "Patent Scout",
+  applicationName: "SynapseIP",
   title: {
-    default: "Patent Scout | AI Patent Intelligence Platform",
-    template: "%s | Patent Scout",
+    default: "SynapseIP | AI Patent Intelligence Platform",
+    template: "%s | SynapseIP",
   },
   description:
-    "Patent Scout delivers semantic patent search, IP overview graph analytics, and automated alerts so IP teams can monitor AI and machine learning filings in real time.",
+    "SynapseIP delivers semantic patent search, IP overview graph analytics, and automated alerts so IP teams can monitor AI and machine learning filings in real time.",
   keywords: [
     "AI patent search",
     "machine learning patents",
@@ -43,21 +43,21 @@ export const metadata: Metadata = {
     "IP overview analysis",
     "patent alerts platform",
   ],
-  authors: [{ name: "Patent Scout" }],
-  creator: "Patent Scout",
+  authors: [{ name: "SynapseIP" }],
+  creator: "SynapseIP",
   publisher: "Phaethon Order LLC",
   openGraph: {
-    title: "Patent Scout | AI Patent Intelligence Platform",
+    title: "SynapseIP | AI/ML IP Intelligence Platform",
     description:
-      "Monitor AI and ML patent filings with semantic search, automated alerts, and IP overview graph analytics powered by Patent Scout.",
+      "Monitor AI/ML IP with semantic search, automated alerts, IP overview, graph analytics, and more powered by SynapseIP.",
     url: "https://patent-scout.com/",
-    siteName: "Patent Scout",
+    siteName: "SynapseIP",
     images: [
       {
-        url: "https://patent-scout.com/images/PatentScoutLogo.png",
-        width: 1200,
-        height: 630,
-        alt: "Patent Scout logo with AI patent analytics interface",
+        url: "https://patent-scout.com/images/synapseip-banner.png",
+        width: 1300,
+        height: 360,
+        alt: "SynapseIP banner with AI/ML analytics interface",
       },
     ],
     locale: "en_US",
@@ -65,10 +65,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Patent Scout | AI Patent Intelligence Platform",
+    title: "SynapseIP | AI/ML IP Intelligence Platform",
     description:
-      "Powerful AI and machine learning patent discovery with semantic search, trends, and automated alerts.",
-    images: ["https://patent-scout.com/images/PatentScoutLogo.png"],
+      "Powerful AI/ML IP discovery with semantic search, trends, and automated alerts.",
+    images: ["https://patent-scout.com/images/synapseip-banner.png"],
   },
   robots: {
     index: true,
@@ -101,16 +101,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@context": "https://schema.org",
                   "@type": "Organization",
-                  name: "Patent Scout",
+                  name: "SynapseIP",
                   url: "https://patent-scout.com",
                   description:
-                    "Patent Scout is an AI-driven patent intelligence platform with semantic search, IP overview graph analytics, and automated alerts.",
-                  logo: "https://patent-scout.com/images/PatentScoutLogo.png"
+                    "SynapseIP is an AI-driven IP intelligence platform with semantic search, IP overview, graph analytics, and automated alerts.",
+                  logo: "https://patent-scout.com/images/synapseip-banner.png"
                 },
                 {
                   "@context": "https://schema.org",
                   "@type": "WebSite",
-                  name: "Patent Scout",
+                  name: "SynapseIP",
                   url: "https://patent-scout.com",
                   potentialAction: {
                     "@type": "SearchAction",

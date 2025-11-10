@@ -11,12 +11,12 @@ import alerts_runner
 def reset_mailgun_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MAILGUN_DOMAIN", "")
     monkeypatch.setenv("MAILGUN_API_KEY", "")
-    monkeypatch.setenv("MAILGUN_FROM_NAME", "Patent Scout Alerts")
+    monkeypatch.setenv("MAILGUN_FROM_NAME", "SynapseIP Alerts")
     monkeypatch.setenv("MAILGUN_FROM_EMAIL", "alerts@example.com")
     monkeypatch.setenv("MAILGUN_BASE_URL", "https://api.mailgun.net/v3")
     alerts_runner.MAILGUN_DOMAIN = ""
     alerts_runner.MAILGUN_API_KEY = ""
-    alerts_runner.MAILGUN_FROM_NAME = "Patent Scout Alerts"
+    alerts_runner.MAILGUN_FROM_NAME = "SynapseIP Alerts"
     alerts_runner.MAILGUN_FROM_EMAIL = "alerts@example.com"
     alerts_runner.MAILGUN_BASE_URL = "https://api.mailgun.net/v3"
 

@@ -1,4 +1,4 @@
-name: Patent Scout Alerts
+name: SynapseIP Alerts
 
 on:
   schedule:

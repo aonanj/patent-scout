@@ -45,7 +45,7 @@ export default function DataProcessingAgreementPage() {
         
         {/* Header */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Data Processing Agreement</h1>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>SynapseIP Data Processing Agreement</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
             <strong>Effective Date</strong>: October 17, 2025<br />
             <strong>Last Updated</strong>: October 17, 2025
@@ -60,7 +60,7 @@ export default function DataProcessingAgreementPage() {
           
           <Section title="Introduction and Agreement">
             <p>
-              This Data Processing Agreement ("<strong>DPA</strong>") forms part of the <a href="/docs" className="hover:underline" style={{ color: LINK_COLOR }}>Terms of Service</a> between you (the "<strong>Customer</strong>" or "<strong>Data Controller</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>Processor</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") for the use of the Patent Scout service (the "<strong>Service</strong>").
+              This Data Processing Agreement ("<strong>DPA</strong>") forms part of the <a href="/docs" className="hover:underline" style={{ color: LINK_COLOR }}>Terms of Service</a> between you (the "<strong>Customer</strong>" or "<strong>Data Controller</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>Processor</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") for the use of the SynapseIP service (the "<strong>Service</strong>").
             </p>
             <p style={{ marginTop: 16 }}>
               This DPA governs the processing of Personal Data (as defined below) by the Company on behalf of the Customer in connection with the Service. This DPA reflects the parties' agreement on the terms governing the processing of Personal Data in compliance with applicable Data Protection Laws.
@@ -724,7 +724,7 @@ export default function DataProcessingAgreementPage() {
             <div style={{ marginTop: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: TEXT_COLOR, marginBottom: 8 }}>Subject Matter of Processing</h3>
               <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>
-                Provision of the Patent Scout service, including patent search, trend analysis, IP overview, alert delivery, data export, and customer support.
+                Provision of the SynapseIP service, including patent search, trend analysis, IP overview, alert delivery, data export, and customer support.
               </p>
             </div>
 

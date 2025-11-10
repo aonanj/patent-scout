@@ -2,7 +2,7 @@
 """
 etl_xml_fulltext.py
 
-USPTO Patent Application Full Text XML → Postgres loader for Patent Scout.
+USPTO Patent Application Full Text XML → Postgres loader for SynapseIP.
 
 Parses USPTO bulk XML files (e.g., ipa250220.xml) containing full text of patent
 applications and upserts abstracts and claims into the patent_staging table.

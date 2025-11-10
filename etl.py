@@ -2,7 +2,7 @@
 """
 etl_bigquery_to_postgres.py
 
-BigQuery → Postgres loader for Patent Scout MVP with integrated:
+BigQuery → Postgres loader for SynapseIP MVP with integrated:
 - claims ingestion 
 - embeddings generation (OpenAI text-embedding-3-small) for title+abstract and claims
 

@@ -307,7 +307,7 @@ function BillingContent() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Billing & Subscription</h1>
           <p style={{ marginTop: 16, fontSize: 15, lineHeight: 1.6, color: "#627D98", marginBottom: 0 }}>
-            Manage your Patent Scout subscription, review billing status, and update payment preferences.
+            Manage your SynapseIP subscription, review billing status, and update payment preferences.
           </p>
         </div>
 

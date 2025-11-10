@@ -45,7 +45,7 @@ export default function TermsOfServicePage() {
         
         {/* Header */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>Patent Scout Terms of Service</h1>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: TEXT_COLOR }}>SynapseIP Terms of Service</h1>
           <div style={{ marginTop: 12, fontSize: 14, color: TEXT_COLOR }}>
             <strong>Effective Date</strong>: October 17, 2025<br />
             <strong>Last Updated</strong>: October 17, 2025
@@ -60,7 +60,7 @@ export default function TermsOfServicePage() {
           
           <Section title="Agreement to Terms">
             <p>
-              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the Patent Scout service, including Our website at <a href="https://patent-scout.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.com/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
+              These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you (individually or on behalf of an entity, "<strong>you</strong>" or "<strong>your</strong>") and Phaethon Order LLC ("<strong>Company</strong>," "<strong>We</strong>," "<strong>Us</strong>," or "<strong>Our</strong>") concerning your access to and use of the SynapseIP service, including Our website at <a href="https://patent-scout.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: LINK_COLOR }}>https://patent-scout.com/</a> and any related services, features, content, or applications (collectively, the "<strong>Service</strong>").
             </p>
             <p style={{ fontWeight: 600, marginTop: 16 }}>
               BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. If you do not agree to these Terms, you must not access or use the Service.
@@ -68,10 +68,10 @@ export default function TermsOfServicePage() {
           </Section>
 
           <Section title="1. Service Description">
-            <Subsection title="1.1 What Patent Scout Provides">
-              <p>Patent Scout is a patent intelligence platform that provides:</p>
+            <Subsection title="1.1 What SynapseIP Provides">
+              <p>SynapseIP is an AI/ML IP intelligence platform that provides:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-                <li>Search and discovery tools for AI-related patent publications;</li>
+                <li>Search and discovery tools for AI/ML-related patents and publications;</li>
                 <li>Trend analysis and visualization;</li>
                 <li>IP overview information and signal analysis;</li>
                 <li>Automated alerts for patent filings matching user-defined criteria;</li>
@@ -91,7 +91,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="1.3 Beta Service Notice">
               <p>
-                Patent Scout is currently in active development. Features, functionality, data quality, and availability may change without notice. You acknowledge that you are using a service that is under continuous improvement and may experience interruptions, errors, and/or data inconsistencies. By using this Service, you agree that We are not liable for such interruptions, errors, and/or inconsistencies.
+                SynapseIP is currently in active development. Features, functionality, data quality, and availability may change without notice. You acknowledge that you are using a service that is under continuous improvement and may experience interruptions, errors, and/or data inconsistencies. By using this Service, you agree that We are not liable for such interruptions, errors, and/or inconsistencies.
               </p>
             </Subsection>
           </Section>
@@ -99,12 +99,12 @@ export default function TermsOfServicePage() {
           <Section title="2. Critical Disclaimers and Limitations">
             <Subsection title="2.1 NOT Legal Advice">
               <p style={{ fontWeight: 600 }}>THE SERVICE DOES NOT PROVIDE LEGAL ADVICE.</p>
-              <p>Patent Scout is an informational tool only. The Service:</p>
+              <p>SynapseIP is an informational tool only. The Service:</p>
               <ul style={{ marginLeft: 20, marginTop: 8, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
                 <li>Does NOT constitute legal, patent, or professional advice of any kind;</li>
                 <li>Does NOT replace consultation with qualified patent attorneys or agents;</li>
                 <li>Does NOT provide comprehensive freedom-to-operate, patentability, or infringement analyses;</li>
-                <li>Is NOT suitable as the sole basis for patent strategy, filing, or litigation decisions.</li>
+                <li>Is NOT suitable as the sole basis for IP strategy, filing, or litigation decisions.</li>
               </ul>
             </Subsection>
 
@@ -288,7 +288,7 @@ export default function TermsOfServicePage() {
 
             <Subsection title="6.4 Trademarks">
               <p>
-                "Patent Scout" and associated logos, branding, etc. are the exclusive property of Phaethon Order LLC. You may not use Our intellectual property without prior written permission. We are under no obligation to consent to the use of any intellectual property owned by Us.
+                "SynapseIP" and associated logos, branding, etc. are the exclusive property of Phaethon Order LLC. You may not use Our intellectual property without prior written permission. We are under no obligation to consent to the use of any intellectual property owned by Us.
               </p>
             </Subsection>
           </Section>
@@ -352,7 +352,7 @@ export default function TermsOfServicePage() {
                 <li><strong>Neon.tech</strong> (database).</li>
               </ul>
               <p style={{ marginTop: 12 }}>
-                Your use of these services through Patent Scout is subject to their respective terms and privacy policies. We are not responsible for third-party service failures, changes, and/or discontinuations.
+                Your use of these services through SynapseIP is subject to their respective terms and privacy policies. We are not responsible for third-party service failures, changes, and/or discontinuations.
               </p>
             </Subsection>
 
@@ -646,7 +646,7 @@ export default function TermsOfServicePage() {
               BY CLICKING "I AGREE," CREATING AN ACCOUNT, OR USING THE SERVICE, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS OF SERVICE.
             </p>
             <p style={{ marginTop: 12, marginBottom: 0, fontSize: 13, fontWeight: 600, color: TEXT_COLOR }}>
-              IF YOU DO NOT AGREE TO THESE TERMS, YOU MUST NOT ACCESS OR USE PATENT SCOUT.
+              IF YOU DO NOT AGREE TO THESE TERMS, YOU MUST NOT ACCESS OR USE SynapseIP.
             </p>
           </div>
 

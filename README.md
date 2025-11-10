@@ -1,9 +1,9 @@
-# Patent Scout
+# SynapseIP
 
-> Patent Scout is a data and analytics platform for artificial intelligence (AI) and machine learning (ML) IP. The platform blends hybrid semantic search, trend analytics, IP overview graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes 56k+ AI/ML-related patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
+> SynapseIP is a data and analytics platform for artificial intelligence (AI) and machine learning (ML) IP. The platform blends hybrid semantic search, trend analytics, IP overview graphing, and proactive alerts on top of a pgvector-powered corpus that is refreshed by automated ETL pipelines. Current corpus includes 56k+ AI/ML-related patents and publications dating back to 2023, with support for multiple data sources including BigQuery, USPTO ODP API, and bulk XML feeds.
 
 ## Overview
-The repository contains the full Patent Scout stack: FastAPI exposes the search, export, trend, saved-query, and overview endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific IP overview analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
+The repository contains the full SynapseIP stack: FastAPI exposes the search, export, trend, saved-query, and overview endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific IP overview analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
 
 ## Feature Highlights
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). Filters are edited live, but searches only execute when the user clicks the `Apply` button, removing prior debounce-driven inconsistencies across the trend graph and table.
@@ -272,7 +272,7 @@ The React UI ([app/overview/page.tsx](app/overview/page.tsx)) defaults to the ov
 ## Screenshots
 - Search & Trends UI – ![docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
 - IP Overview UI – ![docs/screenshots/overview-ui.png](docs/screenshots/overview-ui.png)
-- Patent Scout API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
+- SynapseIP API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
 ## Documentation & Legal Pages
 - **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [Search & Trends](app/help/search_trends/page.tsx) and [IP Overview](app/help/overview/page.tsx).

@@ -80,7 +80,7 @@ async def lifespan(_: FastAPI):
         await pool.close()
 
 
-app = FastAPI(title="Patent Scout API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="SynapseIP API", version="0.1.0", lifespan=lifespan)
 Conn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
 User = Annotated[dict, Depends(get_current_user)]
 origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()] or [
@@ -464,7 +464,7 @@ async def export(
     margin = 40
     y = height - margin
     c.setFont("Helvetica-Bold", 12)
-    c.drawString(margin, y, "Patent Scout Export (top results)")
+    c.drawString(margin, y, "SynapseIP Export (top results)")
     y -= 18
     c.setFont("Helvetica", 9)
 

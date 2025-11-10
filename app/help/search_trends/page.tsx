@@ -104,7 +104,7 @@ export default function SearchTrendsHelpPage() {
           <div style={{ display: "grid", gap: 20 }}>
             <InputDescription
               label="Semantic Query"
-              description="Enter a natural language description of the technology or concept you're interested in. Patent Scout uses AI embeddings to search for semantically similar patents and publications, which incorporates context, meaning, and other auxiliary information in order to return results that that are more robust, comprehensive, and relevant than traditional keyword searches."
+              description="Enter a natural language description of the technology or concept you're interested in. SynapseIP uses AI embeddings to search for semantically similar patents and publications, which incorporates context, meaning, and other auxiliary information in order to return results that that are more robust, comprehensive, and relevant than traditional keyword searches."
               example='Example: "autonomous vehicle perception systems using LIDAR and camera fusion"'
               tips={[
                 "Be specific and descriptive rather than using single keywords",
@@ -156,7 +156,7 @@ export default function SearchTrendsHelpPage() {
               tips={[
                 "Dates are based on earliest publication date for applications, grant date for patents",
                 "Both fields accept MM-DD-YYYY format via the date picker",
-                "Leaving fields blank uses Patent Scout's min/max dates",
+                "Leaving fields blank uses SynapseIP's min/max dates",
                 "Date range is displayed in the Trend chart subtitle"
               ]}
             />
