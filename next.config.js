@@ -41,13 +41,13 @@ const nextConfig = {
   async redirects() {
     return [
       // old vercel hostname → new primary
-      { source: '/:path*', has: [{ type: 'host', value: 'patent-scout.vercel.app' }], destination: 'https://synapse-ip.com/:path*', permanent: true },
+      { source: '/:path*', has: [{ type: 'host', value: 'patent-scout.vercel.app' }], destination: 'https://www.synapse-ip.com/:path*', permanent: true },
 
       // if moving the brand/domain
-      { source: '/:path*', has: [{ type: 'host', value: 'patent-scout.com' }], destination: 'https://synapse-ip.com/:path*', permanent: true },
+      { source: '/:path*', has: [{ type: 'host', value: 'patent-scout.com' }], destination: 'https://www.synapse-ip.com/:path*', permanent: true },
 
       // www → apex for new brand
-      { source: '/:path*', has: [{ type: 'host', value: 'www.synapse-ip.com' }], destination: 'https://synapse-ip.com/:path*', permanent: true },
+      //{ source: '/:path*', has: [{ type: 'host', value: 'synapse-ip.com' }], destination: 'https://www.synapse-ip.com/:path*', permanent: true },
     ];
   },
 };
