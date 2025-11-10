@@ -111,6 +111,18 @@ type RunQuery = {
 };
 
 type ResultSort = "relevance_desc" | "pub_date_desc" | "assignee_asc";
+type ResultMode = "exact" | "semantic";
+
+type SearchRequestPayload = {
+  keywords: string | null;
+  semantic_query: string | null;
+  filters: {
+    cpc: string | null;
+    date_from: number | null;
+    date_to: number | null;
+  };
+  sort_by: ResultSort;
+};
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -771,8 +783,11 @@ export default function OverviewPage() {
   const [groupByAssignee, setGroupByAssignee] = useState(false);
 
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
-  const [results, setResults] = useState<PatentHit[]>([]);
-  const [totalResults, setTotalResults] = useState(0);
+  const [exactResults, setExactResults] = useState<PatentHit[]>([]);
+  const [semanticResults, setSemanticResults] = useState<PatentHit[]>([]);
+  const [totalExactResults, setTotalExactResults] = useState(0);
+  const [totalSemanticResults, setTotalSemanticResults] = useState(0);
+  const [resultMode, setResultMode] = useState<ResultMode>("exact");
   const [resultPage, setResultPage] = useState(1);
   const [sortBy, setSortBy] = useState<ResultSort>("relevance_desc");
   const [assigneeData, setAssigneeData] = useState<OverviewGraphResponse | null>(null);
@@ -849,6 +864,54 @@ export default function OverviewPage() {
     setActiveSignalKey(null);
   }, [assigneeData?.graph]);
 
+  const fetchSearchResults = useCallback(
+    async (token: string, payload: SearchRequestPayload) => {
+      const aggregated: PatentHit[] = [];
+      let totalCount = 0;
+      let offset = 0;
+      let fetching = true;
+
+      while (fetching) {
+        const searchPayload = {
+          ...payload,
+          limit: SEARCH_BATCH_SIZE,
+          offset,
+        };
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(searchPayload),
+        });
+        if (!res.ok) {
+          const detail = await res.json().catch(() => ({}));
+          throw new Error((detail as { detail?: string }).detail || `Search failed (${res.status})`);
+        }
+        const data = (await res.json()) as SearchResponse;
+        const batchItems = data.items ?? [];
+        if (offset === 0) {
+          totalCount = data.total ?? batchItems.length ?? 0;
+        }
+        if (batchItems.length) {
+          aggregated.push(...batchItems);
+        }
+        if (batchItems.length < SEARCH_BATCH_SIZE || (totalCount > 0 && aggregated.length >= totalCount)) {
+          fetching = false;
+        } else {
+          offset += SEARCH_BATCH_SIZE;
+        }
+      }
+
+      return {
+        total: totalCount || aggregated.length,
+        items: aggregated,
+      };
+    },
+    [],
+  );
+
   const runAnalysis = useCallback(async () => {
     if (!isAuthenticated) {
       await loginWithRedirect();
@@ -898,50 +961,25 @@ export default function OverviewPage() {
         date_from: fromInt ?? null,
         date_to: toInt ?? null,
       };
-      const semanticQuery = currentQuery.semantic ? currentQuery.keywords || null : null;
-      const aggregatedResults: PatentHit[] = [];
-      let totalCount = 0;
-      let offset = 0;
-      let fetching = true;
 
-      while (fetching) {
-        const searchPayload = {
-          keywords: currentQuery.keywords || null,
-          semantic_query: semanticQuery,
-          limit: SEARCH_BATCH_SIZE,
-          offset,
-          filters: baseFilters,
-          sort_by: "relevance_desc" as const,
-        };
-        const res = await fetch("/api/search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(searchPayload),
-        });
-        if (!res.ok) {
-          const detail = await res.json().catch(() => ({}));
-          throw new Error(detail.detail || `Search failed (${res.status})`);
-        }
-        const data = (await res.json()) as SearchResponse;
-        const batchItems = data.items ?? [];
-        if (offset === 0) {
-          totalCount = data.total ?? batchItems.length ?? 0;
-        }
-        if (batchItems.length) {
-          aggregatedResults.push(...batchItems);
-        }
-        const received = batchItems.length;
-        if (received < SEARCH_BATCH_SIZE || aggregatedResults.length >= totalCount) {
-          fetching = false;
-        } else {
-          offset += SEARCH_BATCH_SIZE;
-        }
-      }
+      const exactPromise = fetchSearchResults(token, {
+        keywords: currentQuery.keywords || null,
+        semantic_query: null,
+        filters: baseFilters,
+        sort_by: "relevance_desc",
+      });
 
-      const overviewRes = await overviewPromise;
+      const semanticPromise: Promise<{ total: number; items: PatentHit[] } | null> =
+        currentQuery.semantic && currentQuery.keywords
+          ? fetchSearchResults(token, {
+              keywords: null,
+              semantic_query: currentQuery.keywords,
+              filters: baseFilters,
+              sort_by: "relevance_desc",
+            })
+          : Promise.resolve(null);
+
+      const [overviewRes, exactData, semanticData] = await Promise.all([overviewPromise, exactPromise, semanticPromise]);
       if (!overviewRes.ok) {
         const detail = await overviewRes.json().catch(() => ({}));
         throw new Error(detail.detail || `IP Overview failed (${overviewRes.status})`);
@@ -949,8 +987,16 @@ export default function OverviewPage() {
 
       const overviewJson = (await overviewRes.json()) as OverviewResponse;
       setOverview(overviewJson);
-      setResults(aggregatedResults);
-      setTotalResults(totalCount || aggregatedResults.length);
+      setExactResults(exactData.items);
+      setTotalExactResults(exactData.total || exactData.items.length);
+      if (semanticData && currentQuery.semantic && currentQuery.keywords) {
+        setSemanticResults(semanticData.items);
+        setTotalSemanticResults(semanticData.total || semanticData.items.length);
+      } else {
+        setSemanticResults([]);
+        setTotalSemanticResults(0);
+      }
+      setResultMode("exact");
       setResultPage(1);
       setLastQuery(currentQuery);
 
@@ -969,6 +1015,7 @@ export default function OverviewPage() {
     cpcFilter,
     dateFrom,
     dateTo,
+    fetchSearchResults,
     getAccessTokenSilently,
     today,
     groupByAssignee,
@@ -1007,6 +1054,18 @@ export default function OverviewPage() {
     return `Saturation: ${numberFmt.format(overview.crowding.total)} total (${percentileLabelText}) | Activity Rate: ${overview.crowding.density_per_month.toFixed(1)}/mo | Momentum: ${overview.momentum.bucket}`;
   }, [overview]);
 
+  useEffect(() => {
+    if (!showSemantic) {
+      setResultMode("exact");
+      setSemanticResults([]);
+      setTotalSemanticResults(0);
+    }
+  }, [showSemantic]);
+
+  useEffect(() => {
+    setResultPage(1);
+  }, [resultMode]);
+
   const topCpcTile = useMemo(() => {
     if (!overview) return [];
     return overview.top_cpcs.slice(0, 5);
@@ -1024,12 +1083,19 @@ export default function OverviewPage() {
     };
   }, [overview]);
 
+  const activeResults = resultMode === "semantic" ? semanticResults : exactResults;
+  const activeTotalResults = resultMode === "semantic" ? totalSemanticResults : totalExactResults;
+  const hasKeywordInput = keywords.trim().length > 0;
+  const semanticResultsEnabled = showSemantic && hasKeywordInput;
+  const semanticResultsAvailable = semanticResultsEnabled && totalSemanticResults > 0;
+
   const sortedResults = useMemo(() => {
-    if (!results.length) return results;
+    const source = resultMode === "semantic" ? semanticResults : exactResults;
+    if (!source.length) return source;
     if (sortBy === "relevance_desc") {
-      return results;
+      return source;
     }
-    const copy = [...results];
+    const copy = [...source];
     if (sortBy === "pub_date_desc") {
       copy.sort((a, b) => {
         const aDate = pubDateValue(a.pub_date);
@@ -1068,7 +1134,7 @@ export default function OverviewPage() {
       return (a.pub_id || "").localeCompare(b.pub_id || "");
     });
     return copy;
-  }, [results, sortBy]);
+  }, [exactResults, semanticResults, resultMode, sortBy]);
 
   const paginatedResults = useMemo(() => {
     const start = (resultPage - 1) * RESULTS_PER_PAGE;
@@ -1085,8 +1151,10 @@ export default function OverviewPage() {
   }, [totalResultPages]);
 
   const startIndex = (resultPage - 1) * RESULTS_PER_PAGE;
+  const resultModeLabel = resultMode === "semantic" ? "Semantic neighbors" : "Exact matches";
+  const totalForDisplay = activeTotalResults || sortedResults.length;
   const showingRangeLabel = sortedResults.length
-    ? `${numberFmt.format(startIndex + 1)}-${numberFmt.format(Math.min(sortedResults.length, startIndex + RESULTS_PER_PAGE))} of ${numberFmt.format(sortedResults.length)}`
+    ? `${numberFmt.format(startIndex + 1)}-${numberFmt.format(Math.min(sortedResults.length, startIndex + RESULTS_PER_PAGE))} of ${numberFmt.format(totalForDisplay)} • ${resultModeLabel}`
     : "";
   const canPrev = resultPage > 1;
   const canNext = resultPage < totalResultPages;
@@ -1099,8 +1167,11 @@ export default function OverviewPage() {
     setShowSemantic(true);
     setGroupByAssignee(false);
     setOverview(null);
-    setResults([]);
-    setTotalResults(0);
+    setExactResults([]);
+    setSemanticResults([]);
+    setTotalExactResults(0);
+    setTotalSemanticResults(0);
+    setResultMode("exact");
     setResultPage(1);
     setSortBy("relevance_desc");
     setAssigneeData(null);
@@ -1175,6 +1246,7 @@ export default function OverviewPage() {
         `Date Range: ${(dateFrom || "—")} – ${(dateTo || "—")}`,
         `Semantic Neighbors: ${showSemantic ? "On" : "Off"}`,
         `Group by Assignee: ${groupByAssignee ? "On" : "Off"}`,
+        `Result Source: ${resultModeLabel}`,
       ];
       scopeLines.forEach((line) => addWrappedText(line));
 
@@ -1250,7 +1322,7 @@ export default function OverviewPage() {
     } finally {
       setExporting(false);
     }
-  }, [overview, sortedResults, keywords, cpcFilter, dateFrom, dateTo, showSemantic, groupByAssignee, sortBy]);
+  }, [overview, sortedResults, keywords, cpcFilter, dateFrom, dateTo, showSemantic, groupByAssignee, sortBy, resultModeLabel]);
 
   return (
     <div style={pageWrapperStyle}>
@@ -1432,10 +1504,39 @@ export default function OverviewPage() {
             <div>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: "semibold", color: "#102a43" }}>RESULTS</h2>
               <div style={{ fontSize: 12, color: "#475569" }}>
-                {totalResults ? `${numberFmt.format(totalResults)} patents & publications` : "No data"}
+                {activeTotalResults ? `${numberFmt.format(activeTotalResults)} patents & publications (${resultModeLabel})` : "No data"}
               </div>
+              {resultMode === "exact" && semanticResultsAvailable && (
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>
+                  Semantic neighbors available: {numberFmt.format(totalSemanticResults)}
+                </div>
+              )}
+              {showSemantic && !hasKeywordInput && (
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>Add focus keywords to compute semantic neighbors.</div>
+              )}
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Label htmlFor="result-source">Results</Label>
+                <select
+                  id="result-source"
+                  value={resultMode}
+                  onChange={(event) => setResultMode(event.target.value as ResultMode)}
+                  style={{
+                    height: 32,
+                    borderRadius: 10,
+                    border: "1px solid rgba(148,163,184,0.6)",
+                    background: semanticResultsEnabled ? "rgba(248,250,252,0.9)" : "rgba(248,250,252,0.5)",
+                    padding: "0 10px",
+                    fontSize: 12,
+                    color: "#102a43",
+                    minWidth: 140,
+                  }}
+                >
+                  <option value="exact">Exact matches</option>
+                  <option value="semantic" disabled={!semanticResultsEnabled}>Semantic neighbors</option>
+                </select>
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Label htmlFor="result-sort">Sort</Label>
                 <select
