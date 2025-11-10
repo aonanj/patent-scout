@@ -272,6 +272,9 @@ CLUSTER_LABEL_STOPWORDS: set[str] = {
     "possible",
     "potential",
     "different",
+    "least",
+    "through",
+    "other"
 }
 CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "algorithm",
@@ -306,7 +309,13 @@ CLUSTER_LABEL_STEM_STOPWORDS: tuple[str, ...] = (
     "detect",
     "disclos",
     "apply",
-    "analyz"
+    "analyz",
+    "vari",
+    "exampl",
+    "specif",
+    "particul",
+    "aspect",
+    "illustrat"
 )
 
 
