@@ -70,3 +70,26 @@ class PatentDetail(BaseModel):
     assignee_name: str | None = None
     inventor_name: list[str] | None = None
     cpc: list[dict] | None = None
+
+
+class ScopeAnalysisRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=20000)
+    top_k: int = Field(20, ge=1, le=100)
+
+
+class ScopeClaimMatch(BaseModel):
+    pub_id: str
+    claim_number: int
+    claim_text: str | None = None
+    title: str | None = None
+    assignee_name: str | None = None
+    pub_date: int | None = None
+    is_independent: bool | None = None
+    distance: float
+    similarity: float
+
+
+class ScopeAnalysisResponse(BaseModel):
+    query_text: str
+    top_k: int
+    matches: list[ScopeClaimMatch]

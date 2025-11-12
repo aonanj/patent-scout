@@ -132,6 +132,60 @@ Links patents in the `patent` table to the patents and publications it cites via
 
 ---
 
+## public.patent\_claim
+
+Stores independent claims of patents in the patent table for generating claim-specific embeddings.
+
+### Columns
+
+| Column | Type | Nullable | Default |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | not null | `get_random_uuid()` |
+| `pub id` | `text` | not null | |
+| `claim_number` | `integer` | not null | |
+| `is independent` | `boolean` | not null | `false` |
+| `claim text` | `text` | true | |
+| `overview score` | `real` | true | |
+| `created at` | `timestamp with time zone` | not null | `now()` |
+| `updated at` | `timestamp with time zone` | not null | `now()` |
+
+
+### Indexes
+
+* `patent_claim_pkey` PRIMARY KEY, btree `(id)`
+* `idx_patent_claim_pub_id` btree `(pub_id)`
+* `uq_patent_claim` UNIQUE CONSTRAINT, btree `(pub_id, claim_number)`
+
+### Foreign Key Constraints
+
+* `patent fkey` FOREIGN KEY (`pub id`) REFERENCES `patent(pub id)` ON DELETE CASCADE
+
+---
+
+## public.patent\_claim\_embeddings
+
+Stores embeddings generated for individual independent claims of patents in the patent claim table. 
+### Columns
+
+| Column | Type | Nullable | Default |
+| :--- | :--- | :--- | :--- |
+| `id` | `bigint` | not null | `generated always as identity` |
+| `pub id` | `text` | not null | |
+| `claim_number` | `integer` | not null | |
+| `dim` | `integer` | not null | |
+| `created at` | `timestamp with time zone` | not null | `now()` |
+| `embedding` | `vector(1536)` | true | |
+
+
+### Indexes
+
+* `patent_claim_embeddings_pkey` PRIMARY KEY, btree `(id)`
+* `idx_patent_claim_embeddings_pub_id` btree `(pub_id, claim_number)`
+* `patent_claim_embeddings_hnsw_idx_claim_model` hnsw `(embedding vector_cosine_ops)`
+* `uq_patent_claim_number` UNIQUE CONSTRAINT, btree (pub_id, claim_number)`
+
+---
+
 ## public.user\_overview\_analysis
 
 Stores analysis results, like clustering and scoring, for patents specific to a user.

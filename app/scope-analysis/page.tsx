@@ -1,0 +1,450 @@
+"use client";
+
+import { useAuth0 } from "@auth0/auth0-react";
+import { useCallback, useMemo, useState } from "react";
+
+type ScopeClaimMatch = {
+  pub_id: string;
+  claim_number: number;
+  claim_text?: string | null;
+  title?: string | null;
+  assignee_name?: string | null;
+  pub_date?: number | null;
+  is_independent?: boolean | null;
+  distance: number;
+  similarity: number;
+};
+
+type ScopeAnalysisResponse = {
+  query_text: string;
+  top_k: number;
+  matches: ScopeClaimMatch[];
+};
+
+type GraphProps = {
+  matches: ScopeClaimMatch[];
+  selectedId: string | null;
+  onSelect: (rowId: string) => void;
+};
+
+function formatPubDate(pubDate?: number | null): string {
+  if (!pubDate) return "—";
+  const s = String(pubDate);
+  if (s.length !== 8) return s;
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+}
+
+function formatSimilarity(sim: number | null | undefined): string {
+  if (sim == null) return "—";
+  const pct = Math.max(0, Math.min(1, sim)) * 100;
+  return `${pct.toFixed(1)}%`;
+}
+
+const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
+  const width = 620;
+  const height = 360;
+  const cx = width / 2;
+  const cy = height / 2;
+
+  const nodes = useMemo(() => {
+    if (!matches.length) return [];
+    const limit = Math.min(matches.length, 18);
+    return matches.slice(0, limit).map((match, idx) => {
+      const proportion = idx / limit;
+      const angle = proportion * Math.PI * 2;
+      const sim = Math.max(0, Math.min(1, match.similarity ?? 0));
+      const minRadius = 90;
+      const maxRadius = 190;
+      const radius = maxRadius - sim * (maxRadius - minRadius);
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      const rowId = `${match.pub_id}#${match.claim_number}`;
+      return {
+        x,
+        y,
+        angle,
+        rowId,
+        similarity: sim,
+        title: match.title || match.pub_id,
+      };
+    });
+  }, [matches, cx, cy]);
+
+  if (!matches.length) {
+    return (
+      <div className="h-[360px] flex items-center justify-center text-sm text-slate-500">
+        Run a scope analysis to visualize overlaps with independent claims.
+      </div>
+    );
+  }
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[360px]">
+      {/* Edges */}
+      {nodes.map((node) => (
+        <line
+          key={`${node.rowId}-edge`}
+          x1={cx}
+          y1={cy}
+          x2={node.x}
+          y2={node.y}
+          stroke="rgba(14,165,233,0.25)"
+          strokeWidth={selectedId === node.rowId ? 2.2 : 1.2}
+        />
+      ))}
+
+      {/* Query node */}
+      <g>
+        <circle cx={cx} cy={cy} r={28} fill="#0ea5e9" fillOpacity={0.8} />
+        <text
+          x={cx}
+          y={cy}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={12}
+          fontWeight={600}
+          fill="white"
+        >
+          Input
+        </text>
+      </g>
+
+      {/* Claim nodes */}
+      {nodes.map((node) => (
+        <g
+          key={node.rowId}
+          className="cursor-pointer"
+          onClick={() => onSelect(node.rowId)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelect(node.rowId);
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Highlight ${node.title}`}
+        >
+          <circle
+            cx={node.x}
+            cy={node.y}
+            r={selectedId === node.rowId ? 16 : 13}
+            fill={selectedId === node.rowId ? "#1d4ed8" : "#e0f2fe"}
+            stroke={selectedId === node.rowId ? "#1d4ed8" : "#0ea5e9"}
+            strokeWidth={selectedId === node.rowId ? 3 : 1.5}
+          />
+          <text
+            x={node.x}
+            y={node.y - (selectedId === node.rowId ? 22 : 20)}
+            textAnchor="middle"
+            fontSize={11}
+            fontWeight={600}
+            fill="#0f172a"
+          >
+            {`${Math.round(node.similarity * 100)}%`}
+          </text>
+          <text
+            x={node.x}
+            y={node.y + 26}
+            textAnchor="middle"
+            fontSize={10}
+            fill="#475569"
+          >
+            {node.title.slice(0, 24)}
+            {node.title.length > 24 ? "…" : ""}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+};
+
+export default function ScopeAnalysisPage() {
+  const { isAuthenticated, isLoading, loginWithRedirect, getAccessTokenSilently } = useAuth0();
+  const [text, setText] = useState("");
+  const [topK, setTopK] = useState(15);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<ScopeClaimMatch[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [lastQuery, setLastQuery] = useState<string | null>(null);
+
+  const primaryRisk = useMemo(() => {
+    if (!results.length) return null;
+    const top = results[0];
+    if (!top) return null;
+    const sim = top.similarity ?? 0;
+    if (sim >= 0.75) {
+      return { label: "High overlap", level: "high", message: "Top claim vector is very close to your input. Consider immediate counsel review." };
+    }
+    if (sim >= 0.55) {
+      return { label: "Moderate overlap", level: "medium", message: "One or more existing claims are directionally similar. Evaluate design-arounds." };
+    }
+    return { label: "Low overlap", level: "low", message: "Closest claims remain relatively distant. Filing or launch risk appears low." };
+  }, [results]);
+
+  const runAnalysis = useCallback(async () => {
+    if (!text.trim()) {
+      setError("Please describe the product or claim set to analyze.");
+      return;
+    }
+    if (!isAuthenticated) {
+      loginWithRedirect();
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const token = await getAccessTokenSilently();
+      const payload = { text, top_k: topK };
+      const resp = await fetch("/api/scope-analysis", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const detail = await resp.json().catch(() => ({}));
+        throw new Error(detail?.detail || `HTTP ${resp.status}`);
+      }
+      const data: ScopeAnalysisResponse = await resp.json();
+      const matches = Array.isArray(data.matches) ? data.matches : [];
+      setResults(matches);
+      setLastQuery(data.query_text || text);
+      setSelectedId(matches.length ? `${matches[0].pub_id}#${matches[0].claim_number}` : null);
+    } catch (err: any) {
+      setError(err?.message ?? "Scope analysis failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [text, topK, isAuthenticated, loginWithRedirect, getAccessTokenSilently]);
+
+  const highRiskCount = useMemo(() => {
+    return results.filter((r) => (r.similarity ?? 0) >= 0.7).length;
+  }, [results]);
+
+  const lowRiskCount = useMemo(() => {
+    return results.filter((r) => (r.similarity ?? 0) < 0.5).length;
+  }, [results]);
+
+  const handleRowSelect = (rowId: string) => {
+    setSelectedId(rowId);
+  };
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <header className="glass-card p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
+          Scope Analysis
+        </p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-3">Preliminary FTO / Infringement Radar</h1>
+        <p className="text-base text-slate-600 max-w-3xl">
+          Paste a product description, invention disclosure, or draft claims to instantly map your concept
+          against independent claims in our corpus. We run a semantic KNN search over claim embeddings to surface
+          the closest risks so you can triage potential overlap long before a formal freedom-to-operate opinion.
+        </p>
+      </header>
+
+      <section className="glass-card p-6 space-y-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="scope-text" className="text-sm font-semibold text-slate-700">
+            Describe the feature you want to clear
+          </label>
+          <textarea
+            id="scope-text"
+            className="w-full min-h-[160px] rounded-xl border border-slate-200 p-4 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80"
+            placeholder="Example: Our device uses a multi-modal transformer that fuses radar and camera signals..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label htmlFor="topk" className="text-sm font-semibold text-slate-700">
+              # of claim comparisons
+            </label>
+            <input
+              id="topk"
+              type="number"
+              min={5}
+              max={50}
+              value={topK}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                if (Number.isFinite(next)) {
+                  setTopK(Math.max(5, Math.min(50, Math.trunc(next))));
+                }
+              }}
+              className="mt-1 w-28 rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </div>
+          <div className="flex-1" />
+          <button
+            type="button"
+            onClick={runAnalysis}
+            disabled={loading}
+            className="btn-modern h-11 px-6 text-sm font-semibold disabled:opacity-60"
+          >
+            {loading ? "Analyzing…" : isAuthenticated ? "Run scope analysis" : "Log in to analyze"}
+          </button>
+        </div>
+        {!isAuthenticated && !isLoading && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            You&apos;ll be prompted to sign in before we run the infringement risk pass.
+          </div>
+        )}
+      </section>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs tracking-wide uppercase text-slate-500">Risk snapshot</p>
+                <h2 className="text-xl font-semibold text-slate-900">Similarity map</h2>
+              </div>
+              {primaryRisk && (
+                <div
+                  className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                    primaryRisk.level === "high"
+                      ? "bg-red-100 text-red-700"
+                      : primaryRisk.level === "medium"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  {primaryRisk.label}
+                </div>
+              )}
+            </div>
+            <ScopeGraph matches={results} selectedId={selectedId} onSelect={handleRowSelect} />
+            {primaryRisk && (
+              <p className="mt-4 text-sm text-slate-600">{primaryRisk.message}</p>
+            )}
+          </div>
+
+          <div className="glass-card p-6 space-y-4">
+            <p className="text-xs tracking-wide uppercase text-slate-500">Impact summary</p>
+            <h2 className="text-xl font-semibold text-slate-900">Claim proximity breakdown</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                <p className="text-sm text-slate-500">Top match similarity</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {formatSimilarity(results[0]?.similarity)}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Pub {results[0]?.pub_id} / Claim {results[0]?.claim_number}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                <p className="text-sm text-slate-500">High-risk cluster</p>
+                <p className="text-2xl font-bold text-slate-900">{highRiskCount}</p>
+                <p className="text-xs text-slate-500 mt-1">claims ≥ 0.70 similarity</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                <p className="text-sm text-slate-500">Lower-risk set</p>
+                <p className="text-2xl font-bold text-slate-900">{lowRiskCount}</p>
+                <p className="text-xs text-slate-500 mt-1">claims &lt; 0.50 similarity</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                <p className="text-sm text-slate-500">Scope sampled</p>
+                <p className="text-2xl font-bold text-slate-900">{results.length}</p>
+                <p className="text-xs text-slate-500 mt-1">independent claims inspected</p>
+              </div>
+            </div>
+            {lastQuery && (
+              <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-500">
+                Last analyzed snippet: {lastQuery.slice(0, 160)}
+                {lastQuery.length > 160 ? "…" : ""}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section className="glass-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs tracking-wide uppercase text-slate-500">Independent claim matches</p>
+            <h2 className="text-xl font-semibold text-slate-900">Closest patent claims</h2>
+          </div>
+          {results.length > 0 && (
+            <span className="text-xs font-semibold text-slate-500">
+              Click a row to highlight the graph node.
+            </span>
+          )}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-left text-slate-500 border-b">
+                <th className="py-2 pr-4">Patent</th>
+                <th className="py-2 pr-4">Claim #</th>
+                <th className="py-2 pr-4">Similarity</th>
+                <th className="py-2 pr-4">Distance</th>
+                <th className="py-2">Claim text</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-slate-500">
+                    Run a scope analysis to populate this table.
+                  </td>
+                </tr>
+              ) : (
+                results.map((match) => {
+                  const rowId = `${match.pub_id}#${match.claim_number}`;
+                  const isSelected = selectedId === rowId;
+                  return (
+                    <tr
+                      key={rowId}
+                      className={`align-top transition-colors cursor-pointer ${
+                        isSelected ? "bg-sky-50/80" : "hover:bg-slate-50"
+                      }`}
+                      onClick={() => handleRowSelect(rowId)}
+                    >
+                      <td className="py-3 pr-4 min-w-[180px]">
+                        <div className="font-semibold text-slate-900">{match.title || "Untitled patent"}</div>
+                        <div className="text-xs text-slate-500">
+                          {match.pub_id} · {match.assignee_name || "Unknown assignee"} · {formatPubDate(match.pub_date)}
+                        </div>
+                        <a
+                          href={`https://patents.google.com/patent/${match.pub_id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-sky-600 hover:underline"
+                        >
+                          Open on patents.google.com
+                        </a>
+                      </td>
+                      <td className="py-3 pr-4">{match.claim_number}</td>
+                      <td className="py-3 pr-4 font-semibold text-slate-900">
+                        {formatSimilarity(match.similarity)}
+                      </td>
+                      <td className="py-3 pr-4 text-slate-600">
+                        {typeof match.distance === "number" ? match.distance.toFixed(3) : "—"}
+                      </td>
+                      <td className="py-3 text-slate-700">
+                        {match.claim_text ? match.claim_text.slice(0, 280) : "—"}
+                        {match.claim_text && match.claim_text.length > 280 ? "…" : ""}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  );
+}

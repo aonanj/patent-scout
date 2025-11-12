@@ -9,7 +9,13 @@ import psycopg
 from psycopg import sql as _sql
 from psycopg.rows import dict_row
 
-from .schemas import PatentDetail, PatentHit, SearchFilters, SearchSortOption
+from .schemas import (
+    PatentDetail,
+    PatentHit,
+    ScopeClaimMatch,
+    SearchFilters,
+    SearchSortOption,
+)
 
 _VEC_CAST: Final[str] = (
     "::halfvec" if os.environ.get("VECTOR_TYPE", "vector").lower().startswith("half") else "::vector"
@@ -582,6 +588,66 @@ async def trend_volume(
         return [(r["bucket"], r["count"], r.get("top_assignee")) for r in rows]
     else:
         return [(r["bucket"], r["count"], None) for r in rows]
+
+
+async def scope_claim_knn(
+    conn: psycopg.AsyncConnection,
+    *,
+    query_vec: Iterable[float],
+    limit: int = 20,
+) -> list[ScopeClaimMatch]:
+    """
+    Find the nearest independent claims to the provided vector embedding.
+    """
+    vector_list = list(query_vec)
+    if not vector_list:
+        return []
+
+    limit = max(1, min(limit, 100))
+
+    sql = f"""
+        SELECT
+            pc.pub_id,
+            pc.claim_number,
+            pc.claim_text,
+            pc.is_independent,
+            p.title,
+            COALESCE(can.canonical_assignee_name, p.assignee_name) AS assignee_name,
+            p.pub_date,
+            (emb.embedding <=> %s{_VEC_CAST}) AS dist
+        FROM patent_claim_embeddings emb
+        JOIN patent_claim pc
+          ON pc.pub_id = emb.pub_id AND pc.claim_number = emb.claim_number
+        JOIN patent p ON p.pub_id = emb.pub_id
+        {CANONICAL_ASSIGNEE_LATERAL}
+        WHERE COALESCE(pc.is_independent, TRUE)
+        ORDER BY dist ASC
+        LIMIT %s
+    """
+
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(_sql.SQL(sql), [vector_list, limit])  # type: ignore
+        rows = await cur.fetchall()
+
+    matches: list[ScopeClaimMatch] = []
+    for row in rows:
+        dist_raw = row.get("dist")
+        dist = float(dist_raw) if dist_raw is not None else 0.0
+        similarity = max(0.0, 1.0 - dist)
+        matches.append(
+            ScopeClaimMatch(
+                pub_id=row["pub_id"],
+                claim_number=row["claim_number"],
+                claim_text=row.get("claim_text"),
+                title=row.get("title"),
+                assignee_name=row.get("assignee_name"),
+                pub_date=row.get("pub_date"),
+                is_independent=row.get("is_independent"),
+                distance=dist,
+                similarity=similarity,
+            )
+        )
+    return matches
 
 
 async def get_patent_detail(
