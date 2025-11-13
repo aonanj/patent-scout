@@ -80,10 +80,11 @@ export default function HelpIndexPage() {
             Metadata and context for each entry further include the assignee name (i.e., owner). The SynapseIP platform normalizes each assignee name to ensure that the AI/ML IP assets held by different entities are accurately and comprehensively represented.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            SynapseIP is designed with a streamlined user interface divided between two primary web service pages:
+            SynapseIP is designed with a streamlined user interface divided between three primary web service pages:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
             <li><strong>Search & Trends</strong>: Discover patents and publications through hybrid keyword and semantic search, visualize filing trends over time, by CPC code, or by assignee, and set up proactive alerts for new filings that match configurable criteria;</li>
+            <li><strong>Scope Analysis</strong>: Paste a product description or draft claim set to run a semantic comparison against independent claims in the corpus and surface potential overlap signals for early FTO and infringement-risk triage;</li>
             <li><strong>IP Overview</strong>: Analysis and insights on the AI/ML IP landscape with subject matter saturation, activity rates, momentum, and CPC distribution. Option to focus on specific assignees.</li>
           </ul>
         </div>
@@ -211,6 +212,65 @@ export default function HelpIndexPage() {
 
         </div>
 
+        {/* Scope Analysis Card */}
+        <div
+          className="glass-card"
+          style={{
+            ...cardBaseStyle,
+            border: "1.5px solid rgba(107, 174, 219, 0.75)",
+            boxShadow: "0 30px 60px rgba(107, 174, 219, 0.32)",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 250 }}>
+              <h3 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: TEXT_COLOR }}>Scope Analysis</h3>
+              <p style={{ marginTop: 8, fontSize: 13, color: "#627D98", marginBottom: 0 }}>
+                Claim-level semantic comparison for rapid FTO and infringement triage
+              </p>
+            </div>
+            <a
+              href="/help/scope-analysis"
+              className="btn-modern"
+              style={linkButtonStyle}
+            >
+              View Guide →
+            </a>
+          </div>
+
+          <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
+            The Scope Analysis page enables users to paste product descriptions, invention disclosures, or draft claim sets and instantly compare them against every independent claim in the SynapseIP corpus. The tool generates an embedding for the input text, runs a KNN search over the <em>patent_claim_embeddings</em> table, and surfaces the closest matches with distance scores, similarity percentages, and claim metadata.
+          </p>
+          <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
+            Results are visualized in an interactive node map that positions the user input at the center with claim nodes arranged radially by similarity, while a synchronized evidence table lists the associated patents, assignees, publication dates, and full claim language. This combination provides an immediate, data-driven starting point for preliminary freedom-to-operate, infringement-risk reviews, and design-around brainstorming.
+          </p>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            <DetailItem icon="⬩" title="Independent Claim Embeddings" text="Every independent claim in the corpus is embedded and indexed, allowing high-fidelity semantic comparisons against your pasted text." />
+            <DetailItem icon="⬩" title="Interactive Similarity Graph" text="Hover to preview claim snippets, click nodes to sync with the evidence table, and quickly see which patents crowd closest to your concept." />
+            <DetailItem icon="⬩" title="Evidence Table" text="Clickable publication numbers open Google Patents, while expandable claim cells reveal the full verbatim language for attorney review." />
+            <DetailItem icon="⬩" title="Risk Snapshot Tiles" text="Automatic tallies highlight the number of high-similarity claims, lower-risk matches, and the overall scope sampled during each run." />
+            <DetailItem icon="⬩" title="Workflow Friendly" text="Perfect for rapid internal reviews before green-lighting a formal opinion, briefing outside counsel, or prioritizing design-around investigations." />
+          </div>
+
+          <div
+            style={{
+              marginTop: 20,
+              padding: 18,
+              background: "rgba(57, 80, 107, 0.22)",
+              borderRadius: 14,
+              border: "1px solid rgba(107, 174, 219, 0.25)",
+              boxShadow: "0 14px 26px rgba(107, 174, 219, 0.18)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
+            <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
+              <strong>Example Use Cases</strong>: Pre-FTO reviews for new product features, infringement-risk screening before diligence meetings, prioritizing claim charts, and communicating overlap concerns to engineering teams.
+            </p>
+          </div>
+        </div>
+
         {/* Quick Start */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Quick Start Guide</h2>
@@ -232,12 +292,17 @@ export default function HelpIndexPage() {
             />
 
             <InfoSection
-              title="4. Explore AI/ML IP Opportunities"
+              title="4. Run Scope Analysis Early"
+              content="Paste a product description, invention disclosure, or draft claims into the Scope Analysis page to generate a semantic comparison against independent claims. Use the similarity graph and evidence table to identify high-overlap patents before engaging outside counsel."
+            />
+
+            <InfoSection
+              title="5. Explore AI/ML IP Opportunities"
               content="Navigate to the IP Overview page to view how busy a technology area is. Enter focus keywords and/or CPC codes, review the saturation/activity rate/momentum tiles, inspect the timeline and CPC bars, and review the result set table for representative filings."
             />
 
             <InfoSection
-              title="5. Export and Share Insights"
+              title="6. Export and Share Insights"
               content="Use CSV/PDF exports for shareable reports, and copy links from the IP Overview result set table to access full text and figures of specific patents or publications."
             />
           </div>
