@@ -373,7 +373,7 @@ export default function ScopeAnalysisPage() {
             <div className="flex flex-wrap items-end gap-4">
               <div>
                 <label htmlFor="topk" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
-                  # of claim comparisons
+                  # of claim comparisons: 
                 </label>
                 <input
                   id="topk"
@@ -387,7 +387,7 @@ export default function ScopeAnalysisPage() {
                       setTopK(Math.max(5, Math.min(50, Math.trunc(next))));
                     }
                   }}
-                  className="mt-1 w-28 rounded-lg border border-slate-200 px-3 py-2"
+                  style={inputStyle}
                 />
               </div>
               <div className="flex-1" />
@@ -641,4 +641,19 @@ const cardBaseStyle: CSSProperties = {
   boxShadow: CARD_SHADOW,
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
+};
+
+const inputStyle: React.CSSProperties = {
+  height: 38,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
+  outline: "none",
+  minWidth: 220,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#102A43",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
 };
