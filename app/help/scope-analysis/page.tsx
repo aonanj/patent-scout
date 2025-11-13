@@ -83,7 +83,7 @@ export default function ScopeAnalysisHelpPage() {
 
         {/* Overview */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Why use Scope Analysis?</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>What is Scope Analysis?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
             Traditional search tools focus on matching titles or abstracts. Scope Analysis dives into claim language, which ultimately determines infringement exposure. Each independent claim in the SynapseIP database is embedded and indexed. Features:
           </p>
@@ -109,37 +109,37 @@ export default function ScopeAnalysisHelpPage() {
             <li><strong>Visualization + evidence</strong>: Results populate both the similarity map and the evidence table to concurrently provide both macro and micro views.</li>
           </ol>
           <p style={{ fontSize: 13, lineHeight: 1.5, color: "#627D98", marginTop: 12 }}>
-            Tip: start with 10–20 closest claims for rapid assessments, then increase the <strong># of claim comparisons</strong> input to broaden coverage.
+            Note: Start with 10–20 closest claims for rapid results. Increase <strong># of claim comparisons</strong> input to broaden coverage.
           </p>
         </div>
 
         {/* Workflow */}
         <div className="glass-card" style={{ ...cardBaseStyle }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Recommended workflow</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Example workflow</h2>
           <div style={{ display: "grid", gap: 18 }}>
             <InfoBlock
-              title="1. Prepare your description"
-              description="Collect a concise paragraph or two that captures the inventive concept or product capability. Include nouns/verbs tied to technical components so the embedding has enough signal."
+              title="1. Describe subject matter"
+              description="Draft 1-3 concise paragraphs capturing inventive concepts, functionalities, and technical details. Include language tied to technical components so the embedding has enough signal."
             />
             <InfoBlock
-              title="2. Choose the sampling depth"
-              description="Use the '# of claim comparisons' input to define how many independent claims you want returned. 15 is a good starting point; expanding to 30–40 helps when validating a near miss."
+              title="2. Choose sampling depth"
+              description="Use the '# of claim comparisons' input to specify the number independent claims to be returned. Default is 15; expanding to 40-50 may be useful initial claim comparisons are near misses."
             />
             <InfoBlock
               title="3. Run the analysis"
-              description="Click 'Run scope analysis'. Authenticated users trigger an embedding + KNN pass, resulting in similarity scores, graph positioning, and risk tiles tailored to that query."
+              description="Click 'Run scope analysis' to execute embeddings search + KNN graphing operations. Results are returned with similarity scores, graph positioning, and risk tiles tailored to that query."
             />
             <InfoBlock
               title="4. Inspect the graph"
-              description="Hover nodes to preview claim snippets, click to highlight a specific patent, and observe whether overlaps cluster around one entity or span multiple assignees."
+              description="Hover nodes to preview claim snippets, click to highlight a specific patent, identify patents clustered around specific assignees."
             />
             <InfoBlock
               title="5. Review supporting claims"
-              description="In the table, click any claim cell to expand the full text. Publication numbers link to Google Patents for downloading PDFs or reviewing prosecution histories."
+              description="In the table, click any claim cell to expand the full text. Patent numbers link to Google Patents to view full documents."
             />
             <InfoBlock
-              title="6. Capture learnings"
-              description="Record high-similarity cases in your diligence tracker, flag patents for attorney review, or rerun the tool with an alternative product configuration to test design-around ideas."
+              title="6. Export Results"
+              description="Results table can be exported as a PDF document for offline reference and review."
             />
           </div>
         </div>
@@ -149,10 +149,10 @@ export default function ScopeAnalysisHelpPage() {
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Interpreting the graph & table</h2>
           <div style={{ display: "grid", gap: 14 }}>
             <DetailItem title="Radial layout" description="The input text sits in the center. Nodes closer to the center represent higher similarity (lower cosine distance). The updated radius scaling exaggerates separation so critical risks pop immediately." />
-            <DetailItem title="Tooltip previews" description="Hover any node to see the patent title and first 200 characters of the matched claim. Tooltips appear above the node to avoid hiding the data point." />
-            <DetailItem title="Selection sync" description="Clicking a node or claim row highlights both views, ensuring the graph, summary tiles, and claim text stay in lockstep." />
-            <DetailItem title="Similarity column" description="Percent values are derived from 1 − distance. Scores ≥ 70% often warrant immediate counsel review; 55–69% indicates moderate overlap; &lt;50% is generally lower risk but still worth logging." />
-            <DetailItem title="Expandable claim text" description="Click the claim snippet to read the entire independent claim inline. Use this to copy relevant language into risk memos or ask engineering teams to evaluate potential design-arounds." />
+            <DetailItem title="Tooltip previews" description="Hover any node to see the patent title and first 200 characters of the matched claim." />
+            <DetailItem title="Selection sync" description="Graph, summary tiles, and claim text are synchronized. Clicking a node or claim row highlights both views." />
+            <DetailItem title="Similarity column" description="Percent values are derived from 1 − distance. Scores ≥ 70% may indicate high overlap risks; 55–69% indicates moderate overlap; &lt;50% is generally lower risk but may be relevant." />
+            <DetailItem title="Expandable claim text" description="Click the claim snippet to read the entire independent claim text inline." />
           </div>
         </div>
 
