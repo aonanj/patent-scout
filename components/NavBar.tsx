@@ -164,17 +164,6 @@ export default function NavBar() {
           <Link href="/scope-analysis" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Scope Analysis</Link>
         </div>
 
-        <div className="hidden md:flex items-center pl-1 ml-1">
-          <button
-            onClick={openAlerts}
-            className="px-3 py-1.5 text-sm font-semibold border-0 rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]"
-            disabled={isLoading}
-            title={isAuthenticated ? "View and manage your alerts" : "Log in to manage alerts"}
-          >
-            Alerts
-          </button>
-        </div>
-
         <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
           <Link href="/help" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Help</Link>
         </div>
@@ -182,23 +171,38 @@ export default function NavBar() {
           {isLoading ? (
             <span className="text-xs text-slate-500">Loading…</span>
           ) : isAuthenticated ? (
-            <>
-              <div className="hidden sm:flex items-center gap-2 pr-2">
-                <span className="text-sm font-semibold text-slate-700">{user?.name || user?.email}</span>
+            <div className="relative group">
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold text-[#3A506B] hover:bg-[#d9e1eb] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                aria-haspopup="menu"
+              >
+                <span className="hidden sm:inline whitespace-nowrap">{user?.name || user?.email}</span>
                 <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-300 text-sky-700 text-xs font-semibold grid place-items-center">
                   {userInitials}
                 </div>
-              </div>
-              <div className="hidden md:flex items-center px-2 mx-2 border-l border-r border-slate-200">
-                <Link href="/billing" className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-[#d9e1eb] hover:underline text-[#3A506B]">Billing</Link>
-              </div>
-              <button
-                onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
-                className="h-8 px-3 text-sm font-semibold rounded-md border border-slate-200 bg-white hover:bg-[#d9e1eb] hover:underline text-blue-800"
-              >
-                Log out
               </button>
-            </>
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-slate-200 bg-white shadow-lg opacity-0 pointer-events-none translate-y-1 transition-all group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 z-50">
+                <button
+                  type="button"
+                  onClick={openAlerts}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                  disabled={isLoading}
+                >
+                  Alerts
+                </button>
+                <Link href="/billing" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                  Billing
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : undefined } })}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                >
+                  Log out
+                </button>
+              </div>
+            </div>
           ) : (
             <button
               onClick={() => loginWithRedirect()}
