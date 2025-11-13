@@ -9,6 +9,7 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). Filters are edited live, but searches only execute when the user clicks the `Apply` button, removing prior debounce-driven inconsistencies across the trend graph and table.
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
 - IP Overview that surfaces saturation, activity rates, momentum, and CPC distribution for focus keyword(s) and/or CPC(s), with optional group by assignee signals ([app/overview_api.py](app/overview_api.py), [app/overview_signals.py](app/overview_signals.py), [components/SigmaOverviewGraph.tsx](components/SigmaOverviewGraph.tsx), [app/overview/page.tsx](app/overview/page.tsx)).
+- Scope Analysis page transforms the platform into a preliminary freedom-to-operate (FTO) and infringement-risk triage tool: paste a product description or draft claim set, run a KNN search against every embedded independent claim, visualize similarity nodes, inspect expandable claims inline, and export the match table to PDF for counsel review ([app/api.py](app/api.py#L147), [app/repository.py](app/repository.py#L593), [app/scope-analysis/page.tsx](app/scope-analysis/page.tsx)).
 - Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
 - Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent and application coverage.
 - Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
@@ -62,62 +63,69 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 ## Repository Layout
 ```
 ├── app/
-│   ├── api.py                       # FastAPI application & routers
-│   ├── overview_api.py            # IP Overview endpoint
-│   ├── overview_signals.py        # IP Overview signal calculation logic
-│   ├── auth.py                      # Auth0 JWT validation
-│   ├── config.py                    # Settings from environment
-│   ├── db.py                        # Async DB connection pools
+│   ├── api.py                       # FastAPI application (search, export, trends, scope, billing)
+│   ├── overview_api.py              # IP overview graph router mounted into the API
+│   ├── payment_api.py               # Stripe customer portal + billing endpoints
+│   ├── stripe_config.py             # Stripe client bootstrap helpers
+│   ├── stripe_webhooks.py           # Webhook verification + processing
+│   ├── subscription_middleware.py   # Shared subscription enforcement logic
 │   ├── repository.py                # SQL query builders & search logic
-│   ├── schemas.py                   # Pydantic models
-│   ├── embed.py                     # OpenAI embedding client
-│   ├── api/                         # Next.js route handlers (backend proxy)
-│   │   ├── search/route.ts          # Search proxy
-│   │   ├── export/route.ts          # CSV/PDF export
-│   │   ├── trend/volume/route.ts    # Trend analytics
-│   │   ├── saved-queries/           # Alert CRUD endpoints
-│   │   └── overview/graph/          # IP Overview graph endpoints
-│   ├── page.tsx                     # Search & trends experience
-│   ├── overview/page.tsx            # IP Overview exploration UI
-│   ├── help/                        # Help documentation pages
-│   │   ├── page.tsx                 # Help index
-│   │   ├── search_trends/page.tsx   # Search & trends help
-│   │   └── overview/page.tsx        # IP Overview help
-│   ├── docs/                        # Legal & commercial pages
-│   │   ├── privacy/page.tsx         # Privacy policy
-│   │   ├── tos/page.tsx             # Terms of service
-│   │   └── dpa/page.tsx             # Data Processing Agreement
-│   └── providers.tsx, layout.tsx, globals.css
+│   ├── schemas.py                   # Pydantic models shared by API + clients
+│   ├── db.py, db_errors.py          # Async Postgres connection pooling helpers
+│   ├── auth.py, config.py           # Auth0 JWT validation + settings
+│   ├── embed.py, overview_signals.py  # Embedding helpers & overview calculations
+│   ├── observability.py             # GlitchTip / telemetry bootstrap
+│   ├── instrumentation.ts           # Server-side instrumentation hook for Next.js
+│   ├── api/                         # Next.js Route Handlers proxying backend services
+│   │   ├── search/, scope-analysis/, overview/  # Patent search + graph proxies
+│   │   ├── trend/, export/, patent-date-range/  # Analytics + CSV/PDF exports
+│   │   ├── saved-queries/           # Alert CRUD handlers
+│   │   └── glitchtip-example-api/   # Observability demo endpoints
+│   ├── page.tsx                     # Landing + patent search UI
+│   ├── overview/page.tsx            # Graph-based overview explorer
+│   ├── scope-analysis/page.tsx      # Claim scope analysis UI
+│   ├── billing/page.tsx             # Customer billing portal
+│   ├── docs/(privacy|tos|dpa)/      # Legal & compliance content
+│   ├── help/(search_trends|overview|scope-analysis)/ # Product documentation pages
+│   ├── glitchtip-example-page/      # Client-side observability demo
+│   ├── global-error.tsx, globals.css, layout.tsx, providers.tsx, robots.ts
 ├── components/
-│   ├── NavBar.tsx                   # Auth0-aware navigation & alert modal
-│   └── SigmaOverviewGraph.tsx     # Sigma.js graph renderer
-├── tests/                           # pytest suite (API, repository, signals, auth)
+│   ├── NavBar.tsx                   # Auth-aware navigation & alert modal trigger
+│   ├── HomePageClient.tsx           # Client-side interactivity for the landing/search page
+│   ├── SigmaOverviewGraph.tsx       # Sigma.js renderer for overview graphs
+│   ├── SubscriptionRequired.tsx     # Subscription gate wrapper
+│   ├── GlitchtipInit.tsx            # Front-end telemetry bootstrap
+│   └── billing/                     # PricingPlans & SubscriptionStatus widgets
+├── infrastructure/
+│   └── logger.py                    # Structured logging helper for API + jobs
+├── tests/                           # pytest suite (API, repository, signals, auth, billing)
 │   ├── test_api.py, test_auth.py, test_config.py, test_db.py
-│   ├── test_embed.py, test_repository.py
-│   └── test_overview_signals.py, test_overview_utils.py
+│   ├── test_embed.py, test_repository.py, test_alerts_runner.py
+│   ├── test_overview_signals.py, test_overview_utils.py
+│   └── test_subscription_middleware.py, conftest.py
 ├── migrations/                      # Alembic environment + versions
-│   ├── env.py                       # Migration configuration
-│   └── versions/                    # Schema migrations (overview, user tables)
+│   ├── env.py, script.py.mako       # Migration configuration
+│   └── versions/                    # Schema migrations (overview, billing, user tables)
 ├── docs/
 │   ├── screenshots/                 # UI & API imagery
 │   └── uspto_odp_api/               # USPTO API schema reference
-├── public/                          # Static assets (favicon, logos)
+├── resources/                       # Runbooks (Stripe, subscriptions, ETL) + sample data
+├── public/                          # Static assets (favicons, logos, OG images)
 ├── types/                           # TypeScript ambient declarations
-├── infrastructure/
-│   └── logger.py                    # Centralized logging utility
-├── resources/                       # Commercial ToS & privacy policy source docs
-├── etl.py                           # BigQuery → Postgres loader + embeddings
-├── etl_uspto.py                     # USPTO PEDS API loader (alternative pipeline)
-├── etl_xml_fulltext.py              # USPTO bulk XML parser for abstracts/claims
-├── etl_add_embeddings.py            # Backfill missing embeddings by date range
-├── add_canon_name.py                # Assignee name normalization script
-├── alerts_runner.py                 # Saved-query alert executor
-├── Dockerfile & start.sh            # FastAPI container entrypoint (runs Alembic)
-├── pyproject.toml                   # Python project metadata & dependencies
-├── requirements.in/.txt             # pip-tools inputs & lock
-├── package.json                     # Next.js workspace configuration
-├── tsconfig.json                    # TypeScript configuration
-└── tailwind.config.js               # Tailwind CSS styling
+├── instrumentation.ts & instrumentation-client.ts # Next.js instrumentation entrypoints
+├── etl.py, etl_uspto.py, etl_xml_fulltext.py,
+│   etl_add_embeddings.py, independent_claims_embeddings.py # Batch loaders & embedding jobs
+├── alerts_runner.py, add_canon_name.py, process_patent_citations.py,
+│   update_patent_staging.py, update_stripe_prices.py, generate_citations_csv.py
+│                                     # Operational & maintenance scripts
+├── Dockerfile & start.sh            # Container build + entrypoint (runs Alembic)
+├── next.config.js, package.json, package-lock.json,
+│   tsconfig.json, tsconfig.tsbuildinfo, tailwind.config.js, postcss.config.js
+│                                     # Next.js workspace + build configuration
+├── pyproject.toml, requirements.in, requirements.txt # Python packaging & dependency locks
+├── DATABASE_SCHEMA.md, LICENSE.md   # Reference documentation & licensing
+└── fix_existing_subscription.sql, us_patent_citations.csv, output_with_app_numbers.csv
+                                      # Data/SQL artifacts consumed by ETL & analytics
 ```
 
 ## Setup
@@ -263,7 +271,7 @@ python add_canon_name.py \
 ```
 
 ## IP Overview
-[app/overview_api.py](app/overview_api.py) serves two complementary experiences:
+[app/overview_api.py](app/overview_api.py) serves two complementary functions:
 
 - `/overview/overview` composes analysis and insights for IP Overview. For any keyword/CPC scope it returns exact and semantic saturation counts, activity rate (per month), momentum slope/CAGR with labeled Up/Flat/Down, top CPC slices, recent filing tallies (6/12/18/24 months), and the full monthly timeline used across the UI.
 - `/overview/graph` builds a user-specific embedding graph when the optional “Group by Assignee” facet is enabled. It selects an embedding model (`OVERVIEW_EMBEDDING_MODEL`, falling back to `WS_EMBEDDING_MODEL`), computes cosine KNN neighborhoods, applies Leiden community detection, and scores intensity per grouping. Signal detection logic in [app/overview_signals.py](app/overview_signals.py) evaluates convergence, emerging gaps, crowd-out, and bridge opportunities.

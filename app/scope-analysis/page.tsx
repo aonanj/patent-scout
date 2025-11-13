@@ -637,7 +637,7 @@ const cardBaseStyle: CSSProperties = {
   background: CARD_BG,
   border: `1px solid ${CARD_BORDER}`,
   borderRadius: 20,
-  padding: 32,
+  padding: 22,
   boxShadow: CARD_SHADOW,
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
