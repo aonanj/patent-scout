@@ -21,7 +21,10 @@ import argparse
 import os
 import sys
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
 from google.cloud import bigquery
@@ -41,7 +44,7 @@ load_dotenv()
 
 BQ_PROJECT = "patent-scout-etl"
 BQ_LOCATION = os.getenv("BQ_LOCATION", None)
-CREDENTIALS_PATH = ".secrets/patent-scout-etl-9ca3cd656391.json"
+CREDENTIALS_PATH = "../.secrets/patent-scout-etl-9ca3cd656391.json"
 
 # Set credentials environment variable
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_PATH
@@ -72,7 +75,8 @@ SELECT
         SELECT citation.application_number 
         FROM UNNEST(bqp.citation) AS citation 
         WHERE citation.application_number IS NOT NULL
-    ) AS citation_application_numbers
+    ) AS citation_application_numbers,
+    (SELECT an.name FROM UNNEST(bqp.assignee_harmonized) an WHERE an.name IS NOT NULL LIMIT 1) AS assignee_name,
 FROM 
     `patents-public-data.patents.publications` AS bqp
 WHERE 
@@ -97,6 +101,7 @@ SET
     kind_code = COALESCE(%(kind_code)s, kind_code),
     pub_id = COALESCE(%(pub_id)s, pub_id),
     family_id = COALESCE(%(family_id)s, family_id),
+    assignee_name = %(assignee_name)s,
     grant_date = %(grant_date)s,
     citation_publication_numbers = %(citation_publication_numbers)s,
     citation_application_numbers = %(citation_application_numbers)s,
@@ -149,6 +154,7 @@ class PatentUpdateRecord:
         self.kind_code = row.get("kind_code")
         self.family_id = row.get("family_id")
         self.grant_date = row.get("grant_date")
+        self.assignee_name = row.get("assignee_name")
         self.abstract = row.get("abstract")
         self.claims_text = row.get("claims_text")
         self.citation_publication_numbers = list(row.get("citation_publication_numbers") or [])
@@ -162,6 +168,7 @@ class PatentUpdateRecord:
             "family_id": self.family_id,
             "grant_date": self.grant_date,
             "abstract": self.abstract,
+            "assignee_name": self.assignee_name,
             "claims_text": self.claims_text,
             "citation_publication_numbers": self.citation_publication_numbers,
             "citation_application_numbers": self.citation_application_numbers,

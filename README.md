@@ -6,11 +6,11 @@
 The repository contains the full SynapseIP stack: FastAPI exposes the search, export, trend, saved-query, and overview endpoints; Next.js 15 App Router (React 19) provides the Auth0-gated UI and API proxy; multiple ETL pipelines (BigQuery, USPTO API, bulk XML) with AI embeddings keep the corpus current; and a Mailgun-capable alerts runner notifies subscribers when new filings match their saved scopes. User-specific IP overview analysis tables enable personalized AI/ML IP landscape exploration with isolated graph computation.
 
 ## Feature Highlights
-- Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). Filters are edited live, but searches only execute when the user clicks the `Apply` button, removing prior debounce-driven inconsistencies across the trend graph and table.
+- Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). 
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
 - IP Overview that surfaces saturation, activity rates, momentum, and CPC distribution for focus keyword(s) and/or CPC(s), with optional group by assignee signals ([app/overview_api.py](app/overview_api.py), [app/overview_signals.py](app/overview_signals.py), [components/SigmaOverviewGraph.tsx](components/SigmaOverviewGraph.tsx), [app/overview/page.tsx](app/overview/page.tsx)). 
   - Semantic neighbors are trimmed when distances jump or exceed a threshold so the counts and timelines stay focused on relevant patents and publications.
-- Scope Analysis page transforms the platform into a preliminary freedom-to-operate (FTO) and infringement-risk triage tool: input subject matter of interest (e.g., a product description or draft claim set), run a KNN search against every embedded independent claim, visualize similarity nodes, inspect expandable claims inline, and export the match table to PDF for review ([app/api.py](app/api.py#L147), [app/repository.py](app/repository.py#L593), [app/scope-analysis/page.tsx](app/scope-analysis/page.tsx)).
+- Scope Analysis page adds a preliminary freedom-to-operate (FTO) and infringement-risk tool to the platform: input subject matter of interest (e.g., a product description or draft claim set), run a KNN search against every embedded independent claim, visualize similarity nodes, inspect expandable claims inline, and export the match table to PDF for review ([app/api.py](app/api.py#L147), [app/repository.py](app/repository.py#L593), [app/scope-analysis/page.tsx](app/scope-analysis/page.tsx)).
 - Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
 - Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent and application coverage.
 - Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
@@ -294,7 +294,7 @@ The React UI ([app/overview/page.tsx](app/overview/page.tsx)) defaults to the ov
 - SynapseIP API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
 ## Documentation & Legal Pages
-- **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [Search & Trends](app/help/search_trends/page.tsx) and [IP Overview](app/help/overview/page.tsx).
+- **Help Documentation**: Interactive help pages available at `/help`, including detailed guides for [Search & Trends](app/help/search_trends/page.tsx), [IP Overview](app/help/overview/page.tsx), and [Scope Analysis](app/help/scope-analysis/page.tsx).
 - **Legal Pages**: Privacy policy ([app/docs/privacy/page.tsx](app/docs/privacy/page.tsx)), Terms of Service ([app/docs/tos/page.tsx](app/docs/tos/page.tsx)), and Data Processing Agreement ([app/docs/dpa/page.tsx](app/docs/dpa/page.tsx)).
 
 ## License

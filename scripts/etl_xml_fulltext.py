@@ -19,12 +19,15 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
+import sys
 import re
 import time
 import xml.etree.ElementTree as ET
-from collections.abc import Iterator
-from dataclasses import dataclass
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import psycopg
 from dotenv import load_dotenv
@@ -69,8 +72,45 @@ WHERE pub_id = %(pub_id)s
 RETURNING pub_id;
 """
 
+UPDATE_STAGING_BY_APPLICATION_SQL = """
+UPDATE patent_staging
+SET
+    pub_id = %(pub_id)s,
+    abstract = COALESCE(%(abstract)s, abstract),
+    claims_text = COALESCE(%(claims_text)s, claims_text),
+    kind_code = COALESCE(%(kind_code)s, kind_code),
+    updated_at = NOW()
+WHERE application_number IS NOT NULL
+  AND BTRIM(
+        CASE
+            WHEN application_number ILIKE 'US%%' THEN SUBSTRING(application_number FROM 3)
+            ELSE application_number
+        END
+    ) = %(application_doc_number)s
+RETURNING pub_id;
+"""
+
 CHECK_RECORD_EXISTS_SQL = """
 SELECT pub_id FROM patent_staging WHERE pub_id = %(pub_id)s;
+"""
+
+UPSERT_CLAIM_STAGING_SQL = """
+INSERT INTO patent_claim_staging (
+    pub_id,
+    claim_number,
+    is_independent,
+    claim_text
+) VALUES (
+    %(pub_id)s,
+    %(claim_number)s,
+    %(is_independent)s,
+    %(claim_text)s
+)
+ON CONFLICT (pub_id, claim_number) DO UPDATE
+SET
+    claim_text = EXCLUDED.claim_text,
+    is_independent = EXCLUDED.is_independent,
+    updated_at = NOW();
 """
 
 
@@ -155,6 +195,15 @@ def safe_rollback(conn: PgConn) -> None:
 # --------------
 
 @dataclass
+class PatentClaim:
+    """Structured representation of a single patent claim."""
+
+    claim_number: int
+    claim_text: str
+    is_independent: bool = True
+
+
+@dataclass
 class PatentFullText:
     """Patent full text extracted from USPTO XML."""
 
@@ -162,6 +211,65 @@ class PatentFullText:
     abstract: str | None
     claims_text: str | None
     kind: str | None = None
+    doc_number: str | None = None
+    application_number: str | None = None
+    independent_claims: list[PatentClaim] = field(default_factory=list)
+
+
+TARGET_INDEPENDENT_KINDS = {"B1", "B2"}
+
+
+def _compose_pub_id(pub_id: str, kind: str | None) -> str:
+    """Return canonical pub_id including kind code when present."""
+    if kind:
+        suffix = kind.strip()
+        if pub_id.endswith(f"-{suffix}"):
+            return pub_id
+        return f"{pub_id}-{suffix}"
+    return pub_id
+
+
+def insert_independent_claims(
+    conn: PgConn,
+    pub_id: str,
+    claims: Sequence[PatentClaim],
+) -> int:
+    """Insert or update independent claims for a pub_id in staging."""
+    if not claims:
+        return 0
+
+    staged = 0
+    with conn.cursor() as cur:
+        for claim in claims:
+            if not claim.claim_text:
+                continue
+            cur.execute(
+                UPSERT_CLAIM_STAGING_SQL,
+                {
+                    "pub_id": pub_id,
+                    "claim_number": claim.claim_number,
+                    "is_independent": claim.is_independent,
+                    "claim_text": claim.claim_text,
+                },
+            )
+            staged += 1
+    return staged
+
+
+def maybe_stage_independent_claims(conn: PgConn, record: PatentFullText) -> int:
+    """Stage independent claims for grants with kind B1/B2."""
+    if not record.independent_claims:
+        return 0
+
+    kind = (record.kind or "").upper()
+    if kind not in TARGET_INDEPENDENT_KINDS:
+        return 0
+
+    pub_id = _compose_pub_id(record.pub_id, kind)
+    staged = insert_independent_claims(conn, pub_id, record.independent_claims)
+    if staged:
+        logger.info(f"Staged {staged} independent claims for {pub_id}")
+    return staged
 
 
 @dataclass
@@ -246,7 +354,105 @@ def extract_abstract(app_elem: ET.Element) -> str | None:
     return text if text else None
 
 
-def extract_claims(app_elem: ET.Element) -> str | None:
+def _extract_publication_field(app_elem: ET.Element, field: str) -> str | None:
+    """Return the first value for a given field under publication-reference/document-id."""
+    pub_ref = app_elem.find(".//publication-reference/document-id")
+    if pub_ref is None:
+        return None
+
+    field_elem = pub_ref.find(field)
+    if field_elem is None or field_elem.text is None:
+        return None
+
+    value = field_elem.text.strip()
+    return value or None
+
+
+def extract_publication_doc_number(app_elem: ET.Element) -> str | None:
+    """Return the first <doc-number> under <publication-reference>/<document-id>."""
+    return _extract_publication_field(app_elem, "doc-number")
+
+
+def extract_publication_kind(app_elem: ET.Element) -> str | None:
+    """Return the first <kind> under <publication-reference>/<document-id>."""
+    return _extract_publication_field(app_elem, "kind")
+
+
+def extract_application_number(app_elem: ET.Element) -> str | None:
+    """Return doc-number from the first utility application-reference, fallback to first reference."""
+    application_refs = app_elem.findall(".//application-reference")
+    fallback: str | None = None
+
+    for app_ref in application_refs:
+        doc_id = app_ref.find("document-id")
+        if doc_id is None:
+            continue
+
+        doc_elem = doc_id.find("doc-number")
+        if doc_elem is None or doc_elem.text is None:
+            continue
+
+        value = doc_elem.text.strip()
+        if not value:
+            continue
+
+        appl_type = (app_ref.attrib.get("appl-type") or "").strip().lower()
+        if appl_type == "utility":
+            return value
+        if fallback is None:
+            fallback = value
+
+    return fallback
+
+
+_CLAIM_NUM_PATTERN = re.compile(r"\d+")
+
+
+def _parse_claim_number(claim_elem: ET.Element) -> int | None:
+    """Extract claim number from attributes or nested elements."""
+    for attr in ("num", "number", "claim-number", "claim_num"):
+        value = claim_elem.attrib.get(attr)
+        if value:
+            match = _CLAIM_NUM_PATTERN.search(value)
+            if match:
+                return int(match.group())
+
+    for tag in ("claim-number", "claim-num"):
+        number_elem = claim_elem.find(f".//{tag}")
+        if number_elem is not None and number_elem.text:
+            match = _CLAIM_NUM_PATTERN.search(number_elem.text)
+            if match:
+                return int(match.group())
+    return None
+
+
+def _is_independent_claim(claim_elem: ET.Element) -> bool:
+    """Determine whether a claim element is independent."""
+    claim_type = (
+        claim_elem.attrib.get("claim-type")
+        or claim_elem.attrib.get("type")
+        or claim_elem.attrib.get("claim_type")
+    )
+    if claim_type and claim_type.strip().lower() == "independent":
+        return True
+
+    depends_on = (
+        claim_elem.attrib.get("depends-on")
+        or claim_elem.attrib.get("depends_on")
+        or claim_elem.attrib.get("dependson")
+    )
+    if depends_on:
+        return False
+
+    # Some XMLs mark dependencies via nested claim-ref elements.
+    claim_ref = claim_elem.find(".//claim-ref")
+    if claim_ref is not None and claim_ref.attrib.get("idref"):
+        return False
+
+    return True
+
+
+def extract_claims(app_elem: ET.Element) -> tuple[str | None, list[PatentClaim]]:
     """Extract plain text claims from <us-patent-application> element.
 
     Excludes <us-claim-statement> tags and inserts newlines at each <claim-text> opening tag.
@@ -256,21 +462,24 @@ def extract_claims(app_elem: ET.Element) -> str | None:
         app_elem: <us-patent-application> XML element.
 
     Returns:
-        Plain text claims as single string or None if not found.
+        Tuple of (claims_text, independent_claims).
     """
     # Find <claims> element (may be nested)
     claims_elem = app_elem.find(".//claims")
     if claims_elem is None:
-        return None
+        return None, []
 
     # Find all <claim> elements
     claim_elems = claims_elem.findall(".//claim")
     if not claim_elems:
-        return None
+        return None, []
 
     claim_parts: list[str] = []
+    independent_claims: list[PatentClaim] = []
 
     for claim_elem in claim_elems:
+        claim_segments: list[str] = []
+
         # Find all <claim-text> elements within this claim
         claim_text_elems = claim_elem.findall(".//claim-text")
 
@@ -284,13 +493,29 @@ def extract_claims(app_elem: ET.Element) -> str | None:
 
             if text:
                 claim_parts.append(text)
+                claim_segments.append(text)
+
+        claim_text_full = " ".join(claim_segments).strip()
+        if not claim_text_full:
+            continue
+
+        if _is_independent_claim(claim_elem):
+            claim_number = _parse_claim_number(claim_elem)
+            if claim_number is not None:
+                independent_claims.append(
+                    PatentClaim(
+                        claim_number=claim_number,
+                        claim_text=claim_text_full,
+                        is_independent=True,
+                    )
+                )
 
     if not claim_parts:
-        return None
+        return None, []
 
     # Join with newlines to separate claim texts
     claims_text = "\n".join(claim_parts)
-    return claims_text
+    return claims_text, independent_claims
 
 
 def extract_pub_id(app_elem: ET.Element) -> str | None:
@@ -419,9 +644,12 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                             buffer = []
                             in_application = False
                             continue
+                        doc_number = extract_publication_doc_number(elem)
+                        kind_value = extract_publication_kind(elem)
+                        application_number = extract_application_number(elem)
 
                         abstract = extract_abstract(elem)
-                        claims_text = extract_claims(elem)
+                        claims_text, independent_claims = extract_claims(elem)
 
                         # Only yield if we have at least one field to update
                         if abstract or claims_text:
@@ -429,7 +657,10 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                                 pub_id=pub_id,
                                 abstract=abstract,
                                 claims_text=claims_text,
-                                kind=None,
+                                kind=kind_value,
+                                doc_number=doc_number,
+                                application_number=application_number,
+                                independent_claims=independent_claims,
                             )
                         else:
                             logger.info(f"Record {count} ({pub_id}): no abstract or claims found")
@@ -466,11 +697,12 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                             buffer = []
                             in_patent = False
                             continue
+                        doc_number = extract_publication_doc_number(elem)
+                        kind = extract_publication_kind(elem)
+                        application_number = extract_application_number(elem)
 
                         abstract = extract_abstract(elem)
-                        claims_text = extract_claims(elem)
-                        kind_elem = elem.find(".//publication-reference/document-id/kind")
-                        kind = kind_elem.text.strip() if kind_elem is not None and kind_elem.text else None
+                        claims_text, independent_claims = extract_claims(elem)
 
                         # Only yield if we have at least one field to update
                         if abstract or claims_text:
@@ -479,6 +711,9 @@ def parse_xml_file(xml_path: str) -> Iterator[PatentFullText]:
                                 abstract=abstract,
                                 claims_text=claims_text,
                                 kind=kind,
+                                doc_number=doc_number,
+                                application_number=application_number,
+                                independent_claims=independent_claims,
                             )
                         else:
                             logger.info(f"Record {count} ({pub_id}): no abstract or claims found")
@@ -517,6 +752,27 @@ def upsert_fulltext(conn: PgConn, record: PatentFullText) -> bool:
         exists = cur.fetchone() is not None
 
         if not exists:
+            if record.application_number:
+                normalized_pub_id = _compose_pub_id(record.pub_id, record.kind)
+                cur.execute(
+                    UPDATE_STAGING_BY_APPLICATION_SQL,
+                    {
+                        "application_doc_number": record.application_number,
+                        "pub_id": normalized_pub_id,
+                        "abstract": record.abstract,
+                        "claims_text": record.claims_text,
+                        "kind_code": record.kind,
+                    },
+                )
+                updated_by_app = cur.fetchone() is not None
+                if updated_by_app:
+                    logger.info(
+                        "Updated via application_number match (%s -> %s)",
+                        record.application_number,
+                        normalized_pub_id,
+                    )
+                    return True
+
             return False
 
         # If kind is present, update pub_id to append kind and set kind_code
@@ -653,6 +909,7 @@ def process_single_file(
 
                 if updated:
                     stats.total_updated += 1
+                    maybe_stage_independent_claims(conn, record)
                 else:
                     stats.total_skipped += 1
 

@@ -116,8 +116,8 @@ INSERT INTO patent_staging (
     %(inventor_name)s::jsonb,
     %(cpc)s::jsonb
 )
-ON CONFLICT (pub_id) DO UPDATE SET
-    application_number = COALESCE(EXCLUDED.application_number, patent_staging.application_number),
+ON CONFLICT (application_number) DO UPDATE SET
+    pub_id            = COALESCE(EXCLUDED.pub_id,            patent_staging.pub_id),
     priority_date     = COALESCE(EXCLUDED.priority_date,     patent_staging.priority_date),
     family_id         = COALESCE(EXCLUDED.family_id,         patent_staging.family_id),
     kind_code         = COALESCE(EXCLUDED.kind_code,         patent_staging.kind_code),
@@ -129,7 +129,8 @@ ON CONFLICT (pub_id) DO UPDATE SET
     assignee_name     = COALESCE(EXCLUDED.assignee_name,     patent_staging.assignee_name),
     inventor_name     = COALESCE(EXCLUDED.inventor_name,     patent_staging.inventor_name),
     cpc               = COALESCE(EXCLUDED.cpc,               patent_staging.cpc)
-WHERE EXCLUDED.pub_date > patent_staging.pub_date OR patent_staging.pub_date IS NULL
+WHERE (EXCLUDED.pub_date > patent_staging.pub_date OR patent_staging.pub_date IS NULL)
+  AND EXCLUDED.kind_code NOT IN ('B1', 'B2')
 """
 
 INGEST_LOG_SQL = """

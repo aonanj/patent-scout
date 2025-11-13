@@ -7,6 +7,9 @@ This document outlines the database schema for the project. The database is a **
 * [public.patent](#publicpatent)
 * [public.patent\_embeddings](#publicpatent_embeddings)
 * [public.patent\_citation](#publicpatent_citation)
+* [public.patent\_claim](#publicpatent_claim)
+* [public.patent\_claim\_staging](#publicpatent_claim_staging)
+* [public.patent\_claim\_embeddings](#publicpatent_claim_embeddings)
 * [public.user\_overview\_analysis](#publicuser_overview_analysis)
 * [public.knn\_edge](#publicknn_edge)
 * [public.alert\_event](#publicalert_event)
@@ -18,6 +21,8 @@ This document outlines the database schema for the project. The database is a **
 * [public.subscription](#publicsubscription)
 * [public.subscription\_event](#publicsubscription_event)
 * [public.patent\_staging](#publicpatent_staging)
+* [public.issued\_patent\_staging](#publicissued_patent_staging)
+* [public.ingest\_log](#publicingest_log)
 
 ---
 
@@ -145,7 +150,6 @@ Stores independent claims of patents in the patent table for generating claim-sp
 | `claim_number` | `integer` | not null | |
 | `is independent` | `boolean` | not null | `false` |
 | `claim text` | `text` | true | |
-| `overview score` | `real` | true | |
 | `created at` | `timestamp with time zone` | not null | `now()` |
 | `updated at` | `timestamp with time zone` | not null | `now()` |
 
@@ -159,6 +163,32 @@ Stores independent claims of patents in the patent table for generating claim-sp
 ### Foreign Key Constraints
 
 * `patent fkey` FOREIGN KEY (`pub id`) REFERENCES `patent(pub id)` ON DELETE CASCADE
+
+### Referenced By
+
+* `TABLE "patent_claim_embeddings"` via `embeddings_pub_id_claim_no_patent_claim_fkey`
+
+---
+
+## public.patent\_claim\_staging
+
+Temporary storage for independent claims of patents in the patent_staging before merging into patent_claim table.
+
+### Columns
+
+| Column | Type | Nullable | Default |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | not null | `get_random_uuid()` |
+| `pub id` | `text` | not null | |
+| `claim_number` | `integer` | not null | |
+| `is independent` | `boolean` | not null | `false` |
+| `claim text` | `text` | true | |
+| `created at` | `timestamp with time zone` | not null | `now()` |
+| `updated at` | `timestamp with time zone` | not null | `now()` |
+
+### Indexes
+
+* `patent_claim_uq` UNIQUE CONSTRAINT, btree `(pub_id, claim_number)`
 
 ---
 
@@ -182,7 +212,11 @@ Stores embeddings generated for individual independent claims of patents in the 
 * `patent_claim_embeddings_pkey` PRIMARY KEY, btree `(id)`
 * `idx_patent_claim_embeddings_pub_id` btree `(pub_id, claim_number)`
 * `patent_claim_embeddings_hnsw_idx_claim_model` hnsw `(embedding vector_cosine_ops)`
-* `uq_patent_claim_number` UNIQUE CONSTRAINT, btree (pub_id, claim_number)`
+* `uq_patent_claim_number` UNIQUE CONSTRAINT, btree `(pub_id, claim_number)`
+
+### Foreign Key Constraints
+
+* `embeddings_pub_id_claim_no_patent_claim_fkey` FOREIGN KEY `(pub_id, claim_number)` REFERENCES `patent_claim(pub_id, claim_number)` ON UPDATE CASCADE ON DELETE CASCADE
 
 ---
 
@@ -520,3 +554,58 @@ A staging table for ingesting patent data before it's processed and moved to the
 ### Indexes
 
 * `patent staging pkey` (Primary Key, btree) on `(application number)`
+
+---
+
+## public.issued\_patent\_staging
+
+A staging table for ingesting patents corresponding to granted applications in the main `patent` table.
+
+### Columns
+
+| Column | Type | Nullable | Default |
+| :--- | :--- | :--- | :--- |
+| `pub id` | `text` | not null | |
+| `family_id` | `text` | true | |
+| `kind code` | `text` | true | |
+| `title` | `text` | not null | |
+| `abstract` | `text` | true | |
+| `claims text` | `text` | true | |
+| `assignee name` | `text` | true | |
+| `inventor name` | `jsonb` | true | |
+| `cpc` | `jsonb` | true | |
+| `created at` | `timestamp with time zone` | not null | `now()` |
+| `updated at` | `timestamp with time zone` | not null | `now()` |
+| `application number` | `text` | not null | |
+| `priority date` | `integer` | true | |
+| `filing date` | `integer` | true | |
+| `pub date` | `integer` | not null | |
+
+
+### Indexes
+
+* `issued patent staging pkey` (Primary Key, btree) on `(pub_id)`
+
+---
+
+## public.ingest\_log
+
+Logs data ingested into the main `patent` table.
+
+### Columns
+
+| Column | Type | Nullable | Default |
+| :--- | :--- | :--- | :--- |
+| `id` | `bigint` | not null | nextval('ingest_log_id_seq'::regclass) |
+| `pub_id` | `text` | not null | |
+| `stage` | `text` | not null | |
+| `content_hash` | `text` | true | |
+| `stage` | `jsonb` | true | |
+| `created at` | `timestamp with time zone` | not null | `now()` |
+
+
+### Indexes
+
+* `ingest_log_pkey` PRIMARY KEY, btree `(id)`
+* `ingest_log_pub_idx` btree `(pub_id, created_at DESC)`
+* `uq_ingest_pub_stage` UNIQUE CONSTRAINT, btree `(pub_id, stage)`

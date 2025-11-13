@@ -17,10 +17,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import psycopg
 from dotenv import load_dotenv
@@ -46,7 +49,8 @@ DEFAULT_DSN = os.getenv("PG_DSN", "")
 
 INSERT_CITATION_SQL = """
 INSERT INTO patent_citation (citing_pub_id, cited_pub_id, cited_application_number)
-VALUES (%(citing_pub_id)s, %(cited_pub_id)s, %(cited_application_number)s)
+SELECT %(citing_pub_id)s, %(cited_pub_id)s, %(cited_application_number)s
+WHERE EXISTS (SELECT 1 FROM patent WHERE pub_id = %(citing_pub_id)s)
 ON CONFLICT (citing_pub_id, cited_application_number) DO NOTHING;
 """
 
@@ -72,6 +76,7 @@ class ImportStats:
     inserted: int = 0
     duplicates: int = 0
     invalid: int = 0
+    skipped_no_patent: int = 0
 
 
 def positive_int(value: str) -> int:
@@ -201,12 +206,14 @@ def load_citations(
         stats.valid += len(batch)
         inserted = insert_citations_batch(pool, batch)
         stats.inserted += inserted
-        stats.duplicates += len(batch) - inserted
+        skipped = len(batch) - inserted
+        stats.duplicates += skipped
+        stats.skipped_no_patent += skipped
         logger.info(
-            "Processed %d valid rows (%d inserted, %d duplicates skipped)",
+            "Processed %d valid rows (%d inserted, %d skipped)",
             stats.valid,
             stats.inserted,
-            stats.duplicates,
+            skipped,
         )
     return stats
 
@@ -243,7 +250,7 @@ def main() -> int:
         pool.close()
 
     logger.info(
-        "Finished: %d lines read (%d valid, %d invalid). Inserted %d new rows, %d duplicates skipped.",
+        "Finished: %d lines read (%d valid, %d invalid). Inserted %d new rows, %d skipped (duplicates or missing patent).",
         stats.read,
         stats.valid,
         stats.invalid,
