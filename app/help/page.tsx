@@ -239,18 +239,18 @@ export default function HelpIndexPage() {
           </div>
 
           <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 8 }}>
-            The Scope Analysis page enables users to paste product descriptions, invention disclosures, or draft claim sets and instantly compare them against every independent claim in the SynapseIP corpus. The tool generates an embedding for the input text, runs a KNN search over the <em>patent_claim_embeddings</em> table, and surfaces the closest matches with distance scores, similarity percentages, and claim metadata.
+            The Scope Analysis page supplements AI/ML IP search, trends, and IP overview by providing freedom-to-operate (FTO) and infringement-risk screening. Input a natural language description of subject matter of interest (e.g., product features, invention disclosures, draft claims, etc.) and run a semantically comparison against independent claims across patents in the SynapseIP database. Closest matches with context-rich analysis is returned.
           </p>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 16 }}>
             Results are visualized in an interactive node map that positions the user input at the center with claim nodes arranged radially by similarity, while a synchronized evidence table lists the associated patents, assignees, publication dates, and full claim language. This combination provides an immediate, data-driven starting point for preliminary freedom-to-operate, infringement-risk reviews, and design-around brainstorming.
           </p>
 
           <div style={{ display: "grid", gap: 12 }}>
-            <DetailItem icon="⬩" title="Independent Claim Embeddings" text="Every independent claim in the corpus is embedded and indexed, allowing high-fidelity semantic comparisons against your pasted text." />
-            <DetailItem icon="⬩" title="Interactive Similarity Graph" text="Hover to preview claim snippets, click nodes to sync with the evidence table, and quickly see which patents crowd closest to your concept." />
-            <DetailItem icon="⬩" title="Evidence Table" text="Clickable publication numbers open Google Patents, while expandable claim cells reveal the full verbatim language for attorney review." />
+            <DetailItem icon="⬩" title="Independent Claim Embeddings" text="Every independent claim in the corpus is embedded and indexed, allowing high-fidelity semantic comparisons against inputs." />
+            <DetailItem icon="⬩" title="Interactive Similarity Graph" text="Hover to preview claim snippets, click nodes to sync with the evidence table, and quickly see which patents crowd closest to input subject matter." />
+            <DetailItem icon="⬩" title="Evidence Table" text="Clickable publication numbers open full patents on Google Patents, while expandable claim cells reveal the full verbatim language for easy reference." />
             <DetailItem icon="⬩" title="Risk Snapshot Tiles" text="Automatic tallies highlight the number of high-similarity claims, lower-risk matches, and the overall scope sampled during each run." />
-            <DetailItem icon="⬩" title="Workflow Friendly" text="Perfect for rapid internal reviews before green-lighting a formal opinion, briefing outside counsel, or prioritizing design-around investigations." />
+            <DetailItem icon="⬩" title="Workflow Friendly" text="Perfect for rapid internal reviews before proceeding with formal opinions or further R&D investments." />
           </div>
 
           <div
@@ -266,7 +266,7 @@ export default function HelpIndexPage() {
             }}
           >
             <p style={{ fontSize: 13, lineHeight: 1.5, color: TEXT_COLOR, margin: 0 }}>
-              <strong>Example Use Cases</strong>: Pre-FTO reviews for new product features, infringement-risk screening before diligence meetings, prioritizing claim charts, and communicating overlap concerns to engineering teams.
+              <strong>Example Use Cases</strong>: pre-FTO review, infringement-risk screening, due diligence, clearance analysis.
             </p>
           </div>
         </div>
@@ -283,22 +283,22 @@ export default function HelpIndexPage() {
 
             <InfoSection
               title="2. Start with Search & Trends"
-              content="Exploring the Search & Trends page may be helpful in familiarizing yourself with the patent and publication data set accessible through SynapseIP. Try a semantic query like 'autonomous vehicle perception systems' or use keyword filters to narrow results. Experiment with trend groupings to understand filing patterns."
+              content="Search & Trends provides direct and easy access to the AI/ML patent and publication data set available through SynapseIP. Semantic queries, keyword input, and CPC filters are available to narrow results. Trend groupings may assist in understanding filing patterns."
             />
 
             <InfoSection
-              title="3. Save Important Searches as Alerts"
-              content="When you find a search configuration that matters to your work, click 'Save as Alert' to receive notifications when new patents or publications match your criteria. Manage your alerts through the navigation bar modal."
+              title="3. Save Searches as Alerts"
+              content="Relevant or important searches can be saved as alerts to avoid repeated manual runs. With search criteria of interest input, click 'Save as Alert' to receive notifications when new patents or publications match that criteria. Alerts can be managed through the navigation bar (hover over username for menu)."
             />
 
             <InfoSection
               title="4. Run Scope Analysis Early"
-              content="Paste a product description, invention disclosure, or draft claims into the Scope Analysis page to generate a semantic comparison against independent claims. Use the similarity graph and evidence table to identify high-overlap patents before engaging outside counsel."
+              content="Input a product description, invention disclosure, or draft claims into the Scope Analysis page to generate a semantic comparison against independent claims. Use the similarity graph and evidence table to identify relevant patents to assess infringement risks."
             />
 
             <InfoSection
               title="5. Explore AI/ML IP Opportunities"
-              content="Navigate to the IP Overview page to view how busy a technology area is. Enter focus keywords and/or CPC codes, review the saturation/activity rate/momentum tiles, inspect the timeline and CPC bars, and review the result set table for representative filings."
+              content="Navigate to the IP Overview page to view how busy a technology area is. Enter focus keywords and/or CPC codes, review the saturation/activity rate/momentum tiles, inspect the timeline and CPC bars, and review the result set table for representative patents and publications."
             />
 
             <InfoSection
