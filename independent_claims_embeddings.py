@@ -402,8 +402,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--batch-size",
         type=int,
-        default=100,
-        help="Batch size for processing patents (default: 100)",
+        default=500,
+        help="Batch size for processing patents (default: 500)",
     )
     p.add_argument(
         "--dsn",

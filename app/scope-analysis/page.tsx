@@ -60,9 +60,10 @@ const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
       const proportion = idx / limit;
       const angle = proportion * Math.PI * 2;
       const sim = Math.max(0, Math.min(1, match.similarity ?? 0));
-      const minRadius = 90;
-      const maxRadius = 190;
-      const radius = maxRadius - sim * (maxRadius - minRadius);
+      const minRadius = 70;
+      const maxRadius = 220;
+      const emphasis = Math.pow(sim, 1.35); // push high-sim nodes closer to center
+      const radius = maxRadius - emphasis * (maxRadius - minRadius);
       const x = cx + Math.cos(angle) * radius;
       const y = cy + Math.sin(angle) * radius;
       const rowId = `${match.pub_id}#${match.claim_number}`;
@@ -172,8 +173,9 @@ const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
         <div
           className="absolute max-w-xs rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg pointer-events-none"
           style={{
-            left: `calc(${tooltip.leftPct}% - 80px)`,
-            top: `calc(${tooltip.topPct}% - 70px)`,
+            left: `${tooltip.leftPct}%`,
+            top: `${tooltip.topPct}%`,
+            transform: "translate(-50%, -100%) translateY(-12px)",
           }}
         >
           <p className="font-semibold text-slate-800 mb-1">{tooltip.title}</p>
@@ -292,7 +294,7 @@ export default function ScopeAnalysisPage() {
           <textarea
             id="scope-text"
             className="w-full min-h-[160px] rounded-xl border border-slate-200 p-4 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80"
-            placeholder="Example: Our device uses a multi-modal transformer that fuses radar and camera signals..."
+            placeholder="Example: A device using a multi-modal transformer that fuses radar and camera signals..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
