@@ -348,8 +348,8 @@ export default function ScopeAnalysisPage() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      <div className="glass-surface">
-        <header className="glass-card p-6">
+      <div className="glass-surface" style={surfaceStyle}>
+        <header className="glass-card p-6" style={{ ...cardBaseStyle }}>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
             Scope Analysis
           </p>
@@ -360,7 +360,7 @@ export default function ScopeAnalysisPage() {
           </p>
         </header>
 
-        <section className="glass-card p-6 space-y-4">
+        <section className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
           <div className="flex flex-col gap-2">
             <label htmlFor="scope-text" className="text-sm font-semibold text-slate-700">
               Input subject matter to search (e.g., product description, invention disclosure, draft claim, etc.)
@@ -418,7 +418,7 @@ export default function ScopeAnalysisPage() {
 
         {results.length > 0 && (
           <section className="grid gap-6 lg:grid-cols-2">
-            <div className="glass-card p-6">
+            <div className="glass-card p-6" style={{ ...cardBaseStyle }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-xs tracking-wide uppercase text-slate-500">Risk snapshot</p>
@@ -444,7 +444,7 @@ export default function ScopeAnalysisPage() {
               )}
             </div>
 
-            <div className="glass-card p-6 space-y-4">
+            <div className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
               <p className="text-xs tracking-wide uppercase text-slate-500">Impact summary</p>
               <h2 className="text-xl font-semibold text-slate-900">Claim proximity breakdown</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -483,7 +483,7 @@ export default function ScopeAnalysisPage() {
           </section>
         )}
 
-      <section className="glass-card p-6">
+      <section className="glass-card p-6" style={{ ...cardBaseStyle }}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs tracking-wide uppercase text-slate-500">Independent claim matches</p>
@@ -604,6 +604,12 @@ export default function ScopeAnalysisPage() {
   );
 };
 
+const TEXT_COLOR = "#102A43";
+const LINK_COLOR = "#5FA8D2";
+const CARD_BG = "rgba(255, 255, 255, 0.8)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
+const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
 const footerStyle: React.CSSProperties = {
   alignSelf: "center",
   padding: "16px 24px",
@@ -618,4 +624,14 @@ const footerStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 500,
   gap: 4
+};
+
+const cardBaseStyle: CSSProperties = {
+  background: CARD_BG,
+  border: `1px solid ${CARD_BORDER}`,
+  borderRadius: 20,
+  padding: 32,
+  boxShadow: CARD_SHADOW,
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
 };
