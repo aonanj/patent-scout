@@ -364,7 +364,7 @@ export default function ScopeAnalysisPage() {
               </label>
               <textarea
                 id="scope-text"
-                className="w-full min-h-[160px] rounded-xl border border-slate-200 p-4 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80"
+                className="focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80" style={{ ...textInputStyle}}
                 placeholder="Example: A device using a multi-modal transformer that fuses radar and camera signals..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -654,6 +654,20 @@ const inputStyle: React.CSSProperties = {
   outline: "none",
   minWidth: 60,
   width: 70,
+  background: "rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
+  color: "#102A43",
+  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+
+const textInputStyle: React.CSSProperties = {
+  minHeight: 140,
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 12,
+  padding: "0 14px",
+  width: "85%",
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
   color: "#102A43",
