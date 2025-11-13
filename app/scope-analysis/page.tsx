@@ -45,6 +45,13 @@ const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
   const height = 360;
   const cx = width / 2;
   const cy = height / 2;
+  const [tooltip, setTooltip] = useState<{
+    rowId: string;
+    title: string;
+    snippet: string;
+    leftPct: number;
+    topPct: number;
+  } | null>(null);
 
   const nodes = useMemo(() => {
     if (!matches.length) return [];
@@ -59,13 +66,17 @@ const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
       const x = cx + Math.cos(angle) * radius;
       const y = cy + Math.sin(angle) * radius;
       const rowId = `${match.pub_id}#${match.claim_number}`;
+      const text = (match.claim_text || "").trim();
+      const snippet = text
+        ? `${text.slice(0, 200)}${text.length > 200 ? "…" : ""}`
+        : "No claim text available.";
       return {
         x,
         y,
-        angle,
         rowId,
         similarity: sim,
         title: match.title || match.pub_id,
+        snippet,
       };
     });
   }, [matches, cx, cy]);
@@ -79,83 +90,97 @@ const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
   }
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[360px]">
-      {/* Edges */}
-      {nodes.map((node) => (
-        <line
-          key={`${node.rowId}-edge`}
-          x1={cx}
-          y1={cy}
-          x2={node.x}
-          y2={node.y}
-          stroke="rgba(14,165,233,0.25)"
-          strokeWidth={selectedId === node.rowId ? 2.2 : 1.2}
-        />
-      ))}
-
-      {/* Query node */}
-      <g>
-        <circle cx={cx} cy={cy} r={28} fill="#0ea5e9" fillOpacity={0.8} />
-        <text
-          x={cx}
-          y={cy}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={12}
-          fontWeight={600}
-          fill="white"
-        >
-          Input
-        </text>
-      </g>
-
-      {/* Claim nodes */}
-      {nodes.map((node) => (
-        <g
-          key={node.rowId}
-          className="cursor-pointer"
-          onClick={() => onSelect(node.rowId)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onSelect(node.rowId);
-            }
-          }}
-          tabIndex={0}
-          role="button"
-          aria-label={`Highlight ${node.title}`}
-        >
-          <circle
-            cx={node.x}
-            cy={node.y}
-            r={selectedId === node.rowId ? 16 : 13}
-            fill={selectedId === node.rowId ? "#1d4ed8" : "#e0f2fe"}
-            stroke={selectedId === node.rowId ? "#1d4ed8" : "#0ea5e9"}
-            strokeWidth={selectedId === node.rowId ? 3 : 1.5}
+    <div className="relative w-full h-[360px]">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+        {/* Edges */}
+        {nodes.map((node) => (
+          <line
+            key={`${node.rowId}-edge`}
+            x1={cx}
+            y1={cy}
+            x2={node.x}
+            y2={node.y}
+            stroke="rgba(14,165,233,0.25)"
+            strokeWidth={selectedId === node.rowId ? 2.2 : 1.2}
           />
+        ))}
+
+        {/* Query node */}
+        <g>
+          <circle cx={cx} cy={cy} r={28} fill="#0ea5e9" fillOpacity={0.8} />
           <text
-            x={node.x}
-            y={node.y - (selectedId === node.rowId ? 22 : 20)}
+            x={cx}
+            y={cy}
             textAnchor="middle"
-            fontSize={11}
+            dominantBaseline="middle"
+            fontSize={12}
             fontWeight={600}
-            fill="#0f172a"
+            fill="white"
           >
-            {`${Math.round(node.similarity * 100)}%`}
-          </text>
-          <text
-            x={node.x}
-            y={node.y + 26}
-            textAnchor="middle"
-            fontSize={10}
-            fill="#475569"
-          >
-            {node.title.slice(0, 24)}
-            {node.title.length > 24 ? "…" : ""}
+            Input
           </text>
         </g>
-      ))}
-    </svg>
+
+        {/* Claim nodes */}
+        {nodes.map((node) => (
+          <g
+            key={node.rowId}
+            className="cursor-pointer"
+            onClick={() => onSelect(node.rowId)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect(node.rowId);
+              }
+            }}
+            onMouseEnter={() =>
+              setTooltip({
+                rowId: node.rowId,
+                title: node.title,
+                snippet: node.snippet,
+                leftPct: (node.x / width) * 100,
+                topPct: (node.y / height) * 100,
+              })
+            }
+            onMouseLeave={() => setTooltip((prev) => (prev?.rowId === node.rowId ? null : prev))}
+            tabIndex={0}
+            role="button"
+            aria-label={`Highlight ${node.title}`}
+          >
+            <circle
+              cx={node.x}
+              cy={node.y}
+              r={selectedId === node.rowId ? 16 : 13}
+              fill={selectedId === node.rowId ? "#1d4ed8" : "#e0f2fe"}
+              stroke={selectedId === node.rowId ? "#1d4ed8" : "#0ea5e9"}
+              strokeWidth={selectedId === node.rowId ? 3 : 1.5}
+            />
+            <text
+              x={node.x}
+              y={node.y - (selectedId === node.rowId ? 22 : 20)}
+              textAnchor="middle"
+              fontSize={11}
+              fontWeight={600}
+              fill="#0f172a"
+            >
+              {`${Math.round(node.similarity * 100)}%`}
+            </text>
+          </g>
+        ))}
+      </svg>
+      {tooltip && (
+        <div
+          className="absolute max-w-xs rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg pointer-events-none"
+          style={{
+            left: `calc(${tooltip.leftPct}% - 80px)`,
+            top: `calc(${tooltip.topPct}% - 70px)`,
+          }}
+        >
+          <p className="font-semibold text-slate-800 mb-1">{tooltip.title}</p>
+          <p className="text-slate-600 leading-snug">{tooltip.snippet}</p>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -168,6 +193,7 @@ export default function ScopeAnalysisPage() {
   const [results, setResults] = useState<ScopeClaimMatch[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [lastQuery, setLastQuery] = useState<string | null>(null);
+  const [expandedClaims, setExpandedClaims] = useState<Record<string, boolean>>({});
 
   const primaryRisk = useMemo(() => {
     if (!results.length) return null;
@@ -233,6 +259,18 @@ export default function ScopeAnalysisPage() {
     setSelectedId(rowId);
   };
 
+  const toggleClaimExpansion = (rowId: string) => {
+    setExpandedClaims((prev) => {
+      const next = { ...prev };
+      if (next[rowId]) {
+        delete next[rowId];
+      } else {
+        next[rowId] = true;
+      }
+      return next;
+    });
+  };
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       <header className="glass-card p-6">
@@ -241,16 +279,15 @@ export default function ScopeAnalysisPage() {
         </p>
         <h1 className="text-3xl font-bold text-slate-900 mb-3">Preliminary FTO / Infringement Radar</h1>
         <p className="text-base text-slate-600 max-w-3xl">
-          Paste a product description, invention disclosure, or draft claims to instantly map your concept
-          against independent claims in our corpus. We run a semantic KNN search over claim embeddings to surface
-          the closest risks so you can triage potential overlap long before a formal freedom-to-operate opinion.
+          Input subject matter to search for comparison against independent claims of patents in the SynapseIP database. 
+          A semantic search is executed over available independent claim, and semantically similar claims are returned with similarity scores and risk analysis.
         </p>
       </header>
 
       <section className="glass-card p-6 space-y-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="scope-text" className="text-sm font-semibold text-slate-700">
-            Describe the feature you want to clear
+            Input subject matter to search (e.g., product description, invention disclosure, draft claim, etc.)
           </label>
           <textarea
             id="scope-text"
@@ -292,7 +329,7 @@ export default function ScopeAnalysisPage() {
         </div>
         {!isAuthenticated && !isLoading && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            You&apos;ll be prompted to sign in before we run the infringement risk pass.
+            Sign in to access this feature.
           </div>
         )}
       </section>
@@ -415,16 +452,16 @@ export default function ScopeAnalysisPage() {
                       <td className="py-3 pr-4 min-w-[180px]">
                         <div className="font-semibold text-slate-900">{match.title || "Untitled patent"}</div>
                         <div className="text-xs text-slate-500">
-                          {match.pub_id} · {match.assignee_name || "Unknown assignee"} · {formatPubDate(match.pub_date)}
+                          <a
+                            href={`https://patents.google.com/patent/${match.pub_id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sky-600 hover:underline"
+                          >
+                            {match.pub_id}
+                          </a>{" "}
+                          · {match.assignee_name || "Unknown assignee"} · {formatPubDate(match.pub_date)}
                         </div>
-                        <a
-                          href={`https://patents.google.com/patent/${match.pub_id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-sky-600 hover:underline"
-                        >
-                          Open on patents.google.com
-                        </a>
                       </td>
                       <td className="py-3 pr-4">{match.claim_number}</td>
                       <td className="py-3 pr-4 font-semibold text-slate-900">
@@ -433,9 +470,34 @@ export default function ScopeAnalysisPage() {
                       <td className="py-3 pr-4 text-slate-600">
                         {typeof match.distance === "number" ? match.distance.toFixed(3) : "—"}
                       </td>
-                      <td className="py-3 text-slate-700">
-                        {match.claim_text ? match.claim_text.slice(0, 280) : "—"}
-                        {match.claim_text && match.claim_text.length > 280 ? "…" : ""}
+                      <td
+                        className="py-3 text-slate-700"
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowSelect(rowId);
+                          toggleClaimExpansion(rowId);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRowSelect(rowId);
+                            toggleClaimExpansion(rowId);
+                          }
+                        }}
+                      >
+                        {match.claim_text
+                          ? expandedClaims[rowId]
+                            ? match.claim_text
+                            : match.claim_text.slice(0, 280) + (match.claim_text.length > 280 ? "…" : "")
+                          : "—"}
+                        {match.claim_text && (
+                          <span className="block text-xs text-slate-500 mt-1">
+                            {expandedClaims[rowId] ? "Click to collapse" : "Click to read full claim"}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );
