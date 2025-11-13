@@ -364,7 +364,7 @@ export default function ScopeAnalysisPage() {
               </label>
               <textarea
                 id="scope-text"
-                className="focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80" style={{ ...textInputStyle}}
+                className="focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80 pt-2 pl-2" style={{ ...textInputStyle}}
                 placeholder="Example: A device using a multi-modal transformer that fuses radar and camera signals..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}

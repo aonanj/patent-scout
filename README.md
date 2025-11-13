@@ -8,13 +8,13 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 ## Feature Highlights
 - Hybrid keyword + vector search with semantic embeddings, adaptive result trimming, CSV/PDF export, and patent/application detail expansion ([app/api.py](app/api.py), [app/page.tsx](app/page.tsx)). Filters are edited live, but searches only execute when the user clicks the `Apply` button, removing prior debounce-driven inconsistencies across the trend graph and table.
 - Auth0-protected React UI with saved-alert management, login overlay, and modal workspace for alert toggles ([components/NavBar.tsx](components/NavBar.tsx), [app/layout.tsx](app/layout.tsx)).
-- IP Overview that surfaces saturation, activity rates, momentum, and CPC distribution for focus keyword(s) and/or CPC(s), with optional group by assignee signals ([app/overview_api.py](app/overview_api.py), [app/overview_signals.py](app/overview_signals.py), [components/SigmaOverviewGraph.tsx](components/SigmaOverviewGraph.tsx), [app/overview/page.tsx](app/overview/page.tsx)).
-- Scope Analysis page transforms the platform into a preliminary freedom-to-operate (FTO) and infringement-risk triage tool: paste a product description or draft claim set, run a KNN search against every embedded independent claim, visualize similarity nodes, inspect expandable claims inline, and export the match table to PDF for counsel review ([app/api.py](app/api.py#L147), [app/repository.py](app/repository.py#L593), [app/scope-analysis/page.tsx](app/scope-analysis/page.tsx)).
+- IP Overview that surfaces saturation, activity rates, momentum, and CPC distribution for focus keyword(s) and/or CPC(s), with optional group by assignee signals ([app/overview_api.py](app/overview_api.py), [app/overview_signals.py](app/overview_signals.py), [components/SigmaOverviewGraph.tsx](components/SigmaOverviewGraph.tsx), [app/overview/page.tsx](app/overview/page.tsx)). 
+  - Semantic neighbors are trimmed when distances jump or exceed a threshold so the counts and timelines stay focused on relevant patents and publications.
+- Scope Analysis page transforms the platform into a preliminary freedom-to-operate (FTO) and infringement-risk triage tool: input subject matter of interest (e.g., a product description or draft claim set), run a KNN search against every embedded independent claim, visualize similarity nodes, inspect expandable claims inline, and export the match table to PDF for review ([app/api.py](app/api.py#L147), [app/repository.py](app/repository.py#L593), [app/scope-analysis/page.tsx](app/scope-analysis/page.tsx)).
 - Canonical assignee name normalization for improved entity matching and trend analysis ([add_canon_name.py](add_canon_name.py)).
 - Multiple data ingestion pipelines: BigQuery loader ([etl.py](etl.py)), USPTO PEDS API loader ([etl_uspto.py](etl_uspto.py)), and bulk XML parser ([etl_xml_fulltext.py](etl_xml_fulltext.py)) for comprehensive patent and application coverage.
 - Embedding backfill utility for maintaining vector search quality across historical data ([etl_add_embeddings.py](etl_add_embeddings.py)).
 - Automated Mailgun/console alert notifications for saved queries packaged as standalone runner ([alerts_runner.py](alerts_runner.py)).
-- User-specific IP overview analysis with isolated graph computation and personalized signal detection.
 - Comprehensive pytest suite covering authentication, repository search logic, overview signal math, and API contracts ([tests/](tests/)).
 
 ## Live Deployment
@@ -88,7 +88,9 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 │   ├── docs/(privacy|tos|dpa)/      # Legal & compliance content
 │   ├── help/(search_trends|overview|scope-analysis)/ # Product documentation pages
 │   ├── glitchtip-example-page/      # Client-side observability demo
-│   ├── global-error.tsx, globals.css, layout.tsx, providers.tsx, robots.ts
+│   ├── global-error.tsx, layout.tsx, providers.tsx
+│   ├── globals.css,                # Client-side observability demo
+│   └── robots.ts
 ├── components/
 │   ├── NavBar.tsx                   # Auth-aware navigation & alert modal trigger
 │   ├── HomePageClient.tsx           # Client-side interactivity for the landing/search page
@@ -109,23 +111,26 @@ The repository contains the full SynapseIP stack: FastAPI exposes the search, ex
 ├── docs/
 │   ├── screenshots/                 # UI & API imagery
 │   └── uspto_odp_api/               # USPTO API schema reference
-├── resources/                       # Runbooks (Stripe, subscriptions, ETL) + sample data
+├── scripts/                              # Operational & maintenance scripts
+│   ├── add_canon_name.py
+│   ├── etl_uspto.py
+│   ├── etl_xml_fulltext.py
+│   ├── etl_add_embeddings.py
+│   ├── generate_citations_csv.py
+│   ├── independent_claims_embeddings.py 
+│   ├── process_patent_citations.py
+│   ├── update_patent_staging.py
+│   └── update_stripe_prices.py 
 ├── public/                          # Static assets (favicons, logos, OG images)
 ├── types/                           # TypeScript ambient declarations
-├── instrumentation.ts & instrumentation-client.ts # Next.js instrumentation entrypoints
-├── etl.py, etl_uspto.py, etl_xml_fulltext.py,
-│   etl_add_embeddings.py, independent_claims_embeddings.py # Batch loaders & embedding jobs
-├── alerts_runner.py, add_canon_name.py, process_patent_citations.py,
-│   update_patent_staging.py, update_stripe_prices.py, generate_citations_csv.py
-│                                     # Operational & maintenance scripts
+├── instrumentation.ts & -client.ts  # Next.js instrumentation entrypoints
+├── alerts_runner.py, etl.py         # Automated chron jobs
 ├── Dockerfile & start.sh            # Container build + entrypoint (runs Alembic)
-├── next.config.js, package.json, package-lock.json,
-│   tsconfig.json, tsconfig.tsbuildinfo, tailwind.config.js, postcss.config.js
-│                                     # Next.js workspace + build configuration
-├── pyproject.toml, requirements.in, requirements.txt # Python packaging & dependency locks
-├── DATABASE_SCHEMA.md, LICENSE.md   # Reference documentation & licensing
-└── fix_existing_subscription.sql, us_patent_citations.csv, output_with_app_numbers.csv
-                                      # Data/SQL artifacts consumed by ETL & analytics
+├── next.config.js, package.json, et al.  # Next.js workspace + build configuration
+├── pyproject.toml                   # Python packaging 
+├── requirements.txt                 # Python dependency reqs
+├── DATABASE_SCHEMA.md               # Reference documentation
+└── LICENSE.md                       # Proprietary license
 ```
 
 ## Setup
@@ -184,6 +189,9 @@ Unit and integration tests cover search repository queries, API endpoints, Auth0
 - `EMBEDDING_MODEL` / `SEMANTIC_TOPK` / `SEMANTIC_JUMP` / `VECTOR_TYPE` – Hybrid search tuning knobs.
 - `EXPORT_MAX_ROWS` / `EXPORT_SEMANTIC_TOPK` – Export limits shared by CSV/PDF generators.
 - `OVERVIEW_EMBEDDING_MODEL` – Preferred embedding suffix for IP Overview analytics (falls back to `WS_EMBEDDING_MODEL` for legacy deployments).
+- `OVERVIEW_SEMANTIC_DIST_CAP` – Absolute cosine-distance ceiling (set ≤ 0 to disable) for overview semantic neighbors; defaults to 0.9.
+- `OVERVIEW_SEMANTIC_SPREAD` – Maximum delta from the closest semantic result before pruning (defaults to 0.35).
+- `OVERVIEW_SEMANTIC_JUMP` – Distance jump threshold that stops adding additional neighbors once the relevance curve has a sharp break (defaults to 0.10).
 
 ### Frontend / Next.js
 - `NEXT_PUBLIC_AUTH0_DOMAIN`
@@ -281,6 +289,8 @@ The React UI ([app/overview/page.tsx](app/overview/page.tsx)) defaults to the ov
 ## Screenshots
 - Search & Trends UI – ![docs/screenshots/search-ui.png](docs/screenshots/search-ui.png)
 - IP Overview UI – ![docs/screenshots/overview-ui.png](docs/screenshots/overview-ui.png)
+- IP Overview UI (con't) - ![docs/screenshots/overview-ui-2.png](docs/screenshots/overview-ui-2.png)
+- Scope Analysis UI - ![docs/screenshots/scope-ui.png](docs/screenshots/scope-ui.png)
 - SynapseIP API Docs – ![docs/screenshots/api-docs.png](docs/screenshots/api-docs.png)
 
 ## Documentation & Legal Pages

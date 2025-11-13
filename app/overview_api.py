@@ -56,9 +56,24 @@ AsyncConn = Annotated[psycopg.AsyncConnection, Depends(get_conn)]
 
 logger = get_logger()
 
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        logger.warning("Invalid %s=%r; using default %s", name, raw, default)
+        return default
+
 MAX_GRAPH_LIMIT = 2000
 MAX_GRAPH_NEIGHBORS = 50
 MAX_GRAPH_LAYOUT_NEIGHBORS = 50
+
+_semantic_dist_cap = _env_float("OVERVIEW_SEMANTIC_DIST_CAP", 0.9)
+OVERVIEW_SEMANTIC_DIST_CAP = math.inf if _semantic_dist_cap <= 0 else _semantic_dist_cap
+OVERVIEW_SEMANTIC_SPREAD = max(0.0, _env_float("OVERVIEW_SEMANTIC_SPREAD", 0.35))
+OVERVIEW_SEMANTIC_JUMP = max(0.0, _env_float("OVERVIEW_SEMANTIC_JUMP", 0.1))
 
 SearchMode = Literal["keywords", "assignee"]
 GroupKind = Literal["assignee", "cluster"]
@@ -901,6 +916,45 @@ def _split_cpc_list(raw: str | None) -> list[str]:
         return []
     parts = [part.strip().upper().replace(" ", "") for part in raw.split(",")]
     return [p for p in parts if p]
+
+
+def _filter_semantic_pub_ids(
+    rows: Sequence[dict[str, Any]],
+    *,
+    semantic_limit: int,
+    tau: float | None,
+) -> tuple[list[str], float | None]:
+    """Apply distance-based guardrails to semantic neighbors."""
+    if not rows:
+        return [], None
+
+    first_val = rows[0].get("dist")
+    first_dist = float(first_val) if first_val is not None else 0.0
+    cap = first_dist + OVERVIEW_SEMANTIC_SPREAD
+    if not math.isinf(OVERVIEW_SEMANTIC_DIST_CAP):
+        cap = min(cap, OVERVIEW_SEMANTIC_DIST_CAP)
+    if tau is not None:
+        cap = min(cap, float(tau))
+
+    keep: list[str] = []
+    seen: set[str] = set()
+    prev = first_dist
+    for row in rows:
+        pub_id = row.get("pub_id")
+        if not pub_id or pub_id in seen:
+            continue
+        dist_val = row.get("dist")
+        dist = float(dist_val) if dist_val is not None else 0.0
+        if dist > cap:
+            break
+        if keep and (dist - prev) > OVERVIEW_SEMANTIC_JUMP:
+            break
+        keep.append(pub_id)
+        seen.add(pub_id)
+        prev = dist
+        if len(keep) >= semantic_limit:
+            break
+    return keep, cap
 
 
 def _build_filter_clause(
@@ -1881,29 +1935,50 @@ async def get_ip_overview(
         keyword_cte = "keyword_hits AS (SELECT f.pub_id FROM filtered f)"
         keyword_params = []
 
+    semantic_cte = "semantic_hits AS (SELECT f.pub_id FROM filtered f WHERE FALSE)"
+    semantic_params: list[Any] = []
+    semantic_pub_ids: list[str] = []
     if semantic_enabled and query_vec:
         model_like = "%|ta"
         lim = max(1, min(int(semantic_limit), 5000))
-        semantic_cte = (
-            "semantic_hits AS ("
-            " SELECT DISTINCT nn.pub_id"
-            " FROM ("
-            "   SELECT f.pub_id, e.embedding <=> %s" + _VEC_CAST + " AS dist"
-            "   FROM filtered f"
-            "   JOIN patent_embeddings e ON e.pub_id = f.pub_id"
-            "   WHERE e.model LIKE %s"
-            "   ORDER BY dist ASC"
-            "   LIMIT %s"
-            " ) AS nn"
+        semantic_neighbor_sql = _sql.SQL(
+            f"""
+            WITH {filtered_cte} 
+            SELECT f.pub_id, e.embedding <=> %s{ _VEC_CAST } AS dist 
+            FROM filtered f 
+            JOIN patent_embeddings e ON e.pub_id = f.pub_id 
+            WHERE e.model LIKE %s 
+            ORDER BY dist ASC 
+            LIMIT %s
+            """ #type: ignore
+        )   
+        neighbor_params = tuple((*filter_params, query_vec, model_like, lim))
+        async with conn.cursor(row_factory=dict_row) as cur:
+            await cur.execute(semantic_neighbor_sql, neighbor_params)
+            neighbor_rows = await cur.fetchall()
+        semantic_pub_ids, semantic_cap = _filter_semantic_pub_ids(
+            neighbor_rows,
+            semantic_limit=lim,
+            tau=tau,
         )
-        semantic_params: list[Any] = [query_vec, model_like, lim]
-        if tau is not None:
-            semantic_cte += " WHERE nn.dist <= %s"
-            semantic_params.append(tau)
-        semantic_cte += ")"
-    else:
-        semantic_cte = "semantic_hits AS (SELECT f.pub_id FROM filtered f WHERE FALSE)"
-        semantic_params = []
+        if neighbor_rows:
+            cap_label = f"{semantic_cap:.4f}" if semantic_cap is not None else "n/a"
+            logger.debug(
+                "Overview semantic neighbors kept %d/%d (limit=%d, cap=%s, tau=%s)",
+                len(semantic_pub_ids),
+                len(neighbor_rows),
+                lim,
+                cap_label,
+                f"{tau:.4f}" if tau is not None else "auto",
+            )
+        if semantic_pub_ids:
+            semantic_cte = (
+                "semantic_hits AS ("
+                " SELECT DISTINCT s.pub_id"
+                " FROM unnest(%s::text[]) AS s(pub_id)"
+                ")"
+            )
+            semantic_params = [semantic_pub_ids]
 
     combined_cte = (
         "combined AS ("
