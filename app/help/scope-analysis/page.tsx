@@ -77,7 +77,7 @@ export default function ScopeAnalysisHelpPage() {
             </a>
           </div>
           <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 0 }}>
-            The Scope Analysis page moves SynapseIP beyond patent search and into rapid freedom-to-operate (FTO) and infringement-risk screening. Paste a description of your product feature, invention disclosure, or draft claims and SynapseIP will semantically compare it against independent claims across the entire corpus, returning the closest matches with context-rich diagnostics.
+            The Scope Analysis page supplements AI/ML IP search, trends, and IP overview by providing freedom-to-operate (FTO) and infringement-risk screening. Input a natural language description of subject matter of interest (e.g., product features, invention disclosures, draft claims, etc.) and run a semantically comparison against independent claims across patents in the SynapseIP database. Closest matches with context-rich analysis is returned.
           </p>
         </div>
 
@@ -85,16 +85,17 @@ export default function ScopeAnalysisHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>Why use Scope Analysis?</h2>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginBottom: 12 }}>
-            Traditional search tools focus on matching titles or abstracts. Scope Analysis dives into claim language, which ultimately determines infringement exposure. Each independent claim in the SynapseIP database is embedded and indexed, letting you:
+            Traditional search tools focus on matching titles or abstracts. Scope Analysis dives into claim language, which ultimately determines infringement exposure. Each independent claim in the SynapseIP database is embedded and indexed. Features:
           </p>
           <ul style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.5, listStyleType: "disc", listStylePosition: "outside", color: TEXT_COLOR }}>
-            <li>Surface patents whose claim scope is semantically closest to your description;</li>
-            <li>Quantify proximity using cosine distance and similarity percentage;</li>
-            <li>Visualize whether risk is concentrated in one assignee or dispersed across multiple entities;</li>
-            <li>Quickly read the actual claim text without leaving the page, while keeping a direct link to Google Patents one click away.</li>
+            <li>Returns patents with claim scopes semantically closest to the input subject matter.</li>
+            <li>Quantifies proximity using cosine distance and similarity percentage.</li>
+            <li>Presents quickly and easily comprehensible visual indicators of risk, including assignee information.</li>
+            <li>Full text of semantically similar claims. Direct links to full patents.</li>
+            <li>Export capability for all results in PDF format.</li>
           </ul>
           <p style={{ fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR, marginTop: 12 }}>
-            This workflow dramatically shortens the path between an idea and a data-backed infringement assessment, making it ideal for internal diligence before commissioning formal legal opinions.
+            This workflow meaningfully reduces the cost and time of a formal infringement assessment.
           </p>
         </div>
 
@@ -102,10 +103,10 @@ export default function ScopeAnalysisHelpPage() {
         <div className="glass-card" style={{ ...cardBaseStyle }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: TEXT_COLOR, marginBottom: 16 }}>How Scope Analysis works</h2>
           <ol style={{ marginLeft: 20, marginTop: 12, fontSize: 14, lineHeight: 1.7, color: TEXT_COLOR }}>
-            <li><strong>User input</strong>: Provide up to ~20k characters describing the feature or claim set you want to clear. The richer the technical detail, the better the embedding quality.</li>
+            <li><strong>User input</strong>: Provide up to ~20k characters describing the feature(s) or claim(s) to clear. Embedding quality improves with richer technical detail.</li>
             <li><strong>Embedding generation</strong>: SynapseIP generates an OpenAI embedding for the submitted text (no data is stored beyond what is required to fulfill the request).</li>
-            <li><strong>KNN search</strong>: The embedding is compared against the <em>patent_claim_embeddings</em> table, which stores vectors for every independent claim in the corpus. Only the closest matches (top-k configurable) are returned.</li>
-            <li><strong>Visualization + evidence</strong>: Results populate both the similarity map and the evidence table so you can bounce between macro and micro views without rerunning the analysis.</li>
+            <li><strong>KNN search</strong>: Generated embedding is compared against embeddings generated from independent claims of the patents in the SynapseIP database. Closest matches (top-k configurable) are returned.</li>
+            <li><strong>Visualization + evidence</strong>: Results populate both the similarity map and the evidence table to concurrently provide both macro and micro views.</li>
           </ol>
           <p style={{ fontSize: 13, lineHeight: 1.5, color: "#627D98", marginTop: 12 }}>
             Tip: start with 10–20 closest claims for rapid assessments, then increase the <strong># of claim comparisons</strong> input to broaden coverage.
@@ -167,9 +168,15 @@ export default function ScopeAnalysisHelpPage() {
           </ul>
         </div>
       </div>
-    </div>
+      <div className="glass-surface" style={surfaceStyle}>
+        {/* Footer */}
+        <footer style={footerStyle}>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
+        </footer>
+      </div>
+    </div>        
   );
-}
+};
 
 function InfoBlock({ title, description }: { title: string; description: string }) {
   return (
@@ -178,7 +185,7 @@ function InfoBlock({ title, description }: { title: string; description: string 
       <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: TEXT_COLOR }}>{description}</p>
     </div>
   );
-}
+};
 
 function DetailItem({ title, description }: { title: string; description: string }) {
   return (
@@ -188,4 +195,20 @@ function DetailItem({ title, description }: { title: string; description: string
       </p>
     </div>
   );
-}
+};
+
+const footerStyle: React.CSSProperties = {
+  alignSelf: "center",
+  padding: "16px 24px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.22)",
+  border: "1px solid rgba(255, 255, 255, 0.35)",
+  boxShadow: "0 16px 36px rgba(15, 23, 42, 0.26)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  color: "#102a43",
+  textAlign: "center",
+  fontSize: 13,
+  fontWeight: 500,
+  gap: 4
+};
