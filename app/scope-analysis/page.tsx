@@ -188,6 +188,14 @@ const ScopeGraph = ({ matches, selectedId, onSelect }: GraphProps) => {
   );
 };
 
+const pageWrapperStyle: React.CSSProperties = {
+  padding: "48px 24px 64px",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  gap: 32,
+};
+
 const surfaceStyle: CSSProperties = {
   maxWidth: 960,
   width: "100%",
@@ -346,261 +354,263 @@ export default function ScopeAnalysisPage() {
   }, [results, lastQuery, exporting]);
 
   return (
-    <main style={pageSurfaceStyle}>
-      <div className="glass-surface" style={surfaceStyle}>
-        <header className="glass-card p-6" style={{ ...cardBaseStyle }}>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
-            Scope Analysis
-          </p>
-          <h1 style={{ color: TEXT_COLOR, fontSize: 22, fontWeight: 700 }}>Preliminary FTO / Infringement Radar</h1>
-          <p className="text-base max-w-3xl" style={{ color: TEXT_COLOR, marginTop: 8 }}>
-            Input subject matter to search for comparison against independent claims of patents in the SynapseIP database. 
-            A semantic search is executed over available independent claim, and semantically similar claims are returned with similarity scores and risk analysis.
-          </p>
-        </header>
+    <div style={pageWrapperStyle}>
+      <main style={pageSurfaceStyle}>
+        <div className="glass-surface" style={surfaceStyle}>
+          <header className="glass-card p-6" style={{ ...cardBaseStyle }}>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
+              Scope Analysis
+            </p>
+            <h1 style={{ color: TEXT_COLOR, fontSize: 22, fontWeight: 700 }}>Preliminary FTO / Infringement Radar</h1>
+            <p className="text-base max-w-3xl" style={{ color: TEXT_COLOR, marginTop: 8 }}>
+              Input subject matter to search for comparison against independent claims of patents in the SynapseIP database. 
+              A semantic search is executed over available independent claim, and semantically similar claims are returned with similarity scores and risk analysis.
+            </p>
+          </header>
 
-        <section className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="scope-text" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
-              Input subject matter to search (e.g., product description, invention disclosure, draft claim, etc.)
-            </label>
-            <textarea
-              id="scope-text"
-              className="w-full min-h-[160px] rounded-xl border border-slate-200 p-4 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80"
-              placeholder="Example: A device using a multi-modal transformer that fuses radar and camera signals..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap items-end gap-4">
-            <div>
-              <label htmlFor="topk" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
-                # of claim comparisons
+          <section className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="scope-text" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
+                Input subject matter to search (e.g., product description, invention disclosure, draft claim, etc.)
               </label>
-              <input
-                id="topk"
-                type="number"
-                min={5}
-                max={50}
-                value={topK}
-                onChange={(e) => {
-                  const next = Number(e.target.value);
-                  if (Number.isFinite(next)) {
-                    setTopK(Math.max(5, Math.min(50, Math.trunc(next))));
-                  }
-                }}
-                className="mt-1 w-28 rounded-lg border border-slate-200 px-3 py-2"
+              <textarea
+                id="scope-text"
+                className="w-full min-h-[160px] rounded-xl border border-slate-200 p-4 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80"
+                placeholder="Example: A device using a multi-modal transformer that fuses radar and camera signals..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
               />
             </div>
-            <div className="flex-1" />
-            <button
-              type="button"
-              onClick={runAnalysis}
-              disabled={loading}
-              className="btn-modern h-11 px-6 text-sm font-semibold disabled:opacity-60"
-            >
-              {loading ? "Analyzing…" : isAuthenticated ? "Run scope analysis" : "Log in to analyze"}
-            </button>
-          </div>
-          {!isAuthenticated && !isLoading && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Sign in to access this feature.
+            <div className="flex flex-wrap items-end gap-4">
+              <div>
+                <label htmlFor="topk" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
+                  # of claim comparisons
+                </label>
+                <input
+                  id="topk"
+                  type="number"
+                  min={5}
+                  max={50}
+                  value={topK}
+                  onChange={(e) => {
+                    const next = Number(e.target.value);
+                    if (Number.isFinite(next)) {
+                      setTopK(Math.max(5, Math.min(50, Math.trunc(next))));
+                    }
+                  }}
+                  className="mt-1 w-28 rounded-lg border border-slate-200 px-3 py-2"
+                />
+              </div>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={runAnalysis}
+                disabled={loading}
+                className="btn-modern h-11 px-6 text-sm font-semibold disabled:opacity-60"
+              >
+                {loading ? "Analyzing…" : isAuthenticated ? "Run scope analysis" : "Log in to analyze"}
+              </button>
+            </div>
+            {!isAuthenticated && !isLoading && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Sign in to access this feature.
+              </div>
+            )}
+          </section>
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
             </div>
           )}
-        </section>
 
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {results.length > 0 && (
-          <section className="grid gap-6 lg:grid-cols-2">
-            <div className="glass-card p-6" style={{ ...cardBaseStyle }}>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs tracking-wide uppercase text-slate-500">Risk snapshot</p>
-                  <h2 className="text-xl font-semibold text-slate-900">Similarity map</h2>
+          {results.length > 0 && (
+            <section className="grid gap-6 lg:grid-cols-2">
+              <div className="glass-card p-6" style={{ ...cardBaseStyle }}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs tracking-wide uppercase text-slate-500">Risk snapshot</p>
+                    <h2 className="text-xl font-semibold text-slate-900">Similarity map</h2>
+                  </div>
+                  {primaryRisk && (
+                    <div
+                      className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                        primaryRisk.level === "high"
+                          ? "bg-red-100 text-red-700"
+                          : primaryRisk.level === "medium"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {primaryRisk.label}
+                    </div>
+                  )}
                 </div>
+                <ScopeGraph matches={results} selectedId={selectedId} onSelect={handleRowSelect} />
                 {primaryRisk && (
-                  <div
-                    className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                      primaryRisk.level === "high"
-                        ? "bg-red-100 text-red-700"
-                        : primaryRisk.level === "medium"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {primaryRisk.label}
+                  <p className="mt-4 text-sm text-slate-600">{primaryRisk.message}</p>
+                )}
+              </div>
+
+              <div className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
+                <p className="text-xs tracking-wide uppercase text-slate-500">Impact summary</p>
+                <h2 className="text-xl font-semibold" style={{ color: TEXT_COLOR }}>Claim proximity breakdown</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <p className="text-sm text-slate-500">Top match similarity</p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {formatSimilarity(results[0]?.similarity)}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Pub {results[0]?.pub_id} / Claim {results[0]?.claim_number}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <p className="text-sm text-slate-500">High-risk cluster</p>
+                    <p className="text-2xl font-bold text-slate-900">{highRiskCount}</p>
+                    <p className="text-xs text-slate-500 mt-1">claims ≥ 0.70 similarity</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <p className="text-sm text-slate-500">Lower-risk set</p>
+                    <p className="text-2xl font-bold text-slate-900">{lowRiskCount}</p>
+                    <p className="text-xs text-slate-500 mt-1">claims &lt; 0.50 similarity</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <p className="text-sm text-slate-500">Scope sampled</p>
+                    <p className="text-2xl font-bold text-slate-900">{results.length}</p>
+                    <p className="text-xs text-slate-500 mt-1">independent claims inspected</p>
+                  </div>
+                </div>
+                {lastQuery && (
+                  <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-500">
+                    Last analyzed snippet: {lastQuery.slice(0, 160)}
+                    {lastQuery.length > 160 ? "…" : ""}
                   </div>
                 )}
               </div>
-              <ScopeGraph matches={results} selectedId={selectedId} onSelect={handleRowSelect} />
-              {primaryRisk && (
-                <p className="mt-4 text-sm text-slate-600">{primaryRisk.message}</p>
-              )}
-            </div>
+            </section>
+          )}
 
-            <div className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
-              <p className="text-xs tracking-wide uppercase text-slate-500">Impact summary</p>
-              <h2 className="text-xl font-semibold" style={{ color: TEXT_COLOR }}>Claim proximity breakdown</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-sm text-slate-500">Top match similarity</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {formatSimilarity(results[0]?.similarity)}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Pub {results[0]?.pub_id} / Claim {results[0]?.claim_number}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-sm text-slate-500">High-risk cluster</p>
-                  <p className="text-2xl font-bold text-slate-900">{highRiskCount}</p>
-                  <p className="text-xs text-slate-500 mt-1">claims ≥ 0.70 similarity</p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-sm text-slate-500">Lower-risk set</p>
-                  <p className="text-2xl font-bold text-slate-900">{lowRiskCount}</p>
-                  <p className="text-xs text-slate-500 mt-1">claims &lt; 0.50 similarity</p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-sm text-slate-500">Scope sampled</p>
-                  <p className="text-2xl font-bold text-slate-900">{results.length}</p>
-                  <p className="text-xs text-slate-500 mt-1">independent claims inspected</p>
-                </div>
-              </div>
-              {lastQuery && (
-                <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-500">
-                  Last analyzed snippet: {lastQuery.slice(0, 160)}
-                  {lastQuery.length > 160 ? "…" : ""}
-                </div>
-              )}
+        <section className="glass-card p-6" style={{ ...cardBaseStyle }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs tracking-wide uppercase text-slate-500">Independent claim matches</p>
+              <h2 className="text-xl font-semibold text-slate-900">Closest patent claims</h2>
             </div>
-          </section>
-        )}
-
-      <section className="glass-card p-6" style={{ ...cardBaseStyle }}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-xs tracking-wide uppercase text-slate-500">Independent claim matches</p>
-            <h2 className="text-xl font-semibold text-slate-900">Closest patent claims</h2>
+            <div className="flex items-center gap-3">
+              {results.length > 0 && (
+                <span className="text-xs font-semibold text-slate-500">
+                  Click a row to highlight the graph node.
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={exportTableToPdf}
+                disabled={!results.length || exporting}
+                className="btn-outline h-9 px-4 text-xs font-semibold disabled:opacity-50"
+              >
+                {exporting ? "Preparing PDF…" : "Export PDF"}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {results.length > 0 && (
-              <span className="text-xs font-semibold text-slate-500">
-                Click a row to highlight the graph node.
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={exportTableToPdf}
-              disabled={!results.length || exporting}
-              className="btn-outline h-9 px-4 text-xs font-semibold disabled:opacity-50"
-            >
-              {exporting ? "Preparing PDF…" : "Export PDF"}
-            </button>
-          </div>
-        </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="text-left text-slate-500 border-b">
-                  <th className="py-2 pr-4">Patent</th>
-                  <th className="py-2 pr-4">Claim #</th>
-                  <th className="py-2 pr-4">Similarity</th>
-                  <th className="py-2 pr-4">Distance</th>
-                  <th className="py-2">Claim text</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-6 text-center text-slate-500">
-                      Run a scope analysis to populate this table.
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="text-left text-slate-500 border-b">
+                    <th className="py-2 pr-4">Patent</th>
+                    <th className="py-2 pr-4">Claim #</th>
+                    <th className="py-2 pr-4">Similarity</th>
+                    <th className="py-2 pr-4">Distance</th>
+                    <th className="py-2">Claim text</th>
                   </tr>
-                ) : (
-                  results.map((match) => {
-                    const rowId = `${match.pub_id}#${match.claim_number}`;
-                    const isSelected = selectedId === rowId;
-                    return (
-                      <tr
-                        key={rowId}
-                        className={`align-top transition-colors cursor-pointer ${
-                          isSelected ? "bg-sky-50/80" : "hover:bg-slate-50"
-                        }`}
-                        onClick={() => handleRowSelect(rowId)}
-                      >
-                        <td className="py-3 pr-4 min-w-[180px]">
-                          <div className="font-semibold text-slate-900">{match.title || "Untitled patent"}</div>
-                          <div className="text-xs text-slate-500">
-                            <a
-                              href={`https://patents.google.com/patent/${match.pub_id}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sky-600 hover:underline"
-                            >
-                              {match.pub_id}
-                            </a>{" "}
-                            · {match.assignee_name || "Unknown assignee"} · {formatPubDate(match.pub_date)}
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4">{match.claim_number}</td>
-                        <td className="py-3 pr-4 font-semibold text-slate-900">
-                          {formatSimilarity(match.similarity)}
-                        </td>
-                        <td className="py-3 pr-4 text-slate-600">
-                          {typeof match.distance === "number" ? match.distance.toFixed(3) : "—"}
-                        </td>
-                        <td
-                          className="py-3 text-slate-700"
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRowSelect(rowId);
-                            toggleClaimExpansion(rowId);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
+                </thead>
+                <tbody>
+                  {results.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-slate-500">
+                        Run a scope analysis to populate this table.
+                      </td>
+                    </tr>
+                  ) : (
+                    results.map((match) => {
+                      const rowId = `${match.pub_id}#${match.claim_number}`;
+                      const isSelected = selectedId === rowId;
+                      return (
+                        <tr
+                          key={rowId}
+                          className={`align-top transition-colors cursor-pointer ${
+                            isSelected ? "bg-sky-50/80" : "hover:bg-slate-50"
+                          }`}
+                          onClick={() => handleRowSelect(rowId)}
+                        >
+                          <td className="py-3 pr-4 min-w-[180px]">
+                            <div className="font-semibold text-slate-900">{match.title || "Untitled patent"}</div>
+                            <div className="text-xs text-slate-500">
+                              <a
+                                href={`https://patents.google.com/patent/${match.pub_id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sky-600 hover:underline"
+                              >
+                                {match.pub_id}
+                              </a>{" "}
+                              · {match.assignee_name || "Unknown assignee"} · {formatPubDate(match.pub_date)}
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4">{match.claim_number}</td>
+                          <td className="py-3 pr-4 font-semibold text-slate-900">
+                            {formatSimilarity(match.similarity)}
+                          </td>
+                          <td className="py-3 pr-4 text-slate-600">
+                            {typeof match.distance === "number" ? match.distance.toFixed(3) : "—"}
+                          </td>
+                          <td
+                            className="py-3 text-slate-700"
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
                               e.stopPropagation();
                               handleRowSelect(rowId);
                               toggleClaimExpansion(rowId);
-                            }
-                          }}
-                        >
-                          {match.claim_text
-                            ? expandedClaims[rowId]
-                              ? match.claim_text
-                              : match.claim_text.slice(0, 280) + (match.claim_text.length > 280 ? "…" : "")
-                            : "—"}
-                          {match.claim_text && (
-                            <span className="block text-xs text-slate-500 mt-1">
-                              {expandedClaims[rowId] ? "Click to collapse" : "Click to read full claim"}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-      <br />
-      <div className="glass-surface" style={surfaceStyle}>
-        {/* Footer */}
-        <footer style={footerStyle}>
-          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
-        </footer>
-      </div>
-    </main>
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRowSelect(rowId);
+                                toggleClaimExpansion(rowId);
+                              }
+                            }}
+                          >
+                            {match.claim_text
+                              ? expandedClaims[rowId]
+                                ? match.claim_text
+                                : match.claim_text.slice(0, 280) + (match.claim_text.length > 280 ? "…" : "")
+                              : "—"}
+                            {match.claim_text && (
+                              <span className="block text-xs text-slate-500 mt-1">
+                                {expandedClaims[rowId] ? "Click to collapse" : "Click to read full claim"}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+        <br />
+        <div className="glass-surface" style={surfaceStyle}>
+          {/* Footer */}
+          <footer style={footerStyle}>
+            2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
+          </footer>
+        </div>
+      </main>
+    </div>
   );
 };
 

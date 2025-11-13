@@ -3,14 +3,14 @@ from __future__ import annotations
 import argparse
 import os
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime
-import uuid
+from typing import Any, TypeVar
 
 from dotenv import load_dotenv
 from openai import OpenAI
-from psycopg import Connection
+import psycopg
+from psycopg import Connection, errors as psycopg_errors
 from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool
 from tenacity import retry, stop_after_attempt, wait_random_exponential
@@ -27,6 +27,9 @@ load_dotenv()
 EMB_MODEL = "text-embedding-3-small"
 EMB_BATCH_SIZE = int(os.getenv("EMB_BATCH_SIZE", "150"))
 EMB_MAX_CHARS = int(os.getenv("EMB_MAX_CHARS", "25000"))
+DB_RETRY_DEFAULT = int(os.getenv("DB_RETRIES", "3"))
+QUERY_TIMEOUT_RETRY_DEFAULT = int(os.getenv("DB_TIMEOUT_RETRIES", "3"))
+T = TypeVar("T")
 
 # psycopg generics
 type PgConn = Connection[TupleRow]
@@ -72,6 +75,104 @@ class PatentRecord:
     claim_number: int
     claim_text: str | None
     is_independent: bool | None
+
+
+class DbPoolManager:
+    """Wraps a psycopg connection pool with retry/reconnect helpers."""
+
+    def __init__(
+        self,
+        dsn: str,
+        *,
+        max_size: int = 10,
+        reconnect_retries: int = 3,
+        timeout_retries: int = 3,
+        pool_kwargs: dict[str, Any] | None = None,
+    ):
+        self._dsn = dsn
+        self._max_size = max_size
+        self._reconnect_retries = max(1, reconnect_retries)
+        self._timeout_retries = max(1, timeout_retries)
+        self._pool_kwargs = dict(pool_kwargs or {})
+        self._pool = self._create_pool()
+
+    def _create_pool(self) -> ConnectionPool[PgConn]:
+        return ConnectionPool[PgConn](
+            conninfo=self._dsn,
+            max_size=self._max_size,
+            kwargs=self._pool_kwargs,
+        )
+
+    def close(self) -> None:
+        try:
+            self._pool.close()
+        except Exception:
+            pass
+
+    def _reconnect_pool(self) -> None:
+        logger.warning("Resetting database connection pool")
+        try:
+            self._pool.close()
+        except Exception:
+            pass
+        self._pool = self._create_pool()
+
+    def run(self, fn: Callable[[ConnectionPool[PgConn]], T], desc: str) -> T:
+        reconnect_attempts = 0
+        timeout_attempts = 0
+        while True:
+            try:
+                return fn(self._pool)
+            except psycopg_errors.QueryCanceled as exc:
+                timeout_attempts += 1
+                if timeout_attempts > self._timeout_retries:
+                    logger.error(
+                        "Query timeout while %s exceeded retry limit (%s)",
+                        desc,
+                        self._timeout_retries,
+                    )
+                    raise
+                delay = min(2 ** (timeout_attempts - 1), 30)
+                logger.warning(
+                    "Query timeout while %s: %s. Retrying %s/%s after %.1fs",
+                    desc,
+                    exc,
+                    timeout_attempts,
+                    self._timeout_retries,
+                    delay,
+                )
+                time.sleep(delay)
+                continue
+            except psycopg.Error as exc:
+                if should_attempt_reconnect(exc) and reconnect_attempts < self._reconnect_retries:
+                    reconnect_attempts += 1
+                    delay = min(2 ** (reconnect_attempts - 1), 30)
+                    logger.warning(
+                        "Database connection error during %s: %s. "
+                        "Reconnecting %s/%s after %.1fs",
+                        desc,
+                        exc,
+                        reconnect_attempts,
+                        self._reconnect_retries,
+                        delay,
+                    )
+                    time.sleep(delay)
+                    self._reconnect_pool()
+                    timeout_attempts = 0
+                    continue
+                raise
+
+
+def should_attempt_reconnect(exc: psycopg.Error) -> bool:
+    reconnectable = (
+        psycopg.OperationalError,
+        psycopg_errors.AdminShutdown,
+        psycopg_errors.CannotConnectNow,
+        psycopg_errors.ConnectionDoesNotExist,
+        psycopg_errors.ConnectionException,
+        psycopg_errors.IdleInTransactionSessionTimeout,
+    )
+    return isinstance(exc, reconnectable)
 
 
 # -----------
@@ -314,13 +415,13 @@ def build_claims_inputs(r: PatentRecord) -> list[str]:
 
 
 def ensure_embeddings_for_batch(
-    pool: ConnectionPool[PgConn], client: OpenAI, batch: Sequence[PatentRecord]
+    db: DbPoolManager, client: OpenAI, batch: Sequence[PatentRecord]
 ) -> tuple[int, int]:
     """
     Generate and upsert missing embeddings for a batch of patents.
 
     Args:
-        pool: Database connection pool.
+        db: Database pool manager with retry/reconnect helpers.
         client: OpenAI client instance.
         batch: Sequence of PatentRecord instances.
 
@@ -332,7 +433,10 @@ def ensure_embeddings_for_batch(
 
     pub_ids_cn = [(r.pub_id, r.claim_number) for r in batch]
 
-    existing = select_existing_embeddings(pool, pub_ids_cn)
+    existing = db.run(
+        lambda pool: select_existing_embeddings(pool, pub_ids_cn),
+        "select_existing_embeddings",
+    )
 
     rows: list[dict] = []
     total_targets = 0
@@ -379,7 +483,7 @@ def ensure_embeddings_for_batch(
     # Write
     if rows:
         logger.info(f"Upserting {len(rows)} embeddings")
-        upsert_embeddings(pool, rows)
+        db.run(lambda pool: upsert_embeddings(pool, rows), "upsert_embeddings")
 
     return (len(rows), total_targets)
 
@@ -402,8 +506,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--batch-size",
         type=int,
-        default=500,
-        help="Batch size for processing patents (default: 500)",
+        default=1000,
+        help="Batch size for processing patents (default: 1000)",
     )
     p.add_argument(
         "--dsn",
@@ -414,6 +518,24 @@ def parse_args() -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="Query patents but do not generate or upsert embeddings",
+    )
+    p.add_argument(
+        "--db-retries",
+        type=int,
+        default=DB_RETRY_DEFAULT,
+        help=(
+            "Reconnection attempts when the database connection drops "
+            f"(default: {DB_RETRY_DEFAULT})"
+        ),
+    )
+    p.add_argument(
+        "--query-timeout-retries",
+        type=int,
+        default=QUERY_TIMEOUT_RETRY_DEFAULT,
+        help=(
+            "Retries for queries that fail due to statement timeouts "
+            f"(default: {QUERY_TIMEOUT_RETRY_DEFAULT})"
+        ),
     )
     return p.parse_args()
 
@@ -432,56 +554,67 @@ def main() -> int:
         return 2
 
 
-    # Setup database pool
-    pool = ConnectionPool[PgConn](
-        conninfo=args.dsn,
-        max_size=10,
-        kwargs={
-            "autocommit": False,
-            "sslmode": "require",
-            "prepare_threshold": None,
-            "channel_binding": "require",
-        },
-    )
+    pool_kwargs = {
+        "autocommit": False,
+        "sslmode": "require",
+        "prepare_threshold": None,
+        "channel_binding": "require",
+    }
+    db: DbPoolManager | None = None
 
-    # Query patents
-    logger.info("Querying patents")
-    patent_claims = query_patents(pool)
-    logger.info(f"Found {len(patent_claims)} patents")
+    try:
+        db = DbPoolManager(
+            dsn=args.dsn,
+            max_size=10,
+            reconnect_retries=args.db_retries,
+            timeout_retries=args.query_timeout_retries,
+            pool_kwargs=pool_kwargs,
+        )
 
-    if not patent_claims:
-        logger.info("No patents found, exiting")
+        # Query patents
+        logger.info("Querying patents")
+        patent_claims = db.run(query_patents, "query_patents")
+        logger.info(f"Found {len(patent_claims)} patents")
+
+        if not patent_claims:
+            logger.info("No patents found, exiting")
+            return 0
+
+        if args.dry_run:
+            logger.info("Dry run mode: skipping embedding generation")
+            # Still check what's missing
+            pub_ids_cn = [(r.pub_id, r.claim_number) for r in patent_claims]
+            existing = db.run(
+                lambda pool: select_existing_embeddings(pool, pub_ids_cn),
+                "select_existing_embeddings",
+            )
+            missing_count = 0
+            for r in patent_claims:
+                if (r.pub_id, r.claim_number) not in existing and build_claims_inputs(r):
+                    missing_count += 1
+            logger.info(f"Would generate {missing_count} missing embeddings")
+            return 0
+
+        # Setup OpenAI client
+        oa_client = get_openai_client()
+
+        # Process in batches
+        total_upserted = 0
+        total_targets = 0
+
+        for i, batch in enumerate(chunked(patent_claims, args.batch_size)):
+            logger.info(f"Processing batch {i + 1} ({len(batch)} patents)")
+            upserted, targets = ensure_embeddings_for_batch(db, oa_client, batch)
+            total_upserted += upserted
+            total_targets += targets
+
+        logger.info(
+            f"Completed: upserted {total_upserted} embeddings out of {total_targets} targets"
+        )
         return 0
-
-    if args.dry_run:
-        logger.info("Dry run mode: skipping embedding generation")
-        # Still check what's missing
-        pub_ids_cn = [(r.pub_id, r.claim_number) for r in patent_claims]
-        existing = select_existing_embeddings(pool, pub_ids_cn)
-        missing_count = 0
-        for r in patent_claims:
-            if (r.pub_id, r.claim_number) not in existing and build_claims_inputs(r):
-                missing_count += 1
-        logger.info(f"Would generate {missing_count} missing embeddings")
-        return 0
-
-    # Setup OpenAI client
-    oa_client = get_openai_client()
-
-    # Process in batches
-    total_upserted = 0
-    total_targets = 0
-
-    for i, batch in enumerate(chunked(patent_claims, args.batch_size)):
-        logger.info(f"Processing batch {i + 1} ({len(batch)} patents)")
-        upserted, targets = ensure_embeddings_for_batch(pool, oa_client, batch)
-        total_upserted += upserted
-        total_targets += targets
-
-    logger.info(
-        f"Completed: upserted {total_upserted} embeddings out of {total_targets} targets"
-    )
-    return 0
+    finally:
+        if db is not None:
+            db.close()
 
 
 if __name__ == "__main__":
