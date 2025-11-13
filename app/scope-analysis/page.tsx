@@ -378,13 +378,13 @@ export default function ScopeAnalysisPage() {
                 <input
                   id="topk"
                   type="number"
-                  min={5}
+                  min={0}
                   max={50}
                   value={topK}
                   onChange={(e) => {
                     const next = Number(e.target.value);
                     if (Number.isFinite(next)) {
-                      setTopK(Math.max(5, Math.min(50, Math.trunc(next))));
+                      setTopK(Math.max(0, Math.min(50, Math.trunc(next))));
                     }
                   }}
                   style={inputStyle}
