@@ -45,7 +45,7 @@ const pageWrapperStyle: CSSProperties = {
 };
 
 const surfaceStyle: CSSProperties = {
-  maxWidth: 960,
+  maxWidth: 1240,
   width: "100%",
   margin: "0 auto",
   display: "grid",

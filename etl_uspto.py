@@ -760,7 +760,7 @@ def main() -> int:
             date_to = (date.fromisoformat(args.date_from) + timedelta(days=3)).isoformat()
         else:
             wm = latest_watermark(args.dsn, args.watermark_table)
-            date_to = (wm + timedelta(days=3)).isoformat() if wm else date.today().isoformat()
+            date_to = (wm + timedelta(days=7)).isoformat() if wm else date.today().isoformat()
     logger.info("Loading up to date %s", date_to)
 
     session = requests.Session()
