@@ -370,7 +370,7 @@ export default function ScopeAnalysisPage() {
                 onChange={(e) => setText(e.target.value)}
               />
             </div>
-            <div className="flex flex-wrap items-end gap-4">
+            <div className="mt-6 flex flex-wrap items-center gap-4">
               <div>
                 <label htmlFor="topk" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
                   # of claim comparisons: 

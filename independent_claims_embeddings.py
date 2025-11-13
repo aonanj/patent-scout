@@ -46,7 +46,15 @@ SELECT
     pc.claim_text,
     pc.is_independent
 FROM patent_claim pc
+LEFT JOIN patent_claim_embeddings pe
+    ON pe.pub_id = pc.pub_id
+   AND pe.claim_number = pc.claim_number
+WHERE pe.pub_id IS NULL  
+  AND pc.claim_text IS NOT NULL
+  AND pc.claim_text <> ''
+ORDER BY pc.id
 """
+
 
 SELECT_EXISTING_EMB_SQL = """
 SELECT pub_id
