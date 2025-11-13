@@ -1330,7 +1330,10 @@ export default function OverviewPage() {
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ display: "grid", gap: 4 }}>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#102a43" }}>IP Overview</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
+              IP Overview
+            </p>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#102a43" }}>Density and Distribution Analysis</h1>
               <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
                 Subject matter saturation, patent/publication activity rates and momentum, and CPC distribution for specific search criteria and semantically similar areas.
               </p>

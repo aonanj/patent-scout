@@ -218,17 +218,17 @@ export default function ScopeAnalysisPage() {
     if (!top) return null;
     const sim = top.similarity ?? 0;
     if (sim >= 0.75) {
-      return { label: "High overlap", level: "high", message: "Top claim vector is very close to your input. Consider immediate counsel review." };
+      return { label: "High Risk", level: "high", message: "Top claim vector is very close to input. Very high risk of infringement or overlap." };
     }
     if (sim >= 0.55) {
-      return { label: "Moderate overlap", level: "medium", message: "One or more existing claims are directionally similar. Evaluate design-arounds." };
+      return { label: "Moderate Risk", level: "medium", message: "One or more existing claims are directionally similar to input. Formal review is recommended." };
     }
-    return { label: "Low overlap", level: "low", message: "Closest claims remain relatively distant. Filing or launch risk appears low." };
+    return { label: "Low Risk", level: "low", message: "Closest independent claims are relatively distant from input. Lower risk of infringement or overlap." };
   }, [results]);
 
   const runAnalysis = useCallback(async () => {
     if (!text.trim()) {
-      setError("Please describe the product or claim set to analyze.");
+      setError("Please describe subject matter to analyze.");
       return;
     }
     if (!isAuthenticated) {
@@ -324,7 +324,7 @@ export default function ScopeAnalysisPage() {
         doc.setFontSize(10);
         const meta = [
           `Assignee: ${match.assignee_name || "Unknown"}`,
-          `Pub Date: ${formatPubDate(match.pub_date)}`,
+          `Grant Date: ${formatPubDate(match.pub_date)}`,
           `Claim #: ${match.claim_number}`,
           `Similarity: ${formatSimilarity(match.similarity)}`,
           `Distance: ${typeof match.distance === "number" ? match.distance.toFixed(3) : "—"}`,
@@ -345,16 +345,15 @@ export default function ScopeAnalysisPage() {
     }
   }, [results, lastQuery, exporting]);
 
-
   return (
-    <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <main style={pageSurfaceStyle}>
       <div className="glass-surface" style={surfaceStyle}>
         <header className="glass-card p-6" style={{ ...cardBaseStyle }}>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
             Scope Analysis
           </p>
-          <h1 className="text-3xl font-bold text-slate-900 mb-3">Preliminary FTO / Infringement Radar</h1>
-          <p className="text-base text-slate-600 max-w-3xl">
+          <h1 style={{ color: TEXT_COLOR, fontSize: 22, fontWeight: 700 }}>Preliminary FTO / Infringement Radar</h1>
+          <p className="text-base max-w-3xl" style={{ color: TEXT_COLOR, marginTop: 8 }}>
             Input subject matter to search for comparison against independent claims of patents in the SynapseIP database. 
             A semantic search is executed over available independent claim, and semantically similar claims are returned with similarity scores and risk analysis.
           </p>
@@ -362,7 +361,7 @@ export default function ScopeAnalysisPage() {
 
         <section className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
           <div className="flex flex-col gap-2">
-            <label htmlFor="scope-text" className="text-sm font-semibold text-slate-700">
+            <label htmlFor="scope-text" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
               Input subject matter to search (e.g., product description, invention disclosure, draft claim, etc.)
             </label>
             <textarea
@@ -375,7 +374,7 @@ export default function ScopeAnalysisPage() {
           </div>
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <label htmlFor="topk" className="text-sm font-semibold text-slate-700">
+              <label htmlFor="topk" className="text-sm font-semibold" style={{ color: TEXT_COLOR }}>
                 # of claim comparisons
               </label>
               <input
@@ -446,7 +445,7 @@ export default function ScopeAnalysisPage() {
 
             <div className="glass-card p-6 space-y-4" style={{ ...cardBaseStyle }}>
               <p className="text-xs tracking-wide uppercase text-slate-500">Impact summary</p>
-              <h2 className="text-xl font-semibold text-slate-900">Claim proximity breakdown</h2>
+              <h2 className="text-xl font-semibold" style={{ color: TEXT_COLOR }}>Claim proximity breakdown</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
                   <p className="text-sm text-slate-500">Top match similarity</p>
@@ -610,6 +609,16 @@ const LINK_COLOR = "#5FA8D2";
 const CARD_BG = "rgba(255, 255, 255, 0.8)";
 const CARD_BORDER = "rgba(255, 255, 255, 0.45)";
 const CARD_SHADOW = "0 26px 54px rgba(15, 23, 42, 0.28)";
+
+const pageSurfaceStyle: React.CSSProperties = {
+  maxWidth: 1240,
+  width: "100%",
+  margin: "0 auto",
+  display: "grid",
+  gap: 20,
+  padding: 28,
+  borderRadius: 28,
+};
 
 const footerStyle: React.CSSProperties = {
   alignSelf: "center",

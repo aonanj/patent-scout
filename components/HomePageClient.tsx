@@ -517,6 +517,9 @@ export default function HomePageClient() {
 
       <div className="glass-surface" style={pageSurfaceStyle}>
         <Card>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
+            Search & Trends
+          </p>
           <div style={{ display: "grid", gap: 12 }}>
             <Row>
               <div style={{ display: "grid", gap: 6 }}>
