@@ -262,7 +262,9 @@ const CLUSTER_TERM_STEM_STOPWORDS = [
     "specif",
     "particul",
     "aspect",
-    "illustrat"
+    "illustrat",
+    "embodiment",
+    "aspect",
 ];
 
 type ClusterLegendEntry = {
