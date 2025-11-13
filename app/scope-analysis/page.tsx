@@ -594,6 +594,7 @@ export default function ScopeAnalysisPage() {
           </div>
         </section>
       </div>
+      <br />
       <div className="glass-surface" style={surfaceStyle}>
         {/* Footer */}
         <footer style={footerStyle}>
