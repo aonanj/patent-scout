@@ -196,16 +196,6 @@ const pageWrapperStyle: React.CSSProperties = {
   gap: 32,
 };
 
-const surfaceStyle: CSSProperties = {
-  maxWidth: 960,
-  width: "100%",
-  margin: "0 auto",
-  display: "grid",
-  gap: 24,
-  padding: 32,
-  borderRadius: 28,
-};
-
 
 
 export default function ScopeAnalysisPage() {
@@ -355,8 +345,7 @@ export default function ScopeAnalysisPage() {
 
   return (
     <div style={pageWrapperStyle}>
-      <main style={pageSurfaceStyle}>
-        <div className="glass-surface" style={surfaceStyle}>
+      <div className="glass-surface" style={pageSurfaceStyle}>
           <header className="glass-card p-6" style={{ ...cardBaseStyle }}>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 mb-2">
               Scope Analysis
@@ -600,16 +589,14 @@ export default function ScopeAnalysisPage() {
                 </tbody>
               </table>
             </div>
-          </section>
-        </div>
-        <br />
-        <div className="glass-surface" style={surfaceStyle}>
-          {/* Footer */}
-          <footer style={footerStyle}>
-            2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
-          </footer>
-        </div>
-      </main>
+        </section>
+      </div>
+      <div className="glass-surface" style={pageSurfaceStyle}>
+        {/* Footer */}
+        <footer style={footerStyle}>
+          2025 © Phaethon Order LLC | <a href="mailto:support@phaethon.llc" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">support@phaethon.llc</a> | <a href="https://phaethonorder.com" target="_blank" rel="noopener noreferrer" className="text-[#312f2f] hover:underline hover:text-blue-400">phaethonorder.com</a> | <a href="/help" className="text-[#312f2f] hover:underline hover:text-blue-400">Help</a> | <a href="/docs" className="text-[#312f2f] hover:underline hover:text-blue-400">Legal</a>
+        </footer>
+      </div>
     </div>
   );
 };
