@@ -666,7 +666,7 @@ const textInputStyle: React.CSSProperties = {
   minHeight: 140,
   border: "1px solid rgba(148, 163, 184, 0.45)",
   borderRadius: 12,
-  padding: "10px 14px",
+  padding: "5px 14px",
   width: "98%",
   background: "rgba(255, 255, 255, 0.7)",
   boxShadow: "0 12px 22px rgba(15, 23, 42, 0.18)",
